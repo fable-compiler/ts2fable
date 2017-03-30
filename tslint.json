@@ -1,0 +1,12 @@
+{
+    "extends": [
+        "tslint-config-standard"
+    ],
+    "rules": {
+        "no-angle-bracket-type-assertion": false,
+        "one-line": [
+            false
+        ],
+        "brace-style": false
+    }
+}

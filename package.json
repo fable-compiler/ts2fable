@@ -7,6 +7,9 @@
     "ts2fable": "./ts2fable.js"
   },
   "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "start": "yarn build -- -w",
+    "ver": "tsc -v",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,6 +30,12 @@
   },
   "homepage": "https://github.com/fable-compiler/Fable#readme",
   "dependencies": {
-    "typescript": "^1.8.7"
+    "@types/electron": "^1.4.35",
+    "@types/node": "^7.0.12",
+    "@types/react": "^15.0.20",
+    "byots": "^2.3.0-dev.20170328.5.14",
+    "tslint": "^4.5.1",
+    "tslint-config-standard": "^4.0.0",
+    "typescript": "^2.2.2"
   }
 }
