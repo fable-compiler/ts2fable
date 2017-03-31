@@ -19,7 +19,10 @@ var mappedTypes = {
 function escape(x) {
     // HACK: ignore strings with a comment (* ... *), tuples ( * )
     // and union types arrays U2<string,float>[]
-    if (x.indexOf('(*') >= 0 || x.indexOf(' * ') >= 0 || /^U\d+<.*>$/.test(x)) {
+    if (typeof x === 'undefined') {
+        return '';
+    }
+    if (x && x.indexOf('(*') >= 0 || x.indexOf(' * ') >= 0 || /^U\d+<.*>$/.test(x)) {
         return x;
     }
     var genParams = genReg.exec(x);
@@ -55,6 +58,7 @@ function isDuplicate(member, other) {
     function arrayEquals(ar1, ar2, f) {
         if (ar1 === void 0) { ar1 = []; }
         if (ar2 === void 0) { ar2 = []; }
+        if (f === void 0) { f = function () { return false; }; }
         if (ar1.length !== ar2.length) {
             return false;
         }
@@ -179,7 +183,7 @@ function printClassProperty(prefix) {
         return prefix + (x.emit ? '[<Emit("' + x.emit + '")>] ' : '') + templates_1.templates.classProperty
             .replace('[STATIC]', x.static ? 'static ' : '')
             .replace('[INSTANCE]', x.static ? '' : '__.')
-            .replace('[NAME]', escape(x.name))
+            .replace('[NAME]', escape(x.name.text))
             .replace(/\[TYPE\]/g, escape(x.type))
             .replace(/\[OPTION\]/g, x.optional ? ' option' : '');
     };
@@ -348,7 +352,6 @@ function getType(type) {
         // case ts.SyntaxKind.TypeQuery:
         //     return type.exprName.text + "Constructor";
         default:
-            console.error("UNSUPPORTED: " + ts.SyntaxKind[type.kind]);
             var anyType = type;
             var name_1 = type.typeName ? anyType.typeName.text : (anyType.expression ? anyType.expression.text : null);
             if (anyType.expression && anyType.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
@@ -363,6 +366,7 @@ function getType(type) {
             if (name_1 in mappedTypes) {
                 name_1 = mappedTypes[name_1];
             }
+            // console.error( `UNSUPPORTED: ${ts.SyntaxKind[type.kind]}` )
             var result = name_1 + printTypeArguments(anyType.typeArguments);
             return (typeParameters.indexOf(result) > -1 ? "'" : '') + result;
     }

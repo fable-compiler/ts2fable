@@ -18,10 +18,11 @@ let mappedTypes = {
   Number: 'float'
 }
 
-function escape ( x ) {
+function escape ( x: string ) {
   // HACK: ignore strings with a comment (* ... *), tuples ( * )
   // and union types arrays U2<string,float>[]
-  if ( x.indexOf( '(*' ) >= 0 || x.indexOf( ' * ' ) >= 0 || /^U\d+<.*>$/.test( x ) ) {
+  if (typeof x !== 'string') { return x }
+  if ( x && x.indexOf( '(*' ) >= 0 || x.indexOf( ' * ' ) >= 0 || /^U\d+<.*>$/.test( x ) ) {
     return x
   }
   let genParams = genReg.exec( x )
@@ -32,8 +33,8 @@ function escape ( x ) {
   return name + ( genParams ? genParams[0] : '' )
 }
 
-function stringToUnionCase ( str ) {
-  function upperFirstLetter ( str ) {
+function stringToUnionCase ( str: string ) {
+  function upperFirstLetter ( str: string ) {
     return typeof str === 'string' && str.length > 1
       ? str[0].toUpperCase() + str.substr( 1 )
       : str
@@ -48,16 +49,16 @@ function stringToUnionCase ( str ) {
   }
 }
 
-function append ( template, txt ) {
+function append ( template: string, txt: string ) {
   return typeof txt === 'string' && txt.length > 0 ? template + txt + '\n\n' : template
 }
 
-function joinPath ( path, name ) {
+function joinPath ( path: string, name: string ) {
   return typeof path === 'string' && path.length > 0 ? path + '.' + name : name
 }
 
 function isDuplicate ( member, other ) {
-  function arrayEquals ( ar1 = [], ar2 = [], f ) {
+  function arrayEquals ( ar1: any[] = [], ar2: any[] = [], f: (ar1: any, ar2: any) => boolean = () => false) {
     if ( ar1.length !== ar2.length ) {
       return false
     }
@@ -187,7 +188,7 @@ function printClassProperty ( prefix ) {
     return prefix + ( x.emit ? '[<Emit("' + x.emit + '")>] ' : '' ) + templates.classProperty
       .replace( '[STATIC]', x.static ? 'static ' : '' )
       .replace( '[INSTANCE]', x.static ? '' : '__.' )
-      .replace( '[NAME]', escape( x.name ) )
+      .replace( '[NAME]', escape( x.name.text ) )
       .replace( /\[TYPE\]/g, escape( x.type ) )
       .replace( /\[OPTION\]/g, x.optional ? ' option' : '' )
   }
@@ -375,7 +376,6 @@ function getType ( type: ts.TypeNode ): string {
     //     return type.exprName.text + "Constructor";
 
     default:
-      console.error( `UNSUPPORTED: ${ts.SyntaxKind[type.kind]}` )
       let anyType: any = type
       let name = ( <any> type ).typeName ? anyType.typeName.text : ( anyType.expression ? anyType.expression.text : null )
       if ( anyType.expression && anyType.expression.kind === ts.SyntaxKind.PropertyAccessExpression ) {
@@ -392,6 +392,7 @@ function getType ( type: ts.TypeNode ): string {
         name = mappedTypes[name]
       }
 
+      // console.error( `UNSUPPORTED: ${ts.SyntaxKind[type.kind]}` )
       let result = name + printTypeArguments( anyType.typeArguments )
       return ( typeParameters.indexOf( result ) > -1 ? "'" : '' ) + result
   }

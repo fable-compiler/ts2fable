@@ -2,15 +2,16 @@
   "name": "ts2fable",
   "version": "0.1.23",
   "description": "TypeScript definition files parser for fable-compiler",
-  "main": "ts2fable.js",
+  "main": "./orig/ts2fable.js",
   "bin": {
-    "ts2fable": "./ts2fable.js"
+    "ts2fable": "./orig/ts2fable.js"
   },
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
     "start": "yarn build -- -w",
     "ver": "tsc -v",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./dist/ts2fable ./node_modules/@types/electron/index.d.ts",
+    "test-orig": "node ./orig/ts2fable.js ./node_modules/@types/electron/index.d.ts"
   },
   "repository": {
     "type": "git",
