@@ -10,8 +10,10 @@
     "build": "tsc -p ./tsconfig.json",
     "start": "yarn build -- -w",
     "ver": "tsc -v",
-    "test": "node ./dist/ts2fable ./node_modules/@types/electron/index.d.ts",
-    "test-orig": "node ./orig/ts2fable.js ./node_modules/@types/electron/index.d.ts"
+    "run-new": "ts-node ./dist/ts2fable ./node_modules/@types/electron/index.d.ts",
+    "run-orig": "ts-node ./orig/ts2fable.js ./node_modules/@types/electron/index.d.ts",
+    "trash": "trash './output/**/*.fsx'",
+    "run-both": "cross-env yarn build && yarn trash && yarn run-new > ./output/electron-new.fsx && yarn run-orig > ./output/electron-orig.fsx"
   },
   "repository": {
     "type": "git",
@@ -35,8 +37,11 @@
     "@types/node": "^7.0.12",
     "@types/react": "^15.0.20",
     "byots": "^2.3.0-dev.20170328.5.14",
-    "tslint": "^4.5.1",
+    "cross-env": "^4.0.0",
+    "trash-cli": "^1.4.0",
+    "ts-node": "^3.0.2",
+    "tslint": "^4.9.0",
     "tslint-config-standard": "^4.0.0",
-    "typescript": "^2.2.2"
+    "typescript": "2.1"
   }
 }
