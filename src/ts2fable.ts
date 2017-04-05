@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 import * as fs from 'fs'
+import * as util from './utilities'
+
 import 'byots' // This exposes a ts global usable from any imported file after this
 import { templates } from './templates'
-import { keywords } from './keywords'
-import { reserved } from './reserved'
 import { Module, MemberOptions, InterfaceOptions } from './types'
 
 let typeCache = {}
 
-let genReg = /<.+?>$/
+
 let mappedTypes = {
   Date: 'DateTime',
   Object: 'obj',
@@ -21,75 +21,15 @@ let mappedTypes = {
   Never: '`a',
 }
 
-function escape( x: string ) {
-  // HACK: ignore strings with a comment (* ... *), tuples ( * )
-  // and union types arrays U2<string,float>[] 
-  if ( x !== undefined && ( x.indexOf( '(*' ) >= 0 || x.indexOf( ' * ' ) >= 0 || /^U\d+<.*>$/.test( x ) ) ) {
-    return x
-  }
-  let genParams = genReg.exec( x )
-  let name = x.replace( genReg, '' )
-  name = ( keywords.indexOf( name ) >= 0 || reserved.indexOf( name ) >= 0 || /[^\w.']/.test( name ) )
-    ? '``' + name + '``'
-    : name
-  return name + ( genParams ? genParams[0] : '' )
-}
-
-function stringToUnionCase( str ) {
-  function upperFirstLetter( str ) {
-    return typeof str === 'string' && str.length > 1
-      ? str[0].toUpperCase() + str.substr( 1 )
-      : str
-  }
-  if ( str.length == 0 ) {
-    return `[<CompiledName("")>] EmptyString`
-  } else if ( /^[A-Z]/.test( str ) ) {
-    return `[<CompiledName("${str}")>] ${escape( str )}`
-  } else {
-    return escape( upperFirstLetter( str ) )
-  }
-}
-
-function append( template, txt ) {
-  return typeof txt === 'string' && txt.length > 0 ? template + txt + '\n\n' : template
-}
-
-function joinPath( path, name ) {
-  return typeof path === 'string' && path.length > 0 ? path + '.' + name : name
-}
-
-function isDuplicate( member, other ) {
-  function arrayEquals( ar1 = [], ar2 = [], f ) {
-    if ( ar1.length !== ar2.length ) {
-      return false
-    }
-    for ( let i = 0; i < ar1.length; i++ ) {
-      if ( !f( ar1[i], ar2[i] ) ) {
-        return false
-      }
-    }
-    return true
-  }
-
-  for ( let m of other ) {
-    if ( m.name === member.name && arrayEquals(
-      m.parameters, member.parameters,
-      ( x, y ) => x.type === y.type ) ) {
-      return true
-    }
-  }
-  return false
-}
-
 function printParameters( parameters, sep: string = ', ', def: string = '' ) {
   function printParameter( x ) {
     if ( x.rest ) {
-      let execed = /^ResizeArray<(.*?)>$/.exec( escape( x.type ) )
-      let type = ( execed == null ? 'obj' : escape( execed[1] ) ) + '[]'
-      return '[<ParamArray>] ' + escape( x.name ) + ': ' + type
+      let execed = /^ResizeArray<(.*?)>$/.exec( util.escape( x.type ) )
+      let type = ( execed == null ? 'obj' : util.escape( execed[1] ) ) + '[]'
+      return '[<ParamArray>] ' + util.escape( x.name ) + ': ' + type
     }
     else {
-      return ( x.optional ? '?' : '' ) + escape( x.name ) + ': ' + escape( x.type )
+      return ( x.optional ? '?' : '' ) + util.escape( x.name ) + ': ' + util.escape( x.type )
     }
   }
   return Array.isArray( parameters ) && parameters.length > 0
@@ -101,10 +41,10 @@ function printMethod( prefix: string ): ( x: string ) => string {
   return function ( y: Partial<MemberOptions> ): string {
     let method = prefix + ( y.emit ? '[<Emit("' + y.emit + '")>] ' : '' ) + templates.method
     if ( y !== undefined && y.name !== undefined ) {
-      method = method.replace( '[NAME]', escape( y.name ) )
+      method = method.replace( '[NAME]', util.escape( y.name ) )
     }
     if ( y !== undefined && y.type !== undefined ) {
-      method = method.replace( '[TYPE]', escape( y.type ) )
+      method = method.replace( '[TYPE]', util.escape( y.type ) )
     }
     if ( y !== undefined && y.parameters !== undefined ) {
       method = method.replace( '[PARAMETERS]', printParameters( y.parameters, ' * ', 'unit' ) )
@@ -120,10 +60,10 @@ function printProperty( prefix: string ) {
       ? printParameters( x.parameters ) + ' -> ' : ''
     let property = prefix + ( x.emit ? '[<Emit("' + x.emit + '")>] ' : '' ) + templates.property
     if ( x && x.name ) {
-      property = property.replace( '[NAME]', escape( x.name ) )
+      property = property.replace( '[NAME]', util.escape( x.name ) )
     }
     if ( x && x.type ) {
-      property = property.replace( '[TYPE]', param + escape( x.type ) )
+      property = property.replace( '[TYPE]', param + util.escape( x.type ) )
     }
     if ( x && x.optional ) {
       property = property.replace( '[OPTION]', x.optional ? ' option' : '' )
@@ -145,14 +85,14 @@ function printParents( prefix: string, node, template ) {
       parent.methods.forEach( x => lines.push( printMethod( prefix )( x ) ) )
     }
     // Clean methods and properties from the child
-    child.properties = child.properties.filter( x => !isDuplicate( x, parent.properties ) )
-    child.methods = child.methods.filter( x => !isDuplicate( x, parent.methods ) )
+    child.properties = child.properties.filter( x => !util.isDuplicate( x, parent.properties ) )
+    child.methods = child.methods.filter( x => !util.isDuplicate( x, parent.methods ) )
   }
 
   let lines: string[] = []
   node.parents.forEach( function ( parentName ) {
-    let nameNoArgs = parentName.replace( genReg, '' )
-    let parent = typeCache[nameNoArgs.indexOf( '.' ) > 0 ? nameNoArgs : joinPath( node.path, nameNoArgs )]
+    let nameNoArgs = parentName.replace( util.genReg, '' )
+    let parent = typeCache[nameNoArgs.indexOf( '.' ) > 0 ? nameNoArgs : util.joinPath( node.path, nameNoArgs )]
     if ( node.kind === 'class' ) {
       if ( parent && parent.kind === 'class' ) {
         lines.push( prefix + 'inherit ' + parentName + '()' ) // TODO: Check base class constructor arguments?
@@ -201,8 +141,8 @@ function printClassMethod( prefix ) {
       .replace( '[STATIC]', x.static ? 'static ' : '' )
       .replace( '[MEMBER_KEYWORD]', 'member' )
       .replace( '[INSTANCE]', x.static ? '' : '__.' )
-      .replace( '[NAME]', escape( x.name ) )
-      .replace( '[TYPE]', escape( x.type ) )
+      .replace( '[NAME]', util.escape( x.name ) )
+      .replace( '[TYPE]', util.escape( x.type ) )
       .replace( '[PARAMETERS]', printParameters( x.parameters ) )
     }
     return ''
@@ -215,8 +155,8 @@ function printClassProperty( prefix ) {
       return prefix + ( x.emit ? '[<Emit("' + x.emit + '")>] ' : '' ) + templates.classProperty
         .replace( '[STATIC]', x.static ? 'static ' : '' )
         .replace( '[INSTANCE]', x.static ? '' : '__.' )
-        .replace( '[NAME]', escape( x.name ) )
-        .replace( /\[TYPE\]/g, x && x.type ? escape( x.type ) : '' )
+        .replace( '[NAME]', util.escape( x.name ) )
+        .replace( /\[TYPE\]/g, x && x.type ? util.escape( x.type ) : '' )
         .replace( /\[OPTION\]/g, x.optional ? ' option' : '' )
     }
     return ''
@@ -235,7 +175,7 @@ function printImport( path, name ) {
     return '[<Erase>]'
   }
   else {
-    let fullPath = joinPath( path, name.replace( genReg, '' ) )
+    let fullPath = util.joinPath( path, name.replace( util.genReg, '' ) )
     let period = fullPath.indexOf( '.' )
     let importPath = period >= 0
       ? fullPath.substr( period + 1 ) + '","' + fullPath.substr( 0, period )
@@ -265,7 +205,7 @@ function printInterface( prefix ) {
     template =
       prefix + template
         .replace( '[TYPE_KEYWORD]', i === 0 ? 'type' : 'and' )
-        .replace( '[NAME]', escape( ifc.name ) )
+        .replace( '[NAME]', util.escape( ifc.name ) )
         .replace( '[DECORATOR]', printDecorator( ifc ) )
         .replace( '[CONSTRUCTOR]', ifc.kind === 'class'
           ? '(' + printParameters( ifc.constructorParameters ) + ')' : '' )
@@ -286,7 +226,7 @@ function printInterface( prefix ) {
         }).join( '\n' )
       case 'stringEnum':
         return template + prefix + prefix + '| ' + ifc.properties.map( x =>
-          stringToUnionCase( x.name ) ).join( ' | ' )
+          util.stringToUnionCase( x.name ) ).join( ' | ' )
       case 'class':
         let classMembers = printClassMembers( prefix + '    ', ifc )
         return template += ( classMembers.length === 0 && !hasParents
@@ -315,12 +255,12 @@ function printGlobals( prefix, ent ) {
 function printModule( prefix ) {
   return function ( mod ) {
     let template = prefix + templates.module
-      .replace( '[NAME]', escape( mod.name ) )
+      .replace( '[NAME]', util.escape( mod.name ) )
 
-    template = append( template, mod.interfaces.map(
+    template = util.append( template, mod.interfaces.map(
       printInterface( prefix + '    ' ) ).join( '\n\n' ) )
 
-    template = append( template, printGlobals( prefix + '    ', mod ) )
+    template = util.append( template, printGlobals( prefix + '    ', mod ) )
 
     template += mod.modules.map( printModule( prefix + '    ' ) ).join( '\n\n' )
 
@@ -330,8 +270,8 @@ function printModule( prefix ) {
 
 function printFile( file ) {
   let template = templates.file
-  template = append( template, file.interfaces.map( printInterface( '' ) ).join( '\n\n' ) )
-  template = append( template, printGlobals( '', file ) )
+  template = util.append( template, file.interfaces.map( printInterface( '' ) ).join( '\n\n' ) )
+  template = util.append( template, printGlobals( '', file ) )
   return template + file.modules.map( printModule( '' ) ).join( '\n\n' )
 }
 
@@ -571,7 +511,7 @@ function getInterface( node: ts.Node, opts: Partial<MemberOptions> ): Partial<In
   }
   if ( !opts.anonymous ) {
     if ( ifc && typeof ifc.name === 'string' ) {
-      typeCache[joinPath( ifc.path, ifc.name.replace( genReg, '' ) )] = ifc
+      typeCache[util.joinPath( ifc.path, ifc.name.replace( util.genReg, '' ) )] = ifc
     }
   }
   return ifc
@@ -605,8 +545,8 @@ function mergeNamesakeInterfaces( intfs ) {
 
 function visitInterface( node: ts.Node, opts: Partial<InterfaceOptions> ): Partial<InterfaceOptions> {
   let ifc = getInterface( node, opts )
-  ifc.properties = ifc.properties || [{}] as Partial<MemberOptions>[]
-  ifc.methods = ifc.methods || [{}] as Partial<MemberOptions>[]
+  ifc.properties = ifc.properties || [] as Partial<MemberOptions>[]
+  ifc.methods = ifc.methods || [] as Partial<MemberOptions>[]
 
   let visitMembers = node => {
     let member
@@ -644,7 +584,7 @@ function visitInterface( node: ts.Node, opts: Partial<InterfaceOptions> ): Parti
           member = getMethod( node )
         }
         // Sometimes TypeScript definitions contain duplicated methods
-        if ( !isDuplicate( member, ifc.methods ) ) {
+        if ( !util.isDuplicate( member, ifc.methods ) ) {
           if ( ifc && ifc.methods ) {
             ifc.methods.push( member )
           }
@@ -758,7 +698,7 @@ function visitModule( node: ts.ModuleDeclaration | ts.ModuleBody | undefined, op
     methods: [],
     modules: []
   }
-  let modPath = joinPath( mod.path, mod.name )
+  let modPath = util.joinPath( mod.path, mod.name )
 
   switch ( ( <any>node ).body.kind ) {
     case ts.SyntaxKind.ModuleDeclaration:

@@ -2,6 +2,36 @@
 
 [Fable](https://github.com/fable-compiler/Fable) parser for [TypeScript declaration files](https://www.typescriptlang.org/docs/handbook/writing-declaration-files.html).
 
+## Contributing
+```
+git clone https://github.com/fable-compiler/ts2fable
+git checkout develop
+```
+Please use yarn so you will use the exact same versions of everything that were used during development
+```
+yarn
+```
+
+### npm/yarn Commands
+
+``` 
+yarn build // Compiles the TypeScript Code into ./dist
+
+yarn ver // Outputs the installed version of TypeScript
+
+yarn run-new // Outputs the Fable code to the window using the new TS version
+yarn run-orig // Outputs the Fable code using the current version
+
+yarn run-both // Outputs both the new and the original to the output directory 
+```
+
+After this, you can use Visual Studio Code to compare the orig file to the new file.
+
+### Debugging
+
+Set a breakpoint.  It is configured to run against electron.d.ts by default. You can change this by editing the launch.json in launch.json and package.json
+
+
 ## Usage
 
 Install it with npm and run the `ts2fable` command on a TypeScript declaration file.
