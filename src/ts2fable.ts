@@ -17,12 +17,13 @@ let mappedTypes = {
   Array: 'ResizeArray',
   RegExp: 'Regex',
   String: 'string',
-  Number: 'float'
+  Number: 'float',
+  Never: '`a',
 }
 
 function escape( x: string ) {
   // HACK: ignore strings with a comment (* ... *), tuples ( * )
-  // and union types arrays U2<string,float>[]
+  // and union types arrays U2<string,float>[] 
   if ( x !== undefined && ( x.indexOf( '(*' ) >= 0 || x.indexOf( ' * ' ) >= 0 || /^U\d+<.*>$/.test( x ) ) ) {
     return x
   }
