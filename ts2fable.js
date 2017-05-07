@@ -563,7 +563,7 @@ function getProperty(node, opts) {
         name: opts.name || getName(node),
         type: getType(node.type),
         optional: node.questionToken != null,
-        static: node.name ? hasFlag(node.name.parserContextFlags, ts.NodeFlags.Static) : false
+        static: hasFlag(ts.getCombinedModifierFlags(node), ts.ModifierFlags.Static)
     };
 }
 
@@ -641,9 +641,7 @@ function getMethod(node, opts) {
         name: opts.name || getName(node),
         type: getType(node.type),
         optional: node.questionToken != null,
-        static: opts.static
-            || (node.name && hasFlag(node.name.parserContextFlags, ts.NodeFlags.Static))
-            || (node.modifiers && hasFlag(node.modifiers.flags, ts.NodeFlags.Static)),
+        static: opts.static || hasFlag(ts.getCombinedModifierFlags(node), ts.ModifierFlags.Static),
         parameters: node.parameters.map(getParameter)
     };
     var firstParam = node.parameters[0], secondParam = node.parameters[1];
