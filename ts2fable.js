@@ -6,7 +6,7 @@ var ts = require("typescript");
 
 var templates = {
 file:
-`namespace Fable.Import
+`namespace rec Fable.Import
 open System
 open System.Text.RegularExpressions
 open Fable.Core
@@ -386,7 +386,7 @@ function printInterface(prefix) {
             templates.interface;
         var template = 
             prefix + template
-            .replace("[TYPE_KEYWORD]", i === 0 ? "type" : "and")
+            .replace("[TYPE_KEYWORD]", "type")
             .replace("[NAME]", escape(ifc.name))
             .replace("[DECORATOR]", printDecorator(ifc))
             .replace("[CONSTRUCTOR]", ifc.kind === "class"
