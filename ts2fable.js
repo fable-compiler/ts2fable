@@ -169,8 +169,9 @@ var mappedTypes = {
 
 function escape(x) {
     // HACK: ignore strings with a comment (* ... *), tuples ( * )
+    // function arrows
     // and union types arrays U2<string,float>[]
-    if (x.indexOf("(*") >= 0 || x.indexOf(" * ") >= 0 || /^U\d+<.*>$/.test(x)) {
+    if (x.indexOf("(*") >= 0 || x.indexOf(" * ") >= 0 || x.indexOf(" -> ") >= 0 || /^U\d+<.*>$/.test(x)) {
         return x;
     }
     var genParams = genReg.exec(x);
@@ -507,8 +508,8 @@ function getType(type) {
         case ts.SyntaxKind.FunctionType:
             var cbParams = type.parameters.map(function (x) {
                 return x.dotDotDotToken ? "obj" : getType(x.type);
-            }).join(", ");
-            return "Func<" + (cbParams || "unit") + ", " + getType(type.type) + ">";
+            }).join(' -> ');
+            return '(' + (cbParams || 'unit') + ' -> ' + getType(type.type) + ')';
         case ts.SyntaxKind.UnionType:
             if (type.types && type.types[0].kind == ts.SyntaxKind.StringLiteralType)
                 return "(* TODO StringEnum " + type.types.map(x=>x.text).join(" | ") + " *) string";
