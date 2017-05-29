@@ -11,7 +11,7 @@
     "ver": "tsc -v",
     "run-new": "ts-node ./dist/ts2fable ./node_modules/@types/electron/index.d.ts",
     "run-orig": "ts-node ./orig/ts2fable.js ./node_modules/@types/electron/index.d.ts",
-    "trash": "trash './output/**/*.fsx'",
+    "trash": "trash './output/**/*.fs'",
     "run-both": "cross-env yarn build && yarn trash && yarn run-new > ./output/electron-new.fs && yarn run-orig > ./output/electron-orig.fs"
   },
   "repository": {

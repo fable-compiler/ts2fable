@@ -9,7 +9,6 @@ import { Module, MemberOptions, InterfaceOptions } from './types'
 
 let typeCache = {}
 
-
 let mappedTypes = {
   Date: 'DateTime',
   Object: 'obj',
@@ -18,7 +17,7 @@ let mappedTypes = {
   RegExp: 'Regex',
   String: 'string',
   Number: 'float',
-  Never: '`a',
+  Never: '`a'
 }
 
 function printParameters( parameters, sep: string = ', ', def: string = '' ) {
@@ -115,7 +114,7 @@ function printParents( prefix: string, node, template ) {
         lines.push( prefix + 'inherit ' + parentName )
       }
     }
-  })
+  } )
 
   return template + ( lines.length ? lines.join( '\n' ) + '\n' : '' )
 }
@@ -127,41 +126,47 @@ function printArray( arr: Partial<MemberOptions>[], mapper: ( s: string ) => str
 }
 
 function printMembers( prefix: string, ent: Partial<InterfaceOptions> ) {
-  if ( ent !== undefined && ent.properties !== undefined && ent.methods !== undefined && prefix !== undefined )
+  if ( ent !== undefined && ent.properties !== undefined && ent.methods !== undefined && prefix !== undefined ) {
     return [
       printArray( ent.properties, printProperty( prefix ) ),
       printArray( ent.methods, printMethod( prefix ) )
     ].filter( x => x.length > 0 ).join( '\n' )
+  }
 }
 
-function printClassMethod( prefix ) {
+function printClassMethod( prefix: string ) {
   return function ( x ) {
-    if ( x.name !== undefined ) {
+    if ( typeof x.emit !== 'undefined' && typeof x.name !== 'undefined') {
       return prefix + ( x.emit ? '[<Emit("' + x.emit + '")>] ' : '' ) + templates.classMethod
-      .replace( '[STATIC]', x.static ? 'static ' : '' )
-      .replace( '[MEMBER_KEYWORD]', 'member' )
-      .replace( '[INSTANCE]', x.static ? '' : '__.' )
-      .replace( '[NAME]', util.escape( x.name ) )
-      .replace( '[TYPE]', util.escape( x.type ) )
-      .replace( '[PARAMETERS]', printParameters( x.parameters ) )
+        .replace( '[STATIC]', x.static ? 'static ' : '' )
+        .replace( '[MEMBER_KEYWORD]', 'member' )
+        .replace( '[INSTANCE]', x.static ? '' : '__.' )
+        .replace( '[NAME]', util.escape( x.name ) )
+        .replace( '[TYPE]', util.escape( x.type ) )
+        .replace( '[PARAMETERS]', printParameters( x.parameters ) )
     }
-    return ''
+    else {
+      return ''
+    }
   }
 }
 
 function printClassProperty( prefix ) {
-  return function ( x: Partial<MemberOptions> ) {
-    if ( x.name !== undefined ) {
+  return function ( x ) {
+    if ( typeof x.emit !== 'undefined' && typeof x.name !== 'undefined') {
       return prefix + ( x.emit ? '[<Emit("' + x.emit + '")>] ' : '' ) + templates.classProperty
         .replace( '[STATIC]', x.static ? 'static ' : '' )
         .replace( '[INSTANCE]', x.static ? '' : '__.' )
         .replace( '[NAME]', util.escape( x.name ) )
-        .replace( /\[TYPE\]/g, x && x.type ? util.escape( x.type ) : '' )
+        .replace( /\[TYPE\]/g, util.escape( x.type ) )
         .replace( /\[OPTION\]/g, x.optional ? ' option' : '' )
     }
-    return ''
+    else {
+      return ''
+    }
   }
 }
+
 
 function printClassMembers( prefix, ent ) {
   return [
@@ -211,7 +216,7 @@ function printInterface( prefix ) {
           ? '(' + printParameters( ifc.constructorParameters ) + ')' : '' )
 
     let tmp = printParents( prefix + '    ', ifc, template )
-    let hasParents = tmp != template
+    let hasParents = tmp !== template
     template = tmp
 
     switch ( ifc.kind ) {
@@ -223,7 +228,7 @@ function printInterface( prefix ) {
             .replace( '[NAME]', currentValue.name )
             .replace( '[ID]', currentValue.value )
           return prefix + cv
-        }).join( '\n' )
+        } ).join( '\n' )
       case 'stringEnum':
         return template + prefix + prefix + '| ' + ifc.properties.map( x =>
           util.stringToUnionCase( x.name ) ).join( ' | ' )
@@ -280,9 +285,9 @@ function hasFlag( flags, flag ) {
 }
 
 function getName( node: ts.Node ) {
-  if ( ( <ts.PropertyAccessExpression>node ).expression && ( <any>node ).expression.kind == ts.SyntaxKind.PropertyAccessExpression ) {
+  if ( ( <ts.PropertyAccessExpression>node ).expression && ( <any>node ).expression.kind === ts.SyntaxKind.PropertyAccessExpression ) {
     return ( <any>node ).expression.expression.text + '.' + ( <any>node ).expression.name.text
-    //return ( <any> node ).expression.getText() + '.' + ( <any> node ).expression.name.text
+    // return ( <any> node ).expression.getText() + '.' + ( <any> node ).expression.name.text
   }
   else {
     // TODO: Throw exception if there's no name?
@@ -326,7 +331,7 @@ function getType( type ) {
     case ts.SyntaxKind.FunctionType:
       let cbParams = type.parameters.map( function ( x ) {
         return x.dotDotDotToken ? 'obj' : getType( x.type )
-      }).join( ', ' )
+      } ).join( ', ' )
       return 'Func<' + ( cbParams || 'unit' ) + ', ' + getType( type.type ) + '>'
     case ts.SyntaxKind.UnionType:
       if ( type.types && type.types[0].kind === ts.SyntaxKind.StringLiteral ) {
@@ -377,7 +382,7 @@ function getParents( node ) {
 }
 
 // TODO: get comments
-function getProperty( node: ts.Node, opts: Partial<MemberOptions> = {}): Partial<MemberOptions> {
+function getProperty( node: ts.Node, opts: Partial<MemberOptions> = {} ): Partial<MemberOptions> {
   return {
     name: opts.name || getName( node ),
     type: getType(( <ts.PropertyDeclaration>node ).type ),
@@ -392,7 +397,7 @@ function getStringEnum( node ) {
     name: getName( node ),
     properties: node.type.types.map( function ( n ) {
       return { name: n.text }
-    }),
+    } ),
     parents: [],
     methods: []
   }
@@ -407,7 +412,7 @@ function getEnum( node ) {
         name: getName( n ),
         value: n.initializer ? n.initializer.text : i
       }
-    }),
+    } ),
     parents: [],
     methods: []
   }
@@ -426,7 +431,7 @@ function getVariables( node ) {
     for ( let j = 0; j < declarations.length; j++ ) {
       name = declarations[j].name.text
       if ( declarations[j].type.kind === ts.SyntaxKind.TypeLiteral ) {
-        type = visitInterface( declarations[j].type, { name: name + 'Type', anonymous: true })
+        type = visitInterface( declarations[j].type, { name: name + 'Type', anonymous: true } )
         anonymousTypes.push( type )
         type = type.name
       }
@@ -438,7 +443,7 @@ function getVariables( node ) {
         type: type,
         static: true,
         parameters: []
-      })
+      } )
     }
   }
   return {
@@ -498,7 +503,7 @@ function getInterface( node: ts.Node, opts: Partial<MemberOptions> ): Partial<In
     typeParams = typeParams || []
     return typeParams.length === 0 ? '' : '<' + typeParams.map( function ( x ) {
       return "'" + x.name.text
-    }).join( ', ' ) + '>'
+    } ).join( ', ' ) + '>'
   }
   opts = opts || {}
   let ifc: Partial<InterfaceOptions> = {
@@ -523,9 +528,9 @@ function mergeNamesakes( xs, getName, mergeTwo ) {
     let name = getName( x )
     if ( !Array.isArray( grouped[name] ) ) { grouped[name] = [] }
     grouped[name].push( x )
-  })
+  } )
 
-  return Object.keys( grouped ).map( function ( k ) { return grouped[k].reduce( mergeTwo ) })
+  return Object.keys( grouped ).map( function ( k ) { return grouped[k].reduce( mergeTwo ) } )
 }
 
 function mergeInterfaces( a, b ) {
@@ -557,7 +562,7 @@ function visitInterface( node: ts.Node, opts: Partial<InterfaceOptions> ): Parti
       case ts.SyntaxKind.PropertyDeclaration:
         if ( node && node.name && node.name.kind === ts.SyntaxKind.ComputedPropertyName ) {
           name = getName( node.name )
-          member = getProperty(( <ts.Node>node ), { name: '[' + name + ']' })
+          member = getProperty(( <ts.Node>node ), { name: '[' + name + ']' } )
           member.emit = '$0[' + name + ']{{=$1}}'
         }
         else {
@@ -568,7 +573,7 @@ function visitInterface( node: ts.Node, opts: Partial<InterfaceOptions> ): Parti
       // TODO: If interface only contains one `Invoke` method
       // make it an alias of Func
       case ts.SyntaxKind.CallSignature:
-        member = getMethod( node, { name: 'Invoke' })
+        member = getMethod( node, { name: 'Invoke' } )
         member.emit = '$0($1...)'
         if ( ifc && ifc.methods ) { ifc.methods.push( member ) }
         break
@@ -577,7 +582,7 @@ function visitInterface( node: ts.Node, opts: Partial<InterfaceOptions> ): Parti
 
         if ( node && node.name && node.name.kind === ts.SyntaxKind.ComputedPropertyName ) {
           name = getName( node.name )
-          member = getMethod( node, { name: '[' + name + ']' })
+          member = getMethod( node, { name: '[' + name + ']' } )
           member.emit = '$0[' + name + ']($1...)'
         }
         else {
@@ -591,14 +596,14 @@ function visitInterface( node: ts.Node, opts: Partial<InterfaceOptions> ): Parti
         }
         break
       case ts.SyntaxKind.ConstructSignature:
-        member = getMethod( node, { name: 'Create' })
+        member = getMethod( node, { name: 'Create' } )
         member.emit = 'new $0($1...)'
         if ( ifc && ifc.methods ) {
           ifc.methods.push( member )
         }
         break
       case ts.SyntaxKind.IndexSignature:
-        member = getMethod( node, { name: 'Item' })
+        member = getMethod( node, { name: 'Item' } )
         member.emit = '$0[$1]{{=$2}}'
         if ( ifc && ifc.properties ) {
           ifc.properties.push( member )
@@ -642,12 +647,12 @@ function visitModuleNode( mod: Partial<Module> = {}, modPath: any = null ) {
     switch ( node.kind ) {
       case ts.SyntaxKind.InterfaceDeclaration:
         if ( mod && mod.interfaces ) {
-          mod.interfaces.push( visitInterface( node, { kind: 'interface', path: modPath }) )
+          mod.interfaces.push( visitInterface( node, { kind: 'interface', path: modPath } ) )
         }
         break
       case ts.SyntaxKind.ClassDeclaration:
         if ( mod && mod.interfaces ) {
-          mod.interfaces.push( visitInterface( node, { kind: 'class', path: modPath }) )
+          mod.interfaces.push( visitInterface( node, { kind: 'class', path: modPath } ) )
         }
         break
       case ts.SyntaxKind.TypeAliasDeclaration:
@@ -656,7 +661,7 @@ function visitModuleNode( mod: Partial<Module> = {}, modPath: any = null ) {
           if ( taNode && taNode.type.kind === ts.SyntaxKind.StringLiteral ) {
             mod.interfaces.push( getStringEnum( node ) )
           } else {
-            mod.interfaces.push( visitInterface( node, { kind: 'alias', path: modPath }) )
+            mod.interfaces.push( visitInterface( node, { kind: 'alias', path: modPath } ) )
           }
         }
         break
@@ -670,12 +675,12 @@ function visitModuleNode( mod: Partial<Module> = {}, modPath: any = null ) {
         break
       case ts.SyntaxKind.FunctionDeclaration:
         if ( mod && mod.methods ) {
-          mod.methods.push( getMethod( node, { static: true }) )
+          mod.methods.push( getMethod( node, { static: true } ) )
         }
         break
       case ts.SyntaxKind.ModuleDeclaration:
-        let m = visitModule(( <ts.ModuleDeclaration>node ), { path: modPath })
-        let isEmpty = Object.keys( m ).every( function ( k ) { return !Array.isArray( m[k] ) || m[k].length === 0 })
+        let m = visitModule(( <ts.ModuleDeclaration>node ), { path: modPath } )
+        let isEmpty = Object.keys( m ).every( function ( k ) { return !Array.isArray( m[k] ) || m[k].length === 0 } )
         if ( !isEmpty && mod && mod.modules ) {
           mod.modules.push( m )
         } break
@@ -688,7 +693,7 @@ function visitModuleNode( mod: Partial<Module> = {}, modPath: any = null ) {
   }
 }
 
-function visitModule( node: ts.ModuleDeclaration | ts.ModuleBody | undefined, opts: Partial<Module> = {}): Partial<Module> {
+function visitModule( node: ts.ModuleDeclaration | ts.ModuleBody | undefined, opts: Partial<Module> = {} ): Partial<Module> {
 
   let mod: Partial<Module> = {
     name: getName(( <any>node ) ),
@@ -703,7 +708,7 @@ function visitModule( node: ts.ModuleDeclaration | ts.ModuleBody | undefined, op
   switch ( ( <any>node ).body.kind ) {
     case ts.SyntaxKind.ModuleDeclaration:
       if ( mod !== undefined && mod.modules ) {
-        mod.modules.push( visitModule(( <ts.ModuleDeclaration>node ).body, { path: modPath }) )
+        mod.modules.push( visitModule(( <ts.ModuleDeclaration>node ).body, { path: modPath } ) )
       } break
 
     case ts.SyntaxKind.ModuleBlock:
@@ -750,6 +755,6 @@ try {
   process.exit( 0 )
 }
 catch ( err ) {
-  console.log( 'ERROR: ' + err )
+  console.log( `Error -> ${err.message} \nStack:${err.stack}` )
   process.exit( 1 )
 }

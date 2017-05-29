@@ -7,7 +7,7 @@
 git clone https://github.com/fable-compiler/ts2fable
 git checkout develop
 ```
-Please use yarn so you will use the exact same versions of everything that were used during development
+Please use yarn so you will use the exact same versions of everything that was used during development
 ```
 yarn
 ```
@@ -29,8 +29,11 @@ After this, you can use Visual Studio Code to compare the orig file to the new f
 
 ### Debugging
 
-Set a breakpoint.  It is configured to run against electron.d.ts by default. You can change this by editing the launch.json in launch.json and package.json
+Set a breakpoint.  It is configured to run against electron.d.ts by default. You can change this by editing the args in launch.json and package.json
 
+### Note
+
+When using F5 debugging, output is to the debug console, whereas yarn run-both will output 2 files in the output folder for comparison.
 
 ## Usage
 
