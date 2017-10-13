@@ -4,7 +4,8 @@ open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
 open Fable.Import.Node
+open Fable.Import.ts
 
 printfn "hello"
 
-Globals.process.exit(1)
+printfn "version: %s" ts.version
