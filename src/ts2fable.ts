@@ -430,7 +430,7 @@ function getVariables( node ) {
     let declarations = declarationList[i].declarations
     for ( let j = 0; j < declarations.length; j++ ) {
       name = declarations[j].name.text
-      if ( declarations[j].type.kind === ts.SyntaxKind.TypeLiteral ) {
+      if ( declarations[j].type !== undefined && declarations[j].type.kind === ts.SyntaxKind.TypeLiteral ) {
         type = visitInterface( declarations[j].type, { name: name + 'Type', anonymous: true } )
         anonymousTypes.push( type )
         type = type.name

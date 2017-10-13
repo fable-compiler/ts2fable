@@ -11,7 +11,7 @@
       "protocol": "inspector",
       "program": "${workspaceRoot}/dist/ts2fable.js",
       "args":[
-        "${workspaceRoot}/node_modules/@types/electron/index.d.ts"
+        "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts"
       ],
       "sourceMaps": true,
       "preLaunchTask": "build",
