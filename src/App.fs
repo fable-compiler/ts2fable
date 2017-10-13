@@ -9,3 +9,6 @@ open Fable.Import.ts
 printfn "hello"
 
 printfn "version: %s" ts.version
+
+let node = ts.createNode SyntaxKind.NumericLiteral
+printfn "node: %A" node
