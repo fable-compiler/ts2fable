@@ -51,14 +51,51 @@ let makeFactorialFunction() =
         ts.createBlock(statements, true) |> Some // multiline
     )
 
-let resultFile = 
-    ts.createSourceFile("someFileName.ts", "", ScriptTarget.Latest, false, ScriptKind.TS); // setParentNodes
+// http://blog.ctaggart.com/2017/10/creating-and-printing-typescript-ast_16.html
+let createTypeScript() =
 
-let printerOptions = createEmpty<PrinterOptions>
-printerOptions.newLine <- Some NewLineKind.LineFeed
+    let resultFile = 
+        ts.createSourceFile("someFileName.ts", "", ScriptTarget.Latest, false, ScriptKind.TS); // setParentNodes
 
-let printer = ts.createPrinter(printerOptions);
+    let printerOptions = createEmpty<PrinterOptions>
+    printerOptions.newLine <- Some NewLineKind.LineFeed
 
-let result = printer.printNode(EmitHint.Unspecified, makeFactorialFunction(), resultFile);
+    let printer = ts.createPrinter(printerOptions);
 
-printfn "%s" result
+    let result = printer.printNode(EmitHint.Unspecified, makeFactorialFunction(), resultFile);
+
+    printfn "%s" result
+    ()
+
+
+// let blah<'T> = fun (node: Node) -> "blah"
+
+// http://blog.ctaggart.com/2015/01/typescript-14-ast-from-nodejs.html
+
+let getAllInterfaces(root: Node) =
+    let nodes = ResizeArray<Node>()
+
+    // let a = fun (node: Node) -> printfn "node: %A" node; None :> unit option
+    // let b: System.Func<Node, unit option> = a
+    // ts.forEachChild<unit>(root, b)
+
+    let ta = System.Func<_,_>(fun (node:Node) ->
+        printfn "node: %A" node
+        None
+    )
+
+    // let aggregate = fun (node: Node) ->
+    //     if node.kind = SyntaxKind.InterfaceDeclaration then
+    //         nodes.Add node
+
+    ts.forEachChild<unit>(root, ta)
+
+    ()
+    
+
+
+let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
+let code = Fs.readFileSync( filePath ).toString()
+let sourceFile = ts.createSourceFile( filePath, code, ScriptTarget.ES2015, true )
+
+getAllInterfaces sourceFile
