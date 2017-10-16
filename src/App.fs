@@ -6,10 +6,6 @@ open Fable.Import
 open Fable.Import.Node
 open Fable.Import.ts
 
-// printfn "hello"
-
-// printfn "version: %s" ts.version
-
 let makeFactorialFunction() =
     let functionName = ts.createIdentifier "factorial"
     let paramName = ts.createIdentifier "n"
@@ -29,55 +25,40 @@ let makeFactorialFunction() =
 
     let ifBody =
         ts.createBlock(
-            [ts.createReturn(ts.createLiteral(1))],
+            [| ts.createReturn(ts.createLiteral(1)) |],
             true) // multiline
     let decrementedArg = ts.createBinary(paramName, SyntaxKind.MinusToken, ts.createLiteral(1))
 
+    let recurse =
+        ts.createBinary(
+            paramName,
+            SyntaxKind.AsteriskToken,
+            ts.createCall(functionName, None, [| decrementedArg |])); // typeArgs
+    let statements: Statement array = 
+        [|
+            ts.createIf(condition, ifBody)
+            ts.createReturn(recurse)
+        |]
 
-    let bug = ts.createCall(functionName, None, [decrementedArg])
+    ts.createFunctionDeclaration(
+        None, // decorators
+        Some [| ts.createToken(SyntaxKind.ExportKeyword) |], // modifiers
+        None, // asteriskToken
+        functionName |> U2.Case2 |> Some,
+        None, // typeParameters
+        [| parameter |],
+        ts.createKeywordTypeNode(SyntaxKind.NumberKeyword) :> TypeNode |> Some, // returnType
+        ts.createBlock(statements, true) |> Some // multiline
+    )
 
-
-    // let recurse =
-    //     ts.createBinary(
-    //         paramName,
-    //         SyntaxKind.AsteriskToken,
-    //         ts.createCall(functionName, None, [decrementedArg])); // typeArgs
-    // let statements: Statement list = 
-    //     [
-    //         ts.createIf(condition, ifBody)
-    //         ts.createReturn(recurse)
-    //     ]
-
-    // let fn =
-    //     ts.createFunctionDeclaration(
-    //         None, // decorators
-    //         Some [ts.createToken(SyntaxKind.ExportKeyword)], // modifiers
-    //         None, // asteriskToken
-    //         functionName |> U2.Case2 |> Some,
-    //         None, // typeParameters
-    //         [parameter],
-    //         ts.createKeywordTypeNode(SyntaxKind.NumberKeyword) :> TypeNode |> Some, // returnType
-    //         ts.createBlock(statements, true) |> Some // multiline
-    //     )
-    
-    bug
-
-// let node = ts.createNode SyntaxKind.NumericLiteral
-// printfn "node: %A" node
-
-printfn "resultFile"
 let resultFile = 
     ts.createSourceFile("someFileName.ts", "", ScriptTarget.Latest, false, ScriptKind.TS); // setParentNodes
 
-// TODO create PrinterOptions
-// let printer = ts.createPrinter(PrinterOptions(newLine: ts.NewLineKind.LineFeed));
 let printerOptions = createEmpty<PrinterOptions>
 printerOptions.newLine <- Some NewLineKind.LineFeed
 
-printfn "createPrinter"
 let printer = ts.createPrinter(printerOptions);
 
-printfn "printNode"
 let result = printer.printNode(EmitHint.Unspecified, makeFactorialFunction(), resultFile);
 
-printfn "result: %s" result
+printfn "%s" result
