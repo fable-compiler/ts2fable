@@ -75,22 +75,27 @@ let createTypeScript() =
 let getAllInterfaces(root: Node) =
     let nodes = ResizeArray<Node>()
 
-    // let a = fun (node: Node) -> printfn "node: %A" node; None :> unit option
-    // let b: System.Func<Node, unit option> = a
-    // ts.forEachChild<unit>(root, b)
+    let rec aggregate = System.Func<_,_>(fun (node:Node) ->
+        if node.kind = SyntaxKind.InterfaceDeclaration then
+            nodes.Add node
+        ts.forEachChild<unit>(node, aggregate) |> ignore
+        None )
 
-    let ta = System.Func<_,_>(fun (node:Node) ->
-        printfn "node: %A" node
-        None
-    )
-
-    // let aggregate = fun (node: Node) ->
-    //     if node.kind = SyntaxKind.InterfaceDeclaration then
-    //         nodes.Add node
-
-    ts.forEachChild<unit>(root, ta)
-
-    ()
+    
+    ts.forEachChild<unit>(root, aggregate) |> ignore
+    for n in nodes do
+        // printfn "node: %A" n.kind
+        let ifd = n :?> InterfaceDeclaration
+        // printfn "interface: %A" ifd.name
+        let name =
+            match ifd.name with
+            | Some name ->
+                match name with
+                | U3.Case1 id -> id.getText()
+                | U3.Case2 sl -> sl.getText()
+                | U3.Case3 nl -> nl.getText()
+            | None -> ""
+        printfn "interface: %s" (name)
     
 
 
