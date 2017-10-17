@@ -6,7 +6,27 @@ open Fable.Import
 open Fable.Import.Node
 open Fable.Import.ts
 
-type Fable.Import.ts.Globals with
+type FsInterface =
+    {
+        Name: string
+        Inherit: string option
+    }
+
+type FsType =
+    | Interface of FsInterface
+
+type FsModule =
+    {
+        Name: string
+    }
+
+type FsFile =
+    {
+        Modules: FsModule list
+    }
+
+
+type Globals with
     member x.forEachChildNode (node: Node) cbNode =
         let func = System.Func<_,_>(fun (node:Node) -> cbNode node; None)
         x.forEachChild<unit>(node, func) |> ignore
@@ -15,27 +35,37 @@ type Fable.Import.ts.Globals with
         cbNode root
         x.forEachChildNode root (fun node -> x.forEachChildNodeRec node cbNode)
 
-let getAllInterfaces(root: Node) =
-    let nodes = ResizeArray<Node>()
+let getModules(root: Node) =
+    let nodes = ResizeArray<ModuleDeclaration>()
+    ts.forEachChildNode root (fun node -> 
+        if node.kind = SyntaxKind.ModuleDeclaration then
+            nodes.Add (node :?> ModuleDeclaration) )
+    nodes
 
-    ts.forEachChildNodeRec root (fun node -> 
-        if node.kind = SyntaxKind.InterfaceDeclaration then
-            nodes.Add node )
+let getModuleName(mn: ModuleName): string =
+    match mn with
+    | U2.Case1 id -> id.getText()
+    | U2.Case2 sl -> sl.getText()
 
-    for n in nodes do
-        let ifd = n :?> InterfaceDeclaration
-        let name =
-            match ifd.name with
-            | Some name ->
-                match name with
-                | U3.Case1 id -> id.getText()
-                | U3.Case2 sl -> sl.getText()
-                | U3.Case3 nl -> nl.getText()
-            | None -> ""
-        printfn "interface: %s" (name)
-    
+let visitModule(md: ModuleDeclaration): FsModule =
+    {
+        Name = md.name |> getModuleName
+    }
+
+let visitFile(sf: SourceFile): FsFile =
+    {
+        Modules = getModules sf |> List.ofSeq |> List.map visitModule
+    }
+
+let printCodeFile (file: FsFile) =
+    // TODO namespace
+    // TODO open statements
+    for md in file.Modules do
+        printfn "module %s =" md.Name
+
 let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
 let code = Fs.readFileSync(filePath).toString()
-let sourceFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
+let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
 
-getAllInterfaces sourceFile
+let fsFile = visitFile tsFile
+printCodeFile fsFile
