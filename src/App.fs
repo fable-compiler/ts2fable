@@ -16,8 +16,14 @@ type FsInterface =
         Inherit: string option
     }
 
+type FsEnum =
+    {
+        Name: string
+    }
+
 type FsType =
     | Interface of FsInterface
+    | Enum of FsEnum
 
 type FsModule =
     {
@@ -49,7 +55,15 @@ let getModules(root: Node) =
 
 let getTypes(root: Node) =
     let nodes = ResizeArray<DeclarationStatement>()
-    let kinds = [ SyntaxKind.InterfaceDeclaration ] |> Set.ofList
+    let kinds = 
+        [
+            SyntaxKind.InterfaceDeclaration
+            SyntaxKind.EnumDeclaration
+            // TODO
+            // SyntaxKind.ClassDeclaration
+            // SyntaxKind.TypeAliasDeclaration
+            // SyntaxKind.FunctionDeclaration
+        ] |> Set.ofList
     ts.forEachChildNode root (fun node ->
         // printfn "kind: %A" node.kind
         if kinds.Contains node.kind then
@@ -80,6 +94,19 @@ let visitType(sd: DeclarationStatement): FsType =
             Inherit = None
         }
         |> FsType.Interface
+    | SyntaxKind.EnumDeclaration ->
+        let ed = sd :?> EnumDeclaration
+        {
+            Name =
+                match ed.name with
+                | Some v ->
+                    match v with
+                    | U3.Case1 id -> id.getText()
+                    | U3.Case2 sl -> sl.getText()
+                    | U3.Case3 nl -> nl.getText()
+                | None -> "NoEnumName"
+        }
+        |> FsType.Enum
     | _ -> failwithf "unsupported type declaration kind: %A" sd.kind
 
 let visitModule(mb: ModuleBlock): FsModule =
@@ -97,12 +124,16 @@ let printCodeFile (file: FsFile) =
     // TODO namespace
     // TODO open statements
     for md in file.Modules do
+        printfn ""
         printfn "module %s =" md.Name
-
         for tp in md.Types do
+            printfn ""
             match tp with
             | Interface inf ->
                 printfn "    interface %s =" inf.Name
+            | Enum en ->
+                printfn "    enum %s =" en.Name
+
 
 let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
 let code = Fs.readFileSync(filePath).toString()
