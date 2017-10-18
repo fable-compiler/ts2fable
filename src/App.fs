@@ -1,4 +1,4 @@
-module FableApp
+module rec FableApp
 
 open Fable.Core
 open Fable.Core.JsInterop
@@ -14,6 +14,7 @@ type FsInterface =
     {
         Name: string
         Inherit: string option
+        Members: FsType list
     }
 
 type FsEnumCase =
@@ -31,6 +32,7 @@ type FsEnum =
 type FsType =
     | Interface of FsInterface
     | Enum of FsEnum
+    | TODO
 
 type FsModule =
     {
@@ -63,23 +65,6 @@ let getModules(root: Node) =
             nodes.Add (node :?> ModuleBlock) )
     nodes |> List.ofSeq
 
-let getTypes(root: Node) =
-    let nodes = ResizeArray<DeclarationStatement>()
-    let kinds = 
-        [
-            SyntaxKind.InterfaceDeclaration
-            SyntaxKind.EnumDeclaration
-            // TODO
-            // SyntaxKind.ClassDeclaration
-            // SyntaxKind.TypeAliasDeclaration
-            // SyntaxKind.FunctionDeclaration
-        ] |> Set.ofList
-    ts.forEachChildNode root (fun node ->
-        // printfn "kind: %A" node.kind
-        if kinds.Contains node.kind then
-            nodes.Add (node :?> DeclarationStatement) )
-    nodes |> List.ofSeq
-
 let getModuleName(mb: ModuleBlock): string =
     match mb.parent with
     | Some md ->
@@ -106,36 +91,55 @@ let visitEnumCase(em: EnumMember): FsEnumCase =
                 | SyntaxKind.NumericLiteral ->
                     let nl = ep :?> NumericLiteral
                     Some nl.text
-                | _ -> None // TODO
+                | _ -> None // TODO TypeScript string based enums #17
+                // https://github.com/fable-compiler/ts2fable/issues/17
     }
 
-let visitType(sd: DeclarationStatement): FsType =
+let visitInterface(id: InterfaceDeclaration): FsInterface =
+    {
+        Name = id.name.text 
+        Inherit = None
+        Members = id.members |> List.ofArray |> List.map visitTypeElement
+    }
+
+let visitEnum(ed: EnumDeclaration): FsEnum =
+    {
+        Name = ed.name.getText()
+        Cases = ed.members |> List.ofArray |> List.map visitEnumCase
+    }
+
+let visitTypeElement(te: TypeElement): FsType =
+    match te.kind with
+    | SyntaxKind.IndexSignature -> FsType.TODO
+    | SyntaxKind.MethodSignature -> FsType.TODO
+    | SyntaxKind.PropertySignature -> FsType.TODO
+    | SyntaxKind.CallSignature -> FsType.TODO
+    | _ -> failwithf "unsupported TypeElement kind: %A" te.kind
+
+let visitStatement(sd: Statement): FsType =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
         let id = sd :?> InterfaceDeclaration
-        {
-            Name = id.name.text 
-            Inherit = None
-        }
-        |> FsType.Interface
+        visitInterface id |> FsType.Interface
     | SyntaxKind.EnumDeclaration ->
         let ed = sd :?> EnumDeclaration
-        {
-            Name = ed.name.getText()
-            Cases = ed.members |> List.ofArray |> List.map visitEnumCase
-        }
-        |> FsType.Enum
-    | _ -> failwithf "unsupported type declaration kind: %A" sd.kind
+        visitEnum ed |> FsType.Enum
+    | SyntaxKind.TypeAliasDeclaration -> FsType.TODO
+    | SyntaxKind.ClassDeclaration -> FsType.TODO
+    | SyntaxKind.VariableStatement -> FsType.TODO
+    | SyntaxKind.FunctionDeclaration -> FsType.TODO
+    | SyntaxKind.ModuleDeclaration -> FsType.TODO
+    | _ -> failwithf "unsupported Statement kind: %A" sd.kind
 
-let visitModule(mb: ModuleBlock): FsModule =
+let visitModuleBlock(mb: ModuleBlock): FsModule =
     {
         Name = mb |> getModuleName
-        Types = getTypes mb |> List.map visitType
+        Types = mb.statements |> List.ofArray |> List.map visitStatement
     }
 
-let visitFile(sf: SourceFile): FsFile =
+let visitSourceFile(sf: SourceFile): FsFile =
     {
-        Modules = getModules sf |> List.map visitModule
+        Modules = getModules sf |> List.map visitModuleBlock
     }
 
 let printCodeFile (file: FsFile) =
@@ -155,12 +159,13 @@ let printCodeFile (file: FsFile) =
                     match cs.Value with
                     | None -> printfn "        | %s" cs.Name
                     | Some v -> printfn "        | %s = %s" cs.Name v
+            | TODO -> ()
 
 
 let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
 let code = Fs.readFileSync(filePath).toString()
 let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
 
-let fsFile = visitFile tsFile
+let fsFile = visitSourceFile tsFile
 printCodeFile fsFile
 ()
