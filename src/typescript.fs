@@ -3466,6 +3466,10 @@ module ts =
         member __.forEachChild<'T>(node: Node, ?cbNode: Func<Node, 'T option>, ?cbNodeArray: Func<Node array, 'T option> -> 'T option): 'T option = jsNative
 
 
+        // type guard functions
+        // function isLiteralExpression(node: Node): node is LiteralExpression;
+        member __.isLiteralExpression(node: Node): bool = jsNative
+
 [<AutoOpen>]
 module ts_Extensions =
     let [<Import("*","typescript")>] ts: ts.Globals = jsNative
