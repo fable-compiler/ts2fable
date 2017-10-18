@@ -29,9 +29,21 @@ type FsEnum =
         Cases: FsEnumCase list
     }
 
+type FsMethod =
+    {
+        Name: string
+    }
+
+type FsProperty =
+    {
+        Name: string
+    }
+
 type FsType =
     | Interface of FsInterface
     | Enum of FsEnum
+    | Method of FsMethod
+    | Property of FsMethod
     | TODO
 
 type FsModule =
@@ -104,26 +116,36 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
 
 let visitEnum(ed: EnumDeclaration): FsEnum =
     {
-        Name = ed.name.getText()
+        Name = ed.name.text
         Cases = ed.members |> List.ofArray |> List.map visitEnumCase
+    }
+
+let visitMethodSignature(ms: MethodSignature): FsMethod =
+    {
+        Name = ms.name |> getPropertyName
+    }
+
+let visitPropertySignature(ms: PropertySignature): FsMethod =
+    {
+        Name = ms.name |> getPropertyName
     }
 
 let visitTypeElement(te: TypeElement): FsType =
     match te.kind with
     | SyntaxKind.IndexSignature -> FsType.TODO
-    | SyntaxKind.MethodSignature -> FsType.TODO
-    | SyntaxKind.PropertySignature -> FsType.TODO
+    | SyntaxKind.MethodSignature ->
+        visitMethodSignature (te :?> MethodSignature) |> FsType.Method
+    | SyntaxKind.PropertySignature ->
+        visitPropertySignature (te :?> PropertySignature) |> FsType.Property
     | SyntaxKind.CallSignature -> FsType.TODO
     | _ -> failwithf "unsupported TypeElement kind: %A" te.kind
 
 let visitStatement(sd: Statement): FsType =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
-        let id = sd :?> InterfaceDeclaration
-        visitInterface id |> FsType.Interface
+        visitInterface (sd :?> InterfaceDeclaration) |> FsType.Interface
     | SyntaxKind.EnumDeclaration ->
-        let ed = sd :?> EnumDeclaration
-        visitEnum ed |> FsType.Enum
+        visitEnum (sd :?> EnumDeclaration) |> FsType.Enum
     | SyntaxKind.TypeAliasDeclaration -> FsType.TODO
     | SyntaxKind.ClassDeclaration -> FsType.TODO
     | SyntaxKind.VariableStatement -> FsType.TODO
@@ -153,13 +175,20 @@ let printCodeFile (file: FsFile) =
             match tp with
             | Interface inf ->
                 printfn "    interface %s =" inf.Name
+                for mbr in inf.Members do
+                    match mbr with
+                    | Method m ->
+                        printfn "        abstract %s" m.Name
+                    | Property p ->
+                        printfn "        prop %s" p.Name 
+                    | _ -> ()
             | Enum en ->
                 printfn "    enum %s =" en.Name
                 for cs in en.Cases do
                     match cs.Value with
                     | None -> printfn "        | %s" cs.Name
                     | Some v -> printfn "        | %s = %s" cs.Name v
-            | TODO -> ()
+            | _ -> ()
 
 
 let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
