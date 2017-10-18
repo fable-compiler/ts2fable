@@ -87,7 +87,7 @@ let getModuleName(mb: ModuleBlock): string =
 
 let getPropertyName(pn: PropertyName): string =
     match pn with
-    | U4.Case1 id -> id.getText()
+    | U4.Case1 id -> id.text
     | U4.Case2 sl -> sl.text
     | U4.Case3 nl -> nl.text
     | U4.Case4 cpn -> cpn.getText()
@@ -111,14 +111,7 @@ let visitType(sd: DeclarationStatement): FsType =
     | SyntaxKind.InterfaceDeclaration ->
         let id = sd :?> InterfaceDeclaration
         {
-            Name =
-                match id.name with
-                | Some v ->
-                    match v with
-                    | U3.Case1 id -> id.getText()
-                    | U3.Case2 sl -> sl.text
-                    | U3.Case3 nl -> nl.text
-                | None -> "NoInterfaceName"
+            Name = id.name.text 
             Inherit = None
         }
         |> FsType.Interface
