@@ -10,7 +10,7 @@ module ts =
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ReadonlyMap<'T> =
-        // abstract size: float with get, set
+        abstract size: float with get, set
         abstract get: key: string -> U2<'T, obj>
         abstract has: key: string -> bool
         abstract forEach: action: Func<'T, string, unit> -> unit
@@ -28,15 +28,15 @@ module ts =
         abstract next: unit -> U2<obj, obj>
 
     and [<AllowNullLiteral>] Push<'T> =
-        // abstract push: [<ParamArray>] values: 'T -> unit
+        abstract push: [<ParamArray>] values: 'T -> unit
         abstract TODO: string with get, set
 
     and Path =
         obj
 
     and [<AllowNullLiteral>] TextRange =
-        // abstract pos: float with get, set
-        // abstract ``end``: float with get, set
+        abstract pos: float with get, set
+        abstract ``end``: float with get, set
         abstract TODO: string with get, set
 
     and SyntaxKind =
@@ -627,7 +627,7 @@ module ts =
         inherit ObjectLiteralElement
         abstract name: Identifier with get, set
         abstract questionToken: QuestionToken option with get, set
-        abstract equalsToken: Token<SyntaxKind.EqualsToken> option with get, set
+        // abstract equalsToken: Token<SyntaxKind.EqualsToken> option with get, set
         abstract objectAssignmentInitializer: Expression option with get, set
 
     and [<AllowNullLiteral>] SpreadAssignment =
@@ -797,7 +797,7 @@ module ts =
 
     and [<AllowNullLiteral>] TypeOperatorNode =
         inherit TypeNode
-        abstract operator: SyntaxKind.KeyOfKeyword with get, set
+        // abstract operator: SyntaxKind.KeyOfKeyword with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] IndexedAccessTypeNode =
@@ -1089,31 +1089,31 @@ module ts =
 
     and [<AllowNullLiteral>] TemplateExpression =
         inherit PrimaryExpression
-        // abstract head: TemplateHead with get, set
-        // abstract templateSpans: TemplateSpan array with get, set
+        abstract head: TemplateHead with get, set
+        abstract templateSpans: TemplateSpan array with get, set
 
     and [<AllowNullLiteral>] TemplateSpan =
         inherit Node
         abstract parent: TemplateExpression option with get, set
-        // abstract expression: Expression with get, set
-        // abstract literal: U2<TemplateMiddle, TemplateTail> with get, set
+        abstract expression: Expression with get, set
+        abstract literal: U2<TemplateMiddle, TemplateTail> with get, set
 
     and [<AllowNullLiteral>] ParenthesizedExpression =
         inherit PrimaryExpression
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] ArrayLiteralExpression =
         inherit PrimaryExpression
-        // abstract elements: Expression array with get, set
+        abstract elements: Expression array with get, set
 
     and [<AllowNullLiteral>] SpreadElement =
         inherit Expression
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] ObjectLiteralExpressionBase<'T> =
         inherit PrimaryExpression
         inherit Declaration
-        // abstract properties: NodeArray<'T> with get, set
+        abstract properties: NodeArray<'T> with get, set
 
     and [<AllowNullLiteral>] ObjectLiteralExpression =
         inherit ObjectLiteralExpressionBase<ObjectLiteralElementLike>
@@ -1127,26 +1127,26 @@ module ts =
     and [<AllowNullLiteral>] PropertyAccessExpression =
         inherit MemberExpression
         inherit NamedDeclaration
-        // abstract expression: LeftHandSideExpression with get, set
-        // abstract name: Identifier with get, set
+        abstract expression: LeftHandSideExpression with get, set
+        abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] SuperPropertyAccessExpression =
         inherit PropertyAccessExpression
-        // abstract expression: SuperExpression with get, set
+        abstract expression: SuperExpression with get, set
 
     and [<AllowNullLiteral>] PropertyAccessEntityNameExpression =
         inherit PropertyAccessExpression
         abstract _propertyAccessExpressionLikeQualifiedNameBrand: obj option with get, set
-        // abstract expression: EntityNameExpression with get, set
+        abstract expression: EntityNameExpression with get, set
 
     and [<AllowNullLiteral>] ElementAccessExpression =
         inherit MemberExpression
-        // abstract expression: LeftHandSideExpression with get, set
+        abstract expression: LeftHandSideExpression with get, set
         abstract argumentExpression: Expression option with get, set
 
     and [<AllowNullLiteral>] SuperElementAccessExpression =
         inherit ElementAccessExpression
-        // abstract expression: SuperExpression with get, set
+        abstract expression: SuperExpression with get, set
 
     and SuperProperty =
         U2<SuperPropertyAccessExpression, SuperElementAccessExpression>
@@ -1154,66 +1154,66 @@ module ts =
     and [<AllowNullLiteral>] CallExpression =
         inherit LeftHandSideExpression
         inherit Declaration
-        // abstract expression: LeftHandSideExpression with get, set
+        abstract expression: LeftHandSideExpression with get, set
         abstract typeArguments: TypeNode array option with get, set
-        // abstract arguments: Expression array with get, set
+        abstract arguments: Expression array with get, set
 
     and [<AllowNullLiteral>] SuperCall =
         inherit CallExpression
-        // abstract expression: SuperExpression with get, set
+        abstract expression: SuperExpression with get, set
 
     and [<AllowNullLiteral>] ImportCall =
         inherit CallExpression
-        // abstract expression: ImportExpression with get, set
+        abstract expression: ImportExpression with get, set
 
     and [<AllowNullLiteral>] ExpressionWithTypeArguments =
         inherit TypeNode
         abstract parent: HeritageClause option with get, set
-        // abstract expression: LeftHandSideExpression with get, set
+        abstract expression: LeftHandSideExpression with get, set
         abstract typeArguments: TypeNode array option with get, set
 
     and [<AllowNullLiteral>] NewExpression =
         inherit PrimaryExpression
         inherit Declaration
-        // abstract expression: LeftHandSideExpression with get, set
+        abstract expression: LeftHandSideExpression with get, set
         abstract typeArguments: TypeNode array option with get, set
         abstract arguments: Expression array option with get, set
 
     and [<AllowNullLiteral>] TaggedTemplateExpression =
         inherit MemberExpression
-        // abstract tag: LeftHandSideExpression with get, set
-        // abstract template: TemplateLiteral with get, set
+        abstract tag: LeftHandSideExpression with get, set
+        abstract template: TemplateLiteral with get, set
 
     and CallLikeExpression =
         obj
 
     and [<AllowNullLiteral>] AsExpression =
         inherit Expression
-        // abstract expression: Expression with get, set
-        // abstract ``type``: TypeNode with get, set
+        abstract expression: Expression with get, set
+        abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] TypeAssertion =
         inherit UnaryExpression
-        // abstract ``type``: TypeNode with get, set
-        // abstract expression: UnaryExpression with get, set
+        abstract ``type``: TypeNode with get, set
+        abstract expression: UnaryExpression with get, set
 
     and AssertionExpression =
         U2<TypeAssertion, AsExpression>
 
     and [<AllowNullLiteral>] NonNullExpression =
         inherit LeftHandSideExpression
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] MetaProperty =
         inherit PrimaryExpression
         // abstract keywordToken: SyntaxKind.NewKeyword with get, set
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] JsxElement =
         inherit PrimaryExpression
-        // abstract openingElement: JsxOpeningElement with get, set
-        // abstract children: JsxChild array with get, set
-        // abstract closingElement: JsxClosingElement with get, set
+        abstract openingElement: JsxOpeningElement with get, set
+        abstract children: JsxChild array with get, set
+        abstract closingElement: JsxClosingElement with get, set
 
     and JsxOpeningLikeElement =
         U2<JsxSelfClosingElement, JsxOpeningElement>
@@ -1231,29 +1231,29 @@ module ts =
     and [<AllowNullLiteral>] JsxOpeningElement =
         inherit Expression
         abstract parent: JsxElement option with get, set
-        // abstract tagName: JsxTagNameExpression with get, set
-        // abstract attributes: JsxAttributes with get, set
+        abstract tagName: JsxTagNameExpression with get, set
+        abstract attributes: JsxAttributes with get, set
 
     and [<AllowNullLiteral>] JsxSelfClosingElement =
         inherit PrimaryExpression
-        // abstract tagName: JsxTagNameExpression with get, set
-        // abstract attributes: JsxAttributes with get, set
+        abstract tagName: JsxTagNameExpression with get, set
+        abstract attributes: JsxAttributes with get, set
 
     and [<AllowNullLiteral>] JsxAttribute =
         inherit ObjectLiteralElement
         abstract parent: JsxAttributes option with get, set
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
         abstract initializer: U2<StringLiteral, JsxExpression> option with get, set
 
     and [<AllowNullLiteral>] JsxSpreadAttribute =
         inherit ObjectLiteralElement
         abstract parent: JsxAttributes option with get, set
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] JsxClosingElement =
         inherit Node
         abstract parent: JsxElement option with get, set
-        // abstract tagName: JsxTagNameExpression with get, set
+        abstract tagName: JsxTagNameExpression with get, set
 
     and [<AllowNullLiteral>] JsxExpression =
         inherit Expression
@@ -1263,7 +1263,7 @@ module ts =
 
     and [<AllowNullLiteral>] JsxText =
         inherit Node
-        // abstract containsOnlyWhiteSpaces: bool with get, set
+        abstract containsOnlyWhiteSpaces: bool with get, set
         abstract parent: JsxElement option with get, set
 
     and JsxChild =
@@ -1271,14 +1271,14 @@ module ts =
 
     and [<AllowNullLiteral>] Statement =
         inherit Node
-        // abstract _statementBrand: obj with get, set
+        abstract _statementBrand: obj with get, set
 
     and [<AllowNullLiteral>] NotEmittedStatement =
         inherit Statement
 
     and [<AllowNullLiteral>] CommaListExpression =
         inherit Expression
-        // abstract elements: Expression array with get, set
+        abstract elements: Expression array with get, set
 
     and [<AllowNullLiteral>] EmptyStatement =
         inherit Statement
@@ -1298,34 +1298,33 @@ module ts =
 
     and [<AllowNullLiteral>] Block =
         inherit Statement
-        // abstract statements: Statement array with get, set
         abstract statements: Statement array with get, set
 
     and [<AllowNullLiteral>] VariableStatement =
         inherit Statement
-        // abstract declarationList: VariableDeclarationList with get, set
+        abstract declarationList: VariableDeclarationList with get, set
 
     and [<AllowNullLiteral>] ExpressionStatement =
         inherit Statement
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] IfStatement =
         inherit Statement
-        // abstract expression: Expression with get, set
-        // abstract thenStatement: Statement with get, set
+        abstract expression: Expression with get, set
+        abstract thenStatement: Statement with get, set
         abstract elseStatement: Statement option with get, set
 
     and [<AllowNullLiteral>] IterationStatement =
         inherit Statement
-        // abstract statement: Statement with get, set
+        abstract statement: Statement with get, set
 
     and [<AllowNullLiteral>] DoStatement =
         inherit IterationStatement
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] WhileStatement =
         inherit IterationStatement
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and ForInitializer =
         U2<VariableDeclarationList, Expression>
@@ -1341,14 +1340,14 @@ module ts =
 
     and [<AllowNullLiteral>] ForInStatement =
         inherit IterationStatement
-        // abstract initializer: ForInitializer with get, set
-        // abstract expression: Expression with get, set
+        abstract initializer: ForInitializer with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] ForOfStatement =
         inherit IterationStatement
         abstract awaitModifier: AwaitKeywordToken option with get, set
-        // abstract initializer: ForInitializer with get, set
-        // abstract expression: Expression with get, set
+        abstract initializer: ForInitializer with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] BreakStatement =
         inherit Statement
@@ -1367,46 +1366,46 @@ module ts =
 
     and [<AllowNullLiteral>] WithStatement =
         inherit Statement
-        // abstract expression: Expression with get, set
-        // abstract statement: Statement with get, set
+        abstract expression: Expression with get, set
+        abstract statement: Statement with get, set
 
     and [<AllowNullLiteral>] SwitchStatement =
         inherit Statement
-        // abstract expression: Expression with get, set
-        // abstract caseBlock: CaseBlock with get, set
+        abstract expression: Expression with get, set
+        abstract caseBlock: CaseBlock with get, set
         abstract possiblyExhaustive: bool option with get, set
 
     and [<AllowNullLiteral>] CaseBlock =
         inherit Node
         abstract parent: SwitchStatement option with get, set
-        // abstract clauses: CaseOrDefaultClause array with get, set
+        abstract clauses: CaseOrDefaultClause array with get, set
 
     and [<AllowNullLiteral>] CaseClause =
         inherit Node
         abstract parent: CaseBlock option with get, set
-        // abstract expression: Expression with get, set
-        // abstract statements: Statement array with get, set
+        abstract expression: Expression with get, set
+        abstract statements: Statement array with get, set
 
     and [<AllowNullLiteral>] DefaultClause =
         inherit Node
         abstract parent: CaseBlock option with get, set
-        // abstract statements: Statement array with get, set
+        abstract statements: Statement array with get, set
 
     and CaseOrDefaultClause =
         U2<CaseClause, DefaultClause>
 
     and [<AllowNullLiteral>] LabeledStatement =
         inherit Statement
-        // abstract label: Identifier with get, set
-        // abstract statement: Statement with get, set
+        abstract label: Identifier with get, set
+        abstract statement: Statement with get, set
 
     and [<AllowNullLiteral>] ThrowStatement =
         inherit Statement
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] TryStatement =
         inherit Statement
-        // abstract tryBlock: Block with get, set
+        abstract tryBlock: Block with get, set
         abstract catchClause: CatchClause option with get, set
         abstract finallyBlock: Block option with get, set
 
@@ -1414,7 +1413,7 @@ module ts =
         inherit Node
         abstract parent: TryStatement option with get, set
         abstract variableDeclaration: VariableDeclaration option with get, set
-        // abstract block: Block with get, set
+        abstract block: Block with get, set
 
     and DeclarationWithTypeParameters =
         obj
@@ -1437,33 +1436,33 @@ module ts =
 
     and [<AllowNullLiteral>] ClassElement =
         inherit NamedDeclaration
-        // abstract _classElementBrand: obj with get, set
+        abstract _classElementBrand: obj with get, set
         abstract name: PropertyName option with get, set
 
     and [<AllowNullLiteral>] TypeElement =
         inherit NamedDeclaration
-        // abstract _typeElementBrand: obj with get, set
+        abstract _typeElementBrand: obj with get, set
         abstract name: PropertyName option with get, set
         abstract questionToken: QuestionToken option with get, set
 
     and [<AllowNullLiteral>] InterfaceDeclaration =
         inherit DeclarationStatement
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
         abstract typeParameters: TypeParameterDeclaration array option with get, set
         abstract heritageClauses: HeritageClause array option with get, set
-        // abstract members: TypeElement array with get, set
+        abstract members: TypeElement array with get, set
 
     and [<AllowNullLiteral>] HeritageClause =
         inherit Node
         abstract parent: U3<InterfaceDeclaration, ClassDeclaration, ClassExpression> option with get, set
         // abstract token: U2<SyntaxKind.ExtendsKeyword, SyntaxKind.ImplementsKeyword> with get, set
-        // abstract types: ExpressionWithTypeArguments array with get, set
+        abstract types: ExpressionWithTypeArguments array with get, set
 
     and [<AllowNullLiteral>] TypeAliasDeclaration =
         inherit DeclarationStatement
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
         abstract typeParameters: TypeParameterDeclaration array option with get, set
-        // abstract ``type``: TypeNode with get, set
+        abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] EnumMember =
         inherit NamedDeclaration
@@ -1474,7 +1473,6 @@ module ts =
     and [<AllowNullLiteral>] EnumDeclaration =
         inherit DeclarationStatement
         abstract name: Identifier with get, set
-        // abstract members: EnumMember array with get, set
         abstract members: EnumMember array with get, set
 
     and ModuleName =
@@ -1494,16 +1492,16 @@ module ts =
 
     and [<AllowNullLiteral>] NamespaceDeclaration =
         inherit ModuleDeclaration
-        // abstract name: Identifier with get, set
-        // abstract body: NamespaceBody with get, set
+        abstract name: Identifier with get, set
+        abstract body: NamespaceBody with get, set
 
     and JSDocNamespaceBody =
         U2<Identifier, JSDocNamespaceDeclaration>
 
     and [<AllowNullLiteral>] JSDocNamespaceDeclaration =
         inherit ModuleDeclaration
-        // abstract name: Identifier with get, set
-        // abstract body: JSDocNamespaceBody with get, set
+        abstract name: Identifier with get, set
+        abstract body: JSDocNamespaceBody with get, set
 
     and [<AllowNullLiteral>] ModuleBlock =
         inherit Node
@@ -1517,8 +1515,8 @@ module ts =
     and [<AllowNullLiteral>] ImportEqualsDeclaration =
         inherit DeclarationStatement
         abstract parent: U2<SourceFile, ModuleBlock> option with get, set
-        // abstract name: Identifier with get, set
-        // abstract moduleReference: ModuleReference with get, set
+        abstract name: Identifier with get, set
+        abstract moduleReference: ModuleReference with get, set
 
     and [<AllowNullLiteral>] ExternalModuleReference =
         inherit Node
@@ -1529,7 +1527,7 @@ module ts =
         inherit Statement
         abstract parent: U2<SourceFile, ModuleBlock> option with get, set
         abstract importClause: ImportClause option with get, set
-        // abstract moduleSpecifier: Expression with get, set
+        abstract moduleSpecifier: Expression with get, set
 
     and NamedImportBindings =
         U2<NamespaceImport, NamedImports>
@@ -1543,11 +1541,11 @@ module ts =
     and [<AllowNullLiteral>] NamespaceImport =
         inherit NamedDeclaration
         abstract parent: ImportClause option with get, set
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] NamespaceExportDeclaration =
         inherit DeclarationStatement
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] ExportDeclaration =
         inherit DeclarationStatement
@@ -1558,12 +1556,12 @@ module ts =
     and [<AllowNullLiteral>] NamedImports =
         inherit Node
         abstract parent: ImportClause option with get, set
-        // abstract elements: ImportSpecifier array with get, set
+        abstract elements: ImportSpecifier array with get, set
 
     and [<AllowNullLiteral>] NamedExports =
         inherit Node
         abstract parent: ExportDeclaration option with get, set
-        // abstract elements: ExportSpecifier array with get, set
+        abstract elements: ExportSpecifier array with get, set
 
     and NamedImportsOrExports =
         U2<NamedImports, NamedExports>
@@ -1572,13 +1570,13 @@ module ts =
         inherit NamedDeclaration
         abstract parent: NamedImports option with get, set
         abstract propertyName: Identifier option with get, set
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] ExportSpecifier =
         inherit NamedDeclaration
         abstract parent: NamedExports option with get, set
         abstract propertyName: Identifier option with get, set
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
 
     and ImportOrExportSpecifier =
         U2<ImportSpecifier, ExportSpecifier>
@@ -1587,15 +1585,15 @@ module ts =
         inherit DeclarationStatement
         abstract parent: SourceFile option with get, set
         abstract isExportEquals: bool option with get, set
-        // abstract expression: Expression with get, set
+        abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] FileReference =
         inherit TextRange
-        // abstract fileName: string with get, set
+        abstract fileName: string with get, set
 
     and [<AllowNullLiteral>] CheckJsDirective =
         inherit TextRange
-        // abstract enabled: bool with get, set
+        abstract enabled: bool with get, set
 
     and CommentKind =
         // U2<SyntaxKind.SingleLineCommentTrivia, SyntaxKind.MultiLineCommentTrivia>
@@ -1604,21 +1602,21 @@ module ts =
     and [<AllowNullLiteral>] CommentRange =
         inherit TextRange
         abstract hasTrailingNewLine: bool option with get, set
-        // abstract kind: CommentKind with get, set
+        abstract kind: CommentKind with get, set
 
     and [<AllowNullLiteral>] SynthesizedComment =
         inherit CommentRange
-        // abstract text: string with get, set
-        // abstract pos: obj with get, set
-        // abstract ``end``: obj with get, set
+        abstract text: string with get, set
+        abstract pos: obj with get, set
+        abstract ``end``: obj with get, set
 
     and [<AllowNullLiteral>] JSDocTypeExpression =
         inherit TypeNode
-        // abstract ``type``: TypeNode with get, set
+        abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] JSDocType =
         inherit TypeNode
-        // abstract _jsDocTypeBrand: obj with get, set
+        abstract _jsDocTypeBrand: obj with get, set
 
     and [<AllowNullLiteral>] JSDocAllType =
         inherit JSDocType
@@ -1628,15 +1626,15 @@ module ts =
 
     and [<AllowNullLiteral>] JSDocNonNullableType =
         inherit JSDocType
-        // abstract ``type``: TypeNode with get, set
+        abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] JSDocNullableType =
         inherit JSDocType
-        // abstract ``type``: TypeNode with get, set
+        abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] JSDocOptionalType =
         inherit JSDocType
-        // abstract ``type``: TypeNode with get, set
+        abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] JSDocFunctionType =
         inherit JSDocType
@@ -1644,49 +1642,49 @@ module ts =
 
     and [<AllowNullLiteral>] JSDocVariadicType =
         inherit JSDocType
-        // abstract ``type``: TypeNode with get, set
+        abstract ``type``: TypeNode with get, set
 
     and JSDocTypeReferencingNode =
         U4<JSDocVariadicType, JSDocOptionalType, JSDocNullableType, JSDocNonNullableType>
 
     and [<AllowNullLiteral>] JSDoc =
         inherit Node
-        // abstract tags: U2<JSDocTag array, obj> with get, set
-        // abstract comment: U2<string, obj> with get, set
+        abstract tags: U2<JSDocTag array, obj> with get, set
+        abstract comment: U2<string, obj> with get, set
 
     and [<AllowNullLiteral>] JSDocTag =
         inherit Node
-        // abstract parent: JSDoc with get, set
-        // abstract atToken: AtToken with get, set
-        // abstract tagName: Identifier with get, set
-        // abstract comment: U2<string, obj> with get, set
+        abstract parent: JSDoc with get, set
+        abstract atToken: AtToken with get, set
+        abstract tagName: Identifier with get, set
+        abstract comment: U2<string, obj> with get, set
 
     and [<AllowNullLiteral>] JSDocUnknownTag =
         inherit JSDocTag
 
     and [<AllowNullLiteral>] JSDocAugmentsTag =
         inherit JSDocTag
-        // abstract typeExpression: JSDocTypeExpression with get, set
+        abstract typeExpression: JSDocTypeExpression with get, set
 
     and [<AllowNullLiteral>] JSDocClassTag =
         inherit JSDocTag
 
     and [<AllowNullLiteral>] JSDocTemplateTag =
         inherit JSDocTag
-        // abstract typeParameters: TypeParameterDeclaration array with get, set
+        abstract typeParameters: TypeParameterDeclaration array with get, set
 
     and [<AllowNullLiteral>] JSDocReturnTag =
         inherit JSDocTag
-        // abstract typeExpression: JSDocTypeExpression with get, set
+        abstract typeExpression: JSDocTypeExpression with get, set
 
     and [<AllowNullLiteral>] JSDocTypeTag =
         inherit JSDocTag
-        // abstract typeExpression: JSDocTypeExpression with get, set
+        abstract typeExpression: JSDocTypeExpression with get, set
 
     and [<AllowNullLiteral>] JSDocTypedefTag =
         inherit JSDocTag
         inherit NamedDeclaration
-        // abstract parent: JSDoc with get, set
+        abstract parent: JSDoc with get, set
         abstract fullName: U2<JSDocNamespaceDeclaration, Identifier> option with get, set
         abstract name: Identifier option with get, set
         abstract typeExpression: U2<JSDocTypeExpression, JSDocTypeLiteral> option with get, set
@@ -1694,11 +1692,11 @@ module ts =
     and [<AllowNullLiteral>] JSDocPropertyLikeTag =
         inherit JSDocTag
         inherit Declaration
-        // abstract parent: JSDoc with get, set
-        // abstract name: EntityName with get, set
-        // abstract typeExpression: JSDocTypeExpression with get, set
-        // abstract isNameFirst: bool with get, set
-        // abstract isBracketed: bool with get, set
+        abstract parent: JSDoc with get, set
+        abstract name: EntityName with get, set
+        abstract typeExpression: JSDocTypeExpression with get, set
+        abstract isNameFirst: bool with get, set
+        abstract isBracketed: bool with get, set
 
     and [<AllowNullLiteral>] JSDocPropertyTag =
         inherit JSDocPropertyLikeTag
@@ -1734,18 +1732,18 @@ module ts =
     and [<AllowNullLiteral>] AfterFinallyFlow =
         inherit FlowNodeBase
         inherit FlowLock
-        // abstract antecedent: FlowNode with get, set
+        abstract antecedent: FlowNode with get, set
 
     and [<AllowNullLiteral>] PreFinallyFlow =
         inherit FlowNodeBase
-        // abstract antecedent: FlowNode with get, set
-        // abstract lock: FlowLock with get, set
+        abstract antecedent: FlowNode with get, set
+        abstract lock: FlowLock with get, set
 
     and FlowNode =
         obj
 
     and [<AllowNullLiteral>] FlowNodeBase =
-        // abstract flags: FlowFlags with get, set
+        abstract flags: FlowFlags with get, set
         abstract id: float option with get, set
 
     and [<AllowNullLiteral>] FlowStart =
@@ -1754,41 +1752,41 @@ module ts =
 
     and [<AllowNullLiteral>] FlowLabel =
         inherit FlowNodeBase
-        // abstract antecedents: ResizeArray<FlowNode> with get, set
+        abstract antecedents: ResizeArray<FlowNode> with get, set
 
     and [<AllowNullLiteral>] FlowAssignment =
         inherit FlowNodeBase
-        // abstract node: U3<Expression, VariableDeclaration, BindingElement> with get, set
-        // abstract antecedent: FlowNode with get, set
+        abstract node: U3<Expression, VariableDeclaration, BindingElement> with get, set
+        abstract antecedent: FlowNode with get, set
 
     and [<AllowNullLiteral>] FlowCondition =
         inherit FlowNodeBase
-        // abstract expression: Expression with get, set
-        // abstract antecedent: FlowNode with get, set
+        abstract expression: Expression with get, set
+        abstract antecedent: FlowNode with get, set
 
     and [<AllowNullLiteral>] FlowSwitchClause =
         inherit FlowNodeBase
-        // abstract switchStatement: SwitchStatement with get, set
-        // abstract clauseStart: float with get, set
-        // abstract clauseEnd: float with get, set
-        // abstract antecedent: FlowNode with get, set
+        abstract switchStatement: SwitchStatement with get, set
+        abstract clauseStart: float with get, set
+        abstract clauseEnd: float with get, set
+        abstract antecedent: FlowNode with get, set
 
     and [<AllowNullLiteral>] FlowArrayMutation =
         inherit FlowNodeBase
-        // abstract node: U2<CallExpression, BinaryExpression> with get, set
-        // abstract antecedent: FlowNode with get, set
+        abstract node: U2<CallExpression, BinaryExpression> with get, set
+        abstract antecedent: FlowNode with get, set
 
     and FlowType =
         U2<Type, IncompleteType>
 
     and [<AllowNullLiteral>] IncompleteType =
-        // abstract flags: TypeFlags with get, set
-        // abstract ``type``: Type with get, set
+        abstract flags: TypeFlags with get, set
+        abstract ``type``: Type with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] AmdDependency =
-        // abstract path: string with get, set
-        // abstract name: string with get, set
+        abstract path: string with get, set
+        abstract name: string with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SourceFile =
@@ -1813,7 +1811,7 @@ module ts =
 
     and [<AllowNullLiteral>] Bundle =
         inherit Node
-        // abstract sourceFiles: ResizeArray<SourceFile> with get, set
+        abstract sourceFiles: ResizeArray<SourceFile> with get, set
 
     and [<AllowNullLiteral>] JsonSourceFile =
         inherit SourceFile
@@ -1827,7 +1825,7 @@ module ts =
         abstract getCurrentDirectory: unit -> string
 
     and [<AllowNullLiteral>] ParseConfigHost =
-        // abstract useCaseSensitiveFileNames: bool with get, set
+        abstract useCaseSensitiveFileNames: bool with get, set
         abstract readDirectory: rootDir: string * extensions: ReadonlyArray<string> * excludes: ReadonlyArray<string> * includes: ReadonlyArray<string> * depth: float -> ResizeArray<string>
         abstract fileExists: path: string -> bool
         abstract readFile: path: string -> U2<string, obj>
@@ -1859,24 +1857,24 @@ module ts =
         abstract after: ResizeArray<TransformerFactory<SourceFile>> option with get, set
 
     and [<AllowNullLiteral>] SourceMapSpan =
-        // abstract emittedLine: float with get, set
-        // abstract emittedColumn: float with get, set
-        // abstract sourceLine: float with get, set
-        // abstract sourceColumn: float with get, set
+        abstract emittedLine: float with get, set
+        abstract emittedColumn: float with get, set
+        abstract sourceLine: float with get, set
+        abstract sourceColumn: float with get, set
         abstract nameIndex: float option with get, set
-        // abstract sourceIndex: float with get, set
+        abstract sourceIndex: float with get, set
 
     and [<AllowNullLiteral>] SourceMapData =
-        // abstract sourceMapFilePath: string with get, set
-        // abstract jsSourceMappingURL: string with get, set
-        // abstract sourceMapFile: string with get, set
-        // abstract sourceMapSourceRoot: string with get, set
-        // abstract sourceMapSources: ResizeArray<string> with get, set
+        abstract sourceMapFilePath: string with get, set
+        abstract jsSourceMappingURL: string with get, set
+        abstract sourceMapFile: string with get, set
+        abstract sourceMapSourceRoot: string with get, set
+        abstract sourceMapSources: ResizeArray<string> with get, set
         abstract sourceMapSourcesContent: ResizeArray<string> option with get, set
-        // abstract inputSourceFileNames: ResizeArray<string> with get, set
+        abstract inputSourceFileNames: ResizeArray<string> with get, set
         abstract sourceMapNames: ResizeArray<string> option with get, set
-        // abstract sourceMapMappings: string with get, set
-        // abstract sourceMapDecodedMappings: ResizeArray<SourceMapSpan> with get, set
+        abstract sourceMapMappings: string with get, set
+        abstract sourceMapDecodedMappings: ResizeArray<SourceMapSpan> with get, set
 
     and ExitStatus =
         | Success = 0
@@ -1884,9 +1882,9 @@ module ts =
         | DiagnosticsPresent_OutputsGenerated = 2
 
     and [<AllowNullLiteral>] EmitResult =
-        // abstract emitSkipped: bool with get, set
-        // abstract diagnostics: ResizeArray<Diagnostic> with get, set
-        // abstract emittedFiles: ResizeArray<string> with get, set
+        abstract emitSkipped: bool with get, set
+        abstract diagnostics: ResizeArray<Diagnostic> with get, set
+        abstract emittedFiles: ResizeArray<string> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] TypeChecker =
@@ -2017,19 +2015,17 @@ module ts =
         | Identifier = 1
 
     and [<AllowNullLiteral>] TypePredicateBase =
-        // abstract kind: TypePredicateKind with get, set
-        // abstract ``type``: Type with get, set
+        abstract kind: TypePredicateKind with get, set
+        abstract ``type``: Type with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ThisTypePredicate =
         inherit TypePredicateBase
-        // abstract kind: TypePredicateKind.This with get, set
 
     and [<AllowNullLiteral>] IdentifierTypePredicate =
         inherit TypePredicateBase
-        // abstract kind: TypePredicateKind.Identifier with get, set
-        // abstract parameterName: string with get, set
-        // abstract parameterIndex: float with get, set
+        abstract parameterName: string with get, set
+        abstract parameterIndex: float with get, set
 
     and TypePredicate =
         U2<IdentifierTypePredicate, ThisTypePredicate>
@@ -2096,14 +2092,14 @@ module ts =
         | ClassMember = 106500
 
     and [<AllowNullLiteral>] Symbol =
-        // abstract flags: SymbolFlags with get, set
+        abstract flags: SymbolFlags with get, set
         // abstract escapedName: __String with get, set
         abstract declarations: ResizeArray<Declaration> option with get, set
         abstract valueDeclaration: Declaration option with get, set
         // abstract members: SymbolTable option with get, set
         // abstract exports: SymbolTable option with get, set
         // abstract globalExports: SymbolTable option with get, set
-        // abstract name: string with get, set
+        abstract name: string with get, set
         abstract getFlags: unit -> SymbolFlags
         // abstract getEscapedName: unit -> __String
         abstract getName: unit -> string
@@ -2194,12 +2190,12 @@ module ts =
         U3<BindingPattern, ObjectLiteralExpression, ArrayLiteralExpression>
 
     and [<AllowNullLiteral>] Type =
-        // abstract flags: TypeFlags with get, set
+        abstract flags: TypeFlags with get, set
         abstract symbol: Symbol option with get, set
-        // abstract pattern: DestructuringPattern option with get, set
+        abstract pattern: DestructuringPattern option with get, set
         abstract aliasSymbol: Symbol option with get, set
         abstract aliasTypeArguments: ResizeArray<Type> option with get, set
-        // abstract getFlags: unit -> TypeFlags
+        abstract getFlags: unit -> TypeFlags
         abstract getSymbol: unit -> U2<Symbol, obj>
         abstract getProperties: unit -> ResizeArray<Symbol>
         abstract getProperty: propertyName: string -> U2<Symbol, obj>
@@ -2213,17 +2209,17 @@ module ts =
 
     and [<AllowNullLiteral>] LiteralType =
         // inherit Type
-        // abstract value: U2<string, float> with get, set
+        abstract value: U2<string, float> with get, set
         abstract freshType: LiteralType option with get, set
         abstract regularType: LiteralType option with get, set
 
     and [<AllowNullLiteral>] StringLiteralType =
         inherit LiteralType
-        // abstract value: string with get, set
+        abstract value: string with get, set
 
     and [<AllowNullLiteral>] NumberLiteralType =
         inherit LiteralType
-        // abstract value: float with get, set
+        abstract value: float with get, set
 
     and [<AllowNullLiteral>] EnumType =
         // inherit Type
@@ -2244,30 +2240,30 @@ module ts =
 
     and [<AllowNullLiteral>] ObjectType =
         // inherit Type
-        // abstract objectFlags: ObjectFlags with get, set
+        abstract objectFlags: ObjectFlags with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] InterfaceType =
         inherit ObjectType
-        // abstract typeParameters: ResizeArray<TypeParameter> with get, set
-        // abstract outerTypeParameters: ResizeArray<TypeParameter> with get, set
-        // abstract localTypeParameters: ResizeArray<TypeParameter> with get, set
-        // abstract thisType: TypeParameter with get, set
+        abstract typeParameters: ResizeArray<TypeParameter> with get, set
+        abstract outerTypeParameters: ResizeArray<TypeParameter> with get, set
+        abstract localTypeParameters: ResizeArray<TypeParameter> with get, set
+        abstract thisType: TypeParameter with get, set
 
     and BaseType =
         U2<ObjectType, IntersectionType>
 
     and [<AllowNullLiteral>] InterfaceTypeWithDeclaredMembers =
         inherit InterfaceType
-        // abstract declaredProperties: ResizeArray<Symbol> with get, set
-        // abstract declaredCallSignatures: ResizeArray<Signature> with get, set
-        // abstract declaredConstructSignatures: ResizeArray<Signature> with get, set
-        // abstract declaredStringIndexInfo: IndexInfo with get, set
-        // abstract declaredNumberIndexInfo: IndexInfo with get, set
+        abstract declaredProperties: ResizeArray<Symbol> with get, set
+        abstract declaredCallSignatures: ResizeArray<Signature> with get, set
+        abstract declaredConstructSignatures: ResizeArray<Signature> with get, set
+        abstract declaredStringIndexInfo: IndexInfo with get, set
+        abstract declaredNumberIndexInfo: IndexInfo with get, set
 
     and [<AllowNullLiteral>] TypeReference =
         inherit ObjectType
-        // abstract target: GenericType with get, set
+        abstract target: GenericType with get, set
         abstract typeArguments: ResizeArray<Type> option with get, set
 
     and [<AllowNullLiteral>] GenericType =
@@ -2276,7 +2272,7 @@ module ts =
 
     and [<AllowNullLiteral>] UnionOrIntersectionType =
         // inherit Type
-        // abstract types: ResizeArray<Type> with get, set
+        abstract types: ResizeArray<Type> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] UnionType =
@@ -2292,7 +2288,7 @@ module ts =
 
     and [<AllowNullLiteral>] EvolvingArrayType =
         inherit ObjectType
-        // abstract elementType: Type with get, set
+        abstract elementType: Type with get, set
         abstract finalArrayType: Type option with get, set
 
     and [<AllowNullLiteral>] TypeVariable =
@@ -2302,18 +2298,18 @@ module ts =
 
     and [<AllowNullLiteral>] TypeParameter =
         inherit TypeVariable
-        // abstract ``constraint``: Type with get, set
+        abstract ``constraint``: Type with get, set
         abstract ``default``: Type option with get, set
 
     and [<AllowNullLiteral>] IndexedAccessType =
         inherit TypeVariable
-        // abstract objectType: Type with get, set
-        // abstract indexType: Type with get, set
+        abstract objectType: Type with get, set
+        abstract indexType: Type with get, set
         abstract ``constraint``: Type option with get, set
 
     and [<AllowNullLiteral>] IndexType =
         // inherit Type
-        // abstract ``type``: U2<TypeVariable, UnionOrIntersectionType> with get, set
+        abstract ``type``: U2<TypeVariable, UnionOrIntersectionType> with get, set
         abstract TODO: string with get, set
 
     and SignatureKind =
@@ -2321,9 +2317,9 @@ module ts =
         | Construct = 1
 
     and [<AllowNullLiteral>] Signature =
-        // abstract declaration: SignatureDeclaration with get, set
+        abstract declaration: SignatureDeclaration with get, set
         abstract typeParameters: ResizeArray<TypeParameter> option with get, set
-        // abstract parameters: ResizeArray<Symbol> with get, set
+        abstract parameters: ResizeArray<Symbol> with get, set
         abstract getDeclaration: unit -> SignatureDeclaration
         abstract getTypeParameters: unit -> U2<ResizeArray<TypeParameter>, obj>
         abstract getParameters: unit -> ResizeArray<Symbol>
@@ -2336,8 +2332,8 @@ module ts =
         | Number = 1
 
     and [<AllowNullLiteral>] IndexInfo =
-        // abstract ``type``: Type with get, set
-        // abstract isReadonly: bool with get, set
+        abstract ``type``: Type with get, set
+        abstract isReadonly: bool with get, set
         abstract declaration: SignatureDeclaration option with get, set
 
     and InferencePriority =
@@ -2346,12 +2342,12 @@ module ts =
         | ReturnType = 4
 
     and [<AllowNullLiteral>] InferenceInfo =
-        // abstract typeParameter: TypeParameter with get, set
-        // abstract candidates: ResizeArray<Type> with get, set
-        // abstract inferredType: Type with get, set
-        // abstract priority: InferencePriority with get, set
-        // abstract topLevel: bool with get, set
-        // abstract isFixed: bool with get, set
+        abstract typeParameter: TypeParameter with get, set
+        abstract candidates: ResizeArray<Type> with get, set
+        abstract inferredType: Type with get, set
+        abstract priority: InferencePriority with get, set
+        abstract topLevel: bool with get, set
+        abstract isFixed: bool with get, set
         abstract TODO: string with get, set
 
     and InferenceFlags =
@@ -2369,30 +2365,30 @@ module ts =
         Func<Type, Type, bool, Ternary>
 
     and [<AllowNullLiteral>] JsFileExtensionInfo =
-        // abstract extension: string with get, set
-        // abstract isMixedContent: bool with get, set
+        abstract extension: string with get, set
+        abstract isMixedContent: bool with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] DiagnosticMessage =
-        // abstract key: string with get, set
-        // abstract category: DiagnosticCategory with get, set
-        // abstract code: float with get, set
-        // abstract message: string with get, set
+        abstract key: string with get, set
+        abstract category: DiagnosticCategory with get, set
+        abstract code: float with get, set
+        abstract message: string with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] DiagnosticMessageChain =
-        // abstract messageText: string with get, set
-        // abstract category: DiagnosticCategory with get, set
-        // abstract code: float with get, set
+        abstract messageText: string with get, set
+        abstract category: DiagnosticCategory with get, set
+        abstract code: float with get, set
         abstract next: DiagnosticMessageChain option with get, set
 
     and [<AllowNullLiteral>] Diagnostic =
-        // abstract file: U2<SourceFile, obj> with get, set
-        // abstract start: U2<float, obj> with get, set
-        // abstract length: U2<float, obj> with get, set
-        // abstract messageText: U2<string, DiagnosticMessageChain> with get, set
-        // abstract category: DiagnosticCategory with get, set
-        // abstract code: float with get, set
+        abstract file: U2<SourceFile, obj> with get, set
+        abstract start: U2<float, obj> with get, set
+        abstract length: U2<float, obj> with get, set
+        abstract messageText: U2<string, DiagnosticMessageChain> with get, set
+        abstract category: DiagnosticCategory with get, set
+        abstract code: float with get, set
         abstract source: string option with get, set
 
     and DiagnosticCategory =
@@ -2405,7 +2401,7 @@ module ts =
         | NodeJs = 2
 
     and [<AllowNullLiteral>] PluginImport =
-        // abstract name: string with get, set
+        abstract name: string with get, set
         abstract TODO: string with get, set
 
     and CompilerOptionsValue =
@@ -2488,13 +2484,13 @@ module ts =
         // [<Emit("$0[$1]{{=$2}}")>] // abstract Item: option: string -> U3<ResizeArray<string>, bool, obj> with get, set
 
     and [<AllowNullLiteral>] DiscoverTypingsInfo =
-        // abstract fileNames: ResizeArray<string> with get, set
-        // abstract projectRootPath: string with get, set
-        // abstract safeListPath: string with get, set
-        // abstract packageNameToTypingLocation: Map<string> with get, set
-        // abstract typeAcquisition: TypeAcquisition with get, set
-        // abstract compilerOptions: CompilerOptions with get, set
-        // abstract unresolvedImports: ReadonlyArray<string> with get, set
+        abstract fileNames: ResizeArray<string> with get, set
+        abstract projectRootPath: string with get, set
+        abstract safeListPath: string with get, set
+        abstract packageNameToTypingLocation: Map<string> with get, set
+        abstract typeAcquisition: TypeAcquisition with get, set
+        abstract compilerOptions: CompilerOptions with get, set
+        abstract unresolvedImports: ReadonlyArray<string> with get, set
         abstract TODO: string with get, set
 
     and ModuleKind =
@@ -2517,8 +2513,8 @@ module ts =
         | LineFeed = 1
 
     and [<AllowNullLiteral>] LineAndCharacter =
-        // abstract line: float with get, set
-        // abstract character: float with get, set
+        abstract line: float with get, set
+        abstract character: float with get, set
         abstract TODO: string with get, set
 
     and ScriptKind =
@@ -2544,11 +2540,11 @@ module ts =
         | JSX = 1
 
     and [<AllowNullLiteral>] ParsedCommandLine =
-        // abstract options: CompilerOptions with get, set
+        abstract options: CompilerOptions with get, set
         abstract typeAcquisition: TypeAcquisition option with get, set
-        // abstract fileNames: ResizeArray<string> with get, set
+        abstract fileNames: ResizeArray<string> with get, set
         abstract raw: obj option with get, set
-        // abstract errors: ResizeArray<Diagnostic> with get, set
+        abstract errors: ResizeArray<Diagnostic> with get, set
         abstract wildcardDirectories: MapLike<WatchDirectoryFlags> option with get, set
         abstract compileOnSave: bool option with get, set
 
@@ -2557,8 +2553,8 @@ module ts =
         | Recursive = 1
 
     and [<AllowNullLiteral>] ExpandResult =
-        // abstract fileNames: ResizeArray<string> with get, set
-        // abstract wildcardDirectories: MapLike<WatchDirectoryFlags> with get, set
+        abstract fileNames: ResizeArray<string> with get, set
+        abstract wildcardDirectories: MapLike<WatchDirectoryFlags> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ModuleResolutionHost =
@@ -2571,18 +2567,18 @@ module ts =
         abstract getDirectories: path: string -> ResizeArray<string>
 
     and [<AllowNullLiteral>] ResolvedModule =
-        // abstract resolvedFileName: string with get, set
+        abstract resolvedFileName: string with get, set
         abstract isExternalLibraryImport: bool option with get, set
 
     and [<AllowNullLiteral>] ResolvedModuleFull =
         inherit ResolvedModule
-        // abstract extension: Extension with get, set
+        abstract extension: Extension with get, set
         abstract packageId: PackageId option with get, set
 
     and [<AllowNullLiteral>] PackageId =
-        // abstract name: string with get, set
-        // abstract subModuleName: string with get, set
-        // abstract version: string with get, set
+        abstract name: string with get, set
+        abstract subModuleName: string with get, set
+        abstract version: string with get, set
         abstract TODO: string with get, set
 
     and Extension =
@@ -2594,22 +2590,22 @@ module ts =
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ResolvedModuleWithFailedLookupLocations =
-        // abstract resolvedModule: U2<ResolvedModuleFull, obj> with get, set
+        abstract resolvedModule: U2<ResolvedModuleFull, obj> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ResolvedTypeReferenceDirective =
-        // abstract primary: bool with get, set
+        abstract primary: bool with get, set
         abstract resolvedFileName: string option with get, set
         abstract packageId: PackageId option with get, set
 
     and [<AllowNullLiteral>] ResolvedTypeReferenceDirectiveWithFailedLookupLocations =
-        // abstract resolvedTypeReferenceDirective: ResolvedTypeReferenceDirective with get, set
-        // abstract failedLookupLocations: ResizeArray<string> with get, set
+        abstract resolvedTypeReferenceDirective: ResolvedTypeReferenceDirective with get, set
+        abstract failedLookupLocations: ResizeArray<string> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] CompilerHost =
         inherit ModuleResolutionHost
-        // abstract writeFile: WriteFileCallback with get, set
+        abstract writeFile: WriteFileCallback with get, set
         abstract getSourceFile: fileName: string * languageVersion: ScriptTarget * ?onError: Func<string, unit> -> SourceFile
         abstract getSourceFileByPath: fileName: string * path: Path * languageVersion: ScriptTarget * ?onError: Func<string, unit> -> SourceFile
         abstract getCancellationToken: unit -> CancellationToken
@@ -2621,7 +2617,7 @@ module ts =
         abstract useCaseSensitiveFileNames: unit -> bool
         abstract getNewLine: unit -> string
         abstract resolveModuleNames: moduleNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedModule>
-        // abstract resolveTypeReferenceDirectives: typeReferenceDirectiveNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedTypeReferenceDirective>
+        abstract resolveTypeReferenceDirectives: typeReferenceDirectiveNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedTypeReferenceDirective>
         abstract getEnvironmentVariable: name: string -> string
 
     and [<AllowNullLiteral>] SourceMapRange =
@@ -2629,8 +2625,8 @@ module ts =
         abstract source: SourceMapSource option with get, set
 
     and [<AllowNullLiteral>] SourceMapSource =
-        // abstract fileName: string with get, set
-        // abstract text: string with get, set
+        abstract fileName: string with get, set
+        abstract text: string with get, set
         abstract skipTrivia: Func<float, float> option with get, set
         abstract getLineAndCharacterOfPosition: pos: float -> LineAndCharacter
 
@@ -2665,9 +2661,9 @@ module ts =
         | NoAsciiEscaping = 16777216
 
     and [<AllowNullLiteral>] EmitHelper =
-        // abstract name: string with get, set
-        // abstract scoped: bool with get, set
-        // abstract text: string with get, set
+        abstract name: string with get, set
+        abstract scoped: bool with get, set
+        abstract text: string with get, set
         abstract priority: float option with get, set
 
     and EmitHint =
@@ -2678,8 +2674,8 @@ module ts =
         | Unspecified = 4
 
     and [<AllowNullLiteral>] TransformationContext =
-        // abstract onSubstituteNode: Func<EmitHint, Node, Node> with get, set
-        // abstract onEmitNode: Func<EmitHint, Node, Func<EmitHint, Node, unit>, unit> with get, set
+        abstract onSubstituteNode: Func<EmitHint, Node, Node> with get, set
+        abstract onEmitNode: Func<EmitHint, Node, Func<EmitHint, Node, unit>, unit> with get, set
         abstract getCompilerOptions: unit -> CompilerOptions
         abstract startLexicalEnvironment: unit -> unit
         abstract suspendLexicalEnvironment: unit -> unit
@@ -2695,7 +2691,7 @@ module ts =
         abstract isEmitNotificationEnabled: node: Node -> bool
 
     and [<AllowNullLiteral>] TransformationResult<'T> =
-        // abstract transformed: ResizeArray<'T> with get, set
+        abstract transformed: ResizeArray<'T> with get, set
         abstract diagnostics: ResizeArray<Diagnostic> option with get, set
         abstract substituteNode: hint: EmitHint * node: Node -> Node
         abstract emitNodeWithNotification: hint: EmitHint * node: Node * emitCallback: Func<EmitHint, Node, unit> -> unit
@@ -2728,18 +2724,18 @@ module ts =
         abstract newLine: NewLineKind option with get, set
 
     and [<AllowNullLiteral>] TextSpan =
-        // abstract start: float with get, set
-        // abstract length: float with get, set
+        abstract start: float with get, set
+        abstract length: float with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] TextChangeRange =
-        // abstract span: TextSpan with get, set
-        // abstract newLength: float with get, set
+        abstract span: TextSpan with get, set
+        abstract newLength: float with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SyntaxList =
         inherit Node
-        // abstract _children: ResizeArray<Node> with get, set
+        abstract _children: ResizeArray<Node> with get, set
 
     and FileWatcherEventKind =
         | Created = 0
@@ -2753,14 +2749,14 @@ module ts =
         Func<string, unit>
 
     and [<AllowNullLiteral>] WatchedFile =
-        // abstract fileName: string with get, set
-        // abstract callback: FileWatcherCallback with get, set
+        abstract fileName: string with get, set
+        abstract callback: FileWatcherCallback with get, set
         abstract mtime: DateTime option with get, set
 
     and [<AllowNullLiteral>] System =
-        // abstract args: ResizeArray<string> with get, set
-        // abstract newLine: string with get, set
-        // abstract useCaseSensitiveFileNames: bool with get, set
+        abstract args: ResizeArray<string> with get, set
+        abstract newLine: string with get, set
+        abstract useCaseSensitiveFileNames: bool with get, set
         abstract write: s: string -> unit
         abstract readFile: path: string * ?encoding: string -> U2<string, obj>
         abstract getFileSize: path: string -> float
@@ -2780,7 +2776,7 @@ module ts =
         abstract getMemoryUsage: unit -> float
         abstract exit: ?exitCode: float -> unit
         abstract realpath: path: string -> string
-        // abstract setTimeout: callback: Func<obj, unit> * ms: float * [<ParamArray>] args: obj -> obj
+        abstract setTimeout: callback: Func<obj, unit> * ms: float * [<ParamArray>] args: obj -> obj
         abstract clearTimeout: timeoutId: obj -> unit
 
     and [<AllowNullLiteral>] FileWatcher =
@@ -2788,8 +2784,8 @@ module ts =
 
     and [<AllowNullLiteral>] DirectoryWatcher =
         inherit FileWatcher
-        // abstract directoryName: string with get, set
-        // abstract referenceCount: float with get, set
+        abstract directoryName: string with get, set
+        abstract referenceCount: float with get, set
 
     and [<AllowNullLiteral>] ErrorCallback =
         [<Emit("$0($1...)")>] abstract Invoke: message: DiagnosticMessage * length: float -> unit
@@ -2827,7 +2823,7 @@ module ts =
 
     and [<AllowNullLiteral>] ModuleResolutionCache =
         inherit NonRelativeModuleNameResolutionCache
-        // abstract getOrCreateCacheForDirectory: directoryName: string -> Map<ResolvedModuleWithFailedLookupLocations>
+        abstract getOrCreateCacheForDirectory: directoryName: string -> Map<ResolvedModuleWithFailedLookupLocations>
 
     and [<AllowNullLiteral>] NonRelativeModuleNameResolutionCache =
         abstract getOrCreateCacheForModuleName: nonRelativeModuleName: string -> PerModuleNameCache
@@ -2851,11 +2847,11 @@ module ts =
         abstract dispose: unit -> unit
 
     and [<AllowNullLiteral>] PreProcessedFileInfo =
-        // abstract referencedFiles: ResizeArray<FileReference> with get, set
-        // abstract typeReferenceDirectives: ResizeArray<FileReference> with get, set
-        // abstract importedFiles: ResizeArray<FileReference> with get, set
-        // abstract ambientExternalModules: ResizeArray<string> with get, set
-        // abstract isLibFile: bool with get, set
+        abstract referencedFiles: ResizeArray<FileReference> with get, set
+        abstract typeReferenceDirectives: ResizeArray<FileReference> with get, set
+        abstract importedFiles: ResizeArray<FileReference> with get, set
+        abstract ambientExternalModules: ResizeArray<string> with get, set
+        abstract isLibFile: bool with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] HostCancellationToken =
@@ -2932,62 +2928,62 @@ module ts =
         abstract dispose: unit -> unit
 
     and [<AllowNullLiteral>] Classifications =
-        // abstract spans: ResizeArray<float> with get, set
-        // abstract endOfLineState: EndOfLineState with get, set
+        abstract spans: ResizeArray<float> with get, set
+        abstract endOfLineState: EndOfLineState with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ClassifiedSpan =
-        // abstract textSpan: TextSpan with get, set
+        abstract textSpan: TextSpan with get, set
         // abstract classificationType: ClassificationTypeNames with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] NavigationBarItem =
-        // abstract text: string with get, set
+        abstract text: string with get, set
         // abstract kind: ScriptElementKind with get, set
-        // abstract kindModifiers: string with get, set
-        // abstract spans: ResizeArray<TextSpan> with get, set
-        // abstract childItems: ResizeArray<NavigationBarItem> with get, set
-        // abstract indent: float with get, set
-        // abstract bolded: bool with get, set
-        // abstract grayed: bool with get, set
+        abstract kindModifiers: string with get, set
+        abstract spans: ResizeArray<TextSpan> with get, set
+        abstract childItems: ResizeArray<NavigationBarItem> with get, set
+        abstract indent: float with get, set
+        abstract bolded: bool with get, set
+        abstract grayed: bool with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] NavigationTree =
-        // abstract text: string with get, set
+        abstract text: string with get, set
         // abstract kind: ScriptElementKind with get, set
-        // abstract kindModifiers: string with get, set
-        // abstract spans: ResizeArray<TextSpan> with get, set
+        abstract kindModifiers: string with get, set
+        abstract spans: ResizeArray<TextSpan> with get, set
         abstract childItems: ResizeArray<NavigationTree> option with get, set
 
     and [<AllowNullLiteral>] TodoCommentDescriptor =
-        // abstract text: string with get, set
-        // abstract priority: float with get, set
+        abstract text: string with get, set
+        abstract priority: float with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] TodoComment =
-        // abstract descriptor: TodoCommentDescriptor with get, set
-        // abstract message: string with get, set
-        // abstract position: float with get, set
+        abstract descriptor: TodoCommentDescriptor with get, set
+        abstract message: string with get, set
+        abstract position: float with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] [<Import("TextChange","ts")>] TextChange() =
         class end
 
     and [<AllowNullLiteral>] FileTextChanges =
-        // abstract fileName: string with get, set
-        // abstract textChanges: ResizeArray<TextChange> with get, set
+        abstract fileName: string with get, set
+        abstract textChanges: ResizeArray<TextChange> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] CodeAction =
-        // abstract description: string with get, set
-        // abstract changes: ResizeArray<FileTextChanges> with get, set
+        abstract description: string with get, set
+        abstract changes: ResizeArray<FileTextChanges> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ApplicableRefactorInfo =
-        // abstract name: string with get, set
-        // abstract description: string with get, set
+        abstract name: string with get, set
+        abstract description: string with get, set
         abstract inlineable: bool option with get, set
-        // abstract actions: ResizeArray<RefactorActionInfo> with get, set
+        abstract actions: ResizeArray<RefactorActionInfo> with get, set
 
     and RefactorActionInfo =
         obj
@@ -2996,13 +2992,13 @@ module ts =
         obj
 
     and [<AllowNullLiteral>] TextInsertion =
-        // abstract newText: string with get, set
-        // abstract caretOffset: float with get, set
+        abstract newText: string with get, set
+        abstract caretOffset: float with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] DocumentSpan =
-        // abstract textSpan: TextSpan with get, set
-        // abstract fileName: string with get, set
+        abstract textSpan: TextSpan with get, set
+        abstract fileName: string with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] RenameLocation =
@@ -3011,18 +3007,18 @@ module ts =
 
     and [<AllowNullLiteral>] ReferenceEntry =
         inherit DocumentSpan
-        // abstract isWriteAccess: bool with get, set
-        // abstract isDefinition: bool with get, set
+        abstract isWriteAccess: bool with get, set
+        abstract isDefinition: bool with get, set
         abstract isInString: obj option with get, set
 
     and [<AllowNullLiteral>] ImplementationLocation =
         inherit DocumentSpan
         // abstract kind: ScriptElementKind with get, set
-        // abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
+        abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
 
     and [<AllowNullLiteral>] DocumentHighlights =
-        // abstract fileName: string with get, set
-        // abstract highlightSpans: ResizeArray<HighlightSpan> with get, set
+        abstract fileName: string with get, set
+        abstract highlightSpans: ResizeArray<HighlightSpan> with get, set
         abstract TODO: string with get, set
 
     // and HighlightSpanKind = // TODO
@@ -3034,18 +3030,18 @@ module ts =
     and [<AllowNullLiteral>] HighlightSpan =
         abstract fileName: string option with get, set
         abstract isInString: obj option with get, set
-        // abstract textSpan: TextSpan with get, set
+        abstract textSpan: TextSpan with get, set
         // abstract kind: HighlightSpanKind with get, set
 
     and [<AllowNullLiteral>] NavigateToItem =
-        // abstract name: string with get, set
+        abstract name: string with get, set
         // abstract kind: ScriptElementKind with get, set
-        // abstract kindModifiers: string with get, set
-        // abstract matchKind: string with get, set
-        // abstract isCaseSensitive: bool with get, set
-        // abstract fileName: string with get, set
-        // abstract textSpan: TextSpan with get, set
-        // abstract containerName: string with get, set
+        abstract kindModifiers: string with get, set
+        abstract matchKind: string with get, set
+        abstract isCaseSensitive: bool with get, set
+        abstract fileName: string with get, set
+        abstract textSpan: TextSpan with get, set
+        abstract containerName: string with get, set
         // abstract containerKind: ScriptElementKind with get, set
         abstract TODO: string with get, set
 
@@ -3056,11 +3052,11 @@ module ts =
 
     and [<AllowNullLiteral>] EditorOptions =
         abstract BaseIndentSize: float option with get, set
-        // abstract IndentSize: float with get, set
-        // abstract TabSize: float with get, set
-        // abstract NewLineCharacter: string with get, set
-        // abstract ConvertTabsToSpaces: bool with get, set
-        // abstract IndentStyle: IndentStyle with get, set
+        abstract IndentSize: float with get, set
+        abstract TabSize: float with get, set
+        abstract NewLineCharacter: string with get, set
+        abstract ConvertTabsToSpaces: bool with get, set
+        abstract IndentStyle: IndentStyle with get, set
 
     and [<AllowNullLiteral>] EditorSettings =
         abstract baseIndentSize: float option with get, set
@@ -3072,21 +3068,21 @@ module ts =
 
     and [<AllowNullLiteral>] FormatCodeOptions =
         inherit EditorOptions
-        // abstract InsertSpaceAfterCommaDelimiter: bool with get, set
-        // abstract InsertSpaceAfterSemicolonInForStatements: bool with get, set
-        // abstract InsertSpaceBeforeAndAfterBinaryOperators: bool with get, set
+        abstract InsertSpaceAfterCommaDelimiter: bool with get, set
+        abstract InsertSpaceAfterSemicolonInForStatements: bool with get, set
+        abstract InsertSpaceBeforeAndAfterBinaryOperators: bool with get, set
         abstract InsertSpaceAfterConstructor: bool option with get, set
-        // abstract InsertSpaceAfterKeywordsInControlFlowStatements: bool with get, set
-        // abstract InsertSpaceAfterFunctionKeywordForAnonymousFunctions: bool with get, set
-        // abstract InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis: bool with get, set
-        // abstract InsertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets: bool with get, set
+        abstract InsertSpaceAfterKeywordsInControlFlowStatements: bool with get, set
+        abstract InsertSpaceAfterFunctionKeywordForAnonymousFunctions: bool with get, set
+        abstract InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis: bool with get, set
+        abstract InsertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets: bool with get, set
         abstract InsertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: bool option with get, set
-        // abstract InsertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces: bool with get, set
+        abstract InsertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces: bool with get, set
         abstract InsertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces: bool option with get, set
         abstract InsertSpaceAfterTypeAssertion: bool option with get, set
         abstract InsertSpaceBeforeFunctionParenthesis: bool option with get, set
-        // abstract PlaceOpenBraceOnNewLineForFunctions: bool with get, set
-        // abstract PlaceOpenBraceOnNewLineForControlBlocks: bool with get, set
+        abstract PlaceOpenBraceOnNewLineForFunctions: bool with get, set
+        abstract PlaceOpenBraceOnNewLineForControlBlocks: bool with get, set
 
     and [<AllowNullLiteral>] FormatCodeSettings =
         inherit EditorSettings
@@ -3107,21 +3103,21 @@ module ts =
         abstract placeOpenBraceOnNewLineForControlBlocks: bool option with get, set
 
     and [<AllowNullLiteral>] DefinitionInfo =
-        // abstract fileName: string with get, set
-        // abstract textSpan: TextSpan with get, set
+        abstract fileName: string with get, set
+        abstract textSpan: TextSpan with get, set
         // abstract kind: ScriptElementKind with get, set
-        // abstract name: string with get, set
+        abstract name: string with get, set
         // abstract containerKind: ScriptElementKind with get, set
-        // abstract containerName: string with get, set
+        abstract containerName: string with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ReferencedSymbolDefinitionInfo =
         inherit DefinitionInfo
-        // abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
+        abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
 
     and [<AllowNullLiteral>] ReferencedSymbol =
-        // abstract definition: ReferencedSymbolDefinitionInfo with get, set
-        // abstract references: ResizeArray<ReferenceEntry> with get, set
+        abstract definition: ReferencedSymbolDefinitionInfo with get, set
+        abstract references: ResizeArray<ReferenceEntry> with get, set
         abstract TODO: string with get, set
 
     and SymbolDisplayPartKind =
@@ -3149,91 +3145,91 @@ module ts =
         | regularExpressionLiteral = 21
 
     and [<AllowNullLiteral>] SymbolDisplayPart =
-        // abstract text: string with get, set
-        // abstract kind: string with get, set
+        abstract text: string with get, set
+        abstract kind: string with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] JSDocTagInfo =
-        // abstract name: string with get, set
+        abstract name: string with get, set
         abstract text: string option with get, set
 
     and [<AllowNullLiteral>] QuickInfo =
         // abstract kind: ScriptElementKind with get, set
-        // abstract kindModifiers: string with get, set
-        // abstract textSpan: TextSpan with get, set
-        // abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract tags: ResizeArray<JSDocTagInfo> with get, set
+        abstract kindModifiers: string with get, set
+        abstract textSpan: TextSpan with get, set
+        abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
+        abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
+        abstract tags: ResizeArray<JSDocTagInfo> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] RenameInfo =
-        // abstract canRename: bool with get, set
-        // abstract localizedErrorMessage: string with get, set
-        // abstract displayName: string with get, set
-        // abstract fullDisplayName: string with get, set
+        abstract canRename: bool with get, set
+        abstract localizedErrorMessage: string with get, set
+        abstract displayName: string with get, set
+        abstract fullDisplayName: string with get, set
         // abstract kind: ScriptElementKind with get, set
-        // abstract kindModifiers: string with get, set
-        // abstract triggerSpan: TextSpan with get, set
+        abstract kindModifiers: string with get, set
+        abstract triggerSpan: TextSpan with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SignatureHelpParameter =
-        // abstract name: string with get, set
-        // abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract isOptional: bool with get, set
+        abstract name: string with get, set
+        abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
+        abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
+        abstract isOptional: bool with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SignatureHelpItem =
-        // abstract isVariadic: bool with get, set
-        // abstract prefixDisplayParts: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract suffixDisplayParts: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract separatorDisplayParts: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract parameters: ResizeArray<SignatureHelpParameter> with get, set
-        // abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract tags: ResizeArray<JSDocTagInfo> with get, set
+        abstract isVariadic: bool with get, set
+        abstract prefixDisplayParts: ResizeArray<SymbolDisplayPart> with get, set
+        abstract suffixDisplayParts: ResizeArray<SymbolDisplayPart> with get, set
+        abstract separatorDisplayParts: ResizeArray<SymbolDisplayPart> with get, set
+        abstract parameters: ResizeArray<SignatureHelpParameter> with get, set
+        abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
+        abstract tags: ResizeArray<JSDocTagInfo> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SignatureHelpItems =
-        // abstract items: ResizeArray<SignatureHelpItem> with get, set
-        // abstract applicableSpan: TextSpan with get, set
-        // abstract selectedItemIndex: float with get, set
-        // abstract argumentIndex: float with get, set
-        // abstract argumentCount: float with get, set
+        abstract items: ResizeArray<SignatureHelpItem> with get, set
+        abstract applicableSpan: TextSpan with get, set
+        abstract selectedItemIndex: float with get, set
+        abstract argumentIndex: float with get, set
+        abstract argumentCount: float with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] CompletionInfo =
-        // abstract isGlobalCompletion: bool with get, set
-        // abstract isMemberCompletion: bool with get, set
-        // abstract isNewIdentifierLocation: bool with get, set
-        // abstract entries: ResizeArray<CompletionEntry> with get, set
+        abstract isGlobalCompletion: bool with get, set
+        abstract isMemberCompletion: bool with get, set
+        abstract isNewIdentifierLocation: bool with get, set
+        abstract entries: ResizeArray<CompletionEntry> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] CompletionEntry =
-        // abstract name: string with get, set
+        abstract name: string with get, set
         // abstract kind: ScriptElementKind with get, set
-        // abstract kindModifiers: string with get, set
-        // abstract sortText: string with get, set
+        abstract kindModifiers: string with get, set
+        abstract sortText: string with get, set
         abstract replacementSpan: TextSpan option with get, set
 
     and [<AllowNullLiteral>] CompletionEntryDetails =
-        // abstract name: string with get, set
+        abstract name: string with get, set
         // abstract kind: ScriptElementKind with get, set
-        // abstract kindModifiers: string with get, set
-        // abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
-        // abstract tags: ResizeArray<JSDocTagInfo> with get, set
+        abstract kindModifiers: string with get, set
+        abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
+        abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
+        abstract tags: ResizeArray<JSDocTagInfo> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] OutliningSpan =
-        // abstract textSpan: TextSpan with get, set
-        // abstract hintSpan: TextSpan with get, set
-        // abstract bannerText: string with get, set
-        // abstract autoCollapse: bool with get, set
+        abstract textSpan: TextSpan with get, set
+        abstract hintSpan: TextSpan with get, set
+        abstract bannerText: string with get, set
+        abstract autoCollapse: bool with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] EmitOutput =
-        // abstract outputFiles: ResizeArray<OutputFile> with get, set
-        // abstract emitSkipped: bool with get, set
+        abstract outputFiles: ResizeArray<OutputFile> with get, set
+        abstract emitSkipped: bool with get, set
         abstract TODO: string with get, set
 
     and OutputFileType =
@@ -3242,9 +3238,9 @@ module ts =
         | Declaration = 2
 
     and [<AllowNullLiteral>] OutputFile =
-        // abstract name: string with get, set
-        // abstract writeByteOrderMark: bool with get, set
-        // abstract text: string with get, set
+        abstract name: string with get, set
+        abstract writeByteOrderMark: bool with get, set
+        abstract text: string with get, set
         abstract TODO: string with get, set
 
     and EndOfLineState =
@@ -3268,13 +3264,13 @@ module ts =
         | RegExpLiteral = 8
 
     and [<AllowNullLiteral>] ClassificationResult =
-        // abstract finalLexState: EndOfLineState with get, set
-        // abstract entries: ResizeArray<ClassificationInfo> with get, set
+        abstract finalLexState: EndOfLineState with get, set
+        abstract entries: ResizeArray<ClassificationInfo> with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ClassificationInfo =
-        // abstract length: float with get, set
-        // abstract classification: TokenClass with get, set
+        abstract length: float with get, set
+        abstract classification: TokenClass with get, set
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] Classifier =
@@ -3399,7 +3395,7 @@ module ts =
         abstract transformers: CustomTransformers option with get, set
 
     and [<AllowNullLiteral>] TranspileOutput =
-        // abstract outputText: string with get, set
+        abstract outputText: string with get, set
         abstract diagnostics: ResizeArray<Diagnostic> option with get, set
         abstract sourceMapText: string option with get, set
 
@@ -3415,7 +3411,6 @@ module ts =
         member __.version with get(): string = jsNative
 
         // function createNode(kind: SyntaxKind, pos?: number, end?: number): Node;
-        // abstract createNode: kind: SyntaxKind * pos: int option * ``end``: int option -> Node
         member __.createNode(kind: SyntaxKind, ?pos: int, ?``end``: int): Node = jsNative
 
         // function createIdentifier(text: string): Identifier;
