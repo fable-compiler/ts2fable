@@ -16,9 +16,16 @@ type FsInterface =
         Inherit: string option
     }
 
+type FsEnumCase =
+    {
+        Name: string
+        Value: string option
+    }
+
 type FsEnum =
     {
         Name: string
+        Cases: FsEnumCase list
     }
 
 type FsType =
@@ -75,8 +82,29 @@ let getModuleName(mb: ModuleBlock): string =
     | Some md ->
         match md.name with
         | U2.Case1 id -> id.getText()
-        | U2.Case2 sl -> sl.getText()
+        | U2.Case2 sl -> sl.text
     | None -> "NoModuleName"
+
+let getPropertyName(pn: PropertyName): string =
+    match pn with
+    | U4.Case1 id -> id.getText()
+    | U4.Case2 sl -> sl.text
+    | U4.Case3 nl -> nl.text
+    | U4.Case4 cpn -> cpn.getText()
+
+let visitEnumCase(em: EnumMember): FsEnumCase =
+    {
+        Name = em.name |> getPropertyName
+        Value = 
+            match em.initializer with
+            | None -> None
+            | Some ep ->
+                match ep.kind with
+                | SyntaxKind.NumericLiteral ->
+                    let nl = ep :?> NumericLiteral
+                    Some nl.text
+                | _ -> None // TODO
+    }
 
 let visitType(sd: DeclarationStatement): FsType =
     match sd.kind with
@@ -88,8 +116,8 @@ let visitType(sd: DeclarationStatement): FsType =
                 | Some v ->
                     match v with
                     | U3.Case1 id -> id.getText()
-                    | U3.Case2 sl -> sl.getText()
-                    | U3.Case3 nl -> nl.getText()
+                    | U3.Case2 sl -> sl.text
+                    | U3.Case3 nl -> nl.text
                 | None -> "NoInterfaceName"
             Inherit = None
         }
@@ -97,14 +125,8 @@ let visitType(sd: DeclarationStatement): FsType =
     | SyntaxKind.EnumDeclaration ->
         let ed = sd :?> EnumDeclaration
         {
-            Name =
-                match ed.name with
-                | Some v ->
-                    match v with
-                    | U3.Case1 id -> id.getText()
-                    | U3.Case2 sl -> sl.getText()
-                    | U3.Case3 nl -> nl.getText()
-                | None -> "NoEnumName"
+            Name = ed.name.getText()
+            Cases = ed.members |> List.ofArray |> List.map visitEnumCase
         }
         |> FsType.Enum
     | _ -> failwithf "unsupported type declaration kind: %A" sd.kind
@@ -133,6 +155,10 @@ let printCodeFile (file: FsFile) =
                 printfn "    interface %s =" inf.Name
             | Enum en ->
                 printfn "    enum %s =" en.Name
+                for cs in en.Cases do
+                    match cs.Value with
+                    | None -> printfn "        | %s" cs.Name
+                    | Some v -> printfn "        | %s = %s" cs.Name v
 
 
 let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
