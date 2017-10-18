@@ -53,6 +53,9 @@ type Globals with
         cbNode root
         x.forEachChildNode root (fun node -> x.forEachChildNodeRec node cbNode)
 
+    member x.isLiteralExpressionAs(node: Node): LiteralExpression option =
+        if x.isLiteralExpression node then Some(node :?> LiteralExpression) else None
+
 let getModules(root: Node) =
     let nodes = ResizeArray<ModuleBlock>()
     ts.forEachChildNodeRec root (fun node -> 
@@ -160,3 +163,4 @@ let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
 
 let fsFile = visitFile tsFile
 printCodeFile fsFile
+()
