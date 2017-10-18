@@ -454,7 +454,6 @@ module ts =
     and [<AllowNullLiteral>] NodeArray<'T> =
         inherit ReadonlyArray<'T>
         inherit TextRange
-        // abstract :  with get, set
         abstract hasTrailingComma: bool option with get, set
 
     and [<AllowNullLiteral>] Token<'TKind> =
@@ -1542,6 +1541,7 @@ module ts =
         // abstract :  with get, set
         // abstract kind: SyntaxKind.Block with get, set
         // abstract statements: NodeArray<Statement> with get, set
+        abstract statements: Statement array with get, set
 
     and [<AllowNullLiteral>] VariableStatement =
         inherit Statement
@@ -1814,7 +1814,7 @@ module ts =
         // abstract :  with get, set
         // abstract kind: SyntaxKind.ModuleBlock with get, set
         abstract parent: ModuleDeclaration option with get, set
-        // abstract statements: NodeArray<Statement> with get, set
+        abstract statements: NodeArray<Statement> with get, set
 
     and ModuleReference =
         U2<EntityName, ExternalModuleReference>
