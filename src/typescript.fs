@@ -1214,8 +1214,7 @@ module ts =
 
     and [<AllowNullLiteral>] LiteralLikeNode =
         inherit Node
-        // abstract :  with get, set
-        // abstract text: string with get, set
+        abstract text: string with get, set
         abstract isUnterminated: bool option with get, set
         abstract hasExtendedUnicodeEscape: bool option with get, set
 
@@ -1763,18 +1762,17 @@ module ts =
 
     and [<AllowNullLiteral>] EnumMember =
         inherit NamedDeclaration
-        // abstract :  with get, set
         // abstract kind: SyntaxKind.EnumMember with get, set
         abstract parent: EnumDeclaration option with get, set
-        // abstract name: PropertyName with get, set
+        abstract name: PropertyName with get, set
         abstract initializer: Expression option with get, set
 
     and [<AllowNullLiteral>] EnumDeclaration =
         inherit DeclarationStatement
-        // abstract :  with get, set
         // abstract kind: SyntaxKind.EnumDeclaration with get, set
-        // abstract name: Identifier with get, set
+        abstract name: Identifier with get, set
         // abstract members: NodeArray<EnumMember> with get, set
+        abstract members: EnumMember array with get, set
 
     and ModuleName =
         U2<Identifier, StringLiteral>
