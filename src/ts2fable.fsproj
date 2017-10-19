@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="typescript.fs" />
-    <Compile Include="App.fs" />
+    <Compile Include="ts2fable.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Fable.Import.Node" Version="0.1.5" />
