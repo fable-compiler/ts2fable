@@ -31,14 +31,14 @@ type FsEnum =
 type FsParam =
     {
         Name: string
-        Type: string option
-        IsArray: bool
+        Type: FsType
     }
 
 type FsMethod =
     {
         Name: string
         Params: FsParam list
+        ReturnType: FsType
     }
 
 type FsProperty =
@@ -46,12 +46,16 @@ type FsProperty =
         Name: string
     }
 
+[<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
     | Enum of FsEnum
     | Method of FsMethod
     | Property of FsProperty
+    | Param of FsParam
+    | Array of FsType
     | TODO
+    | Mapped of string
 
 type FsModule =
     {
@@ -135,30 +139,56 @@ let visitEnum(ed: EnumDeclaration): FsEnum =
         Cases = ed.members |> List.ofArray |> List.map visitEnumCase
     }
 
+let rec visitTypeNode(t: TypeNode): FsType =
+    match t.kind with
+    | SyntaxKind.StringKeyword -> FsType.Mapped "string"
+    | SyntaxKind.FunctionType ->
+        // var cbParams = type.parameters.map(function (x) {
+        //     return x.dotDotDotToken ? "obj" : getType(x.type);
+        // }).join(", ");
+        // return "Func<" + (cbParams || "unit") + ", " + getType(type.type) + ">";
+        FsType.Mapped "fun" // TODO
+    | SyntaxKind.TypeReference -> FsType.Mapped (t.getText())
+    | SyntaxKind.ArrayType ->
+        // return "ResizeArray<" + getType(type.elementType) + ">";
+        let at = t :?> ArrayTypeNode
+        FsType.Array (visitTypeNode at.elementType)
+    | SyntaxKind.NumberKeyword -> FsType.Mapped "float"
+    | SyntaxKind.BooleanKeyword -> FsType.Mapped "bool"
+    | SyntaxKind.UnionType ->
+        // if (type.types && type.types[0].kind == ts.SyntaxKind.StringLiteralType)
+        //     return "(* TODO StringEnum " + type.types.map(x=>x.text).join(" | ") + " *) string";
+        // else if (type.types.length <= 4)
+        //     return "U" + type.types.length + printTypeArguments(type.types);
+        // else
+        //     return "obj";
+        FsType.Mapped "union" // TODO
+    | SyntaxKind.AnyKeyword -> FsType.Mapped "obj"
+    | SyntaxKind.VoidKeyword -> FsType.Mapped "unit"
+    | SyntaxKind.TupleType ->
+        // return type.elementTypes.map(getType).join(" * ");
+        FsType.Mapped "tupple" // TODO
+    | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
+    | SyntaxKind.ThisType -> FsType.TODO
+    | _ -> failwithf "unsupported ParameterDeclaration TypeNode kind: %A" t.kind
+
 let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
     {
         Name = pd.name |> getBindingyName
-        Type =
+        Type = 
             match pd.``type`` with
-            | None -> None
-            | Some t ->
-                match t.kind with
-                | SyntaxKind.StringKeyword -> Some "string"
-                | SyntaxKind.FunctionType -> Some "fun" // TODO
-                | SyntaxKind.TypeReference -> Some (t.getText())
-                | SyntaxKind.ArrayType -> Some "array" // TODO
-                | SyntaxKind.NumberKeyword -> Some "int"
-                | SyntaxKind.BooleanKeyword -> Some "bool"
-                | SyntaxKind.UnionType -> Some "union" // TODO
-                | SyntaxKind.AnyKeyword -> Some "obj"
-                | _ -> failwithf "unsupported ParameterDeclaration TypeNode kind: %A" t.kind
-        IsArray = false // TODO
+            | Some t -> visitTypeNode t
+            | None -> FsType.Mapped "obj"
     }
 
 let visitMethodSignature(ms: MethodSignature): FsMethod =
     {
         Name = ms.name |> getPropertyName
         Params = ms.parameters |> List.ofArray |> List.map visitParameterDeclaration
+        ReturnType =
+            match ms.``type`` with
+            | Some t -> visitTypeNode t
+            | None -> FsType.Mapped "unit"
     }
 
 let visitPropertySignature(ps: PropertySignature): FsProperty=
@@ -209,25 +239,41 @@ let printCodeFile (file: FsFile) =
         for tp in md.Types do
             printfn ""
             match tp with
-            | Interface inf ->
+            | FsType.Interface inf ->
                 printfn "    interface %s =" inf.Name
                 for mbr in inf.Members do
                     match mbr with
-                    | Method m ->
+                    | FsType.Method m ->
                         let line = ResizeArray()
                         sprintf "        abstract %s" m.Name |> line.Add
                         let prms = 
                             m.Params |> List.map(fun p ->
                                 match p.Type with
-                                | None -> sprintf "%s" p.Name
-                                | Some t -> sprintf "%s: %s" p.Name t
+                                | FsType.Mapped t ->
+                                    sprintf "%s: %s" p.Name t
+                                | _ -> sprintf "TODO %A" p.Type
                             )
-                        sprintf ": %s" (prms |> String.concat " * ") |> line.Add
+                        if prms.Length = 0 then
+                            sprintf ": unit" |> line.Add
+                        else
+                            sprintf ": %s" (prms |> String.concat " * ") |> line.Add
+                        sprintf " -> %s"
+                            (
+                                match m.ReturnType with
+                                | FsType.Mapped s -> s
+                                | FsType.TODO -> "TODO"
+                                | FsType.Array at ->
+                                    match at with
+                                    | FsType.Mapped s -> sprintf "ResizeArray<%s>" s 
+                                    | _ -> failwithf "unsupported Array ReturnType %A" m.ReturnType
+                                | _ -> failwithf "unsupported ReturnType %A" m.ReturnType
+                            )
+                            |> line.Add
                         printfn "%s" (line |> String.concat "")
-                    | Property p ->
+                    | FsType.Property p ->
                         printfn "        prop %s" p.Name 
                     | _ -> ()
-            | Enum en ->
+            | FsType.Enum en ->
                 printfn "    enum %s =" en.Name
                 for cs in en.Cases do
                     match cs.Value with
