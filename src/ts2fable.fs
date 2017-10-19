@@ -1,7 +1,6 @@
-module rec FableApp
+module rec ts2fable.App
 
 open Fable.Core
-open Fable.Core.JsInterop
 open Fable.Import
 open Fable.Import.Node
 open Fable.Import.ts
@@ -29,9 +28,17 @@ type FsEnum =
         Cases: FsEnumCase list
     }
 
+type FsParam =
+    {
+        Name: string
+        Type: string option
+        IsArray: bool
+    }
+
 type FsMethod =
     {
         Name: string
+        Params: FsParam list
     }
 
 type FsProperty =
@@ -43,7 +50,7 @@ type FsType =
     | Interface of FsInterface
     | Enum of FsEnum
     | Method of FsMethod
-    | Property of FsMethod
+    | Property of FsProperty
     | TODO
 
 type FsModule =
@@ -92,6 +99,14 @@ let getPropertyName(pn: PropertyName): string =
     | U4.Case3 nl -> nl.text
     | U4.Case4 cpn -> cpn.getText()
 
+let getBindingyName(bn: BindingName): string =
+    match bn with
+    | U2.Case1 id -> id.text
+    | U2.Case2 bp -> // BindingPattern
+        match bp with
+        | U2.Case1 obp -> obp.getText()
+        | U2.Case2 abp -> abp.getText()
+
 let visitEnumCase(em: EnumMember): FsEnumCase =
     {
         Name = em.name |> getPropertyName
@@ -120,14 +135,35 @@ let visitEnum(ed: EnumDeclaration): FsEnum =
         Cases = ed.members |> List.ofArray |> List.map visitEnumCase
     }
 
+let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
+    {
+        Name = pd.name |> getBindingyName
+        Type =
+            match pd.``type`` with
+            | None -> None
+            | Some t ->
+                match t.kind with
+                | SyntaxKind.StringKeyword -> Some "string"
+                | SyntaxKind.FunctionType -> Some "fun" // TODO
+                | SyntaxKind.TypeReference -> Some (t.getText())
+                | SyntaxKind.ArrayType -> Some "array" // TODO
+                | SyntaxKind.NumberKeyword -> Some "int"
+                | SyntaxKind.BooleanKeyword -> Some "bool"
+                | SyntaxKind.UnionType -> Some "union" // TODO
+                | SyntaxKind.AnyKeyword -> Some "obj"
+                | _ -> failwithf "unsupported ParameterDeclaration TypeNode kind: %A" t.kind
+        IsArray = false // TODO
+    }
+
 let visitMethodSignature(ms: MethodSignature): FsMethod =
     {
         Name = ms.name |> getPropertyName
+        Params = ms.parameters |> List.ofArray |> List.map visitParameterDeclaration
     }
 
-let visitPropertySignature(ms: PropertySignature): FsMethod =
+let visitPropertySignature(ps: PropertySignature): FsProperty=
     {
-        Name = ms.name |> getPropertyName
+        Name = ps.name |> getPropertyName
     }
 
 let visitTypeElement(te: TypeElement): FsType =
@@ -178,7 +214,16 @@ let printCodeFile (file: FsFile) =
                 for mbr in inf.Members do
                     match mbr with
                     | Method m ->
-                        printfn "        abstract %s" m.Name
+                        let line = ResizeArray()
+                        sprintf "        abstract %s" m.Name |> line.Add
+                        let prms = 
+                            m.Params |> List.map(fun p ->
+                                match p.Type with
+                                | None -> sprintf "%s" p.Name
+                                | Some t -> sprintf "%s: %s" p.Name t
+                            )
+                        sprintf ": %s" (prms |> String.concat " * ") |> line.Add
+                        printfn "%s" (line |> String.concat "")
                     | Property p ->
                         printfn "        prop %s" p.Name 
                     | _ -> ()
