@@ -31,6 +31,7 @@ type FsEnum =
 type FsParam =
     {
         Name: string
+        Optional: bool
         Type: FsType
     }
 
@@ -175,6 +176,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
 let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
     {
         Name = pd.name |> getBindingyName
+        Optional = pd.questionToken.IsSome
         Type = 
             match pd.``type`` with
             | Some t -> visitTypeNode t
@@ -250,7 +252,7 @@ let printCodeFile (file: FsFile) =
                             m.Params |> List.map(fun p ->
                                 match p.Type with
                                 | FsType.Mapped t ->
-                                    sprintf "%s: %s" p.Name t
+                                    sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name t
                                 | _ -> sprintf "TODO %A" p.Type
                             )
                         if prms.Length = 0 then
