@@ -35,7 +35,7 @@ type FsParam =
         Type: FsType
     }
 
-type FsMethod =
+type FsFunction =
     {
         Name: string
         Params: FsParam list
@@ -51,12 +51,13 @@ type FsProperty =
 type FsType =
     | Interface of FsInterface
     | Enum of FsEnum
-    | Method of FsMethod
+    | Method of FsFunction
     | Property of FsProperty
     | Param of FsParam
     | Array of FsType
     | TODO
     | Mapped of string
+    | Function of FsFunction
 
 type FsModule =
     {
@@ -171,6 +172,11 @@ let rec visitTypeNode(t: TypeNode): FsType =
         FsType.Mapped "tupple" // TODO
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
     | SyntaxKind.ThisType -> FsType.TODO
+    | SyntaxKind.TypePredicate -> FsType.TODO
+    | SyntaxKind.TypeLiteral -> FsType.TODO
+    | SyntaxKind.IntersectionType -> FsType.TODO
+    | SyntaxKind.IndexedAccessType -> FsType.TODO
+    | SyntaxKind.TypeQuery -> FsType.TODO
     | _ -> failwithf "unsupported ParameterDeclaration TypeNode kind: %A" t.kind
 
 let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
@@ -183,7 +189,7 @@ let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
             | None -> FsType.Mapped "obj"
     }
 
-let visitMethodSignature(ms: MethodSignature): FsMethod =
+let visitMethodSignature(ms: MethodSignature): FsFunction =
     {
         Name = ms.name |> getPropertyName
         Params = ms.parameters |> List.ofArray |> List.map visitParameterDeclaration
@@ -193,9 +199,22 @@ let visitMethodSignature(ms: MethodSignature): FsMethod =
             | None -> FsType.Mapped "unit"
     }
 
-let visitPropertySignature(ps: PropertySignature): FsProperty=
+let visitPropertySignature(ps: PropertySignature): FsProperty =
     {
         Name = ps.name |> getPropertyName
+    }
+
+let visitFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
+    {
+        Name =
+            match fd.name with
+            | None -> "TodoNamelessFunction"
+            | Some nm -> nm.text
+        Params = fd.parameters |> List.ofArray |> List.map visitParameterDeclaration
+        ReturnType =
+            match fd.``type`` with
+            | Some t -> visitTypeNode t
+            | None -> FsType.Mapped "unit"
     }
 
 let visitTypeElement(te: TypeElement): FsType =
@@ -217,7 +236,8 @@ let visitStatement(sd: Statement): FsType =
     | SyntaxKind.TypeAliasDeclaration -> FsType.TODO
     | SyntaxKind.ClassDeclaration -> FsType.TODO
     | SyntaxKind.VariableStatement -> FsType.TODO
-    | SyntaxKind.FunctionDeclaration -> FsType.TODO
+    | SyntaxKind.FunctionDeclaration ->
+        visitFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
     | SyntaxKind.ModuleDeclaration -> FsType.TODO
     | _ -> failwithf "unsupported Statement kind: %A" sd.kind
 
@@ -231,6 +251,34 @@ let visitSourceFile(sf: SourceFile): FsFile =
     {
         Modules = getModules sf |> List.map visitModuleBlock
     }
+
+let printFunction(m: FsFunction): string =
+    let line = ResizeArray()
+    sprintf "%s" m.Name |> line.Add
+    let prms = 
+        m.Params |> List.map(fun p ->
+            match p.Type with
+            | FsType.Mapped t ->
+                sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name t
+            | _ -> sprintf "TODO %A" p.Type
+        )
+    if prms.Length = 0 then
+        sprintf ": unit" |> line.Add
+    else
+        sprintf ": %s" (prms |> String.concat " * ") |> line.Add
+    sprintf " -> %s"
+        (
+            match m.ReturnType with
+            | FsType.Mapped s -> s
+            | FsType.TODO -> "TODO"
+            | FsType.Array at ->
+                match at with
+                | FsType.Mapped s -> sprintf "ResizeArray<%s>" s 
+                | _ -> failwithf "unsupported Array ReturnType %A" m.ReturnType
+            | _ -> failwithf "unsupported ReturnType %A" m.ReturnType
+        )
+        |> line.Add
+    line |> String.concat ""
 
 let printCodeFile (file: FsFile) =
     // TODO namespace
@@ -246,32 +294,7 @@ let printCodeFile (file: FsFile) =
                 for mbr in inf.Members do
                     match mbr with
                     | FsType.Method m ->
-                        let line = ResizeArray()
-                        sprintf "        abstract %s" m.Name |> line.Add
-                        let prms = 
-                            m.Params |> List.map(fun p ->
-                                match p.Type with
-                                | FsType.Mapped t ->
-                                    sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name t
-                                | _ -> sprintf "TODO %A" p.Type
-                            )
-                        if prms.Length = 0 then
-                            sprintf ": unit" |> line.Add
-                        else
-                            sprintf ": %s" (prms |> String.concat " * ") |> line.Add
-                        sprintf " -> %s"
-                            (
-                                match m.ReturnType with
-                                | FsType.Mapped s -> s
-                                | FsType.TODO -> "TODO"
-                                | FsType.Array at ->
-                                    match at with
-                                    | FsType.Mapped s -> sprintf "ResizeArray<%s>" s 
-                                    | _ -> failwithf "unsupported Array ReturnType %A" m.ReturnType
-                                | _ -> failwithf "unsupported ReturnType %A" m.ReturnType
-                            )
-                            |> line.Add
-                        printfn "%s" (line |> String.concat "")
+                        printfn "        abstract %s" (printFunction m)
                     | FsType.Property p ->
                         printfn "        prop %s" p.Name 
                     | _ -> ()
@@ -281,6 +304,8 @@ let printCodeFile (file: FsFile) =
                     match cs.Value with
                     | None -> printfn "        | %s" cs.Name
                     | Some v -> printfn "        | %s = %s" cs.Name v
+            | FsType.Function fn ->
+                printfn "    function %s" (printFunction fn) // TODO How should we map these?
             | _ -> ()
 
 
