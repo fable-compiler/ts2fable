@@ -45,6 +45,8 @@ type FsFunction =
 type FsProperty =
     {
         Name: string
+        Option: bool
+        Type: FsType
     }
 
 [<RequireQualifiedAccess>]
@@ -56,6 +58,7 @@ type FsType =
     | Param of FsParam
     | Array of FsType
     | TODO
+    | None // when it is not set
     | Mapped of string
     | Function of FsFunction
 
@@ -177,6 +180,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.IntersectionType -> FsType.TODO
     | SyntaxKind.IndexedAccessType -> FsType.TODO
     | SyntaxKind.TypeQuery -> FsType.TODO
+    | SyntaxKind.LiteralType -> FsType.TODO
     | _ -> failwithf "unsupported ParameterDeclaration TypeNode kind: %A" t.kind
 
 let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
@@ -202,6 +206,11 @@ let visitMethodSignature(ms: MethodSignature): FsFunction =
 let visitPropertySignature(ps: PropertySignature): FsProperty =
     {
         Name = ps.name |> getPropertyName
+        Option = ps.questionToken.IsSome
+        Type = 
+            match ps.``type`` with
+            | None -> FsType.None 
+            | Some tp -> visitTypeNode tp
     }
 
 let visitFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
@@ -252,9 +261,19 @@ let visitSourceFile(sf: SourceFile): FsFile =
         Modules = getModules sf |> List.map visitModuleBlock
     }
 
+let printType(tp: FsType): string =
+    match tp with
+    | FsType.Mapped s -> s
+    | FsType.TODO -> "TODO"
+    | FsType.Array at ->
+        match at with
+        | FsType.Mapped s -> sprintf "ResizeArray<%s>" s 
+        | _ -> failwithf "unsupported Array ReturnType %A" tp
+    | _ -> failwithf "unsupported ReturnType %A" tp
+
 let printFunction(m: FsFunction): string =
     let line = ResizeArray()
-    sprintf "%s" m.Name |> line.Add
+    sprintf "abstract %s" m.Name |> line.Add
     let prms = 
         m.Params |> List.map(fun p ->
             match p.Type with
@@ -266,19 +285,11 @@ let printFunction(m: FsFunction): string =
         sprintf ": unit" |> line.Add
     else
         sprintf ": %s" (prms |> String.concat " * ") |> line.Add
-    sprintf " -> %s"
-        (
-            match m.ReturnType with
-            | FsType.Mapped s -> s
-            | FsType.TODO -> "TODO"
-            | FsType.Array at ->
-                match at with
-                | FsType.Mapped s -> sprintf "ResizeArray<%s>" s 
-                | _ -> failwithf "unsupported Array ReturnType %A" m.ReturnType
-            | _ -> failwithf "unsupported ReturnType %A" m.ReturnType
-        )
-        |> line.Add
+    sprintf " -> %s" (printType m.ReturnType) |> line.Add
     line |> String.concat ""
+
+let printProperty(pr: FsProperty): string =
+    sprintf "abstract %s: %s%s with get, set" pr.Name (printType pr.Type) (if pr.Option then " option" else "")
 
 let printCodeFile (file: FsFile) =
     // TODO namespace
@@ -294,9 +305,9 @@ let printCodeFile (file: FsFile) =
                 for mbr in inf.Members do
                     match mbr with
                     | FsType.Method m ->
-                        printfn "        abstract %s" (printFunction m)
+                        printfn "        %s" (printFunction m)
                     | FsType.Property p ->
-                        printfn "        prop %s" p.Name 
+                        printfn "        %s" (printProperty p)
                     | _ -> ()
             | FsType.Enum en ->
                 printfn "    enum %s =" en.Name
@@ -304,8 +315,8 @@ let printCodeFile (file: FsFile) =
                     match cs.Value with
                     | None -> printfn "        | %s" cs.Name
                     | Some v -> printfn "        | %s = %s" cs.Name v
-            | FsType.Function fn ->
-                printfn "    function %s" (printFunction fn) // TODO How should we map these?
+            // | FsType.Function fn ->
+                // printfn "    %s" (printFunction fn) // TODO How should we map these?
             | _ -> ()
 
 
