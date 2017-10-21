@@ -56,6 +56,12 @@ type FsGenericType =
         TypeParameters: string list
     }
 
+type FsUnion =
+    {
+        Option: bool
+        Types: FsType list
+    }
+
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
@@ -68,6 +74,7 @@ type FsType =
     | None // when it is not set
     | Mapped of string
     | Function of FsFunction
+    | Union of FsUnion
 
 type FsModule =
     {
@@ -193,13 +200,14 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.NumberKeyword -> FsType.Mapped "float"
     | SyntaxKind.BooleanKeyword -> FsType.Mapped "bool"
     | SyntaxKind.UnionType ->
-        // if (type.types && type.types[0].kind == ts.SyntaxKind.StringLiteralType)
-        //     return "(* TODO StringEnum " + type.types.map(x=>x.text).join(" | ") + " *) string";
-        // else if (type.types.length <= 4)
-        //     return "U" + type.types.length + printTypeArguments(type.types);
-        // else
-        //     return "obj";
-        FsType.Mapped "union" // TODO
+        let un = t :?> UnionTypeNode
+        let typs = un.types |> List.ofArray
+        let isUndefined (t:TypeNode) = t.kind = SyntaxKind.UndefinedKeyword
+        {
+            Option = typs |> List.exists isUndefined
+            Types = typs |> List.filter (isUndefined >> not) |> List.map visitTypeNode
+        }
+        |> FsType.Union
     | SyntaxKind.AnyKeyword -> FsType.Mapped "obj"
     | SyntaxKind.VoidKeyword -> FsType.Mapped "unit"
     | SyntaxKind.TupleType ->
@@ -220,6 +228,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
             let id = eta.expression :?> Identifier
             FsType.Mapped id.text
         | _ -> failwithf "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind
+    | SyntaxKind.ParenthesizedType -> FsType.Mapped "TODO_ParenthesizedType"
     | _ -> failwithf "unsupported TypeNode kind: %A" t.kind
 
 let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
@@ -300,6 +309,7 @@ let visitSourceFile(sf: SourceFile): FsFile =
         Modules = getModules sf |> List.map visitModuleBlock
     }
 
+// TODO may need to pass in a list of generic types
 let printType(tp: FsType): string =
     match tp with
     | FsType.Mapped s -> s
@@ -308,6 +318,17 @@ let printType(tp: FsType): string =
         match at with
         | FsType.Mapped s -> sprintf "ResizeArray<%s>" s 
         | _ -> failwithf "unsupported Array ReturnType %A" tp
+    | FsType.Union un ->
+        if un.Types.Length > 6 then
+            "obj"
+        else if un.Types.Length = 1 then
+            sprintf "%s%s" (printType un.Types.[0]) (if un.Option then " option" else "")
+        else
+            let line = ResizeArray()
+            line.Add (sprintf "U%d<" un.Types.Length)
+            un.Types |> List.map printType |> List.map (sprintf "%s") |> String.concat ", " |> line.Add
+            sprintf ">%s" (if un.Option then " option" else "") |> line.Add
+            line |> String.concat ""
     | _ -> failwithf "unsupported ReturnType %A" tp
 
 let printFunction(m: FsFunction): string =
