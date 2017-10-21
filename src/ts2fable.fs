@@ -12,7 +12,7 @@ open Fable.Import.ts
 type FsInterface =
     {
         Name: string
-        Inherit: string option
+        Inherits: FsType list
         Members: FsType list
     }
 
@@ -134,7 +134,16 @@ let visitEnumCase(em: EnumMember): FsEnumCase =
 let visitInterface(id: InterfaceDeclaration): FsInterface =
     {
         Name = id.name.text 
-        Inherit = None
+        Inherits =
+            match id.heritageClauses with
+            | None -> []
+            | Some hcs ->
+                hcs |> List.ofArray |> List.map (fun hc ->
+                    hc.types |> List.ofArray |> List.map (fun eta ->
+                        visitTypeNode eta
+                    )
+                )
+                |> List.concat
         Members = id.members |> List.ofArray |> List.map visitTypeElement
     }
 
@@ -174,14 +183,21 @@ let rec visitTypeNode(t: TypeNode): FsType =
         // return type.elementTypes.map(getType).join(" * ");
         FsType.Mapped "tupple" // TODO
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
-    | SyntaxKind.ThisType -> FsType.TODO
-    | SyntaxKind.TypePredicate -> FsType.TODO
-    | SyntaxKind.TypeLiteral -> FsType.TODO
-    | SyntaxKind.IntersectionType -> FsType.TODO
-    | SyntaxKind.IndexedAccessType -> FsType.TODO
-    | SyntaxKind.TypeQuery -> FsType.TODO
-    | SyntaxKind.LiteralType -> FsType.TODO
-    | _ -> failwithf "unsupported ParameterDeclaration TypeNode kind: %A" t.kind
+    | SyntaxKind.ThisType -> FsType.Mapped "TODO_ThisType"
+    | SyntaxKind.TypePredicate -> FsType.Mapped "TODO_TypePredicate"
+    | SyntaxKind.TypeLiteral -> FsType.Mapped "TODO_TypeLiteral"
+    | SyntaxKind.IntersectionType -> FsType.Mapped "TODO_IntersectionType"
+    | SyntaxKind.IndexedAccessType -> FsType.Mapped "TODO_IndexedAccessType"
+    | SyntaxKind.TypeQuery -> FsType.Mapped "TODO_TypeQuery"
+    | SyntaxKind.LiteralType -> FsType.Mapped "TODO_LiteralType"
+    | SyntaxKind.ExpressionWithTypeArguments ->
+        let eta = t :?> ExpressionWithTypeArguments
+        match eta.expression.kind with
+        | SyntaxKind.Identifier ->
+            let id = eta.expression :?> Identifier
+            FsType.Mapped id.text
+        | _ -> failwithf "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind
+    | _ -> failwithf "unsupported TypeNode kind: %A" t.kind
 
 let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
     {
@@ -273,12 +289,12 @@ let printType(tp: FsType): string =
 
 let printFunction(m: FsFunction): string =
     let line = ResizeArray()
-    sprintf "abstract %s" m.Name |> line.Add
+    sprintf "abstract %s" (escapeWord m.Name) |> line.Add
     let prms = 
         m.Params |> List.map(fun p ->
             match p.Type with
             | FsType.Mapped t ->
-                sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name t
+                sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) t
             | _ -> sprintf "TODO %A" p.Type
         )
     if prms.Length = 0 then
@@ -289,7 +305,7 @@ let printFunction(m: FsFunction): string =
     line |> String.concat ""
 
 let printProperty(pr: FsProperty): string =
-    sprintf "abstract %s: %s%s with get, set" pr.Name (printType pr.Type) (if pr.Option then " option" else "")
+    sprintf "abstract %s: %s%s with get, set" (escapeWord pr.Name) (printType pr.Type) (if pr.Option then " option" else "")
 
 let printCodeFile (file: FsFile) =
     // TODO namespace
@@ -301,7 +317,9 @@ let printCodeFile (file: FsFile) =
             printfn ""
             match tp with
             | FsType.Interface inf ->
-                printfn "    interface %s =" inf.Name
+                printfn "    and [<AllowNullLiteral>] %s =" inf.Name
+                for ih in inf.Inherits do
+                    printfn "        inherit %s" (printType ih)
                 for mbr in inf.Members do
                     match mbr with
                     | FsType.Method m ->
@@ -309,8 +327,10 @@ let printCodeFile (file: FsFile) =
                     | FsType.Property p ->
                         printfn "        %s" (printProperty p)
                     | _ -> ()
+                if inf.Members.Length = 0 then
+                    printfn "        interface end"
             | FsType.Enum en ->
-                printfn "    enum %s =" en.Name
+                printfn "    and %s =" en.Name
                 for cs in en.Cases do
                     match cs.Value with
                     | None -> printfn "        | %s" cs.Name
@@ -319,11 +339,128 @@ let printCodeFile (file: FsFile) =
                 // printfn "    %s" (printFunction fn) // TODO How should we map these?
             | _ -> ()
 
+let reserved =
+    [
+        "atomic"
+        "break"
+        "checked"
+        "component"
+        "const"
+        "constraint"
+        "constructor"
+        "continue"
+        "eager"
+        "event"
+        "external"
+        "fixed"
+        "functor"
+        "include"
+        "measure"
+        "method"
+        "mixin"
+        "object"
+        "parallel"
+        "params"
+        "process"
+        "protected"
+        "pure"
+        "sealed"
+        "tailcall"
+        "trait"
+        "virtual"
+        "volatile"
+        "asr"
+        "land"
+        "lor"
+        "lsl"
+        "lsr"
+        "lxor"
+        "mod"
+        "sig"
+    ]
+    |> Set.ofList
 
-let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
-let code = Fs.readFileSync(filePath).toString()
-let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
+let keywords = 
+    [
+        "abstract"
+        "and"
+        "as"
+        "assert"
+        "base"
+        "begin"
+        "class"
+        "default"
+        "delegate"
+        "do"
+        "done"
+        "downcast"
+        "downto"
+        "elif"
+        "else"
+        "end"
+        "exception"
+        "extern"
+        "false"
+        "finally"
+        "for"
+        "fun"
+        "function"
+        "global"
+        "if"
+        "in"
+        "inherit"
+        "inline"
+        "interface"
+        "internal"
+        "lazy"
+        "let"
+        "match"
+        "member"
+        "module"
+        "mutable"
+        "namespace"
+        "new"
+        "null"
+        "of"
+        "open"
+        "or"
+        "override"
+        "private"
+        "public"
+        "rec"
+        "return"
+        "sig"
+        "static"
+        "struct"
+        "then"
+        "to"
+        "true"
+        "try"
+        "type"
+        "upcast"
+        "use"
+        "val"
+        "void"
+        "when"
+        "while"
+        "with"
+        "yield"
+    ]
+    |> Set.ofList
 
-let fsFile = visitSourceFile tsFile
-printCodeFile fsFile
-()
+let escapeWord s =
+    if reserved.Contains s || keywords.Contains s then
+        sprintf "``%s``" s
+    else
+        s
+
+let printFile() =
+    let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
+    let code = Fs.readFileSync(filePath).toString()
+    let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
+
+    let fsFile = visitSourceFile tsFile
+    printCodeFile fsFile
+    ()
+
+printFile()
