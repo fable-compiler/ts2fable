@@ -12,9 +12,9 @@ open Fable.Import.ts
 type FsInterface =
     {
         Name: string
-        Inherits: FsType list
-        Members: FsType list
         TypeParameters: string list
+        Inherits: FsGenericType list
+        Members: FsType list
     }
 
 type FsEnumCase =
@@ -48,6 +48,12 @@ type FsProperty =
         Name: string
         Option: bool
         Type: FsType
+    }
+
+type FsGenericType =
+    {
+        Type: FsType
+        TypeParameters: string list
     }
 
 [<RequireQualifiedAccess>]
@@ -141,7 +147,16 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
             | Some hcs ->
                 hcs |> List.ofArray |> List.map (fun hc ->
                     hc.types |> List.ofArray |> List.map (fun eta ->
-                        visitTypeNode eta
+                        {
+                            Type = visitTypeNode eta
+                            TypeParameters =
+                                match eta.typeArguments with
+                                | None -> []
+                                | Some tps ->
+                                    tps |> List.ofArray |> List.map (fun tp ->
+                                        tp.getText() // TODO
+                                    )
+                        }
                     )
                 )
                 |> List.concat
@@ -336,7 +351,7 @@ let printCodeFile (file: FsFile) =
             | FsType.Interface inf ->
                 printfn "    and [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters inf.TypeParameters)
                 for ih in inf.Inherits do
-                    printfn "        inherit %s" (printType ih)
+                    printfn "        inherit %s%s" (printType ih.Type) (printTypeParameters ih.TypeParameters)
                 let nPrintedMembers = ref 0
                 for mbr in inf.Members do
                     match mbr with
