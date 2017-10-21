@@ -14,6 +14,7 @@ type FsInterface =
         Name: string
         Inherits: FsType list
         Members: FsType list
+        TypeParameters: string list
     }
 
 type FsEnumCase =
@@ -145,6 +146,13 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
                 )
                 |> List.concat
         Members = id.members |> List.ofArray |> List.map visitTypeElement
+        TypeParameters = 
+            match id.typeParameters with
+            | None -> []
+            | Some tps ->
+                tps |> List.ofArray |> List.map (fun tp ->
+                    tp.name.text
+                )
     }
 
 let visitEnum(ed: EnumDeclaration): FsEnum =
@@ -307,6 +315,15 @@ let printFunction(m: FsFunction): string =
 let printProperty(pr: FsProperty): string =
     sprintf "abstract %s: %s%s with get, set" (escapeWord pr.Name) (printType pr.Type) (if pr.Option then " option" else "")
 
+let printTypeParameters(tps: string list): string =
+    if tps.Length = 0 then ""
+    else
+        let line = ResizeArray()
+        line.Add "<"
+        tps |> List.map (sprintf "'%s") |> String.concat ", " |> line.Add
+        line.Add ">"
+        line |> String.concat ""
+
 let printCodeFile (file: FsFile) =
     // TODO namespace
     // TODO open statements
@@ -317,17 +334,20 @@ let printCodeFile (file: FsFile) =
             printfn ""
             match tp with
             | FsType.Interface inf ->
-                printfn "    and [<AllowNullLiteral>] %s =" inf.Name
+                printfn "    and [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters inf.TypeParameters)
                 for ih in inf.Inherits do
                     printfn "        inherit %s" (printType ih)
+                let nPrintedMembers = ref 0
                 for mbr in inf.Members do
                     match mbr with
                     | FsType.Method m ->
                         printfn "        %s" (printFunction m)
+                        incr nPrintedMembers
                     | FsType.Property p ->
                         printfn "        %s" (printProperty p)
+                        incr nPrintedMembers
                     | _ -> ()
-                if inf.Members.Length = 0 then
+                if !nPrintedMembers = 0 then
                     printfn "        interface end"
             | FsType.Enum en ->
                 printfn "    and %s =" en.Name
@@ -458,7 +478,6 @@ let printFile() =
     let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
     let code = Fs.readFileSync(filePath).toString()
     let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
-
     let fsFile = visitSourceFile tsFile
     printCodeFile fsFile
     ()
