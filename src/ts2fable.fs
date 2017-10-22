@@ -344,6 +344,36 @@ let visitModuleBlock(mb: ModuleBlock): FsModule =
         Types = mb.statements |> List.ofArray |> List.map visitStatement
     }
 
+let mergeTypes(tps: FsType list): FsType list =
+    let index = Dictionary<string,int>()
+    let list = List<FsType>()
+    for b in tps do
+        match b with
+        | FsType.Interface bi ->
+            if index.ContainsKey bi.Name then
+                let i = index.[bi.Name]
+                let a = list.[i]
+                match a with
+                | FsType.Interface ai ->
+                    list.[i] <-
+                        {
+                            Name = ai.Name
+                            TypeParameters = ai.TypeParameters
+                            Inherits = List.append ai.Inherits bi.Inherits
+                            Members = List.append ai.Members bi.Members
+                        }
+                        |> FsType.Interface
+                | _ ->
+                    list.Add b
+                    index.Add(bi.Name, list.Count-1)
+
+            else
+                list.Add b
+                index.Add(bi.Name, list.Count-1)
+        | _ -> 
+            list.Add b
+    list |> List.ofSeq
+
 let mergeModules(modules: FsModule list): FsModule list =
     let index = Dictionary<string,int>()
     let list = List<FsModule>()
@@ -353,8 +383,8 @@ let mergeModules(modules: FsModule list): FsModule list =
             let a = list.[i]
             list.[i] <-
                 {
-                    Name = b.Name
-                    Types = List.append a.Types b.Types
+                    Name = a.Name
+                    Types = List.append a.Types b.Types |> mergeTypes
                 }
         else
             list.Add b
@@ -367,11 +397,9 @@ let visitSourceFile(sf: SourceFile): FsFile =
     }
 
 // TODO may need to pass in a list of generic types
-let printType (fixType: FsType -> FsType) (tp: FsType): string =
+let printType (tp: FsType): string =
     match tp with
-    | FsType.Mapped s ->
-        // fixType s
-        s
+    | FsType.Mapped s -> s
     | FsType.TODO -> "TODO"
     | FsType.Array at ->
         match at with
@@ -382,27 +410,27 @@ let printType (fixType: FsType -> FsType) (tp: FsType): string =
         if un.Types.Length > 6 then
             "obj"
         else if un.Types.Length = 1 then
-            sprintf "%s%s" (printType fixType un.Types.[0]) (if un.Option then " option" else "")
+            sprintf "%s%s" (printType un.Types.[0]) (if un.Option then " option" else "")
         else
             let line = ResizeArray()
             sprintf "U%d<" un.Types.Length |> line.Add
-            un.Types |> List.map (printType fixType) |> List.map (sprintf "%s") |> String.concat ", " |> line.Add
+            un.Types |> List.map printType |> List.map (sprintf "%s") |> String.concat ", " |> line.Add
             sprintf ">%s" (if un.Option then " option" else "") |> line.Add
             line |> String.concat ""
     | FsType.Generic g ->
         let line = ResizeArray()
-        sprintf "%s<" (printType fixType g.Type) |> line.Add
-        g.TypeParameters |> List.map (printType fixType) |> List.map (sprintf "%s") |> String.concat " * " |> line.Add
+        sprintf "%s<" (printType g.Type) |> line.Add
+        g.TypeParameters |> List.map printType |> List.map (sprintf "%s") |> String.concat " * " |> line.Add
         ">" |> line.Add
         line |> String.concat ""
     | _ -> failwithf "unsupported printType %A" tp
 
-let printFunction (fixType: FsType -> FsType) (m: FsFunction): string =
+let printFunction (m: FsFunction): string =
     let line = ResizeArray()
     sprintf "abstract %s" (escapeWord m.Name) |> line.Add
     let prms = 
         m.Params |> List.map(fun p ->
-            match fixType p.Type with
+            match p.Type with
             | FsType.Mapped t ->
                 sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) t
             | _ -> sprintf "TODO %A" p.Type
@@ -411,18 +439,18 @@ let printFunction (fixType: FsType -> FsType) (m: FsFunction): string =
         sprintf ": unit" |> line.Add
     else
         sprintf ": %s" (prms |> String.concat " * ") |> line.Add
-    sprintf " -> %s" (printType fixType m.ReturnType) |> line.Add
+    sprintf " -> %s" (printType m.ReturnType) |> line.Add
     line |> String.concat ""
 
-let printProperty fixType (pr: FsProperty): string =
-    sprintf "abstract %s: %s%s with get, set" (escapeWord pr.Name) (printType fixType pr.Type) (if pr.Option then " option" else "")
+let printProperty (pr: FsProperty): string =
+    sprintf "abstract %s: %s%s with get, set" (escapeWord pr.Name) (printType pr.Type) (if pr.Option then " option" else "")
 
-let printTypeParameters fixType (tps: FsType list): string =
+let printTypeParameters (tps: FsType list): string =
     if tps.Length = 0 then ""
     else
         let line = ResizeArray()
         line.Add "<"
-        tps |> List.map (printType fixType) |> List.map (sprintf "'%s") |> String.concat ", " |> line.Add
+        tps |> List.map printType |> List.map (sprintf "'%s") |> String.concat ", " |> line.Add
         line.Add ">"
         line |> String.concat ""
 
@@ -442,22 +470,18 @@ let printCodeFile (file: FsFile) =
             match tp with
             | FsType.Interface inf ->
                 printfn ""
-                let tps = inf.TypeParameters |> Set.ofList
-                let fixType (tp: FsType) =
-                    // if tps.Contains tp then sprintf "'%s" tp else tp // TODO
-                    tp
-                printfn "    and [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters fixType inf.TypeParameters)
+                printfn "    and [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters inf.TypeParameters)
                 let nLines = ref 0
                 for ih in inf.Inherits do
-                    printfn "        inherit %s%s" (printType fixType ih.Type) (printTypeParameters fixType ih.TypeParameters)
+                    printfn "        inherit %s%s" (printType ih.Type) (printTypeParameters ih.TypeParameters)
                     incr nLines
                 for mbr in inf.Members do
                     match mbr with
                     | FsType.Method m ->
-                        printfn "        %s" (printFunction fixType m)
+                        printfn "        %s" (printFunction m)
                         incr nLines
                     | FsType.Property p ->
-                        printfn "        %s" (printProperty fixType p)
+                        printfn "        %s" (printProperty p)
                         incr nLines
                     | _ -> ()
                 if !nLines = 0 then
@@ -469,13 +493,10 @@ let printCodeFile (file: FsFile) =
                     match cs.Value with
                     | None -> printfn "        | %s" cs.Name
                     | Some v -> printfn "        | %s = %s" cs.Name v
-            // | FsType.Function fn ->
-                // printfn "    %s" (printFunction fn) // TODO How should we map these?
             | FsType.Alias al ->
                 printfn ""
-                let fixType tp = tp
                 printfn "    and %s =" al.Name
-                printfn "        %s" (printType fixType al.Type)
+                printfn "        %s" (printType al.Type)
             | _ -> ()
 
 let reserved =
