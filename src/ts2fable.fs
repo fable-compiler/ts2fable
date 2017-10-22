@@ -62,6 +62,12 @@ type FsUnion =
         Types: FsType list
     }
 
+type FsAlias =
+    {
+        Name: string
+        Type: FsType
+    }
+
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
@@ -75,6 +81,7 @@ type FsType =
     | Mapped of string
     | Function of FsFunction
     | Union of FsUnion
+    | Alias of FsAlias
 
 type FsModule =
     {
@@ -192,7 +199,9 @@ let rec visitTypeNode(t: TypeNode): FsType =
         // }).join(", ");
         // return "Func<" + (cbParams || "unit") + ", " + getType(type.type) + ">";
         FsType.Mapped "fun" // TODO
-    | SyntaxKind.TypeReference -> FsType.Mapped (t.getText())
+    | SyntaxKind.TypeReference ->
+        // let tr = t :?> TypeReference
+        FsType.Mapped (t.getText())
     | SyntaxKind.ArrayType ->
         // return "ResizeArray<" + getType(type.elementType) + ">";
         let at = t :?> ArrayTypeNode
@@ -284,13 +293,20 @@ let visitTypeElement(te: TypeElement): FsType =
     | SyntaxKind.CallSignature -> FsType.TODO
     | _ -> failwithf "unsupported TypeElement kind: %A" te.kind
 
+let visitAliasDeclaration(d: TypeAliasDeclaration): FsAlias =
+    {
+        Name = d.name.text
+        Type = d.``type`` |> visitTypeNode
+    }
+
 let visitStatement(sd: Statement): FsType =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
         visitInterface (sd :?> InterfaceDeclaration) |> FsType.Interface
     | SyntaxKind.EnumDeclaration ->
         visitEnum (sd :?> EnumDeclaration) |> FsType.Enum
-    | SyntaxKind.TypeAliasDeclaration -> FsType.TODO
+    | SyntaxKind.TypeAliasDeclaration ->
+        visitAliasDeclaration (sd :?> TypeAliasDeclaration) |> FsType.Alias
     | SyntaxKind.ClassDeclaration -> FsType.TODO
     | SyntaxKind.VariableStatement -> FsType.TODO
     | SyntaxKind.FunctionDeclaration ->
@@ -361,8 +377,14 @@ let printTypeParameters(tps: string list): string =
         line |> String.concat ""
 
 let printCodeFile (file: FsFile) =
-    // TODO namespace
-    // TODO open statements
+    // TODO specify namespace
+    // TODO customize open statements
+    printfn "namespace rec Fable.Import"
+    printfn "open System"
+    printfn "open System.Text.RegularExpressions" // TODO why
+    printfn "open Fable.Core"
+    printfn "open Fable.Import.JS"
+
     for md in file.Modules do
         printfn ""
         printfn "module %s =" md.Name
@@ -393,6 +415,9 @@ let printCodeFile (file: FsFile) =
                     | Some v -> printfn "        | %s = %s" cs.Name v
             // | FsType.Function fn ->
                 // printfn "    %s" (printFunction fn) // TODO How should we map these?
+            | FsType.Alias al ->
+                printfn "    and %s =" al.Name
+                printfn "        %s" (printType al.Type)
             | _ -> ()
 
 let reserved =
