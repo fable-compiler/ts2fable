@@ -37,7 +37,6 @@ module ts =
     and [<AllowNullLiteral>] TextRange =
         abstract pos: float with get, set
         abstract ``end``: float with get, set
-        abstract TODO: string with get, set
 
     and SyntaxKind =
         | Unknown = 0
@@ -447,46 +446,37 @@ module ts =
 
     and [<AllowNullLiteral>] Token<'TKind> =
         inherit Node
+        abstract kind: 'TKind with get, set
 
     and DotDotDotToken =
-        // Token<SyntaxKind.DotDotDotToken>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and QuestionToken =
-        // Token<SyntaxKind.QuestionToken>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and ColonToken =
-        // Token<SyntaxKind.ColonToken>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and EqualsToken =
-        // Token<SyntaxKind.EqualsToken>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and AsteriskToken =
-        // Token<SyntaxKind.AsteriskToken>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and EqualsGreaterThanToken =
-        // Token<SyntaxKind.EqualsGreaterThanToken>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and EndOfFileToken =
-        // Token<SyntaxKind.EndOfFileToken>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and AtToken =
-        // Token<SyntaxKind.AtToken>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and ReadonlyToken =
-        // Token<SyntaxKind.ReadonlyKeyword>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and AwaitKeywordToken =
-        // Token<SyntaxKind.AwaitKeyword>
-        abstract TODO: string with get, set
+        Token<SyntaxKind>
 
     and Modifier =
         obj
@@ -517,7 +507,7 @@ module ts =
         U4<Identifier, StringLiteral, NumericLiteral, ComputedPropertyName>
 
     and DeclarationName =
-        obj
+        U5<Identifier, StringLiteral, NumericLiteral, ComputedPropertyName, BindingPattern>
 
     and [<AllowNullLiteral>] Declaration =
         inherit Node
@@ -2017,7 +2007,6 @@ module ts =
     and [<AllowNullLiteral>] TypePredicateBase =
         abstract kind: TypePredicateKind with get, set
         abstract ``type``: Type with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ThisTypePredicate =
         inherit TypePredicateBase
@@ -2208,7 +2197,7 @@ module ts =
         abstract getNonNullableType: unit -> Type
 
     and [<AllowNullLiteral>] LiteralType =
-        // inherit Type
+        inherit Type
         abstract value: U2<string, float> with get, set
         abstract freshType: LiteralType option with get, set
         abstract regularType: LiteralType option with get, set
@@ -2222,8 +2211,7 @@ module ts =
         abstract value: float with get, set
 
     and [<AllowNullLiteral>] EnumType =
-        // inherit Type
-        abstract TODO: string with get, set
+        inherit Type
 
     and ObjectFlags =
         | Class = 1
@@ -2239,9 +2227,8 @@ module ts =
         | ClassOrInterface = 3
 
     and [<AllowNullLiteral>] ObjectType =
-        // inherit Type
+        inherit Type
         abstract objectFlags: ObjectFlags with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] InterfaceType =
         inherit ObjectType
@@ -2271,9 +2258,8 @@ module ts =
         inherit TypeReference
 
     and [<AllowNullLiteral>] UnionOrIntersectionType =
-        // inherit Type
+        inherit Type
         abstract types: ResizeArray<Type> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] UnionType =
         inherit UnionOrIntersectionType
@@ -2292,9 +2278,7 @@ module ts =
         abstract finalArrayType: Type option with get, set
 
     and [<AllowNullLiteral>] TypeVariable =
-        // inherit Type
-        abstract TODO: string with get, set
-
+        inherit Type
 
     and [<AllowNullLiteral>] TypeParameter =
         inherit TypeVariable
@@ -2308,9 +2292,8 @@ module ts =
         abstract ``constraint``: Type option with get, set
 
     and [<AllowNullLiteral>] IndexType =
-        // inherit Type
+        inherit Type
         abstract ``type``: U2<TypeVariable, UnionOrIntersectionType> with get, set
-        abstract TODO: string with get, set
 
     and SignatureKind =
         | Call = 0
@@ -2348,7 +2331,6 @@ module ts =
         abstract priority: InferencePriority with get, set
         abstract topLevel: bool with get, set
         abstract isFixed: bool with get, set
-        abstract TODO: string with get, set
 
     and InferenceFlags =
         | InferUnionTypes = 1
@@ -2367,14 +2349,12 @@ module ts =
     and [<AllowNullLiteral>] JsFileExtensionInfo =
         abstract extension: string with get, set
         abstract isMixedContent: bool with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] DiagnosticMessage =
         abstract key: string with get, set
         abstract category: DiagnosticCategory with get, set
         abstract code: float with get, set
         abstract message: string with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] DiagnosticMessageChain =
         abstract messageText: string with get, set
@@ -2402,7 +2382,6 @@ module ts =
 
     and [<AllowNullLiteral>] PluginImport =
         abstract name: string with get, set
-        abstract TODO: string with get, set
 
     and CompilerOptionsValue =
         obj
@@ -2491,7 +2470,6 @@ module ts =
         abstract typeAcquisition: TypeAcquisition with get, set
         abstract compilerOptions: CompilerOptions with get, set
         abstract unresolvedImports: ReadonlyArray<string> with get, set
-        abstract TODO: string with get, set
 
     and ModuleKind =
         | None = 0
@@ -2515,7 +2493,6 @@ module ts =
     and [<AllowNullLiteral>] LineAndCharacter =
         abstract line: float with get, set
         abstract character: float with get, set
-        abstract TODO: string with get, set
 
     and ScriptKind =
         | Unknown = 0
@@ -2555,7 +2532,6 @@ module ts =
     and [<AllowNullLiteral>] ExpandResult =
         abstract fileNames: ResizeArray<string> with get, set
         abstract wildcardDirectories: MapLike<WatchDirectoryFlags> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ModuleResolutionHost =
         abstract fileExists: fileName: string -> bool
@@ -2579,7 +2555,6 @@ module ts =
         abstract name: string with get, set
         abstract subModuleName: string with get, set
         abstract version: string with get, set
-        abstract TODO: string with get, set
 
     and Extension =
         // | Ts = .ts
@@ -2591,7 +2566,6 @@ module ts =
 
     and [<AllowNullLiteral>] ResolvedModuleWithFailedLookupLocations =
         abstract resolvedModule: U2<ResolvedModuleFull, obj> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ResolvedTypeReferenceDirective =
         abstract primary: bool with get, set
@@ -2601,7 +2575,6 @@ module ts =
     and [<AllowNullLiteral>] ResolvedTypeReferenceDirectiveWithFailedLookupLocations =
         abstract resolvedTypeReferenceDirective: ResolvedTypeReferenceDirective with get, set
         abstract failedLookupLocations: ResizeArray<string> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] CompilerHost =
         inherit ModuleResolutionHost
@@ -2726,12 +2699,10 @@ module ts =
     and [<AllowNullLiteral>] TextSpan =
         abstract start: float with get, set
         abstract length: float with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] TextChangeRange =
         abstract span: TextSpan with get, set
         abstract newLength: float with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SyntaxList =
         inherit Node
@@ -2852,7 +2823,6 @@ module ts =
         abstract importedFiles: ResizeArray<FileReference> with get, set
         abstract ambientExternalModules: ResizeArray<string> with get, set
         abstract isLibFile: bool with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] HostCancellationToken =
         abstract isCancellationRequested: unit -> bool
@@ -2930,12 +2900,10 @@ module ts =
     and [<AllowNullLiteral>] Classifications =
         abstract spans: ResizeArray<float> with get, set
         abstract endOfLineState: EndOfLineState with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ClassifiedSpan =
         abstract textSpan: TextSpan with get, set
         // abstract classificationType: ClassificationTypeNames with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] NavigationBarItem =
         abstract text: string with get, set
@@ -2946,7 +2914,6 @@ module ts =
         abstract indent: float with get, set
         abstract bolded: bool with get, set
         abstract grayed: bool with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] NavigationTree =
         abstract text: string with get, set

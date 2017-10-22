@@ -13,7 +13,7 @@ open System.Collections.Generic
 type FsInterface =
     {
         Name: string
-        TypeParameters: string list
+        TypeParameters: FsType list
         Inherits: FsGenericType list
         Members: FsType list
     }
@@ -54,7 +54,7 @@ type FsProperty =
 type FsGenericType =
     {
         Type: FsType
-        TypeParameters: string list
+        TypeParameters: FsType list
     }
 
 type FsUnion =
@@ -83,6 +83,7 @@ type FsType =
     | Function of FsFunction
     | Union of FsUnion
     | Alias of FsAlias
+    | Generic of FsGenericType
 
 type FsModule =
     {
@@ -169,7 +170,7 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
                                 | None -> []
                                 | Some tps ->
                                     tps |> List.ofArray |> List.map (fun tp ->
-                                        tp.getText() // TODO
+                                        tp.getText() |> FsType.Mapped // TODO
                                     )
                         }
                     )
@@ -181,7 +182,7 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
             | None -> []
             | Some tps ->
                 tps |> List.ofArray |> List.map (fun tp ->
-                    tp.name.text
+                    tp.name.text |> FsType.Mapped
                 )
     }
 
@@ -201,8 +202,28 @@ let rec visitTypeNode(t: TypeNode): FsType =
         // return "Func<" + (cbParams || "unit") + ", " + getType(type.type) + ">";
         FsType.Mapped "fun" // TODO
     | SyntaxKind.TypeReference ->
-        // let tr = t :?> TypeReference
-        FsType.Mapped (t.getText())
+        let tr = t :?> TypeReferenceNode
+        match tr.typeArguments with
+        | None ->
+            let txt = tr.getText()
+            if txt.Contains "." then
+                txt.Substring(0, txt.IndexOf ".") |> FsType.Mapped
+            else
+                txt |> FsType.Mapped
+        | Some tas ->
+            {
+                Type =
+                    match tr.typeName with
+                    | U2.Case1 id ->
+                        id.text
+                    | U2.Case2 qn ->
+                        qn.getText()
+                    |> FsType.Mapped
+                TypeParameters =
+                    tas |> List.ofArray |> List.map visitTypeNode
+            }
+            |>
+            FsType.Generic
     | SyntaxKind.ArrayType ->
         // return "ResizeArray<" + getType(type.elementType) + ">";
         let at = t :?> ArrayTypeNode
@@ -227,7 +248,9 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.ThisType -> FsType.Mapped "TODO_ThisType"
     | SyntaxKind.TypePredicate -> FsType.Mapped "TODO_TypePredicate"
     | SyntaxKind.TypeLiteral -> FsType.Mapped "TODO_TypeLiteral"
-    | SyntaxKind.IntersectionType -> FsType.Mapped "TODO_IntersectionType"
+    | SyntaxKind.IntersectionType ->
+        // FsType.Mapped "TODO_IntersectionType"
+        FsType.Mapped "obj"
     | SyntaxKind.IndexedAccessType -> FsType.Mapped "TODO_IndexedAccessType"
     | SyntaxKind.TypeQuery -> FsType.Mapped "TODO_TypeQuery"
     | SyntaxKind.LiteralType -> FsType.Mapped "TODO_LiteralType"
@@ -344,14 +367,16 @@ let visitSourceFile(sf: SourceFile): FsFile =
     }
 
 // TODO may need to pass in a list of generic types
-let printType (fixType: string -> string) (tp: FsType): string =
+let printType (fixType: FsType -> FsType) (tp: FsType): string =
     match tp with
     | FsType.Mapped s ->
-        fixType s
+        // fixType s
+        s
     | FsType.TODO -> "TODO"
     | FsType.Array at ->
         match at with
-        | FsType.Mapped s -> sprintf "ResizeArray<%s>" s 
+        | FsType.Mapped s -> sprintf "ResizeArray<%s>" s
+        | FsType.Generic g -> sprintf "TODO_ArrayGeneric"
         | _ -> failwithf "unsupported Array ReturnType %A" tp
     | FsType.Union un ->
         if un.Types.Length > 6 then
@@ -360,20 +385,26 @@ let printType (fixType: string -> string) (tp: FsType): string =
             sprintf "%s%s" (printType fixType un.Types.[0]) (if un.Option then " option" else "")
         else
             let line = ResizeArray()
-            line.Add (sprintf "U%d<" un.Types.Length)
+            sprintf "U%d<" un.Types.Length |> line.Add
             un.Types |> List.map (printType fixType) |> List.map (sprintf "%s") |> String.concat ", " |> line.Add
             sprintf ">%s" (if un.Option then " option" else "") |> line.Add
             line |> String.concat ""
-    | _ -> failwithf "unsupported ReturnType %A" tp
+    | FsType.Generic g ->
+        let line = ResizeArray()
+        sprintf "%s<" (printType fixType g.Type) |> line.Add
+        g.TypeParameters |> List.map (printType fixType) |> List.map (sprintf "%s") |> String.concat " * " |> line.Add
+        ">" |> line.Add
+        line |> String.concat ""
+    | _ -> failwithf "unsupported printType %A" tp
 
-let printFunction fixType (m: FsFunction): string =
+let printFunction (fixType: FsType -> FsType) (m: FsFunction): string =
     let line = ResizeArray()
     sprintf "abstract %s" (escapeWord m.Name) |> line.Add
     let prms = 
         m.Params |> List.map(fun p ->
-            match p.Type with
+            match fixType p.Type with
             | FsType.Mapped t ->
-                sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) (fixType t)
+                sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) t
             | _ -> sprintf "TODO %A" p.Type
         )
     if prms.Length = 0 then
@@ -386,12 +417,12 @@ let printFunction fixType (m: FsFunction): string =
 let printProperty fixType (pr: FsProperty): string =
     sprintf "abstract %s: %s%s with get, set" (escapeWord pr.Name) (printType fixType pr.Type) (if pr.Option then " option" else "")
 
-let printTypeParameters(tps: string list): string =
+let printTypeParameters fixType (tps: FsType list): string =
     if tps.Length = 0 then ""
     else
         let line = ResizeArray()
         line.Add "<"
-        tps |> List.map (sprintf "'%s") |> String.concat ", " |> line.Add
+        tps |> List.map (printType fixType) |> List.map (sprintf "'%s") |> String.concat ", " |> line.Add
         line.Add ">"
         line |> String.concat ""
 
@@ -412,22 +443,24 @@ let printCodeFile (file: FsFile) =
             | FsType.Interface inf ->
                 printfn ""
                 let tps = inf.TypeParameters |> Set.ofList
-                let fixType tp =
-                    if tps.Contains tp then sprintf "'%s" tp else tp
-                printfn "    and [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters inf.TypeParameters)
+                let fixType (tp: FsType) =
+                    // if tps.Contains tp then sprintf "'%s" tp else tp // TODO
+                    tp
+                printfn "    and [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters fixType inf.TypeParameters)
+                let nLines = ref 0
                 for ih in inf.Inherits do
-                    printfn "        inherit %s%s" (printType fixType ih.Type) (printTypeParameters ih.TypeParameters)
-                let nPrintedMembers = ref 0
+                    printfn "        inherit %s%s" (printType fixType ih.Type) (printTypeParameters fixType ih.TypeParameters)
+                    incr nLines
                 for mbr in inf.Members do
                     match mbr with
                     | FsType.Method m ->
                         printfn "        %s" (printFunction fixType m)
-                        incr nPrintedMembers
+                        incr nLines
                     | FsType.Property p ->
                         printfn "        %s" (printProperty fixType p)
-                        incr nPrintedMembers
+                        incr nLines
                     | _ -> ()
-                if !nPrintedMembers = 0 then
+                if !nLines = 0 then
                     printfn "        interface end"
             | FsType.Enum en ->
                 printfn ""
