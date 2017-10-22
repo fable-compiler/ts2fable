@@ -4,6 +4,7 @@ open Fable.Core
 open Fable.Import
 open Fable.Import.Node
 open Fable.Import.ts
+open System.Collections.Generic
 
 // our simplified F# AST
 // some names inspired by the actual F# AST:
@@ -320,9 +321,26 @@ let visitModuleBlock(mb: ModuleBlock): FsModule =
         Types = mb.statements |> List.ofArray |> List.map visitStatement
     }
 
+let mergeModules(modules: FsModule list): FsModule list =
+    let index = Dictionary<string,int>()
+    let list = List<FsModule>()
+    for b in modules do
+        if index.ContainsKey b.Name then
+            let i = index.[b.Name]
+            let a = list.[i]
+            list.[i] <-
+                {
+                    Name = b.Name
+                    Types = List.append a.Types b.Types
+                }
+        else
+            list.Add b
+            index.Add(b.Name, list.Count-1)
+    list |> List.ofSeq
+
 let visitSourceFile(sf: SourceFile): FsFile =
     {
-        Modules = getModules sf |> List.map visitModuleBlock
+        Modules = getModules sf |> List.map visitModuleBlock |> mergeModules
     }
 
 // TODO may need to pass in a list of generic types
