@@ -15,7 +15,14 @@ type FsInterface =
         Name: string
         TypeParameters: FsType list
         Inherits: FsGenericType list
-        Members: FsType list
+        Functions: FsType list
+    }
+
+type FsClass =
+    {
+        Name: string
+        TypeParameters: FsType list
+        Functions: FsType list
     }
 
 type FsEnumCase =
@@ -40,6 +47,7 @@ type FsParam =
 type FsFunction =
     {
         Name: string
+        TypeParameters: FsType list
         Params: FsParam list
         ReturnType: FsType
     }
@@ -80,8 +88,8 @@ type FsAlias =
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
+    | Class of FsClass
     | Enum of FsEnum
-    | Method of FsFunction
     | Property of FsProperty
     | Param of FsParam
     | Array of FsType
@@ -193,7 +201,7 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
                     )
                 )
                 |> List.concat
-        Members = id.members |> List.ofArray |> List.map visitTypeElement
+        Functions = id.members |> List.ofArray |> List.map visitTypeElement
         TypeParameters = visitTypeParameters id.typeParameters
     }
 
@@ -264,8 +272,8 @@ let rec visitTypeNode(t: TypeNode): FsType =
         FsType.Mapped "tupple" // TODO
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
     | SyntaxKind.ThisType -> FsType.Mapped "TODO_ThisType"
-    | SyntaxKind.TypePredicate -> FsType.Mapped "TODO_TypePredicate"
-    | SyntaxKind.TypeLiteral -> FsType.Mapped "TODO_TypeLiteral"
+    | SyntaxKind.TypePredicate -> FsType.Mapped "bool"
+    | SyntaxKind.TypeLiteral -> FsType.Mapped "obj"
     | SyntaxKind.IntersectionType ->
         // FsType.Mapped "TODO_IntersectionType"
         FsType.Mapped "obj"
@@ -295,6 +303,7 @@ let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
 let visitMethodSignature(ms: MethodSignature): FsFunction =
     {
         Name = ms.name |> getPropertyName
+        TypeParameters = visitTypeParameters ms.typeParameters
         Params = ms.parameters |> List.ofArray |> List.map visitParameterDeclaration
         ReturnType =
             match ms.``type`` with
@@ -318,6 +327,7 @@ let visitFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
             match fd.name with
             | None -> "TodoNamelessFunction"
             | Some nm -> nm.text
+        TypeParameters = visitTypeParameters fd.typeParameters
         Params = fd.parameters |> List.ofArray |> List.map visitParameterDeclaration
         ReturnType =
             match fd.``type`` with
@@ -329,7 +339,7 @@ let visitTypeElement(te: TypeElement): FsType =
     match te.kind with
     | SyntaxKind.IndexSignature -> FsType.TODO
     | SyntaxKind.MethodSignature ->
-        visitMethodSignature (te :?> MethodSignature) |> FsType.Method
+        visitMethodSignature (te :?> MethodSignature) |> FsType.Function
     | SyntaxKind.PropertySignature ->
         visitPropertySignature (te :?> PropertySignature) |> FsType.Property
     | SyntaxKind.CallSignature -> FsType.TODO
@@ -378,7 +388,7 @@ let mergeTypes(tps: FsType list): FsType list =
                             Name = ai.Name
                             TypeParameters = ai.TypeParameters
                             Inherits = List.append ai.Inherits bi.Inherits
-                            Members = List.append ai.Members bi.Members
+                            Functions = List.append ai.Functions bi.Functions
                         }
                         |> FsType.Interface
                 | _ ->
@@ -392,10 +402,10 @@ let mergeTypes(tps: FsType list): FsType list =
             list.Add b
     list |> List.ofSeq
 
-let mergeModules(modules: FsModule list): FsModule list =
+let mergeModules(mds: FsModule list): FsModule list =
     let index = Dictionary<string,int>()
     let list = List<FsModule>()
-    for b in modules do
+    for b in mds do
         if index.ContainsKey b.Name then
             let i = index.[b.Name]
             let a = list.[i]
@@ -409,9 +419,25 @@ let mergeModules(modules: FsModule list): FsModule list =
             index.Add(b.Name, list.Count-1)
     list |> List.ofSeq
 
+let createGlobals(md: FsModule): FsModule =
+    let fns = md.Types |> List.filter (fun tp -> match tp with | FsType.Function _ -> true | _ -> false)
+    let cl: FsClass =
+        {
+            Name = "Globals"
+            TypeParameters = []
+            Functions = fns
+        }
+    { md with
+        Types = [ FsType.Class cl ] @ md.Types
+    }
+
 let visitSourceFile(sf: SourceFile): FsFile =
     {
-        Modules = getModules sf |> List.map visitModuleBlock |> mergeModules
+        Modules =
+            getModules sf
+            |> List.map visitModuleBlock
+            |> mergeModules
+            |> List.map createGlobals
     }
 
 // TODO may need to pass in a list of generic types
@@ -450,21 +476,32 @@ let printType (tp: FsType): string =
         line |> String.concat ""
     | _ -> failwithf "unsupported printType %A" tp
 
-let printFunction (m: FsFunction): string =
+let printFunction (f: FsFunction): string =
     let line = ResizeArray()
-    sprintf "abstract %s" (escapeWord m.Name) |> line.Add
+    sprintf "abstract %s%s" (escapeWord f.Name) (printTypeParameters f.TypeParameters) |> line.Add
     let prms = 
-        m.Params |> List.map(fun p ->
-            match p.Type with
-            | FsType.Mapped t ->
-                sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) t
-            | _ -> sprintf "TODO %A" p.Type
+        f.Params |> List.map(fun p ->
+            sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) (printType p.Type)
         )
     if prms.Length = 0 then
         sprintf ": unit" |> line.Add
     else
         sprintf ": %s" (prms |> String.concat " * ") |> line.Add
-    sprintf " -> %s" (printType m.ReturnType) |> line.Add
+    sprintf " -> %s" (printType f.ReturnType) |> line.Add
+    line |> String.concat ""
+
+let printClassFunction (f: FsFunction): string =
+    let line = ResizeArray()
+    sprintf "member __.%s%s" (escapeWord f.Name) (printTypeParameters f.TypeParameters) |> line.Add
+    let prms = 
+        f.Params |> List.map(fun p ->
+            sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) (printType p.Type)
+        )
+    if prms.Length = 0 then
+        sprintf "(" |> line.Add
+    else
+        sprintf "(%s" (prms |> String.concat ", ") |> line.Add
+    sprintf "): %s = jsNative" (printType f.ReturnType) |> line.Add
     line |> String.concat ""
 
 let printProperty (pr: FsProperty): string =
@@ -475,11 +512,11 @@ let printTypeParameters (tps: FsType list): string =
     else
         let line = ResizeArray()
         line.Add "<"
-        tps |> List.map printType |> List.map (sprintf "%s") |> String.concat ", " |> line.Add
+        tps |> List.map printType |> String.concat ", " |> line.Add
         line.Add ">"
         line |> String.concat ""
 
-let printCodeFile (file: FsFile) =
+let printFile (file: FsFile) =
     // TODO specify namespace
     // TODO customize open statements
     printfn "namespace rec Fable.Import"
@@ -500,10 +537,10 @@ let printCodeFile (file: FsFile) =
                 for ih in inf.Inherits do
                     printfn "        inherit %s%s" (printType ih.Type) (printTypeParameters ih.TypeParameters)
                     incr nLines
-                for mbr in inf.Members do
+                for mbr in inf.Functions do
                     match mbr with
-                    | FsType.Method m ->
-                        printfn "        %s" (printFunction m)
+                    | FsType.Function f ->
+                        printfn "        %s" (printFunction f)
                         incr nLines
                     | FsType.Property p ->
                         printfn "        %s" (printProperty p)
@@ -511,6 +548,18 @@ let printCodeFile (file: FsFile) =
                     | _ -> ()
                 if !nLines = 0 then
                     printfn "        interface end"
+            | FsType.Class cl ->
+                printfn ""
+                printfn "    and %s%s =" cl.Name (printTypeParameters cl.TypeParameters)
+                let nLines = ref 0
+                for mbr in cl.Functions do
+                    match mbr with
+                    | FsType.Function f ->
+                        printfn "        %s" (printClassFunction f)
+                        incr nLines
+                    | _ -> ()
+                if !nLines = 0 then
+                    printfn "        class end"
             | FsType.Enum en ->
                 printfn ""
                 printfn "    and %s =" en.Name
@@ -639,12 +688,11 @@ let escapeWord s =
     else
         s
 
-let printFile() =
+let printTypeScriptFile() =
     let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
     let code = Fs.readFileSync(filePath).toString()
     let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
     let fsFile = visitSourceFile tsFile
-    printCodeFile fsFile
-    ()
+    printFile fsFile
 
-printFile()
+printTypeScriptFile()
