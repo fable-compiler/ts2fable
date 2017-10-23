@@ -14,7 +14,7 @@ type FsInterface =
     {
         Name: string
         TypeParameters: FsType list
-        Inherits: FsGenericType list
+        Inherits: FsType list
         Members: FsType list
     }
 
@@ -200,10 +200,9 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
                                 match eta.typeArguments with
                                 | None -> []
                                 | Some tps ->
-                                    tps |> List.ofArray |> List.map (fun tp ->
-                                        tp.getText() |> FsType.Mapped // TODO
-                                    )
+                                    tps |> List.ofArray |> List.map visitTypeNode
                         }
+                        |> FsType.Generic
                     )
                 )
                 |> List.concat
@@ -432,10 +431,12 @@ let mergeModules(mds: FsModule list): FsModule list =
             index.Add(b.Name, list.Count-1)
     list |> List.ofSeq
 
-let asFunction (tp: FsType) = match tp with | FsType.Function fn -> Some fn | _ -> None
-let isFunction tp = asFunction tp |> Option.isSome
+let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
+let asMapped (tp: FsType) = match tp with | FsType.Mapped v -> Some v | _ -> None
+let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
+let asClass (tp: FsType) = match tp with | FsType.Class v -> Some v | _ -> None
 
-let asMapped (tp: FsType) = match tp with | FsType.Mapped fn -> Some fn | _ -> None
+let isFunction tp = asFunction tp |> Option.isSome
 
 let createGlobals(md: FsModule): FsModule =
     let fns = md.Types |> List.filter isFunction
@@ -454,7 +455,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.Interface it ->
         { it with
             TypeParameters = it.TypeParameters |> List.map (fixType fix)
-            // Inherits = TODO
+            Inherits = it.Inherits |> List.map (fixType fix)
             Members = it.Members |> List.map (fixType fix)
         }
         |> FsType.Interface
@@ -520,28 +521,56 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | _ -> tp
     |> fix
 
+let fixTic (typeParameters: FsType list) (tp: FsType) =
+    if typeParameters.Length = 0 then
+        tp
+    else
+        let list = typeParameters |> List.map printType
+        let set = list |> Set.ofList
+        let fix (t: FsType): FsType =
+            match asMapped t with
+            | None -> t
+            | Some s -> 
+                if set.Contains s then
+                    sprintf "'%s" s |> FsType.Mapped
+                else t
+        fixType fix tp
+
+
 let addTicForGenericFunctions(md: FsModule): FsModule =
     { md with
         Types =
             md.Types |> List.map (fun tp ->
-                match asFunction tp with
+                match tp with
+                | FsType.Interface it ->
+                    { it with
+                        Members = it.Members |> List.map (fun mbr ->
+                            match asFunction mbr with
+                            | None -> mbr
+                            | Some fn -> fixTic fn.TypeParameters mbr
+                        )
+                    }
+                    |> FsType.Interface
+                | FsType.Class cl ->
+                    { cl with
+                        Members = cl.Members |> List.map (fun mbr ->
+                            match asFunction mbr with
+                            | None -> mbr
+                            | Some fn -> fixTic fn.TypeParameters mbr
+                        )
+                    }
+                    |> FsType.Class
+                | _ -> tp
+            )
+    }
+
+let addTicForGenericInterfaces(md: FsModule): FsModule =
+    { md with
+        Types =
+            md.Types |> List.map (fun tp ->
+                match asInterface tp with
                 | None -> tp
-                | Some fn ->
-                    if fn.TypeParameters.Length = 0 then
-                        FsType.Function fn
-                    else
-                        let list = fn.TypeParameters |> List.map printType
-                        let set = list |> Set.ofList
-
-                        let fixTic (tp: FsType): FsType =
-                            match asMapped tp with
-                            | None -> tp
-                            | Some s -> 
-                                if set.Contains s then
-                                    sprintf "'%s" s |> FsType.Mapped
-                                else tp
-
-                        fixType fixTic tp
+                | Some it -> fixTic it.TypeParameters tp
             )
     }
 
@@ -551,8 +580,10 @@ let visitSourceFile(sf: SourceFile): FsFile =
             getModules sf
             |> List.map visitModuleBlock
             |> mergeModules
-            |> List.map addTicForGenericFunctions
             |> List.map createGlobals
+            |> List.map addTicForGenericFunctions
+            |> List.map addTicForGenericInterfaces
+            
     }
 
 let printType (tp: FsType): string =
@@ -574,9 +605,11 @@ let printType (tp: FsType): string =
             line |> String.concat ""
     | FsType.Generic g ->
         let line = ResizeArray()
-        sprintf "%s<" (printType g.Type) |> line.Add
-        g.TypeParameters |> List.map printType |> String.concat " * " |> line.Add
-        ">" |> line.Add
+        sprintf "%s" (printType g.Type) |> line.Add
+        if g.TypeParameters.Length > 0 then
+            "<" |> line.Add
+            g.TypeParameters |> List.map printType |> String.concat " * " |> line.Add
+            ">" |> line.Add
         line |> String.concat ""
     | FsType.FunctionType ft ->
         let line = ResizeArray()
@@ -650,7 +683,7 @@ let printFile (file: FsFile) =
                 printfn "    and [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters inf.TypeParameters)
                 let nLines = ref 0
                 for ih in inf.Inherits do
-                    printfn "        inherit %s%s" (printType ih.Type) (printTypeParameters ih.TypeParameters)
+                    printfn "        inherit %s" (printType ih)
                     incr nLines
                 for mbr in inf.Members do
                     match mbr with
