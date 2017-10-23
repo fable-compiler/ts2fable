@@ -613,10 +613,10 @@ module ts =
         abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ReadonlyMap<'T> =
-        abstract size: float with get, set
-        abstract get: key: string -> U2<'T, obj>
+        abstract get: key: string -> 'T option
         abstract has: key: string -> bool
         abstract forEach: action: Func<'T, string, unit> -> unit
+        abstract size: float with get, set
         abstract keys: unit -> Iterator<string>
         abstract values: unit -> Iterator<'T>
         abstract entries: unit -> Iterator<string * 'T>

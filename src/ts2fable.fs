@@ -83,6 +83,7 @@ type FsAlias =
     {
         Name: string
         Type: FsType
+        TypeParameters: FsType list
     }
 
 type FsTuple =
@@ -361,6 +362,7 @@ let visitAliasDeclaration(d: TypeAliasDeclaration): FsAlias =
     {
         Name = d.name.text
         Type = d.``type`` |> visitTypeNode
+        TypeParameters = visitTypeParameters d.typeParameters
     }
 
 let visitStatement(sd: Statement): FsType =
@@ -505,6 +507,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.Alias al ->
         { al with
             Type = fixType fix al.Type
+            TypeParameters = al.TypeParameters |> List.map (fixType fix)
         }
         |> FsType.Alias
     | FsType.Generic gn ->
@@ -536,7 +539,6 @@ let fixTic (typeParameters: FsType list) (tp: FsType) =
                 else t
         fixType fix tp
 
-
 let addTicForGenericFunctions(md: FsModule): FsModule =
     { md with
         Types =
@@ -564,13 +566,15 @@ let addTicForGenericFunctions(md: FsModule): FsModule =
             )
     }
 
-let addTicForGenericInterfaces(md: FsModule): FsModule =
+let addTicForGenericTypes(md: FsModule): FsModule =
     { md with
         Types =
             md.Types |> List.map (fun tp ->
-                match asInterface tp with
-                | None -> tp
-                | Some it -> fixTic it.TypeParameters tp
+                match tp with
+                | FsType.Interface it -> fixTic it.TypeParameters tp
+                | FsType.Class cl -> fixTic cl.TypeParameters tp
+                | FsType.Alias al -> fixTic al.TypeParameters tp
+                | _ -> tp
             )
     }
 
@@ -582,8 +586,7 @@ let visitSourceFile(sf: SourceFile): FsFile =
             |> mergeModules
             |> List.map createGlobals
             |> List.map addTicForGenericFunctions
-            |> List.map addTicForGenericInterfaces
-            
+            |> List.map addTicForGenericTypes
     }
 
 let printType (tp: FsType): string =
@@ -626,7 +629,9 @@ let printType (tp: FsType): string =
 
 let printFunction (f: FsFunction): string =
     let line = ResizeArray()
-    sprintf "abstract %s%s" (escapeWord f.Name) (printTypeParameters f.TypeParameters) |> line.Add
+    // TODO can interface methods not have generics?
+    // sprintf "abstract %s%s" (escapeWord f.Name) (printTypeParameters f.TypeParameters) |> line.Add
+    sprintf "abstract %s" (escapeWord f.Name) |> line.Add
     let prms = 
         f.Params |> List.map(fun p ->
             sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) (printType p.Type)
@@ -717,7 +722,7 @@ let printFile (file: FsFile) =
                     | Some v -> printfn "        | %s = %s" cs.Name v
             | FsType.Alias al ->
                 printfn ""
-                printfn "    and %s =" al.Name
+                printfn "    and %s%s =" al.Name (printTypeParameters al.TypeParameters)
                 printfn "        %s" (printType al.Type)
             | _ -> ()
 
