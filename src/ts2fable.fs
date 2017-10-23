@@ -528,7 +528,7 @@ let printFile (file: FsFile) =
     for md in file.Modules do
         printfn ""
         printfn "module %s =" md.Name
-        for tp in md.Types do
+        for i, tp in md.Types |> Seq.indexed do
             match tp with
             | FsType.Interface inf ->
                 printfn ""
@@ -550,7 +550,7 @@ let printFile (file: FsFile) =
                     printfn "        interface end"
             | FsType.Class cl ->
                 printfn ""
-                printfn "    and %s%s =" cl.Name (printTypeParameters cl.TypeParameters)
+                printfn "    %s %s%s =" (if i = 0 then "type" else "and") cl.Name (printTypeParameters cl.TypeParameters)
                 let nLines = ref 0
                 for mbr in cl.Functions do
                     match mbr with
