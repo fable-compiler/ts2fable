@@ -44,6 +44,14 @@ type FsFunction =
         ReturnType: FsType
     }
 
+type FsFunctionType =
+    {
+        Name: string option
+        TypeParameters: FsType list
+        Params: FsParam list
+        ReturnType: FsType
+    }
+
 type FsProperty =
     {
         Name: string
@@ -81,6 +89,7 @@ type FsType =
     | None // when it is not set
     | Mapped of string
     | Function of FsFunction
+    | FunctionType of FsFunctionType
     | Union of FsUnion
     | Alias of FsAlias
     | Generic of FsGenericType
@@ -154,6 +163,14 @@ let visitEnumCase(em: EnumMember): FsEnumCase =
                 // https://github.com/fable-compiler/ts2fable/issues/17
     }
 
+let visitTypeParameters(tps: TypeParameterDeclaration array option): FsType list =
+    match tps with
+    | None -> []
+    | Some tps ->
+        tps |> List.ofArray |> List.map (fun tp ->
+            tp.name.text |> FsType.Mapped
+        )
+
 let visitInterface(id: InterfaceDeclaration): FsInterface =
     {
         Name = id.name.text 
@@ -177,13 +194,7 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
                 )
                 |> List.concat
         Members = id.members |> List.ofArray |> List.map visitTypeElement
-        TypeParameters = 
-            match id.typeParameters with
-            | None -> []
-            | Some tps ->
-                tps |> List.ofArray |> List.map (fun tp ->
-                    tp.name.text |> FsType.Mapped
-                )
+        TypeParameters = visitTypeParameters id.typeParameters
     }
 
 let visitEnum(ed: EnumDeclaration): FsEnum =
@@ -192,38 +203,45 @@ let visitEnum(ed: EnumDeclaration): FsEnum =
         Cases = ed.members |> List.ofArray |> List.map visitEnumCase
     }
 
+let visitTypeReference(tr: TypeReferenceNode): FsType =
+    match tr.typeArguments with
+    | None ->
+        let txt = tr.getText()
+        if txt.Contains "." then
+            txt.Substring(0, txt.IndexOf ".") |> FsType.Mapped
+        else
+            txt |> FsType.Mapped
+    | Some tas ->
+        {
+            Type =
+                match tr.typeName with
+                | U2.Case1 id ->
+                    id.text
+                | U2.Case2 qn ->
+                    qn.getText()
+                |> FsType.Mapped
+            TypeParameters =
+                tas |> List.ofArray |> List.map visitTypeNode
+        }
+        |>
+        FsType.Generic
+let visitFunctionType(ft: FunctionTypeNode): FsFunctionType =
+    {
+        Name = ft.name |> Option.map getPropertyName
+        TypeParameters = visitTypeParameters ft.typeParameters
+        Params =  ft.parameters |> List.ofArray |> List.map visitParameterDeclaration
+        ReturnType =
+            match ft.``type`` with
+            | Some t -> visitTypeNode t
+            | None -> FsType.Mapped "unit"
+    }
 let rec visitTypeNode(t: TypeNode): FsType =
     match t.kind with
     | SyntaxKind.StringKeyword -> FsType.Mapped "string"
     | SyntaxKind.FunctionType ->
-        // var cbParams = type.parameters.map(function (x) {
-        //     return x.dotDotDotToken ? "obj" : getType(x.type);
-        // }).join(", ");
-        // return "Func<" + (cbParams || "unit") + ", " + getType(type.type) + ">";
-        FsType.Mapped "fun" // TODO
+        visitFunctionType (t :?> FunctionTypeNode) |> FsType.FunctionType
     | SyntaxKind.TypeReference ->
-        let tr = t :?> TypeReferenceNode
-        match tr.typeArguments with
-        | None ->
-            let txt = tr.getText()
-            if txt.Contains "." then
-                txt.Substring(0, txt.IndexOf ".") |> FsType.Mapped
-            else
-                txt |> FsType.Mapped
-        | Some tas ->
-            {
-                Type =
-                    match tr.typeName with
-                    | U2.Case1 id ->
-                        id.text
-                    | U2.Case2 qn ->
-                        qn.getText()
-                    |> FsType.Mapped
-                TypeParameters =
-                    tas |> List.ofArray |> List.map visitTypeNode
-            }
-            |>
-            FsType.Generic
+        visitTypeReference (t :?> TypeReferenceNode)
     | SyntaxKind.ArrayType ->
         // return "ResizeArray<" + getType(type.elementType) + ">";
         let at = t :?> ArrayTypeNode
@@ -414,14 +432,21 @@ let printType (tp: FsType): string =
         else
             let line = ResizeArray()
             sprintf "U%d<" un.Types.Length |> line.Add
-            un.Types |> List.map printType |> List.map (sprintf "%s") |> String.concat ", " |> line.Add
+            un.Types |> List.map printType |> String.concat ", " |> line.Add
             sprintf ">%s" (if un.Option then " option" else "") |> line.Add
             line |> String.concat ""
     | FsType.Generic g ->
         let line = ResizeArray()
         sprintf "%s<" (printType g.Type) |> line.Add
-        g.TypeParameters |> List.map printType |> List.map (sprintf "%s") |> String.concat " * " |> line.Add
+        g.TypeParameters |> List.map printType |> String.concat " * " |> line.Add
         ">" |> line.Add
+        line |> String.concat ""
+    | FsType.FunctionType ft ->
+        let line = ResizeArray()
+        let typs = (ft.Params |> List.map (fun p -> p.Type)) @ [ft.ReturnType]
+        "Func<" |> line.Add
+        typs |> List.map printType |> String.concat ", " |> line.Add
+        ">"|> line.Add
         line |> String.concat ""
     | _ -> failwithf "unsupported printType %A" tp
 
@@ -450,7 +475,7 @@ let printTypeParameters (tps: FsType list): string =
     else
         let line = ResizeArray()
         line.Add "<"
-        tps |> List.map printType |> List.map (sprintf "'%s") |> String.concat ", " |> line.Add
+        tps |> List.map printType |> List.map (sprintf "%s") |> String.concat ", " |> line.Add
         line.Add ">"
         line |> String.concat ""
 
