@@ -85,6 +85,11 @@ type FsAlias =
         Type: FsType
     }
 
+type FsTuple =
+    {
+        Types: FsType list
+    }
+
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
@@ -101,6 +106,7 @@ type FsType =
     | Union of FsUnion
     | Alias of FsAlias
     | Generic of FsGenericType
+    | Tuple of FsTuple
 
 type FsModule =
     {
@@ -268,18 +274,25 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.AnyKeyword -> FsType.Mapped "obj"
     | SyntaxKind.VoidKeyword -> FsType.Mapped "unit"
     | SyntaxKind.TupleType ->
-        // return type.elementTypes.map(getType).join(" * ");
-        FsType.Mapped "tupple" // TODO
+        let tp = t :?> TupleTypeNode
+        {
+            Types = tp.elementTypes |> List.ofArray |> List.map visitTypeNode
+        }
+        |> FsType.Tuple
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
-    | SyntaxKind.ThisType -> FsType.Mapped "TODO_ThisType"
+    | SyntaxKind.ThisType ->
+        // TODO map to the actual type of this
+        FsType.Mapped "obj"
     | SyntaxKind.TypePredicate -> FsType.Mapped "bool"
     | SyntaxKind.TypeLiteral -> FsType.Mapped "obj"
-    | SyntaxKind.IntersectionType ->
-        // FsType.Mapped "TODO_IntersectionType"
+    | SyntaxKind.IntersectionType -> FsType.Mapped "obj"
+    | SyntaxKind.IndexedAccessType ->
+        // function createKeywordTypeNode(kind: KeywordTypeNode["kind"]): KeywordTypeNode;
+        FsType.Mapped "obj" // TODO
+    | SyntaxKind.TypeQuery ->
+        // let tq = t :?> TypeQueryNode
         FsType.Mapped "obj"
-    | SyntaxKind.IndexedAccessType -> FsType.Mapped "TODO_IndexedAccessType"
-    | SyntaxKind.TypeQuery -> FsType.Mapped "TODO_TypeQuery"
-    | SyntaxKind.LiteralType -> FsType.Mapped "TODO_LiteralType"
+    | SyntaxKind.LiteralType -> FsType.Mapped "obj"
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
         match eta.expression.kind with
@@ -287,7 +300,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
             let id = eta.expression :?> Identifier
             FsType.Mapped id.text
         | _ -> failwithf "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind
-    | SyntaxKind.ParenthesizedType -> FsType.Mapped "TODO_ParenthesizedType"
+    | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj"
     | _ -> failwithf "unsupported TypeNode kind: %A" t.kind
 
 let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
@@ -461,7 +474,8 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Type = fixType fix pr.Type
         }
         |> FsType.Param
-    | FsType.Array ar -> ar |> FsType.Array // TODO
+    | FsType.Array ar ->
+        fixType fix ar |> FsType.Array
     | FsType.Function fn ->
         { fn with
             TypeParameters = fn.TypeParameters |> List.map (fixType fix)
@@ -492,7 +506,17 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Type = fixType fix al.Type
         }
         |> FsType.Alias
-    | FsType.Generic gn -> gn |> FsType.Generic
+    | FsType.Generic gn ->
+        { gn with
+            Type = fixType fix gn.Type
+            TypeParameters = gn.TypeParameters |> List.map (fixType fix)
+        }
+        |> FsType.Generic
+    | FsType.Tuple tp ->
+        { tp with
+            Types = tp.Types |> List.map (fixType fix)
+        }
+        |> FsType.Tuple
     | _ -> tp
     |> fix
 
@@ -531,16 +555,12 @@ let visitSourceFile(sf: SourceFile): FsFile =
             |> List.map createGlobals
     }
 
-// TODO may need to pass in a list of generic types
 let printType (tp: FsType): string =
     match tp with
     | FsType.Mapped s -> s
     | FsType.TODO -> "TODO"
     | FsType.Array at ->
-        match at with
-        | FsType.Mapped s -> sprintf "ResizeArray<%s>" s
-        | FsType.Generic g -> sprintf "TODO_ArrayGeneric"
-        | _ -> failwithf "unsupported Array ReturnType %A" tp
+        sprintf "ResizeArray<%s>" (printType at)
     | FsType.Union un ->
         if un.Types.Length > 6 then
             "obj"
@@ -564,6 +584,10 @@ let printType (tp: FsType): string =
         "Func<" |> line.Add
         typs |> List.map printType |> String.concat ", " |> line.Add
         ">"|> line.Add
+        line |> String.concat ""
+    | FsType.Tuple tp ->
+        let line = ResizeArray()
+        tp.Types |> List.map printType |> String.concat " * " |> line.Add
         line |> String.concat ""
     | _ -> failwithf "unsupported printType %A" tp
 
