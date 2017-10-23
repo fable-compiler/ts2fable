@@ -108,6 +108,8 @@ type FsType =
     | Alias of FsAlias
     | Generic of FsGenericType
     | Tuple of FsTuple
+    | Module of FsModule
+    | File of FsFile
 
 type FsModule =
     {
@@ -437,6 +439,7 @@ let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ ->
 let asMapped (tp: FsType) = match tp with | FsType.Mapped v -> Some v | _ -> None
 let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
 let asClass (tp: FsType) = match tp with | FsType.Class v -> Some v | _ -> None
+let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
 
 let isFunction tp = asFunction tp |> Option.isSome
 
@@ -453,6 +456,17 @@ let createGlobals(md: FsModule): FsModule =
     }
 
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
+
+    let fixModule (md: FsModule) =    
+        { md with
+            Types = md.Types |> List.map (fixType fix)
+        }
+
+    let fixParam (pm: FsParam) =
+        { pm with
+            Type = fixType fix pm.Type
+        }
+
     match tp with
     | FsType.Interface it ->
         { it with
@@ -482,20 +496,14 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.Function fn ->
         { fn with
             TypeParameters = fn.TypeParameters |> List.map (fixType fix)
-            Params = fn.Params |> List.map (fun pm ->
-                { pm with
-                    Type = fixType fix pm.Type
-                })
+            Params = fn.Params |> List.map fixParam
             ReturnType = fixType fix fn.ReturnType
         }
         |> FsType.Function
     | FsType.FunctionType fn ->
         { fn with
             TypeParameters = fn.TypeParameters |> List.map (fixType fix)
-            Params = fn.Params |> List.map (fun pm ->
-                { pm with
-                    Type = fixType fix pm.Type
-                })
+            Params = fn.Params |> List.map fixParam
             ReturnType = fixType fix fn.ReturnType
         }
         |> FsType.FunctionType
@@ -521,6 +529,13 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Types = tp.Types |> List.map (fixType fix)
         }
         |> FsType.Tuple
+    | FsType.Module md ->
+        fixModule md |> FsType.Module
+     | FsType.File f ->
+        { f with
+            Modules = f.Modules |> List.map fixModule
+        }
+        |> FsType.File
     | _ -> tp
     |> fix
 
@@ -566,6 +581,23 @@ let addTicForGenericFunctions(md: FsModule): FsModule =
             )
     }
 
+let fixNodeArray(md: FsModule): FsModule =
+
+    let fix(tp: FsType): FsType =
+        match asGeneric tp with
+        | None -> tp
+        | Some gn ->
+            // printfn "gn: %A" gn 
+            match asMapped gn.Type with
+            | None -> tp
+            | Some s ->
+                if s.Equals "NodeArray" && gn.TypeParameters.Length = 1 then
+                    gn.TypeParameters.[0] |> FsType.Array
+                else tp
+
+    { md with Types = md.Types |> List.map (fixType fix) }
+
+
 let addTicForGenericTypes(md: FsModule): FsModule =
     { md with
         Types =
@@ -587,6 +619,7 @@ let visitSourceFile(sf: SourceFile): FsFile =
             |> List.map createGlobals
             |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
+            // |> List.map fixNodeArray
     }
 
 let printType (tp: FsType): string =
@@ -847,5 +880,6 @@ let printTypeScriptFile() =
     let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
     let fsFile = visitSourceFile tsFile
     printFile fsFile
+    ()
 
 printTypeScriptFile()
