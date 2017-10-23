@@ -15,14 +15,14 @@ type FsInterface =
         Name: string
         TypeParameters: FsType list
         Inherits: FsGenericType list
-        Functions: FsType list
+        Members: FsType list
     }
 
 type FsClass =
     {
         Name: string
         TypeParameters: FsType list
-        Functions: FsType list
+        Members: FsType list
     }
 
 type FsEnumCase =
@@ -201,7 +201,7 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
                     )
                 )
                 |> List.concat
-        Functions = id.members |> List.ofArray |> List.map visitTypeElement
+        Members = id.members |> List.ofArray |> List.map visitTypeElement
         TypeParameters = visitTypeParameters id.typeParameters
     }
 
@@ -388,7 +388,7 @@ let mergeTypes(tps: FsType list): FsType list =
                             Name = ai.Name
                             TypeParameters = ai.TypeParameters
                             Inherits = List.append ai.Inherits bi.Inherits
-                            Functions = List.append ai.Functions bi.Functions
+                            Members = List.append ai.Members bi.Members
                         }
                         |> FsType.Interface
                 | _ ->
@@ -419,16 +419,106 @@ let mergeModules(mds: FsModule list): FsModule list =
             index.Add(b.Name, list.Count-1)
     list |> List.ofSeq
 
+let asFunction (tp: FsType) = match tp with | FsType.Function fn -> Some fn | _ -> None
+let isFunction tp = asFunction tp |> Option.isSome
+
+let asMapped (tp: FsType) = match tp with | FsType.Mapped fn -> Some fn | _ -> None
+
 let createGlobals(md: FsModule): FsModule =
-    let fns = md.Types |> List.filter (fun tp -> match tp with | FsType.Function _ -> true | _ -> false)
+    let fns = md.Types |> List.filter isFunction
     let cl: FsClass =
         {
             Name = "Globals"
             TypeParameters = []
-            Functions = fns
+            Members = fns
         }
     { md with
         Types = [ FsType.Class cl ] @ md.Types
+    }
+
+let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
+    match tp with
+    | FsType.Interface it ->
+        { it with
+            TypeParameters = it.TypeParameters |> List.map (fixType fix)
+            // Inherits = TODO
+            Members = it.Members |> List.map (fixType fix)
+        }
+        |> FsType.Interface
+    | FsType.Class cl ->
+        { cl with
+            TypeParameters = cl.TypeParameters |> List.map (fixType fix)
+            Members = cl.Members |> List.map (fixType fix)
+        }
+        |> FsType.Class
+    | FsType.Property pr ->
+        { pr with
+            Type = fixType fix pr.Type
+        }
+        |> FsType.Property 
+    | FsType.Param pr ->
+        { pr with
+            Type = fixType fix pr.Type
+        }
+        |> FsType.Param
+    | FsType.Array ar -> ar |> FsType.Array // TODO
+    | FsType.Function fn ->
+        { fn with
+            TypeParameters = fn.TypeParameters |> List.map (fixType fix)
+            Params = fn.Params |> List.map (fun pm ->
+                { pm with
+                    Type = fixType fix pm.Type
+                })
+            ReturnType = fixType fix fn.ReturnType
+        }
+        |> FsType.Function
+    | FsType.FunctionType fn ->
+        { fn with
+            TypeParameters = fn.TypeParameters |> List.map (fixType fix)
+            Params = fn.Params |> List.map (fun pm ->
+                { pm with
+                    Type = fixType fix pm.Type
+                })
+            ReturnType = fixType fix fn.ReturnType
+        }
+        |> FsType.FunctionType
+    | FsType.Union un ->
+        { un with
+            Types = un.Types |> List.map (fixType fix)
+        }
+        |> FsType.Union
+    | FsType.Alias al ->
+        { al with
+            Type = fixType fix al.Type
+        }
+        |> FsType.Alias
+    | FsType.Generic gn -> gn |> FsType.Generic
+    | _ -> tp
+    |> fix
+
+let addTicForGenericFunctions(md: FsModule): FsModule =
+    { md with
+        Types =
+            md.Types |> List.map (fun tp ->
+                match asFunction tp with
+                | None -> tp
+                | Some fn ->
+                    if fn.TypeParameters.Length = 0 then
+                        FsType.Function fn
+                    else
+                        let list = fn.TypeParameters |> List.map printType
+                        let set = list |> Set.ofList
+
+                        let fixTic (tp: FsType): FsType =
+                            match asMapped tp with
+                            | None -> tp
+                            | Some s -> 
+                                if set.Contains s then
+                                    sprintf "'%s" s |> FsType.Mapped
+                                else tp
+
+                        fixType fixTic tp
+            )
     }
 
 let visitSourceFile(sf: SourceFile): FsFile =
@@ -437,6 +527,7 @@ let visitSourceFile(sf: SourceFile): FsFile =
             getModules sf
             |> List.map visitModuleBlock
             |> mergeModules
+            |> List.map addTicForGenericFunctions
             |> List.map createGlobals
     }
 
@@ -537,7 +628,7 @@ let printFile (file: FsFile) =
                 for ih in inf.Inherits do
                     printfn "        inherit %s%s" (printType ih.Type) (printTypeParameters ih.TypeParameters)
                     incr nLines
-                for mbr in inf.Functions do
+                for mbr in inf.Members do
                     match mbr with
                     | FsType.Function f ->
                         printfn "        %s" (printFunction f)
@@ -552,7 +643,7 @@ let printFile (file: FsFile) =
                 printfn ""
                 printfn "    %s %s%s =" (if i = 0 then "type" else "and") cl.Name (printTypeParameters cl.TypeParameters)
                 let nLines = ref 0
-                for mbr in cl.Functions do
+                for mbr in cl.Members do
                     match mbr with
                     | FsType.Function f ->
                         printfn "        %s" (printClassFunction f)
