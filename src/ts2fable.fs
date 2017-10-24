@@ -627,6 +627,19 @@ let fixEscapeWords(md: FsModule): FsModule =
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
+let fixDateTime(md: FsModule): FsModule =
+
+    let replaceName name =
+        if String.Equals("Date", name) then "DateTime" else name
+
+    let fix(tp: FsType): FsType =
+        match tp with
+        | FsType.Mapped s ->
+            replaceName s |> FsType.Mapped
+        | _ -> tp
+
+    { md with Types = md.Types |> List.map (fixType fix) }
+
 let addTicForGenericTypes(md: FsModule): FsModule =
     { md with
         Types =
@@ -650,6 +663,7 @@ let visitSourceFile(sf: SourceFile): FsFile =
             |> List.map addTicForGenericTypes
             |> List.map fixNodeArray
             |> List.map fixEscapeWords
+            |> List.map fixDateTime
     }
 
 let printType (tp: FsType): string =
