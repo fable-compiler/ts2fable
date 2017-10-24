@@ -134,33 +134,10 @@ type FsFile =
         Modules: FsModule list
     }
 
-
-type Globals with
-    member x.forEachChildNode (node: Node) cbNode =
-        let func = System.Func<_,_>(fun (node:Node) -> cbNode node; None)
-        x.forEachChild<unit>(node, func) |> ignore
-
-    member x.forEachChildNodeRec (root: Node) cbNode =
-        cbNode root
-        x.forEachChildNode root (fun node -> x.forEachChildNodeRec node cbNode)
-
-    member x.isLiteralExpressionAs(node: Node): LiteralExpression option =
-        if x.isLiteralExpression node then Some(node :?> LiteralExpression) else None
-
-let getModules(root: Node) =
-    let nodes = ResizeArray<ModuleBlock>()
-    ts.forEachChildNodeRec root (fun node -> 
-        if node.kind = SyntaxKind.ModuleBlock then
-            nodes.Add (node :?> ModuleBlock) )
-    nodes |> List.ofSeq
-
-let getModuleName(mb: ModuleBlock): string =
-    match mb.parent with
-    | Some md ->
-        match md.name with
-        | U2.Case1 id -> id.getText()
-        | U2.Case2 sl -> sl.text
-    | None -> "NoModuleName"
+type Node with
+    member x.ForEachChild cbNode =
+        let func = Func<_,_>(fun (node:Node) -> cbNode node; None)
+        x.forEachChild<unit>(func) |> ignore
 
 let getPropertyName(pn: PropertyName): string =
     match pn with
@@ -419,14 +396,9 @@ let visitStatement(sd: Statement): FsType =
     | SyntaxKind.VariableStatement -> FsType.TODO
     | SyntaxKind.FunctionDeclaration ->
         visitFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
-    | SyntaxKind.ModuleDeclaration -> FsType.TODO
+    | SyntaxKind.ModuleDeclaration ->
+        visitModuleDeclaration (sd :?> ModuleDeclaration) |> FsType.Module
     | _ -> failwithf "unsupported Statement kind: %A" sd.kind
-
-let visitModuleBlock(mb: ModuleBlock): FsModule =
-    {
-        Name = mb |> getModuleName
-        Types = mb.statements |> List.ofArray |> List.map visitStatement
-    }
 
 let mergeTypes(tps: FsType list): FsType list =
     let index = Dictionary<string,int>()
@@ -687,11 +659,42 @@ let addTicForGenericTypes(md: FsModule): FsModule =
             )
     }
 
+let rec visitModuleDeclaration(md: ModuleDeclaration): FsModule =
+    let types = ResizeArray()
+    md.ForEachChild (fun nd ->
+        match nd.kind with
+        | SyntaxKind.ModuleBlock ->
+            let mb = nd :?> ModuleBlock
+            mb.statements |> List.ofArray |> List.map visitStatement |> List.iter types.Add
+        | SyntaxKind.DeclareKeyword -> ()
+        | SyntaxKind.Identifier -> ()
+        | SyntaxKind.ModuleDeclaration ->
+            visitModuleDeclaration (nd :?> ModuleDeclaration) |> FsType.Module |> types.Add
+        | _ -> failwithf "unknown kind in ModuleDeclaration: %A" nd.kind
+    )
+    {
+        Name =
+            match md.name with
+            | U2.Case1 id -> id.getText()
+            | U2.Case2 sl -> sl.text
+        Types = types |> List.ofSeq
+    }
+
 let visitSourceFile(sf: SourceFile): FsFile =
+    let modules = ResizeArray()
+    sf.ForEachChild (fun nd ->
+        match nd.kind with
+        | SyntaxKind.ModuleDeclaration ->
+            visitModuleDeclaration (nd :?> ModuleDeclaration) |> modules.Add
+        | SyntaxKind.ExportAssignment -> () // TODO
+        | SyntaxKind.EndOfFileToken -> ()
+        | SyntaxKind.FunctionDeclaration -> ()
+        | _ -> failwithf "unknown kind in SourceFile: %A" nd.kind
+    )
     {
         Modules =
-            getModules sf
-            |> List.map visitModuleBlock
+            modules
+            |> List.ofSeq
             |> mergeModules
             |> List.map createGlobals
             |> List.map addTicForGenericFunctions
@@ -705,9 +708,8 @@ let printType (tp: FsType): string =
     match tp with
     | FsType.Mapped s -> s
     | FsType.TODO -> "TODO"
-    | FsType.Array at -> // TODO which is better
+    | FsType.Array at ->
         sprintf "ResizeArray<%s>" (printType at)
-        // sprintf "%s array" (printType at)
     | FsType.Union un ->
         if un.Types.Length > 6 then
             "obj"
