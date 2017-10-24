@@ -74,6 +74,7 @@ type FsFunction =
 
 type FsProperty =
     {
+        Emit: string option
         Name: string
         Option: bool
         Type: FsType
@@ -279,7 +280,6 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.TypeReference ->
         visitTypeReference (t :?> TypeReferenceNode)
     | SyntaxKind.ArrayType ->
-        // return "ResizeArray<" + getType(type.elementType) + ">";
         let at = t :?> ArrayTypeNode
         FsType.Array (visitTypeNode at.elementType)
     | SyntaxKind.NumberKeyword -> FsType.Mapped "float"
@@ -349,6 +349,7 @@ let visitMethodSignature(ms: MethodSignature): FsFunction =
 
 let visitPropertySignature(ps: PropertySignature): FsProperty =
     {
+        Emit = None
         Name = ps.name |> getPropertyName
         Option = ps.questionToken.IsSome
         Type = 
@@ -368,14 +369,35 @@ let visitFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
             | None -> FsType.Mapped "unit"
     }
 
+let visitIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
+    {
+        Emit = Some "$0[$1]{{=$2}}"
+        Name = "Item"
+        Option = ps.questionToken.IsSome
+        Type = 
+            match ps.``type`` with
+            | None -> FsType.None 
+            | Some tp -> visitTypeNode tp
+    }
+
 let visitTypeElement(te: TypeElement): FsType =
     match te.kind with
-    | SyntaxKind.IndexSignature -> FsType.TODO
+    | SyntaxKind.IndexSignature ->
+        visitIndexSignature (te :?> IndexSignatureDeclaration) |> FsType.Property
     | SyntaxKind.MethodSignature ->
         visitMethodSignature (te :?> MethodSignature) |> FsType.Function
     | SyntaxKind.PropertySignature ->
         visitPropertySignature (te :?> PropertySignature) |> FsType.Property
-    | SyntaxKind.CallSignature -> FsType.TODO
+    | SyntaxKind.CallSignature ->
+        // member = getMethod(node, { name: "Invoke" });
+        // member.emit = "$0($1...)";
+        // ifc.methods.push(member);
+        FsType.TODO
+    | SyntaxKind.ConstructSignature ->
+        // member = getMethod(node, { name: "Create" });
+        // member.emit = "new $0($1...)";
+        // ifc.methods.push(member);
+         FsType.TODO
     | _ -> failwithf "unsupported TypeElement kind: %A" te.kind
 
 let visitAliasDeclaration(d: TypeAliasDeclaration): FsAlias =
@@ -761,7 +783,12 @@ let printClassFunction (f: FsFunction): string =
     line |> String.concat ""
 
 let printProperty (pr: FsProperty): string =
-    sprintf "abstract %s: %s%s with get, set" pr.Name (printType pr.Type) (if pr.Option then " option" else "")
+    sprintf "%sabstract %s: %s%s%s with get, set"
+        (if pr.Emit.IsSome then sprintf "[<Emit \"%s\">] " pr.Emit.Value else "")
+        pr.Name
+        (if pr.Emit.IsSome then "index: string -> " else "") // TODO will only work with indexed
+        (printType pr.Type)
+        (if pr.Option then " option" else "")
 
 let printTypeParameters (tps: FsType list): string =
     if tps.Length = 0 then ""

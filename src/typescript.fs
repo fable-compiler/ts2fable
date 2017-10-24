@@ -609,8 +609,7 @@ module ts =
         member __.transform<'T>(source: U2<'T, ResizeArray<'T>>, transformers: ResizeArray<TransformerFactory<'T>>, ?compilerOptions: CompilerOptions): TransformationResult<'T> = jsNative
 
     and [<AllowNullLiteral>] MapLike<'T> =
-        [<Emit("$0[$1]{{=$2}}")>] // abstract Item: index: string -> 'T with get, set
-        abstract TODO: string with get, set
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: index: string -> 'T with get, set
 
     and [<AllowNullLiteral>] ReadonlyMap<'T> =
         abstract get: key: string -> 'T option
@@ -3056,14 +3055,14 @@ module ts =
         abstract traceResolution: bool option with get, set
         abstract types: ResizeArray<string> option with get, set
         abstract typeRoots: ResizeArray<string> option with get, set
-        // [<Emit("$0[$1]{{=$2}}")>] // abstract Item: option: string -> U3<CompilerOptionsValue, JsonSourceFile, obj> with get, set
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: index: string -> U2<CompilerOptionsValue, JsonSourceFile> option with get, set
 
     and [<AllowNullLiteral>] TypeAcquisition =
         abstract enableAutoDiscovery: bool option with get, set
         abstract enable: bool option with get, set
         abstract ``include``: ResizeArray<string> option with get, set
         abstract exclude: ResizeArray<string> option with get, set
-        // [<Emit("$0[$1]{{=$2}}")>] // abstract Item: option: string -> U3<ResizeArray<string>, bool, obj> with get, set
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: index: string -> U2<ResizeArray<string>, bool> option with get, set
 
     and [<AllowNullLiteral>] DiscoverTypingsInfo =
         abstract fileNames: ResizeArray<string> with get, set
