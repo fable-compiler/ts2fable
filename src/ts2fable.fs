@@ -178,11 +178,11 @@ let visitEnumCase(em: EnumMember): FsEnumCase =
         Value = value
     }
 
-let visitTypeParameters(tps: TypeParameterDeclaration array option): FsType list =
+let visitTypeParameters(tps: ResizeArray<TypeParameterDeclaration> option): FsType list =
     match tps with
     | None -> []
     | Some tps ->
-        tps |> List.ofArray |> List.map (fun tp ->
+        tps |> List.ofSeq |> List.map (fun tp ->
             tp.name.text |> FsType.Mapped
         )
 
@@ -193,28 +193,28 @@ let visitInterface(id: InterfaceDeclaration): FsInterface =
             match id.heritageClauses with
             | None -> []
             | Some hcs ->
-                hcs |> List.ofArray |> List.map (fun hc ->
-                    hc.types |> List.ofArray |> List.map (fun eta ->
+                hcs |> List.ofSeq |> List.map (fun hc ->
+                    hc.types |> List.ofSeq |> List.map (fun eta ->
                         {
                             Type = visitTypeNode eta
                             TypeParameters =
                                 match eta.typeArguments with
                                 | None -> []
                                 | Some tps ->
-                                    tps |> List.ofArray |> List.map visitTypeNode
+                                    tps |> List.ofSeq |> List.map visitTypeNode
                         }
                         |> FsType.Generic
                     )
                 )
                 |> List.concat
-        Members = id.members |> List.ofArray |> List.map visitTypeElement
+        Members = id.members |> List.ofSeq |> List.map visitTypeElement
         TypeParameters = visitTypeParameters id.typeParameters
     }
 
 let visitEnum(ed: EnumDeclaration): FsEnum =
     {
         Name = ed.name.text
-        Cases = ed.members |> List.ofArray |> List.map visitEnumCase
+        Cases = ed.members |> List.ofSeq |> List.map visitEnumCase
     }
 
 let visitTypeReference(tr: TypeReferenceNode): FsType =
@@ -235,7 +235,7 @@ let visitTypeReference(tr: TypeReferenceNode): FsType =
                     qn.getText()
                 |> FsType.Mapped
             TypeParameters =
-                tas |> List.ofArray |> List.map visitTypeNode
+                tas |> List.ofSeq |> List.map visitTypeNode
         }
         |>
         FsType.Generic
@@ -243,7 +243,7 @@ let visitFunctionType(ft: FunctionTypeNode): FsFunction =
     {
         Name = ft.name |> Option.map getPropertyName
         TypeParameters = visitTypeParameters ft.typeParameters
-        Params =  ft.parameters |> List.ofArray |> List.map visitParameterDeclaration
+        Params =  ft.parameters |> List.ofSeq |> List.map visitParameterDeclaration
         ReturnType =
             match ft.``type`` with
             | Some t -> visitTypeNode t
@@ -263,7 +263,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.BooleanKeyword -> FsType.Mapped "bool"
     | SyntaxKind.UnionType ->
         let un = t :?> UnionTypeNode
-        let typs = un.types |> List.ofArray
+        let typs = un.types |> List.ofSeq
         let isUndefined (t:TypeNode) = t.kind = SyntaxKind.UndefinedKeyword
         {
             Option = typs |> List.exists isUndefined
@@ -275,7 +275,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.TupleType ->
         let tp = t :?> TupleTypeNode
         {
-            Types = tp.elementTypes |> List.ofArray |> List.map visitTypeNode
+            Types = tp.elementTypes |> List.ofSeq |> List.map visitTypeNode
         }
         |> FsType.Tuple
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
@@ -317,7 +317,7 @@ let visitMethodSignature(ms: MethodSignature): FsFunction =
     {
         Name = ms.name |> getPropertyName |> Some
         TypeParameters = visitTypeParameters ms.typeParameters
-        Params = ms.parameters |> List.ofArray |> List.map visitParameterDeclaration
+        Params = ms.parameters |> List.ofSeq |> List.map visitParameterDeclaration
         ReturnType =
             match ms.``type`` with
             | Some t -> visitTypeNode t
@@ -339,7 +339,7 @@ let visitFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
     {
         Name = fd.name |> Option.map (fun id -> id.text)
         TypeParameters = visitTypeParameters fd.typeParameters
-        Params = fd.parameters |> List.ofArray |> List.map visitParameterDeclaration
+        Params = fd.parameters |> List.ofSeq |> List.map visitParameterDeclaration
         ReturnType =
             match fd.``type`` with
             | Some t -> visitTypeNode t
@@ -665,7 +665,7 @@ let rec visitModuleDeclaration(md: ModuleDeclaration): FsModule =
         match nd.kind with
         | SyntaxKind.ModuleBlock ->
             let mb = nd :?> ModuleBlock
-            mb.statements |> List.ofArray |> List.map visitStatement |> List.iter types.Add
+            mb.statements |> List.ofSeq |> List.map visitStatement |> List.iter types.Add
         | SyntaxKind.DeclareKeyword -> ()
         | SyntaxKind.Identifier -> ()
         | SyntaxKind.ModuleDeclaration ->
