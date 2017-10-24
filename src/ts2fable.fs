@@ -474,17 +474,28 @@ let createGlobals(md: FsModule): FsModule =
     }
 
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
+    // fix children first, then curren type
 
-    let fixModule (md: FsModule) =    
-        { md with
-            Types = md.Types |> List.map (fixType fix)
-        }
+    let fixModule (a: FsModule) =
+        let b =
+            { a with
+                Types = a.Types |> List.map (fixType fix)
+            }
+            |> FsType.Module |> fix
+        match b with
+        | FsType.Module c -> c
+        | _ -> failwithf "module must be mapped to module"
 
-    let fixParam (pm: FsParam) =
-        { pm with
-            Type = fixType fix pm.Type
-        }
-
+    let fixParam (a: FsParam) =
+        let b =
+            { a with
+                Type = fixType fix a.Type
+            }
+            |> FsType.Param |> fix
+        match b with
+        | FsType.Param c -> c
+        | _ -> failwithf "param must be mapped to param"
+    
     match tp with
     | FsType.Interface it ->
         { it with
@@ -553,7 +564,8 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.Mapped _ -> tp
     | FsType.None _ -> tp
     | FsType.TODO _ -> tp
-    |> fix
+
+    |> fix // current type
 
 let fixTic (typeParameters: FsType list) (tp: FsType) =
     if typeParameters.Length = 0 then
@@ -603,7 +615,6 @@ let fixNodeArray(md: FsModule): FsModule =
         match asGeneric tp with
         | None -> tp
         | Some gn ->
-            // printfn "gn: %A" gn 
             match asMapped gn.Type with
             | None -> tp
             | Some s ->
@@ -738,10 +749,9 @@ let printClassFunction (f: FsFunction): string =
     sprintf "member __.%s%s" f.Name.Value (printTypeParameters f.TypeParameters) |> line.Add
     let prms = 
         f.Params |> List.map(fun p ->
-            // TODO escapeWord should be handled by fixEscapeWords
             sprintf "%s%s%s: %s"
                 (if p.ParamArray then "[<ParamArray>] " else "")
-                (if p.Optional then "?" else "") (escapeWord p.Name) (printType p.Type)
+                (if p.Optional then "?" else "") p.Name (printType p.Type)
         )
     if prms.Length = 0 then
         sprintf "(" |> line.Add
@@ -763,7 +773,6 @@ let printTypeParameters (tps: FsType list): string =
         line |> String.concat ""
 
 let upperFirstLetter (s: string): string =
-    // sprintf "%c%s" (Char.ToUpper s.[0]) (s.Substring 1)
     sprintf "%s%s" (s.Substring(0,1).ToUpper()) (s.Substring 1)
 
 let printFile (file: FsFile) =
