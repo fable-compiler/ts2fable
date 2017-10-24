@@ -237,7 +237,7 @@ module ts =
         member __.isCaseOrDefaultClause(node: Node): bool = jsNative
         member __.isJSDocCommentContainingNode(node: Node): bool = jsNative
         member __.createNode(kind: SyntaxKind, ?pos: float, ?``end``: float): Node = jsNative
-        member __.forEachChild<'T>(node: Node, cbNode: Func<Node, 'T option>, ?cbNodes: Func<NodeArray<Node>, 'T option>): 'T option = jsNative
+        member __.forEachChild<'T>(node: Node, cbNode: Func<Node, 'T option>, ?cbNodes: Func<ResizeArray<Node>, 'T option>): 'T option = jsNative
         member __.createSourceFile(fileName: string, sourceText: string, languageVersion: ScriptTarget, ?setParentNodes: bool, ?scriptKind: ScriptKind): SourceFile = jsNative
         member __.parseIsolatedEntityName(text: string, languageVersion: ScriptTarget): EntityName = jsNative
         member __.parseJsonText(fileName: string, sourceText: string): JsonSourceFile = jsNative
@@ -250,7 +250,7 @@ module ts =
         member __.resolveModuleName(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: ModuleResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
         member __.nodeModuleNameResolver(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: ModuleResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
         member __.classicNameResolver(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: NonRelativeModuleNameResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
-        member __.createNodeArray<'T>(?elements: ReadonlyArray<'T>, ?hasTrailingComma: bool): NodeArray<'T> = jsNative
+        member __.createNodeArray<'T>(?elements: ReadonlyArray<'T>, ?hasTrailingComma: bool): ResizeArray<'T> = jsNative
         member __.createLiteral(value: string): StringLiteral = jsNative
         member __.createLiteral(value: float): NumericLiteral = jsNative
         member __.createLiteral(value: bool): BooleanLiteral = jsNative
@@ -258,7 +258,7 @@ module ts =
         member __.createLiteral(value: U3<string, float, bool>): PrimaryExpression = jsNative
         member __.createNumericLiteral(value: string): NumericLiteral = jsNative
         member __.createIdentifier(text: string): Identifier = jsNative
-        member __.updateIdentifier(node: Identifier, typeArguments: NodeArray<TypeNode> option): Identifier = jsNative
+        member __.updateIdentifier(node: Identifier, typeArguments: ResizeArray<TypeNode> option): Identifier = jsNative
         member __.createTempVariable(recordTempVariable: obj option): Identifier = jsNative
         member __.createLoopVariable(): Identifier = jsNative
         member __.createUniqueName(text: string): Identifier = jsNative
@@ -284,7 +284,7 @@ module ts =
         member __.createProperty(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, PropertyName>, questionToken: QuestionToken option, ``type``: TypeNode option, initializer: Expression option): PropertyDeclaration = jsNative
         member __.updateProperty(node: PropertyDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, PropertyName>, questionToken: QuestionToken option, ``type``: TypeNode option, initializer: Expression option): PropertyDeclaration = jsNative
         member __.createMethodSignature(typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, name: U2<string, PropertyName>, questionToken: QuestionToken option): MethodSignature = jsNative
-        member __.updateMethodSignature(node: MethodSignature, typeParameters: NodeArray<TypeParameterDeclaration> option, parameters: NodeArray<ParameterDeclaration>, ``type``: TypeNode option, name: PropertyName, questionToken: QuestionToken option): MethodSignature = jsNative
+        member __.updateMethodSignature(node: MethodSignature, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option, name: PropertyName, questionToken: QuestionToken option): MethodSignature = jsNative
         member __.createMethod(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, asteriskToken: AsteriskToken option, name: U2<string, PropertyName>, questionToken: QuestionToken option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block option): MethodDeclaration = jsNative
         member __.updateMethod(node: MethodDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, asteriskToken: AsteriskToken option, name: PropertyName, questionToken: QuestionToken option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block option): MethodDeclaration = jsNative
         member __.createConstructor(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, parameters: ReadonlyArray<ParameterDeclaration>, body: Block option): ConstructorDeclaration = jsNative
@@ -294,32 +294,32 @@ module ts =
         member __.createSetAccessor(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, PropertyName>, parameters: ReadonlyArray<ParameterDeclaration>, body: Block option): SetAccessorDeclaration = jsNative
         member __.updateSetAccessor(node: SetAccessorDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: PropertyName, parameters: ReadonlyArray<ParameterDeclaration>, body: Block option): SetAccessorDeclaration = jsNative
         member __.createCallSignature(typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): CallSignatureDeclaration = jsNative
-        member __.updateCallSignature(node: CallSignatureDeclaration, typeParameters: NodeArray<TypeParameterDeclaration> option, parameters: NodeArray<ParameterDeclaration>, ``type``: TypeNode option): CallSignatureDeclaration = jsNative
+        member __.updateCallSignature(node: CallSignatureDeclaration, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): CallSignatureDeclaration = jsNative
         member __.createConstructSignature(typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructSignatureDeclaration = jsNative
-        member __.updateConstructSignature(node: ConstructSignatureDeclaration, typeParameters: NodeArray<TypeParameterDeclaration> option, parameters: NodeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructSignatureDeclaration = jsNative
+        member __.updateConstructSignature(node: ConstructSignatureDeclaration, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructSignatureDeclaration = jsNative
         member __.createIndexSignature(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode): IndexSignatureDeclaration = jsNative
         member __.updateIndexSignature(node: IndexSignatureDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode): IndexSignatureDeclaration = jsNative
         member __.createKeywordTypeNode(kind: obj): KeywordTypeNode = jsNative
         member __.createTypePredicateNode(parameterName: U3<Identifier, ThisTypeNode, string>, ``type``: TypeNode): TypePredicateNode = jsNative
         member __.updateTypePredicateNode(node: TypePredicateNode, parameterName: U2<Identifier, ThisTypeNode>, ``type``: TypeNode): TypePredicateNode = jsNative
         member __.createTypeReferenceNode(typeName: U2<string, EntityName>, typeArguments: ReadonlyArray<TypeNode> option): TypeReferenceNode = jsNative
-        member __.updateTypeReferenceNode(node: TypeReferenceNode, typeName: EntityName, typeArguments: NodeArray<TypeNode> option): TypeReferenceNode = jsNative
+        member __.updateTypeReferenceNode(node: TypeReferenceNode, typeName: EntityName, typeArguments: ResizeArray<TypeNode> option): TypeReferenceNode = jsNative
         member __.createFunctionTypeNode(typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): FunctionTypeNode = jsNative
-        member __.updateFunctionTypeNode(node: FunctionTypeNode, typeParameters: NodeArray<TypeParameterDeclaration> option, parameters: NodeArray<ParameterDeclaration>, ``type``: TypeNode option): FunctionTypeNode = jsNative
+        member __.updateFunctionTypeNode(node: FunctionTypeNode, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): FunctionTypeNode = jsNative
         member __.createConstructorTypeNode(typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructorTypeNode = jsNative
-        member __.updateConstructorTypeNode(node: ConstructorTypeNode, typeParameters: NodeArray<TypeParameterDeclaration> option, parameters: NodeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructorTypeNode = jsNative
+        member __.updateConstructorTypeNode(node: ConstructorTypeNode, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructorTypeNode = jsNative
         member __.createTypeQueryNode(exprName: EntityName): TypeQueryNode = jsNative
         member __.updateTypeQueryNode(node: TypeQueryNode, exprName: EntityName): TypeQueryNode = jsNative
         member __.createTypeLiteralNode(members: ReadonlyArray<TypeElement>): TypeLiteralNode = jsNative
-        member __.updateTypeLiteralNode(node: TypeLiteralNode, members: NodeArray<TypeElement>): TypeLiteralNode = jsNative
+        member __.updateTypeLiteralNode(node: TypeLiteralNode, members: ResizeArray<TypeElement>): TypeLiteralNode = jsNative
         member __.createArrayTypeNode(elementType: TypeNode): ArrayTypeNode = jsNative
         member __.updateArrayTypeNode(node: ArrayTypeNode, elementType: TypeNode): ArrayTypeNode = jsNative
         member __.createTupleTypeNode(elementTypes: ReadonlyArray<TypeNode>): TupleTypeNode = jsNative
         member __.updateTypleTypeNode(node: TupleTypeNode, elementTypes: ReadonlyArray<TypeNode>): TupleTypeNode = jsNative
         member __.createUnionTypeNode(types: ResizeArray<TypeNode>): UnionTypeNode = jsNative
-        member __.updateUnionTypeNode(node: UnionTypeNode, types: NodeArray<TypeNode>): UnionTypeNode = jsNative
+        member __.updateUnionTypeNode(node: UnionTypeNode, types: ResizeArray<TypeNode>): UnionTypeNode = jsNative
         member __.createIntersectionTypeNode(types: ResizeArray<TypeNode>): IntersectionTypeNode = jsNative
-        member __.updateIntersectionTypeNode(node: IntersectionTypeNode, types: NodeArray<TypeNode>): IntersectionTypeNode = jsNative
+        member __.updateIntersectionTypeNode(node: IntersectionTypeNode, types: ResizeArray<TypeNode>): IntersectionTypeNode = jsNative
         member __.createUnionOrIntersectionTypeNode(kind: U2<SyntaxKind, SyntaxKind>, types: ReadonlyArray<TypeNode>): UnionOrIntersectionTypeNode = jsNative
         member __.createParenthesizedType(``type``: TypeNode): ParenthesizedTypeNode = jsNative
         member __.updateParenthesizedType(node: ParenthesizedTypeNode, ``type``: TypeNode): ParenthesizedTypeNode = jsNative
@@ -564,12 +564,12 @@ module ts =
         member __.getEmitHelpers(node: Node): ResizeArray<EmitHelper> option = jsNative
         member __.moveEmitHelpers(source: Node, target: Node, predicate: Func<EmitHelper, bool>): unit = jsNative
         member __.setOriginalNode<'T>(node: 'T, original: Node option): 'T = jsNative
-        member __.visitNode<'T>(node: 'T, visitor: Visitor, ?test: Func<Node, bool>, ?lift: Func<NodeArray<Node>, 'T>): 'T = jsNative
-        member __.visitNode<'T>(node: 'T option, visitor: Visitor, ?test: Func<Node, bool>, ?lift: Func<NodeArray<Node>, 'T>): 'T option = jsNative
-        member __.visitNodes<'T>(nodes: NodeArray<'T>, visitor: Visitor, ?test: Func<Node, bool>, ?start: float, ?count: float): NodeArray<'T> = jsNative
-        member __.visitNodes<'T>(nodes: NodeArray<'T> option, visitor: Visitor, ?test: Func<Node, bool>, ?start: float, ?count: float): NodeArray<'T> option = jsNative
-        member __.visitLexicalEnvironment(statements: NodeArray<Statement>, visitor: Visitor, context: TransformationContext, ?start: float, ?ensureUseStrict: bool): NodeArray<Statement> = jsNative
-        member __.visitParameterList(nodes: NodeArray<ParameterDeclaration>, visitor: Visitor, context: TransformationContext, ?nodesVisitor: obj): NodeArray<ParameterDeclaration> = jsNative
+        member __.visitNode<'T>(node: 'T, visitor: Visitor, ?test: Func<Node, bool>, ?lift: Func<ResizeArray<Node>, 'T>): 'T = jsNative
+        member __.visitNode<'T>(node: 'T option, visitor: Visitor, ?test: Func<Node, bool>, ?lift: Func<ResizeArray<Node>, 'T>): 'T option = jsNative
+        member __.visitNodes<'T>(nodes: ResizeArray<'T>, visitor: Visitor, ?test: Func<Node, bool>, ?start: float, ?count: float): ResizeArray<'T> = jsNative
+        member __.visitNodes<'T>(nodes: ResizeArray<'T> option, visitor: Visitor, ?test: Func<Node, bool>, ?start: float, ?count: float): ResizeArray<'T> option = jsNative
+        member __.visitLexicalEnvironment(statements: ResizeArray<Statement>, visitor: Visitor, context: TransformationContext, ?start: float, ?ensureUseStrict: bool): ResizeArray<Statement> = jsNative
+        member __.visitParameterList(nodes: ResizeArray<ParameterDeclaration>, visitor: Visitor, context: TransformationContext, ?nodesVisitor: obj): ResizeArray<ParameterDeclaration> = jsNative
         member __.visitFunctionBody(node: FunctionBody, visitor: Visitor, context: TransformationContext): FunctionBody = jsNative
         member __.visitFunctionBody(node: FunctionBody option, visitor: Visitor, context: TransformationContext): FunctionBody option = jsNative
         member __.visitFunctionBody(node: ConciseBody, visitor: Visitor, context: TransformationContext): ConciseBody = jsNative
@@ -631,7 +631,6 @@ module ts =
 
     and [<AllowNullLiteral>] Push<'T> =
         abstract push: [<ParamArray>] values: 'T -> unit
-        abstract TODO: string with get, set
 
     and Path =
         obj
@@ -640,7 +639,7 @@ module ts =
         abstract pos: float with get, set
         abstract ``end``: float with get, set
 
-    and SyntaxKind =
+    and [<RequireQualifiedAccess>] SyntaxKind =
         | Unknown = 0
         | EndOfFileToken = 1
         | SingleLineCommentTrivia = 2
@@ -964,7 +963,7 @@ module ts =
         | FirstJSDocTagNode = 276
         | LastJSDocTagNode = 285
 
-    and NodeFlags =
+    and [<RequireQualifiedAccess>] NodeFlags =
         | None = 0
         | Let = 1
         | Const = 2
@@ -992,7 +991,7 @@ module ts =
         | ContextFlags = 96256
         | TypeExcludesFlags = 20480
 
-    and ModifierFlags =
+    and [<RequireQualifiedAccess>] ModifierFlags =
         | None = 0
         | Export = 1
         | Ambient = 2
@@ -1012,7 +1011,7 @@ module ts =
         | TypeScriptModifier = 2270
         | ExportDefault = 513
 
-    and JsxFlags =
+    and [<RequireQualifiedAccess>] JsxFlags =
         | None = 0
         | IntrinsicNamedElement = 1
         | IntrinsicIndexedElement = 2
@@ -1022,7 +1021,7 @@ module ts =
         inherit TextRange
         abstract kind: SyntaxKind with get, set
         abstract flags: NodeFlags with get, set
-        abstract decorators: Decorator array option with get, set
+        abstract decorators: ResizeArray<Decorator> option with get, set
         abstract modifiers: ModifiersArray option with get, set
         abstract parent: Node option with get, set
         abstract getSourceFile: unit -> SourceFile
@@ -1084,11 +1083,12 @@ module ts =
         obj
 
     and ModifiersArray =
-        Modifier array
+        ResizeArray<Modifier>
 
     and [<AllowNullLiteral>] Identifier =
         inherit PrimaryExpression
-        // abstract escapedText: __String with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract escapedText: __String with get, set
         abstract originalKeywordKind: SyntaxKind option with get, set
         abstract isInJSDocNamespace: bool option with get, set
         abstract text: string with get, set
@@ -1099,6 +1099,7 @@ module ts =
 
     and [<AllowNullLiteral>] QualifiedName =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract left: EntityName with get, set
         abstract right: Identifier with get, set
 
@@ -1126,14 +1127,17 @@ module ts =
 
     and [<AllowNullLiteral>] ComputedPropertyName =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] Decorator =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract expression: LeftHandSideExpression with get, set
 
     and [<AllowNullLiteral>] TypeParameterDeclaration =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: DeclarationWithTypeParameters option with get, set
         abstract name: Identifier with get, set
         abstract ``constraint``: TypeNode option with get, set
@@ -1143,23 +1147,26 @@ module ts =
     and [<AllowNullLiteral>] SignatureDeclaration =
         inherit NamedDeclaration
         abstract name: PropertyName option with get, set
-        abstract typeParameters: TypeParameterDeclaration array option with get, set
-        abstract parameters: ParameterDeclaration array with get, set
+        abstract typeParameters: ResizeArray<TypeParameterDeclaration> option with get, set
+        abstract parameters: ResizeArray<ParameterDeclaration> with get, set
         abstract ``type``: TypeNode option with get, set
 
     and [<AllowNullLiteral>] CallSignatureDeclaration =
         inherit SignatureDeclaration
         inherit TypeElement
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] ConstructSignatureDeclaration =
         inherit SignatureDeclaration
         inherit TypeElement
+        abstract kind: SyntaxKind with get, set
 
     and BindingName =
         U2<Identifier, BindingPattern>
 
     and [<AllowNullLiteral>] VariableDeclaration =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: U2<VariableDeclarationList, CatchClause> option with get, set
         abstract name: BindingName with get, set
         abstract ``type``: TypeNode option with get, set
@@ -1167,11 +1174,13 @@ module ts =
 
     and [<AllowNullLiteral>] VariableDeclarationList =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: U4<VariableStatement, ForStatement, ForOfStatement, ForInStatement> option with get, set
-        abstract declarations: VariableDeclaration array with get, set
+        abstract declarations: ResizeArray<VariableDeclaration> with get, set
 
     and [<AllowNullLiteral>] ParameterDeclaration =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: SignatureDeclaration option with get, set
         abstract dotDotDotToken: DotDotDotToken option with get, set
         abstract name: BindingName with get, set
@@ -1181,6 +1190,7 @@ module ts =
 
     and [<AllowNullLiteral>] BindingElement =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: BindingPattern option with get, set
         abstract propertyName: PropertyName option with get, set
         abstract dotDotDotToken: DotDotDotToken option with get, set
@@ -1189,6 +1199,7 @@ module ts =
 
     and [<AllowNullLiteral>] PropertySignature =
         inherit TypeElement
+        abstract kind: SyntaxKind with get, set
         abstract name: PropertyName with get, set
         abstract questionToken: QuestionToken option with get, set
         abstract ``type``: TypeNode option with get, set
@@ -1196,6 +1207,7 @@ module ts =
 
     and [<AllowNullLiteral>] PropertyDeclaration =
         inherit ClassElement
+        abstract kind: SyntaxKind with get, set
         abstract questionToken: QuestionToken option with get, set
         abstract name: PropertyName with get, set
         abstract ``type``: TypeNode option with get, set
@@ -1207,23 +1219,26 @@ module ts =
         abstract name: PropertyName option with get, set
 
     and ObjectLiteralElementLike =
-        obj
+        U5<PropertyAssignment, ShorthandPropertyAssignment, SpreadAssignment, MethodDeclaration, AccessorDeclaration>
 
     and [<AllowNullLiteral>] PropertyAssignment =
         inherit ObjectLiteralElement
+        abstract kind: SyntaxKind with get, set
         abstract name: PropertyName with get, set
         abstract questionToken: QuestionToken option with get, set
         abstract initializer: Expression with get, set
 
     and [<AllowNullLiteral>] ShorthandPropertyAssignment =
         inherit ObjectLiteralElement
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier with get, set
         abstract questionToken: QuestionToken option with get, set
-        // abstract equalsToken: Token<SyntaxKind.EqualsToken> option with get, set
+        abstract equalsToken: Token<SyntaxKind> option with get, set
         abstract objectAssignmentInitializer: Expression option with get, set
 
     and [<AllowNullLiteral>] SpreadAssignment =
         inherit ObjectLiteralElement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] VariableLikeDeclaration =
@@ -1241,13 +1256,15 @@ module ts =
 
     and [<AllowNullLiteral>] ObjectBindingPattern =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: U3<VariableDeclaration, ParameterDeclaration, BindingElement> option with get, set
-        abstract elements: BindingElement array with get, set
+        abstract elements: ResizeArray<BindingElement> with get, set
 
     and [<AllowNullLiteral>] ArrayBindingPattern =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: U3<VariableDeclaration, ParameterDeclaration, BindingElement> option with get, set
-        abstract elements: ArrayBindingElement array with get, set
+        abstract elements: ResizeArray<ArrayBindingElement> with get, set
 
     and BindingPattern =
         U2<ObjectBindingPattern, ArrayBindingPattern>
@@ -1271,35 +1288,41 @@ module ts =
     and [<AllowNullLiteral>] FunctionDeclaration =
         inherit FunctionLikeDeclarationBase
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier option with get, set
         abstract body: FunctionBody option with get, set
 
     and [<AllowNullLiteral>] MethodSignature =
         inherit SignatureDeclaration
         inherit TypeElement
+        abstract kind: SyntaxKind with get, set
         abstract name: PropertyName with get, set
 
     and [<AllowNullLiteral>] MethodDeclaration =
         inherit FunctionLikeDeclarationBase
         inherit ClassElement
         inherit ObjectLiteralElement
+        abstract kind: SyntaxKind with get, set
         abstract name: PropertyName with get, set
         abstract body: FunctionBody option with get, set
 
     and [<AllowNullLiteral>] ConstructorDeclaration =
         inherit FunctionLikeDeclarationBase
         inherit ClassElement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U2<ClassDeclaration, ClassExpression> option with get, set
         abstract body: FunctionBody option with get, set
 
     and [<AllowNullLiteral>] SemicolonClassElement =
         inherit ClassElement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U2<ClassDeclaration, ClassExpression> option with get, set
 
     and [<AllowNullLiteral>] GetAccessorDeclaration =
         inherit FunctionLikeDeclarationBase
         inherit ClassElement
         inherit ObjectLiteralElement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U3<ClassDeclaration, ClassExpression, ObjectLiteralExpression> option with get, set
         abstract name: PropertyName with get, set
         abstract body: FunctionBody with get, set
@@ -1308,6 +1331,7 @@ module ts =
         inherit FunctionLikeDeclarationBase
         inherit ClassElement
         inherit ObjectLiteralElement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U3<ClassDeclaration, ClassExpression, ObjectLiteralExpression> option with get, set
         abstract name: PropertyName with get, set
         abstract body: FunctionBody with get, set
@@ -1319,6 +1343,7 @@ module ts =
         inherit SignatureDeclaration
         inherit ClassElement
         inherit TypeElement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U4<ClassDeclaration, ClassExpression, InterfaceDeclaration, TypeLiteralNode> option with get, set
 
     and [<AllowNullLiteral>] TypeNode =
@@ -1327,9 +1352,11 @@ module ts =
 
     and [<AllowNullLiteral>] KeywordTypeNode =
         inherit TypeNode
+        abstract kind: obj with get, set
 
     and [<AllowNullLiteral>] ThisTypeNode =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
 
     and FunctionOrConstructorTypeNode =
         U2<FunctionTypeNode, ConstructorTypeNode>
@@ -1337,81 +1364,97 @@ module ts =
     and [<AllowNullLiteral>] FunctionTypeNode =
         inherit TypeNode
         inherit SignatureDeclaration
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] ConstructorTypeNode =
         inherit TypeNode
         inherit SignatureDeclaration
+        abstract kind: SyntaxKind with get, set
 
     and TypeReferenceType =
         U2<TypeReferenceNode, ExpressionWithTypeArguments>
 
     and [<AllowNullLiteral>] TypeReferenceNode =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract typeName: EntityName with get, set
-        abstract typeArguments: TypeNode array option with get, set
+        abstract typeArguments: ResizeArray<TypeNode> option with get, set
 
     and [<AllowNullLiteral>] TypePredicateNode =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract parameterName: U2<Identifier, ThisTypeNode> with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] TypeQueryNode =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract exprName: EntityName with get, set
 
     and [<AllowNullLiteral>] TypeLiteralNode =
         inherit TypeNode
         inherit Declaration
-        abstract members: TypeElement array with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract members: ResizeArray<TypeElement> with get, set
 
     and [<AllowNullLiteral>] ArrayTypeNode =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract elementType: TypeNode with get, set
 
     and [<AllowNullLiteral>] TupleTypeNode =
         inherit TypeNode
-        abstract elementTypes: TypeNode array with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract elementTypes: ResizeArray<TypeNode> with get, set
 
     and UnionOrIntersectionTypeNode =
         U2<UnionTypeNode, IntersectionTypeNode>
 
     and [<AllowNullLiteral>] UnionTypeNode =
         inherit TypeNode
-        abstract types: TypeNode array with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract types: ResizeArray<TypeNode> with get, set
 
     and [<AllowNullLiteral>] IntersectionTypeNode =
         inherit TypeNode
-        abstract types: TypeNode array with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract types: ResizeArray<TypeNode> with get, set
 
     and [<AllowNullLiteral>] ParenthesizedTypeNode =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] TypeOperatorNode =
         inherit TypeNode
-        // abstract operator: SyntaxKind.KeyOfKeyword with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract operator: SyntaxKind with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] IndexedAccessTypeNode =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract objectType: TypeNode with get, set
         abstract indexType: TypeNode with get, set
 
     and [<AllowNullLiteral>] MappedTypeNode =
         inherit TypeNode
         inherit Declaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: TypeAliasDeclaration option with get, set
-        abstract Token: ReadonlyToken option with get, set
+        abstract readonlyToken: ReadonlyToken option with get, set
         abstract typeParameter: TypeParameterDeclaration with get, set
         abstract questionToken: QuestionToken option with get, set
         abstract ``type``: TypeNode option with get, set
 
     and [<AllowNullLiteral>] LiteralTypeNode =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract literal: Expression with get, set
 
     and [<AllowNullLiteral>] StringLiteral =
         inherit LiteralExpression
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] Expression =
         inherit Node
@@ -1419,9 +1462,11 @@ module ts =
 
     and [<AllowNullLiteral>] OmittedExpression =
         inherit Expression
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] PartiallyEmittedExpression =
         inherit LeftHandSideExpression
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] UnaryExpression =
@@ -1436,19 +1481,20 @@ module ts =
         abstract _updateExpressionBrand: obj with get, set
 
     and PrefixUnaryOperator =
-        obj
+        U6<SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind>
 
     and [<AllowNullLiteral>] PrefixUnaryExpression =
         inherit UpdateExpression
+        abstract kind: SyntaxKind with get, set
         abstract operator: PrefixUnaryOperator with get, set
         abstract operand: UnaryExpression with get, set
 
     and PostfixUnaryOperator =
-        // U2<SyntaxKind.PlusPlusToken, SyntaxKind.MinusMinusToken>
-        abstract TODO: string with get, set
+        U2<SyntaxKind, SyntaxKind>
 
     and [<AllowNullLiteral>] PostfixUnaryExpression =
         inherit UpdateExpression
+        abstract kind: SyntaxKind with get, set
         abstract operand: LeftHandSideExpression with get, set
         abstract operator: PostfixUnaryOperator with get, set
 
@@ -1467,90 +1513,93 @@ module ts =
     and [<AllowNullLiteral>] NullLiteral =
         inherit PrimaryExpression
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] BooleanLiteral =
         inherit PrimaryExpression
         inherit TypeNode
+        abstract kind: U2<SyntaxKind, SyntaxKind> with get, set
 
     and [<AllowNullLiteral>] ThisExpression =
         inherit PrimaryExpression
         inherit KeywordTypeNode
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] SuperExpression =
         inherit PrimaryExpression
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] ImportExpression =
         inherit PrimaryExpression
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] DeleteExpression =
         inherit UnaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract expression: UnaryExpression with get, set
 
     and [<AllowNullLiteral>] TypeOfExpression =
         inherit UnaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract expression: UnaryExpression with get, set
 
     and [<AllowNullLiteral>] VoidExpression =
         inherit UnaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract expression: UnaryExpression with get, set
 
     and [<AllowNullLiteral>] AwaitExpression =
         inherit UnaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract expression: UnaryExpression with get, set
 
     and [<AllowNullLiteral>] YieldExpression =
         inherit Expression
+        abstract kind: SyntaxKind with get, set
         abstract asteriskToken: AsteriskToken option with get, set
         abstract expression: Expression option with get, set
 
     and ExponentiationOperator =
-        // SyntaxKind.AsteriskAsteriskToken
-        abstract TODO: string with get, set
+        SyntaxKind
 
     and MultiplicativeOperator =
-        // U3<SyntaxKind.AsteriskToken, SyntaxKind.SlashToken, SyntaxKind.PercentToken>
-        abstract TODO: string with get, set
+        U3<SyntaxKind, SyntaxKind, SyntaxKind>
 
     and MultiplicativeOperatorOrHigher =
         U2<ExponentiationOperator, MultiplicativeOperator>
 
     and AdditiveOperator =
-        // U2<SyntaxKind.PlusToken, SyntaxKind.MinusToken>
-        abstract TODO: string with get, set
+        U2<SyntaxKind, SyntaxKind>
 
     and AdditiveOperatorOrHigher =
         U2<MultiplicativeOperatorOrHigher, AdditiveOperator>
 
     and ShiftOperator =
-        // U3<SyntaxKind.LessThanLessThanToken, SyntaxKind.GreaterThanGreaterThanToken, SyntaxKind.GreaterThanGreaterThanGreaterThanToken>
-        abstract TODO: string with get, set
+        U3<SyntaxKind, SyntaxKind, SyntaxKind>
 
     and ShiftOperatorOrHigher =
         U2<AdditiveOperatorOrHigher, ShiftOperator>
 
     and RelationalOperator =
-        obj
+        U6<SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind>
 
     and RelationalOperatorOrHigher =
         U2<ShiftOperatorOrHigher, RelationalOperator>
 
     and EqualityOperator =
-        // U4<SyntaxKind.EqualsEqualsToken, SyntaxKind.EqualsEqualsEqualsToken, SyntaxKind.ExclamationEqualsEqualsToken, SyntaxKind.ExclamationEqualsToken>
-        abstract TODO: string with get, set
+        U4<SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind>
 
     and EqualityOperatorOrHigher =
         U2<RelationalOperatorOrHigher, EqualityOperator>
 
     and BitwiseOperator =
-        // U3<SyntaxKind.AmpersandToken, SyntaxKind.BarToken, SyntaxKind.CaretToken>
-        abstract TODO: string with get, set
+        U3<SyntaxKind, SyntaxKind, SyntaxKind>
 
     and BitwiseOperatorOrHigher =
         U2<EqualityOperatorOrHigher, BitwiseOperator>
 
     and LogicalOperator =
-        // U2<SyntaxKind.AmpersandAmpersandToken, SyntaxKind.BarBarToken>
-        abstract TODO: string with get, set
+        U2<SyntaxKind, SyntaxKind>
 
     and LogicalOperatorOrHigher =
         U2<BitwiseOperatorOrHigher, LogicalOperator>
@@ -1559,15 +1608,13 @@ module ts =
         obj
 
     and AssignmentOperator =
-        // U2<SyntaxKind.EqualsToken, CompoundAssignmentOperator>
-        abstract TODO: string with get, set
+        U2<SyntaxKind, CompoundAssignmentOperator>
 
     and AssignmentOperatorOrHigher =
         U2<LogicalOperatorOrHigher, AssignmentOperator>
 
     and BinaryOperator =
-        // U2<AssignmentOperatorOrHigher, SyntaxKind.CommaToken>
-        abstract TODO: string with get, set
+        U2<AssignmentOperatorOrHigher, SyntaxKind>
 
     and BinaryOperatorToken =
         Token<BinaryOperator>
@@ -1575,6 +1622,7 @@ module ts =
     and [<AllowNullLiteral>] BinaryExpression =
         inherit Expression
         inherit Declaration
+        abstract kind: SyntaxKind with get, set
         abstract left: Expression with get, set
         abstract operatorToken: BinaryOperatorToken with get, set
         abstract right: Expression with get, set
@@ -1621,6 +1669,7 @@ module ts =
 
     and [<AllowNullLiteral>] ConditionalExpression =
         inherit Expression
+        abstract kind: SyntaxKind with get, set
         abstract condition: Expression with get, set
         abstract questionToken: QuestionToken with get, set
         abstract whenTrue: Expression with get, set
@@ -1636,12 +1685,14 @@ module ts =
     and [<AllowNullLiteral>] FunctionExpression =
         inherit PrimaryExpression
         inherit FunctionLikeDeclarationBase
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier option with get, set
         abstract body: FunctionBody with get, set
 
     and [<AllowNullLiteral>] ArrowFunction =
         inherit Expression
         inherit FunctionLikeDeclarationBase
+        abstract kind: SyntaxKind with get, set
         abstract equalsGreaterThanToken: EqualsGreaterThanToken with get, set
         abstract body: ConciseBody with get, set
 
@@ -1654,26 +1705,33 @@ module ts =
     and [<AllowNullLiteral>] LiteralExpression =
         inherit LiteralLikeNode
         inherit PrimaryExpression
+        abstract _literalExpressionBrand: obj with get, set
 
     and [<AllowNullLiteral>] RegularExpressionLiteral =
         inherit LiteralExpression
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] NoSubstitutionTemplateLiteral =
         inherit LiteralExpression
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] NumericLiteral =
         inherit LiteralExpression
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] TemplateHead =
         inherit LiteralLikeNode
+        abstract kind: SyntaxKind with get, set
         abstract parent: TemplateExpression option with get, set
 
     and [<AllowNullLiteral>] TemplateMiddle =
         inherit LiteralLikeNode
+        abstract kind: SyntaxKind with get, set
         abstract parent: TemplateSpan option with get, set
 
     and [<AllowNullLiteral>] TemplateTail =
         inherit LiteralLikeNode
+        abstract kind: SyntaxKind with get, set
         abstract parent: TemplateSpan option with get, set
 
     and TemplateLiteral =
@@ -1681,34 +1739,40 @@ module ts =
 
     and [<AllowNullLiteral>] TemplateExpression =
         inherit PrimaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract head: TemplateHead with get, set
-        abstract templateSpans: TemplateSpan array with get, set
+        abstract templateSpans: ResizeArray<TemplateSpan> with get, set
 
     and [<AllowNullLiteral>] TemplateSpan =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: TemplateExpression option with get, set
         abstract expression: Expression with get, set
         abstract literal: U2<TemplateMiddle, TemplateTail> with get, set
 
     and [<AllowNullLiteral>] ParenthesizedExpression =
         inherit PrimaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] ArrayLiteralExpression =
         inherit PrimaryExpression
-        abstract elements: Expression array with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract elements: ResizeArray<Expression> with get, set
 
     and [<AllowNullLiteral>] SpreadElement =
         inherit Expression
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] ObjectLiteralExpressionBase<'T> =
         inherit PrimaryExpression
         inherit Declaration
-        abstract properties: NodeArray<'T> with get, set
+        abstract properties: ResizeArray<'T> with get, set
 
     and [<AllowNullLiteral>] ObjectLiteralExpression =
         inherit ObjectLiteralExpressionBase<ObjectLiteralElementLike>
+        abstract kind: SyntaxKind with get, set
 
     and EntityNameExpression =
         U3<Identifier, PropertyAccessEntityNameExpression, ParenthesizedExpression>
@@ -1719,6 +1783,7 @@ module ts =
     and [<AllowNullLiteral>] PropertyAccessExpression =
         inherit MemberExpression
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract expression: LeftHandSideExpression with get, set
         abstract name: Identifier with get, set
 
@@ -1733,6 +1798,7 @@ module ts =
 
     and [<AllowNullLiteral>] ElementAccessExpression =
         inherit MemberExpression
+        abstract kind: SyntaxKind with get, set
         abstract expression: LeftHandSideExpression with get, set
         abstract argumentExpression: Expression option with get, set
 
@@ -1746,9 +1812,10 @@ module ts =
     and [<AllowNullLiteral>] CallExpression =
         inherit LeftHandSideExpression
         inherit Declaration
+        abstract kind: SyntaxKind with get, set
         abstract expression: LeftHandSideExpression with get, set
-        abstract typeArguments: TypeNode array option with get, set
-        abstract arguments: Expression array with get, set
+        abstract typeArguments: ResizeArray<TypeNode> option with get, set
+        abstract arguments: ResizeArray<Expression> with get, set
 
     and [<AllowNullLiteral>] SuperCall =
         inherit CallExpression
@@ -1760,32 +1827,37 @@ module ts =
 
     and [<AllowNullLiteral>] ExpressionWithTypeArguments =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract parent: HeritageClause option with get, set
         abstract expression: LeftHandSideExpression with get, set
-        abstract typeArguments: TypeNode array option with get, set
+        abstract typeArguments: ResizeArray<TypeNode> option with get, set
 
     and [<AllowNullLiteral>] NewExpression =
         inherit PrimaryExpression
         inherit Declaration
+        abstract kind: SyntaxKind with get, set
         abstract expression: LeftHandSideExpression with get, set
-        abstract typeArguments: TypeNode array option with get, set
-        abstract arguments: Expression array option with get, set
+        abstract typeArguments: ResizeArray<TypeNode> option with get, set
+        abstract arguments: ResizeArray<Expression> option with get, set
 
     and [<AllowNullLiteral>] TaggedTemplateExpression =
         inherit MemberExpression
+        abstract kind: SyntaxKind with get, set
         abstract tag: LeftHandSideExpression with get, set
         abstract template: TemplateLiteral with get, set
 
     and CallLikeExpression =
-        obj
+        U5<CallExpression, NewExpression, TaggedTemplateExpression, Decorator, JsxOpeningLikeElement>
 
     and [<AllowNullLiteral>] AsExpression =
         inherit Expression
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] TypeAssertion =
         inherit UnaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract ``type``: TypeNode with get, set
         abstract expression: UnaryExpression with get, set
 
@@ -1794,17 +1866,20 @@ module ts =
 
     and [<AllowNullLiteral>] NonNullExpression =
         inherit LeftHandSideExpression
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] MetaProperty =
         inherit PrimaryExpression
-        // abstract keywordToken: SyntaxKind.NewKeyword with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract keywordToken: SyntaxKind with get, set
         abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] JsxElement =
         inherit PrimaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract openingElement: JsxOpeningElement with get, set
-        abstract children: JsxChild array with get, set
+        abstract children: ResizeArray<JsxChild> with get, set
         abstract closingElement: JsxClosingElement with get, set
 
     and JsxOpeningLikeElement =
@@ -1822,39 +1897,46 @@ module ts =
 
     and [<AllowNullLiteral>] JsxOpeningElement =
         inherit Expression
+        abstract kind: SyntaxKind with get, set
         abstract parent: JsxElement option with get, set
         abstract tagName: JsxTagNameExpression with get, set
         abstract attributes: JsxAttributes with get, set
 
     and [<AllowNullLiteral>] JsxSelfClosingElement =
         inherit PrimaryExpression
+        abstract kind: SyntaxKind with get, set
         abstract tagName: JsxTagNameExpression with get, set
         abstract attributes: JsxAttributes with get, set
 
     and [<AllowNullLiteral>] JsxAttribute =
         inherit ObjectLiteralElement
+        abstract kind: SyntaxKind with get, set
         abstract parent: JsxAttributes option with get, set
         abstract name: Identifier with get, set
         abstract initializer: U2<StringLiteral, JsxExpression> option with get, set
 
     and [<AllowNullLiteral>] JsxSpreadAttribute =
         inherit ObjectLiteralElement
+        abstract kind: SyntaxKind with get, set
         abstract parent: JsxAttributes option with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] JsxClosingElement =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: JsxElement option with get, set
         abstract tagName: JsxTagNameExpression with get, set
 
     and [<AllowNullLiteral>] JsxExpression =
         inherit Expression
+        abstract kind: SyntaxKind with get, set
         abstract parent: U2<JsxElement, JsxAttributeLike> option with get, set
-        // abstract dotDotDotToken: Token<SyntaxKind.DotDotDotToken> option with get, set
+        abstract dotDotDotToken: Token<SyntaxKind> option with get, set
         abstract expression: Expression option with get, set
 
     and [<AllowNullLiteral>] JsxText =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract containsOnlyWhiteSpaces: bool with get, set
         abstract parent: JsxElement option with get, set
 
@@ -1867,22 +1949,27 @@ module ts =
 
     and [<AllowNullLiteral>] NotEmittedStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] CommaListExpression =
         inherit Expression
-        abstract elements: Expression array with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract elements: ResizeArray<Expression> with get, set
 
     and [<AllowNullLiteral>] EmptyStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] DebuggerStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] MissingDeclaration =
         inherit DeclarationStatement
         inherit ClassElement
         inherit ObjectLiteralElement
         inherit TypeElement
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier option with get, set
 
     and BlockLike =
@@ -1890,18 +1977,22 @@ module ts =
 
     and [<AllowNullLiteral>] Block =
         inherit Statement
-        abstract statements: Statement array with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract statements: ResizeArray<Statement> with get, set
 
     and [<AllowNullLiteral>] VariableStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract declarationList: VariableDeclarationList with get, set
 
     and [<AllowNullLiteral>] ExpressionStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] IfStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
         abstract thenStatement: Statement with get, set
         abstract elseStatement: Statement option with get, set
@@ -1912,10 +2003,12 @@ module ts =
 
     and [<AllowNullLiteral>] DoStatement =
         inherit IterationStatement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] WhileStatement =
         inherit IterationStatement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and ForInitializer =
@@ -1923,6 +2016,7 @@ module ts =
 
     and [<AllowNullLiteral>] ForStatement =
         inherit IterationStatement
+        abstract kind: SyntaxKind with get, set
         abstract initializer: ForInitializer option with get, set
         abstract condition: Expression option with get, set
         abstract incrementor: Expression option with get, set
@@ -1932,21 +2026,25 @@ module ts =
 
     and [<AllowNullLiteral>] ForInStatement =
         inherit IterationStatement
+        abstract kind: SyntaxKind with get, set
         abstract initializer: ForInitializer with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] ForOfStatement =
         inherit IterationStatement
+        abstract kind: SyntaxKind with get, set
         abstract awaitModifier: AwaitKeywordToken option with get, set
         abstract initializer: ForInitializer with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] BreakStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract label: Identifier option with get, set
 
     and [<AllowNullLiteral>] ContinueStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract label: Identifier option with get, set
 
     and BreakOrContinueStatement =
@@ -1954,77 +2052,89 @@ module ts =
 
     and [<AllowNullLiteral>] ReturnStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression option with get, set
 
     and [<AllowNullLiteral>] WithStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
         abstract statement: Statement with get, set
 
     and [<AllowNullLiteral>] SwitchStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
         abstract caseBlock: CaseBlock with get, set
         abstract possiblyExhaustive: bool option with get, set
 
     and [<AllowNullLiteral>] CaseBlock =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: SwitchStatement option with get, set
-        abstract clauses: CaseOrDefaultClause array with get, set
+        abstract clauses: ResizeArray<CaseOrDefaultClause> with get, set
 
     and [<AllowNullLiteral>] CaseClause =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: CaseBlock option with get, set
         abstract expression: Expression with get, set
-        abstract statements: Statement array with get, set
+        abstract statements: ResizeArray<Statement> with get, set
 
     and [<AllowNullLiteral>] DefaultClause =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: CaseBlock option with get, set
-        abstract statements: Statement array with get, set
+        abstract statements: ResizeArray<Statement> with get, set
 
     and CaseOrDefaultClause =
         U2<CaseClause, DefaultClause>
 
     and [<AllowNullLiteral>] LabeledStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract label: Identifier with get, set
         abstract statement: Statement with get, set
 
     and [<AllowNullLiteral>] ThrowStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
     and [<AllowNullLiteral>] TryStatement =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract tryBlock: Block with get, set
         abstract catchClause: CatchClause option with get, set
         abstract finallyBlock: Block option with get, set
 
     and [<AllowNullLiteral>] CatchClause =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: TryStatement option with get, set
         abstract variableDeclaration: VariableDeclaration option with get, set
         abstract block: Block with get, set
 
     and DeclarationWithTypeParameters =
-        obj
+        U5<SignatureDeclaration, ClassLikeDeclaration, InterfaceDeclaration, TypeAliasDeclaration, JSDocTemplateTag>
 
     and [<AllowNullLiteral>] ClassLikeDeclaration =
         inherit NamedDeclaration
         abstract name: Identifier option with get, set
-        abstract typeParameters: TypeParameterDeclaration array option with get, set
-        abstract heritageClauses: HeritageClause array option with get, set
-        abstract members: ClassElement array with get, set
+        abstract typeParameters: ResizeArray<TypeParameterDeclaration> option with get, set
+        abstract heritageClauses: ResizeArray<HeritageClause> option with get, set
+        abstract members: ResizeArray<ClassElement> with get, set
 
     and [<AllowNullLiteral>] ClassDeclaration =
         inherit ClassLikeDeclaration
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier option with get, set
 
     and [<AllowNullLiteral>] ClassExpression =
         inherit ClassLikeDeclaration
         inherit PrimaryExpression
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] ClassElement =
         inherit NamedDeclaration
@@ -2039,33 +2149,38 @@ module ts =
 
     and [<AllowNullLiteral>] InterfaceDeclaration =
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier with get, set
-        abstract typeParameters: TypeParameterDeclaration array option with get, set
-        abstract heritageClauses: HeritageClause array option with get, set
-        abstract members: TypeElement array with get, set
+        abstract typeParameters: ResizeArray<TypeParameterDeclaration> option with get, set
+        abstract heritageClauses: ResizeArray<HeritageClause> option with get, set
+        abstract members: ResizeArray<TypeElement> with get, set
 
     and [<AllowNullLiteral>] HeritageClause =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: U3<InterfaceDeclaration, ClassDeclaration, ClassExpression> option with get, set
-        // abstract token: U2<SyntaxKind.ExtendsKeyword, SyntaxKind.ImplementsKeyword> with get, set
-        abstract types: ExpressionWithTypeArguments array with get, set
+        abstract token: U2<SyntaxKind, SyntaxKind> with get, set
+        abstract types: ResizeArray<ExpressionWithTypeArguments> with get, set
 
     and [<AllowNullLiteral>] TypeAliasDeclaration =
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier with get, set
-        abstract typeParameters: TypeParameterDeclaration array option with get, set
+        abstract typeParameters: ResizeArray<TypeParameterDeclaration> option with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] EnumMember =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: EnumDeclaration option with get, set
         abstract name: PropertyName with get, set
         abstract initializer: Expression option with get, set
 
     and [<AllowNullLiteral>] EnumDeclaration =
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier with get, set
-        abstract members: EnumMember array with get, set
+        abstract members: ResizeArray<EnumMember> with get, set
 
     and ModuleName =
         U2<Identifier, StringLiteral>
@@ -2075,6 +2190,7 @@ module ts =
 
     and [<AllowNullLiteral>] ModuleDeclaration =
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U2<ModuleBody, SourceFile> option with get, set
         abstract name: ModuleName with get, set
         abstract body: U2<ModuleBody, JSDocNamespaceDeclaration> option with get, set
@@ -2098,25 +2214,29 @@ module ts =
     and [<AllowNullLiteral>] ModuleBlock =
         inherit Node
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract parent: ModuleDeclaration option with get, set
-        abstract statements: Statement array with get, set
+        abstract statements: ResizeArray<Statement> with get, set
 
     and ModuleReference =
         U2<EntityName, ExternalModuleReference>
 
     and [<AllowNullLiteral>] ImportEqualsDeclaration =
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U2<SourceFile, ModuleBlock> option with get, set
         abstract name: Identifier with get, set
         abstract moduleReference: ModuleReference with get, set
 
     and [<AllowNullLiteral>] ExternalModuleReference =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: ImportEqualsDeclaration option with get, set
         abstract expression: Expression option with get, set
 
     and [<AllowNullLiteral>] ImportDeclaration =
         inherit Statement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U2<SourceFile, ModuleBlock> option with get, set
         abstract importClause: ImportClause option with get, set
         abstract moduleSpecifier: Expression with get, set
@@ -2126,46 +2246,54 @@ module ts =
 
     and [<AllowNullLiteral>] ImportClause =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: ImportDeclaration option with get, set
         abstract name: Identifier option with get, set
         abstract namedBindings: NamedImportBindings option with get, set
 
     and [<AllowNullLiteral>] NamespaceImport =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: ImportClause option with get, set
         abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] NamespaceExportDeclaration =
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] ExportDeclaration =
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract parent: U2<SourceFile, ModuleBlock> option with get, set
         abstract exportClause: NamedExports option with get, set
         abstract moduleSpecifier: Expression option with get, set
 
     and [<AllowNullLiteral>] NamedImports =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: ImportClause option with get, set
-        abstract elements: ImportSpecifier array with get, set
+        abstract elements: ResizeArray<ImportSpecifier> with get, set
 
     and [<AllowNullLiteral>] NamedExports =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract parent: ExportDeclaration option with get, set
-        abstract elements: ExportSpecifier array with get, set
+        abstract elements: ResizeArray<ExportSpecifier> with get, set
 
     and NamedImportsOrExports =
         U2<NamedImports, NamedExports>
 
     and [<AllowNullLiteral>] ImportSpecifier =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: NamedImports option with get, set
         abstract propertyName: Identifier option with get, set
         abstract name: Identifier with get, set
 
     and [<AllowNullLiteral>] ExportSpecifier =
         inherit NamedDeclaration
+        abstract kind: SyntaxKind with get, set
         abstract parent: NamedExports option with get, set
         abstract propertyName: Identifier option with get, set
         abstract name: Identifier with get, set
@@ -2175,6 +2303,7 @@ module ts =
 
     and [<AllowNullLiteral>] ExportAssignment =
         inherit DeclarationStatement
+        abstract kind: SyntaxKind with get, set
         abstract parent: SourceFile option with get, set
         abstract isExportEquals: bool option with get, set
         abstract expression: Expression with get, set
@@ -2188,8 +2317,7 @@ module ts =
         abstract enabled: bool with get, set
 
     and CommentKind =
-        // U2<SyntaxKind.SingleLineCommentTrivia, SyntaxKind.MultiLineCommentTrivia>
-        abstract TODO: string with get, set
+        U2<SyntaxKind, SyntaxKind>
 
     and [<AllowNullLiteral>] CommentRange =
         inherit TextRange
@@ -2204,6 +2332,7 @@ module ts =
 
     and [<AllowNullLiteral>] JSDocTypeExpression =
         inherit TypeNode
+        abstract kind: SyntaxKind with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] JSDocType =
@@ -2212,28 +2341,35 @@ module ts =
 
     and [<AllowNullLiteral>] JSDocAllType =
         inherit JSDocType
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] JSDocUnknownType =
         inherit JSDocType
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] JSDocNonNullableType =
         inherit JSDocType
+        abstract kind: SyntaxKind with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] JSDocNullableType =
         inherit JSDocType
+        abstract kind: SyntaxKind with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] JSDocOptionalType =
         inherit JSDocType
+        abstract kind: SyntaxKind with get, set
         abstract ``type``: TypeNode with get, set
 
     and [<AllowNullLiteral>] JSDocFunctionType =
         inherit JSDocType
         inherit SignatureDeclaration
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] JSDocVariadicType =
         inherit JSDocType
+        abstract kind: SyntaxKind with get, set
         abstract ``type``: TypeNode with get, set
 
     and JSDocTypeReferencingNode =
@@ -2241,42 +2377,50 @@ module ts =
 
     and [<AllowNullLiteral>] JSDoc =
         inherit Node
-        abstract tags: U2<JSDocTag array, obj> with get, set
-        abstract comment: U2<string, obj> with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract tags: ResizeArray<JSDocTag> option with get, set
+        abstract comment: string option with get, set
 
     and [<AllowNullLiteral>] JSDocTag =
         inherit Node
         abstract parent: JSDoc with get, set
         abstract atToken: AtToken with get, set
         abstract tagName: Identifier with get, set
-        abstract comment: U2<string, obj> with get, set
+        abstract comment: string option with get, set
 
     and [<AllowNullLiteral>] JSDocUnknownTag =
         inherit JSDocTag
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] JSDocAugmentsTag =
         inherit JSDocTag
+        abstract kind: SyntaxKind with get, set
         abstract typeExpression: JSDocTypeExpression with get, set
 
     and [<AllowNullLiteral>] JSDocClassTag =
         inherit JSDocTag
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] JSDocTemplateTag =
         inherit JSDocTag
-        abstract typeParameters: TypeParameterDeclaration array with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract typeParameters: ResizeArray<TypeParameterDeclaration> with get, set
 
     and [<AllowNullLiteral>] JSDocReturnTag =
         inherit JSDocTag
+        abstract kind: SyntaxKind with get, set
         abstract typeExpression: JSDocTypeExpression with get, set
 
     and [<AllowNullLiteral>] JSDocTypeTag =
         inherit JSDocTag
+        abstract kind: SyntaxKind with get, set
         abstract typeExpression: JSDocTypeExpression with get, set
 
     and [<AllowNullLiteral>] JSDocTypedefTag =
         inherit JSDocTag
         inherit NamedDeclaration
         abstract parent: JSDoc with get, set
+        abstract kind: SyntaxKind with get, set
         abstract fullName: U2<JSDocNamespaceDeclaration, Identifier> option with get, set
         abstract name: Identifier option with get, set
         abstract typeExpression: U2<JSDocTypeExpression, JSDocTypeLiteral> option with get, set
@@ -2292,16 +2436,19 @@ module ts =
 
     and [<AllowNullLiteral>] JSDocPropertyTag =
         inherit JSDocPropertyLikeTag
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] JSDocParameterTag =
         inherit JSDocPropertyLikeTag
+        abstract kind: SyntaxKind with get, set
 
     and [<AllowNullLiteral>] JSDocTypeLiteral =
         inherit JSDocType
+        abstract kind: SyntaxKind with get, set
         abstract jsDocPropertyTags: ReadonlyArray<JSDocPropertyLikeTag> option with get, set
         abstract isArrayType: bool option with get, set
 
-    and FlowFlags =
+    and [<RequireQualifiedAccess>] FlowFlags =
         | Unreachable = 1
         | Start = 2
         | BranchLabel = 4
@@ -2374,17 +2521,16 @@ module ts =
     and [<AllowNullLiteral>] IncompleteType =
         abstract flags: TypeFlags with get, set
         abstract ``type``: Type with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] AmdDependency =
         abstract path: string with get, set
         abstract name: string with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SourceFile =
         inherit Declaration
-        abstract statements: Statement array with get, set
-        // abstract endOfFileToken: Token<SyntaxKind.EndOfFileToken> with get, set
+        abstract kind: SyntaxKind with get, set
+        abstract statements: ResizeArray<Statement> with get, set
+        abstract endOfFileToken: Token<SyntaxKind> with get, set
         abstract fileName: string with get, set
         abstract text: string with get, set
         abstract amdDependencies: ResizeArray<AmdDependency> with get, set
@@ -2403,6 +2549,7 @@ module ts =
 
     and [<AllowNullLiteral>] Bundle =
         inherit Node
+        abstract kind: SyntaxKind with get, set
         abstract sourceFiles: ResizeArray<SourceFile> with get, set
 
     and [<AllowNullLiteral>] JsonSourceFile =
@@ -2420,13 +2567,10 @@ module ts =
         abstract useCaseSensitiveFileNames: bool with get, set
         abstract readDirectory: rootDir: string * extensions: ReadonlyArray<string> * excludes: ReadonlyArray<string> * includes: ReadonlyArray<string> * depth: float -> ResizeArray<string>
         abstract fileExists: path: string -> bool
-        abstract readFile: path: string -> U2<string, obj>
+        abstract readFile: path: string -> string option
 
     and [<AllowNullLiteral>] WriteFileCallback =
-        [<Emit("$0($1...)")>] abstract Invoke: fileName: string * data: string * writeByteOrderMark: bool * ?onError: Func<string, unit> * ?sourceFiles: ReadonlyArray<SourceFile> -> unit
-
-    and [<AllowNullLiteral>] [<Import("OperationCanceledException","ts")>] OperationCanceledException() =
-        class end
+        interface end
 
     and [<AllowNullLiteral>] CancellationToken =
         abstract isCancellationRequested: unit -> bool
@@ -2468,7 +2612,7 @@ module ts =
         abstract sourceMapMappings: string with get, set
         abstract sourceMapDecodedMappings: ResizeArray<SourceMapSpan> with get, set
 
-    and ExitStatus =
+    and [<RequireQualifiedAccess>] ExitStatus =
         | Success = 0
         | DiagnosticsPresent_OutputsSkipped = 1
         | DiagnosticsPresent_OutputsGenerated = 2
@@ -2477,16 +2621,15 @@ module ts =
         abstract emitSkipped: bool with get, set
         abstract diagnostics: ResizeArray<Diagnostic> with get, set
         abstract emittedFiles: ResizeArray<string> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] TypeChecker =
         abstract getTypeOfSymbolAtLocation: symbol: Symbol * node: Node -> Type
         abstract getDeclaredTypeOfSymbol: symbol: Symbol -> Type
         abstract getPropertiesOfType: ``type``: Type -> ResizeArray<Symbol>
-        abstract getPropertyOfType: ``type``: Type * propertyName: string -> U2<Symbol, obj>
-        abstract getIndexInfoOfType: ``type``: Type * kind: IndexKind -> U2<IndexInfo, obj>
+        abstract getPropertyOfType: ``type``: Type * propertyName: string -> Symbol option
+        abstract getIndexInfoOfType: ``type``: Type * kind: IndexKind -> IndexInfo option
         abstract getSignaturesOfType: ``type``: Type * kind: SignatureKind -> ResizeArray<Signature>
-        abstract getIndexTypeOfType: ``type``: Type * kind: IndexKind -> U2<Type, obj>
+        abstract getIndexTypeOfType: ``type``: Type * kind: IndexKind -> Type option
         abstract getBaseTypes: ``type``: InterfaceType -> ResizeArray<BaseType>
         abstract getBaseTypeOfLiteralType: ``type``: Type -> Type
         abstract getWidenedType: ``type``: Type -> Type
@@ -2497,11 +2640,11 @@ module ts =
         abstract signatureToSignatureDeclaration: signature: Signature * kind: SyntaxKind * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> SignatureDeclaration
         abstract indexInfoToIndexSignatureDeclaration: indexInfo: IndexInfo * kind: IndexKind * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> IndexSignatureDeclaration
         abstract getSymbolsInScope: location: Node * meaning: SymbolFlags -> ResizeArray<Symbol>
-        abstract getSymbolAtLocation: node: Node -> U2<Symbol, obj>
+        abstract getSymbolAtLocation: node: Node -> Symbol option
         abstract getSymbolsOfParameterPropertyDeclaration: parameter: ParameterDeclaration * parameterName: string -> ResizeArray<Symbol>
-        abstract getShorthandAssignmentValueSymbol: location: Node -> U2<Symbol, obj>
-        abstract getExportSpecifierLocalTargetSymbol: location: ExportSpecifier -> U2<Symbol, obj>
-        abstract getPropertySymbolOfDestructuringAssignment: location: Identifier -> U2<Symbol, obj>
+        abstract getShorthandAssignmentValueSymbol: location: Node -> Symbol option
+        abstract getExportSpecifierLocalTargetSymbol: location: ExportSpecifier -> Symbol option
+        abstract getPropertySymbolOfDestructuringAssignment: location: Identifier -> Symbol option
         abstract getTypeAtLocation: node: Node -> Type
         abstract getTypeFromTypeNode: node: TypeNode -> Type
         abstract signatureToString: signature: Signature * ?enclosingDeclaration: Node * ?flags: TypeFormatFlags * ?kind: SignatureKind -> string
@@ -2511,27 +2654,27 @@ module ts =
         abstract getFullyQualifiedName: symbol: Symbol -> string
         abstract getAugmentedPropertiesOfType: ``type``: Type -> ResizeArray<Symbol>
         abstract getRootSymbols: symbol: Symbol -> ResizeArray<Symbol>
-        abstract getContextualType: node: Expression -> U2<Type, obj>
-        abstract getResolvedSignature: node: CallLikeExpression * ?candidatesOutArray: ResizeArray<Signature> * ?argumentCount: float -> U2<Signature, obj>
-        abstract getSignatureFromDeclaration: declaration: SignatureDeclaration -> U2<Signature, obj>
-        abstract isImplementationOfOverload: node: FunctionLike -> U2<bool, obj>
+        abstract getContextualType: node: Expression -> Type option
+        abstract getResolvedSignature: node: CallLikeExpression * ?candidatesOutArray: ResizeArray<Signature> * ?argumentCount: float -> Signature option
+        abstract getSignatureFromDeclaration: declaration: SignatureDeclaration -> Signature option
+        abstract isImplementationOfOverload: node: FunctionLike -> bool option
         abstract isUndefinedSymbol: symbol: Symbol -> bool
         abstract isArgumentsSymbol: symbol: Symbol -> bool
         abstract isUnknownSymbol: symbol: Symbol -> bool
-        abstract getConstantValue: node: U3<EnumMember, PropertyAccessExpression, ElementAccessExpression> -> U3<string, float, obj>
+        abstract getConstantValue: node: U3<EnumMember, PropertyAccessExpression, ElementAccessExpression> -> U2<string, float> option
         abstract isValidPropertyAccess: node: U2<PropertyAccessExpression, QualifiedName> * propertyName: string -> bool
         abstract getAliasedSymbol: symbol: Symbol -> Symbol
         abstract getExportsOfModule: moduleSymbol: Symbol -> ResizeArray<Symbol>
-        abstract getAllAttributesTypeFromJsxOpeningLikeElement: elementNode: JsxOpeningLikeElement -> U2<Type, obj>
+        abstract getAllAttributesTypeFromJsxOpeningLikeElement: elementNode: JsxOpeningLikeElement -> Type option
         abstract getJsxIntrinsicTagNames: unit -> ResizeArray<Symbol>
         abstract isOptionalParameter: node: ParameterDeclaration -> bool
         abstract getAmbientModules: unit -> ResizeArray<Symbol>
-        abstract tryGetMemberInModuleExports: memberName: string * moduleSymbol: Symbol -> U2<Symbol, obj>
+        abstract tryGetMemberInModuleExports: memberName: string * moduleSymbol: Symbol -> Symbol option
         abstract getApparentType: ``type``: Type -> Type
-        abstract getSuggestionForNonexistentProperty: node: Identifier * containingType: Type -> U2<string, obj>
-        abstract getSuggestionForNonexistentSymbol: location: Node * name: string * meaning: SymbolFlags -> U2<string, obj>
+        abstract getSuggestionForNonexistentProperty: node: Identifier * containingType: Type -> string option
+        abstract getSuggestionForNonexistentSymbol: location: Node * name: string * meaning: SymbolFlags -> string option
 
-    and NodeBuilderFlags =
+    and [<RequireQualifiedAccess>] NodeBuilderFlags =
         | None = 0
         | NoTruncation = 1
         | WriteArrayAsGenericType = 2
@@ -2578,7 +2721,7 @@ module ts =
         abstract reportInaccessibleThisError: unit -> unit
         abstract reportPrivateInBaseOfClassExpression: propertyName: string -> unit
 
-    and TypeFormatFlags =
+    and [<RequireQualifiedAccess>] TypeFormatFlags =
         | None = 0
         | WriteArrayAsGenericType = 1
         | UseTypeOfFunction = 4
@@ -2597,12 +2740,12 @@ module ts =
         | InArrayType = 32768
         | UseAliasDefinedOutsideCurrentScope = 65536
 
-    and SymbolFormatFlags =
+    and [<RequireQualifiedAccess>] SymbolFormatFlags =
         | None = 0
         | WriteTypeParametersOrArguments = 1
         | UseOnlyExternalAliasing = 2
 
-    and TypePredicateKind =
+    and [<RequireQualifiedAccess>] TypePredicateKind =
         | This = 0
         | Identifier = 1
 
@@ -2612,16 +2755,18 @@ module ts =
 
     and [<AllowNullLiteral>] ThisTypePredicate =
         inherit TypePredicateBase
+        abstract kind: TypePredicateKind with get, set
 
     and [<AllowNullLiteral>] IdentifierTypePredicate =
         inherit TypePredicateBase
+        abstract kind: TypePredicateKind with get, set
         abstract parameterName: string with get, set
         abstract parameterIndex: float with get, set
 
     and TypePredicate =
         U2<IdentifierTypePredicate, ThisTypePredicate>
 
-    and SymbolFlags =
+    and [<RequireQualifiedAccess>] SymbolFlags =
         | None = 0
         | FunctionScopedVariable = 1
         | BlockScopedVariable = 2
@@ -2684,64 +2829,60 @@ module ts =
 
     and [<AllowNullLiteral>] Symbol =
         abstract flags: SymbolFlags with get, set
-        // abstract escapedName: __String with get, set
+        abstract escapedName: __String with get, set
         abstract declarations: ResizeArray<Declaration> option with get, set
         abstract valueDeclaration: Declaration option with get, set
-        // abstract members: SymbolTable option with get, set
-        // abstract exports: SymbolTable option with get, set
-        // abstract globalExports: SymbolTable option with get, set
+        abstract members: SymbolTable option with get, set
+        abstract exports: SymbolTable option with get, set
+        abstract globalExports: SymbolTable option with get, set
         abstract name: string with get, set
         abstract getFlags: unit -> SymbolFlags
-        // abstract getEscapedName: unit -> __String
+        abstract getEscapedName: unit -> __String
         abstract getName: unit -> string
-        abstract getDeclarations: unit -> U2<ResizeArray<Declaration>, obj>
+        abstract getDeclarations: unit -> ResizeArray<Declaration> option
         abstract getDocumentationComment: unit -> ResizeArray<SymbolDisplayPart>
         abstract getJsDocTags: unit -> ResizeArray<JSDocTagInfo>
 
-    and InternalSymbolName =
-        // | Call = __call
-        // | Constructor = __constructor
-        // | New = __new
-        // | Index = __index
-        // | ExportStar = __export
-        // | Global = __global
-        // | Missing = __missing
-        // | Type = __type
-        // | Object = __object
-        // | JSXAttributes = __jsxAttributes
-        // | Class = __class
-        // | Function = __function
-        // | Computed = __computed
-        // | Resolving = __resolving__
-        // | ExportEquals = export=
-        // | Default = default
-        abstract TODO: string with get, set
+    and [<StringEnum>] [<RequireQualifiedAccess>] InternalSymbolName =
+        | Call
+        | Constructor
+        | New
+        | Index
+        | ExportStar
+        | Global
+        | Missing
+        | Type
+        | Object
+        | JSXAttributes
+        | Class
+        | Function
+        | Computed
+        | Resolving
+        | ExportEquals
+        | Default
 
     and __String =
         U3<obj, obj, InternalSymbolName>
 
-    // and [<AllowNullLiteral>] ReadonlyUnderscoreEscapedMap<'T> =
-    //     // abstract :  with get, set
-    //     // abstract size: float with get, set
-    //     // abstract :  ->
-    //     abstract get: key: __String -> U2<'T, obj>
-    //     abstract has: key: __String -> bool
-    //     abstract forEach: action: Func<'T, __String, unit> -> unit
-    //     abstract keys: unit -> Iterator<__String>
-    //     abstract values: unit -> Iterator<'T>
-    //     abstract entries: unit -> Iterator<__String * 'T>
+    and [<AllowNullLiteral>] ReadonlyUnderscoreEscapedMap<'T> =
+        abstract get: key: __String -> 'T option
+        abstract has: key: __String -> bool
+        abstract forEach: action: Func<'T, __String, unit> -> unit
+        abstract size: float with get, set
+        abstract keys: unit -> Iterator<__String>
+        abstract values: unit -> Iterator<'T>
+        abstract entries: unit -> Iterator<__String * 'T>
 
-    // and [<AllowNullLiteral>] UnderscoreEscapedMap<'T> =
-    //     inherit ReadonlyUnderscoreEscapedMap<'T>
-    //     // abstract :  ->
-    //     abstract set: key: __String * value: 'T -> obj
-    //     abstract delete: key: __String -> bool
-    //     abstract clear: unit -> unit
+    and [<AllowNullLiteral>] UnderscoreEscapedMap<'T> =
+        inherit ReadonlyUnderscoreEscapedMap<'T>
+        abstract set: key: __String * value: 'T -> obj
+        abstract delete: key: __String -> bool
+        abstract clear: unit -> unit
 
-    // and SymbolTable =
-    //     UnderscoreEscapedMap<Symbol>
+    and SymbolTable =
+        UnderscoreEscapedMap<Symbol>
 
-    and TypeFlags =
+    and [<RequireQualifiedAccess>] TypeFlags =
         | Any = 1
         | String = 2
         | Number = 4
@@ -2787,15 +2928,15 @@ module ts =
         abstract aliasSymbol: Symbol option with get, set
         abstract aliasTypeArguments: ResizeArray<Type> option with get, set
         abstract getFlags: unit -> TypeFlags
-        abstract getSymbol: unit -> U2<Symbol, obj>
+        abstract getSymbol: unit -> Symbol option
         abstract getProperties: unit -> ResizeArray<Symbol>
-        abstract getProperty: propertyName: string -> U2<Symbol, obj>
+        abstract getProperty: propertyName: string -> Symbol option
         abstract getApparentProperties: unit -> ResizeArray<Symbol>
         abstract getCallSignatures: unit -> ResizeArray<Signature>
         abstract getConstructSignatures: unit -> ResizeArray<Signature>
-        abstract getStringIndexType: unit -> U2<Type, obj>
-        abstract getNumberIndexType: unit -> U2<Type, obj>
-        abstract getBaseTypes: unit -> U2<ResizeArray<BaseType>, obj>
+        abstract getStringIndexType: unit -> Type option
+        abstract getNumberIndexType: unit -> Type option
+        abstract getBaseTypes: unit -> ResizeArray<BaseType> option
         abstract getNonNullableType: unit -> Type
 
     and [<AllowNullLiteral>] LiteralType =
@@ -2815,7 +2956,7 @@ module ts =
     and [<AllowNullLiteral>] EnumType =
         inherit Type
 
-    and ObjectFlags =
+    and [<RequireQualifiedAccess>] ObjectFlags =
         | Class = 1
         | Interface = 2
         | Reference = 4
@@ -2866,10 +3007,8 @@ module ts =
     and [<AllowNullLiteral>] UnionType =
         inherit UnionOrIntersectionType
 
-
     and [<AllowNullLiteral>] IntersectionType =
         inherit UnionOrIntersectionType
-
 
     and StructuredType =
         U3<ObjectType, UnionType, IntersectionType>
@@ -2897,7 +3036,7 @@ module ts =
         inherit Type
         abstract ``type``: U2<TypeVariable, UnionOrIntersectionType> with get, set
 
-    and SignatureKind =
+    and [<RequireQualifiedAccess>] SignatureKind =
         | Call = 0
         | Construct = 1
 
@@ -2906,13 +3045,13 @@ module ts =
         abstract typeParameters: ResizeArray<TypeParameter> option with get, set
         abstract parameters: ResizeArray<Symbol> with get, set
         abstract getDeclaration: unit -> SignatureDeclaration
-        abstract getTypeParameters: unit -> U2<ResizeArray<TypeParameter>, obj>
+        abstract getTypeParameters: unit -> ResizeArray<TypeParameter> option
         abstract getParameters: unit -> ResizeArray<Symbol>
         abstract getReturnType: unit -> Type
         abstract getDocumentationComment: unit -> ResizeArray<SymbolDisplayPart>
         abstract getJsDocTags: unit -> ResizeArray<JSDocTagInfo>
 
-    and IndexKind =
+    and [<RequireQualifiedAccess>] IndexKind =
         | String = 0
         | Number = 1
 
@@ -2921,7 +3060,7 @@ module ts =
         abstract isReadonly: bool with get, set
         abstract declaration: SignatureDeclaration option with get, set
 
-    and InferencePriority =
+    and [<RequireQualifiedAccess>] InferencePriority =
         | NakedTypeVariable = 1
         | MappedType = 2
         | ReturnType = 4
@@ -2934,16 +3073,12 @@ module ts =
         abstract topLevel: bool with get, set
         abstract isFixed: bool with get, set
 
-    and InferenceFlags =
+    and [<RequireQualifiedAccess>] InferenceFlags =
         | InferUnionTypes = 1
         | NoDefault = 2
         | AnyDefault = 4
 
-    and Ternary =
-        // | False = 0
-        // | Maybe = 1
-        // | True = undefined
-        abstract TODO: string with get, set
+      and Ternary = obj
 
     and TypeComparer =
         Func<Type, Type, bool, Ternary>
@@ -2965,20 +3100,20 @@ module ts =
         abstract next: DiagnosticMessageChain option with get, set
 
     and [<AllowNullLiteral>] Diagnostic =
-        abstract file: U2<SourceFile, obj> with get, set
-        abstract start: U2<float, obj> with get, set
-        abstract length: U2<float, obj> with get, set
+        abstract file: SourceFile option with get, set
+        abstract start: float option with get, set
+        abstract length: float option with get, set
         abstract messageText: U2<string, DiagnosticMessageChain> with get, set
         abstract category: DiagnosticCategory with get, set
         abstract code: float with get, set
         abstract source: string option with get, set
 
-    and DiagnosticCategory =
+    and [<RequireQualifiedAccess>] DiagnosticCategory =
         | Warning = 0
         | Error = 1
         | Message = 2
 
-    and ModuleResolutionKind =
+    and [<RequireQualifiedAccess>] ModuleResolutionKind =
         | Classic = 1
         | NodeJs = 2
 
@@ -3073,7 +3208,7 @@ module ts =
         abstract compilerOptions: CompilerOptions with get, set
         abstract unresolvedImports: ReadonlyArray<string> with get, set
 
-    and ModuleKind =
+    and [<RequireQualifiedAccess>] ModuleKind =
         | None = 0
         | CommonJS = 1
         | AMD = 2
@@ -3082,13 +3217,13 @@ module ts =
         | ES2015 = 5
         | ESNext = 6
 
-    and JsxEmit =
+    and [<RequireQualifiedAccess>] JsxEmit =
         | None = 0
         | Preserve = 1
         | React = 2
         | ReactNative = 3
 
-    and NewLineKind =
+    and [<RequireQualifiedAccess>] NewLineKind =
         | CarriageReturnLineFeed = 0
         | LineFeed = 1
 
@@ -3096,7 +3231,7 @@ module ts =
         abstract line: float with get, set
         abstract character: float with get, set
 
-    and ScriptKind =
+    and [<RequireQualifiedAccess>] ScriptKind =
         | Unknown = 0
         | JS = 1
         | JSX = 2
@@ -3105,7 +3240,7 @@ module ts =
         | External = 5
         | JSON = 6
 
-    and ScriptTarget =
+    and [<RequireQualifiedAccess>] ScriptTarget =
         | ES3 = 0
         | ES5 = 1
         | ES2015 = 2
@@ -3114,7 +3249,7 @@ module ts =
         | ESNext = 5
         | Latest = 5
 
-    and LanguageVariant =
+    and [<RequireQualifiedAccess>] LanguageVariant =
         | Standard = 0
         | JSX = 1
 
@@ -3127,7 +3262,7 @@ module ts =
         abstract wildcardDirectories: MapLike<WatchDirectoryFlags> option with get, set
         abstract compileOnSave: bool option with get, set
 
-    and WatchDirectoryFlags =
+    and [<RequireQualifiedAccess>] WatchDirectoryFlags =
         | None = 0
         | Recursive = 1
 
@@ -3137,7 +3272,7 @@ module ts =
 
     and [<AllowNullLiteral>] ModuleResolutionHost =
         abstract fileExists: fileName: string -> bool
-        abstract readFile: fileName: string -> U2<string, obj>
+        abstract readFile: fileName: string -> string option
         abstract trace: s: string -> unit
         abstract directoryExists: directoryName: string -> bool
         abstract realpath: path: string -> string
@@ -3204,7 +3339,7 @@ module ts =
         abstract skipTrivia: Func<float, float> option with get, set
         abstract getLineAndCharacterOfPosition: pos: float -> LineAndCharacter
 
-    and EmitFlags =
+    and [<RequireQualifiedAccess>] EmitFlags =
         | SingleLine = 1
         | AdviseOnEmitNode = 2
         | NoSubstitution = 4
@@ -3240,7 +3375,7 @@ module ts =
         abstract text: string with get, set
         abstract priority: float option with get, set
 
-    and EmitHint =
+    and [<RequireQualifiedAccess>] EmitHint =
         | SourceFile = 0
         | Expression = 1
         | IdentifierName = 2
@@ -3248,8 +3383,6 @@ module ts =
         | Unspecified = 4
 
     and [<AllowNullLiteral>] TransformationContext =
-        abstract onSubstituteNode: Func<EmitHint, Node, Node> with get, set
-        abstract onEmitNode: Func<EmitHint, Node, Func<EmitHint, Node, unit>, unit> with get, set
         abstract getCompilerOptions: unit -> CompilerOptions
         abstract startLexicalEnvironment: unit -> unit
         abstract suspendLexicalEnvironment: unit -> unit
@@ -3258,11 +3391,13 @@ module ts =
         abstract hoistFunctionDeclaration: node: FunctionDeclaration -> unit
         abstract hoistVariableDeclaration: node: Identifier -> unit
         abstract requestEmitHelper: helper: EmitHelper -> unit
-        abstract readEmitHelpers: unit -> U2<ResizeArray<EmitHelper>, obj>
+        abstract readEmitHelpers: unit -> ResizeArray<EmitHelper> option
         abstract enableSubstitution: kind: SyntaxKind -> unit
         abstract isSubstitutionEnabled: node: Node -> bool
+        abstract onSubstituteNode: Func<EmitHint, Node, Node> with get, set
         abstract enableEmitNotification: kind: SyntaxKind -> unit
         abstract isEmitNotificationEnabled: node: Node -> bool
+        abstract onEmitNode: Func<EmitHint, Node, Func<EmitHint, Node, unit>, unit> with get, set
 
     and [<AllowNullLiteral>] TransformationResult<'T> =
         abstract transformed: ResizeArray<'T> with get, set
@@ -3281,7 +3416,7 @@ module ts =
         Func<Node, VisitResult<Node>>
 
     and VisitResult<'T> =
-        U3<'T, ResizeArray<'T>, obj>
+        U2<'T, ResizeArray<'T>> option
 
     and [<AllowNullLiteral>] Printer =
         abstract printNode: hint: EmitHint * node: Node * sourceFile: SourceFile -> string
@@ -3309,7 +3444,7 @@ module ts =
         inherit Node
         abstract _children: ResizeArray<Node> with get, set
 
-    and FileWatcherEventKind =
+    and [<RequireQualifiedAccess>] FileWatcherEventKind =
         | Created = 0
         | Changed = 1
         | Deleted = 2
@@ -3330,7 +3465,7 @@ module ts =
         abstract newLine: string with get, set
         abstract useCaseSensitiveFileNames: bool with get, set
         abstract write: s: string -> unit
-        abstract readFile: path: string * ?encoding: string -> U2<string, obj>
+        abstract readFile: path: string * ?encoding: string -> string option
         abstract getFileSize: path: string -> float
         abstract writeFile: path: string * data: string * ?writeByteOrderMark: bool -> unit
         abstract watchFile: path: string * callback: FileWatcherCallback * ?pollingInterval: float -> FileWatcher
@@ -3348,7 +3483,7 @@ module ts =
         abstract getMemoryUsage: unit -> float
         abstract exit: ?exitCode: float -> unit
         abstract realpath: path: string -> string
-        abstract setTimeout: callback: Func<obj, unit> * ms: float * [<ParamArray>] args: obj -> obj
+        abstract setTimeout: callback: Func<ResizeArray<obj>, unit> * ms: float * [<ParamArray>] args: obj -> obj
         abstract clearTimeout: timeoutId: obj -> unit
 
     and [<AllowNullLiteral>] FileWatcher =
@@ -3360,7 +3495,7 @@ module ts =
         abstract referenceCount: float with get, set
 
     and [<AllowNullLiteral>] ErrorCallback =
-        [<Emit("$0($1...)")>] abstract Invoke: message: DiagnosticMessage * length: float -> unit
+        interface end
 
     and [<AllowNullLiteral>] Scanner =
         abstract getStartPos: unit -> float
@@ -3415,7 +3550,7 @@ module ts =
     and [<AllowNullLiteral>] IScriptSnapshot =
         abstract getText: start: float * ``end``: float -> string
         abstract getLength: unit -> float
-        abstract getChangeRange: oldSnapshot: IScriptSnapshot -> U2<TextChangeRange, obj>
+        abstract getChangeRange: oldSnapshot: IScriptSnapshot -> TextChangeRange option
         abstract dispose: unit -> unit
 
     and [<AllowNullLiteral>] PreProcessedFileInfo =
@@ -3435,7 +3570,7 @@ module ts =
         abstract getScriptFileNames: unit -> ResizeArray<string>
         abstract getScriptKind: fileName: string -> ScriptKind
         abstract getScriptVersion: fileName: string -> string
-        abstract getScriptSnapshot: fileName: string -> U2<IScriptSnapshot, obj>
+        abstract getScriptSnapshot: fileName: string -> IScriptSnapshot option
         abstract getLocalizedDiagnosticMessages: unit -> obj
         abstract getCancellationToken: unit -> HostCancellationToken
         abstract getCurrentDirectory: unit -> string
@@ -3445,14 +3580,14 @@ module ts =
         abstract error: s: string -> unit
         abstract useCaseSensitiveFileNames: unit -> bool
         abstract readDirectory: path: string * ?extensions: ReadonlyArray<string> * ?exclude: ReadonlyArray<string> * ?``include``: ReadonlyArray<string> * ?depth: float -> ResizeArray<string>
-        abstract readFile: path: string * ?encoding: string -> U2<string, obj>
+        abstract readFile: path: string * ?encoding: string -> string option
         abstract fileExists: path: string -> bool
         abstract getTypeRootsVersion: unit -> float
         abstract resolveModuleNames: moduleNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedModule>
         abstract resolveTypeReferenceDirectives: typeDirectiveNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedTypeReferenceDirective>
         abstract directoryExists: directoryName: string -> bool
         abstract getDirectories: directoryName: string -> ResizeArray<string>
-        abstract getCustomTransformers: unit -> U2<CustomTransformers, obj>
+        abstract getCustomTransformers: unit -> CustomTransformers option
 
     and [<AllowNullLiteral>] LanguageService =
         abstract cleanupSemanticCache: unit -> unit
