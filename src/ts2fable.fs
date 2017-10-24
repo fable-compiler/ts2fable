@@ -23,8 +23,9 @@ type FsInterface =
 
 type FsClass =
     {
-        Name: string
+        ClassName: string option
         TypeParameters: FsType list
+        Inherits: FsType list
         Members: FsType list
     }
 
@@ -104,6 +105,11 @@ type FsTuple =
         Types: FsType list
     }
 
+type FsVariable =
+    {
+        Name: string
+    }
+
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
@@ -122,6 +128,7 @@ type FsType =
     | Tuple of FsTuple
     | Module of FsModule
     | File of FsFile
+    | Variable of FsVariable
 
 type FsModule =
     {
@@ -186,29 +193,43 @@ let visitTypeParameters(tps: ResizeArray<TypeParameterDeclaration> option): FsTy
             tp.name.text |> FsType.Mapped
         )
 
+let visitInherits(hcs: ResizeArray<HeritageClause> option): FsType list =
+    match hcs with
+    | None -> []
+    | Some hcs ->
+        hcs |> List.ofSeq |> List.collect (fun hc ->
+            hc.types |> List.ofSeq |> List.map (fun eta ->
+                {
+                    Type = visitTypeNode eta
+                    TypeParameters =
+                        match eta.typeArguments with
+                        | None -> []
+                        | Some tps ->
+                            tps |> List.ofSeq |> List.map visitTypeNode
+                }
+                |> FsType.Generic
+            )
+        )
+
 let visitInterface(id: InterfaceDeclaration): FsInterface =
     {
         Name = id.name.text 
-        Inherits =
-            match id.heritageClauses with
-            | None -> []
-            | Some hcs ->
-                hcs |> List.ofSeq |> List.map (fun hc ->
-                    hc.types |> List.ofSeq |> List.map (fun eta ->
-                        {
-                            Type = visitTypeNode eta
-                            TypeParameters =
-                                match eta.typeArguments with
-                                | None -> []
-                                | Some tps ->
-                                    tps |> List.ofSeq |> List.map visitTypeNode
-                        }
-                        |> FsType.Generic
-                    )
-                )
-                |> List.concat
+        Inherits = visitInherits id.heritageClauses
         Members = id.members |> List.ofSeq |> List.map visitTypeElement
         TypeParameters = visitTypeParameters id.typeParameters
+    }
+
+let visitClass(cd: ClassDeclaration): FsClass =
+    {
+        ClassName = cd.name |> Option.map (fun nm -> nm.text) 
+        Inherits = visitInherits cd.heritageClauses
+        Members = [] // TODO cd.members |> List.ofSeq |> List.map visitTypeElement
+        TypeParameters = visitTypeParameters cd.typeParameters
+    }
+
+let visitVariable(vb: VariableDeclaration): FsVariable =
+    {
+        Name = ""
     }
 
 let visitEnum(ed: EnumDeclaration): FsEnum =
@@ -392,8 +413,10 @@ let visitStatement(sd: Statement): FsType =
         visitEnum (sd :?> EnumDeclaration) |> FsType.Enum
     | SyntaxKind.TypeAliasDeclaration ->
         visitAliasDeclaration (sd :?> TypeAliasDeclaration) |> FsType.Alias
-    | SyntaxKind.ClassDeclaration -> FsType.TODO
-    | SyntaxKind.VariableStatement -> FsType.TODO
+    | SyntaxKind.ClassDeclaration ->
+        visitClass (sd :?> ClassDeclaration) |> FsType.Class
+    | SyntaxKind.VariableStatement ->
+        visitVariable (sd :?> VariableDeclaration) |> FsType.Variable
     | SyntaxKind.FunctionDeclaration ->
         visitFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
     | SyntaxKind.ModuleDeclaration ->
@@ -459,7 +482,8 @@ let createGlobals(md: FsModule): FsModule =
     let fns = md.Types |> List.filter isFunction
     let cl: FsClass =
         {
-            Name = "Globals"
+            ClassName = Some "Globals"
+            Inherits = []
             TypeParameters = []
             Members = fns
         }
@@ -558,6 +582,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.Mapped _ -> tp
     | FsType.None _ -> tp
     | FsType.TODO _ -> tp
+    | FsType.Variable _ -> tp
 
     |> fix // current type
 
@@ -838,7 +863,7 @@ let printFile (file: FsFile) =
                     printfn "        interface end"
             | FsType.Class cl ->
                 printfn ""
-                printfn "    %s %s%s =" (if i = 0 then "type" else "and") cl.Name (printTypeParameters cl.TypeParameters)
+                printfn "    %s %s%s =" (if i = 0 then "type" else "and") cl.ClassName.Value (printTypeParameters cl.TypeParameters)
                 let nLines = ref 0
                 for mbr in cl.Members do
                     match mbr with
@@ -876,6 +901,7 @@ let printFile (file: FsFile) =
                             sprintf "        | [<CompiledName \"%s\">] %s" nm unm |> line.Add
                         printfn "%s" (line |> String.concat "")
                 | FsEnumCaseType.Unknown ->
+                    printfn "    and %s =" en.Name
                     printfn "        obj"
             | FsType.Alias al ->
                 printfn ""

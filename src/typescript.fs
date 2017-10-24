@@ -2572,6 +2572,9 @@ module ts =
     and [<AllowNullLiteral>] WriteFileCallback =
         interface end
 
+    and OperationCanceledException =
+        class end
+
     and [<AllowNullLiteral>] CancellationToken =
         abstract isCancellationRequested: unit -> bool
         abstract throwIfCancellationRequested: unit -> unit
@@ -3078,7 +3081,8 @@ module ts =
         | NoDefault = 2
         | AnyDefault = 4
 
-      and Ternary = obj
+    and Ternary =
+        obj
 
     and TypeComparer =
         Func<Type, Type, bool, Ternary>
@@ -3667,7 +3671,7 @@ module ts =
         abstract message: string with get, set
         abstract position: float with get, set
 
-    and [<AllowNullLiteral>] [<Import("TextChange","ts")>] TextChange() =
+    and TextChange =
         class end
 
     and [<AllowNullLiteral>] FileTextChanges =
