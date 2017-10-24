@@ -3947,7 +3947,3 @@ module ts =
     and [<AllowNullLiteral>] DisplayPartsSymbolWriter =
         inherit SymbolWriter
         abstract displayParts: unit -> ResizeArray<SymbolDisplayPart>
-
-[<AutoOpen>]
-module ts_Extensions =
-    let [<Import("*","typescript")>] ts: ts.Globals = jsNative

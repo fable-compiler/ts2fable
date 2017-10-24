@@ -11,6 +11,8 @@ open System
 // some names inspired by the actual F# AST:
 // https://github.com/fsharp/FSharp.Compiler.Service/blob/master/src/fsharp/ast.fs
 
+let [<Import("*","typescript")>] ts: ts.Globals = jsNative
+
 type FsInterface =
     {
         Name: string
