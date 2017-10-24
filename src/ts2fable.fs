@@ -285,10 +285,10 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.UnionType ->
         let un = t :?> UnionTypeNode
         let typs = un.types |> List.ofSeq
-        let isUndefined (t:TypeNode) = t.kind = SyntaxKind.UndefinedKeyword
+        let isOption (t:TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
         {
-            Option = typs |> List.exists isUndefined
-            Types = typs |> List.filter (isUndefined >> not) |> List.map visitTypeNode
+            Option = typs |> List.exists isOption
+            Types = typs |> List.filter (isOption >> not) |> List.map visitTypeNode
         }
         |> FsType.Union
     | SyntaxKind.AnyKeyword -> FsType.Mapped "obj"
@@ -304,7 +304,10 @@ let rec visitTypeNode(t: TypeNode): FsType =
         // TODO map to the actual type of this
         FsType.Mapped "obj"
     | SyntaxKind.TypePredicate -> FsType.Mapped "bool"
-    | SyntaxKind.TypeLiteral -> FsType.Mapped "obj"
+    | SyntaxKind.TypeLiteral ->
+        // let tl = t :?> TypeLiteralNode
+        // printfn "TypeLiteral %A" tl
+        FsType.Mapped "obj"
     | SyntaxKind.IntersectionType -> FsType.Mapped "obj"
     | SyntaxKind.IndexedAccessType ->
         // function createKeywordTypeNode(kind: KeywordTypeNode["kind"]): KeywordTypeNode;
@@ -312,7 +315,10 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.TypeQuery ->
         // let tq = t :?> TypeQueryNode
         FsType.Mapped "obj"
-    | SyntaxKind.LiteralType -> FsType.Mapped "obj"
+    | SyntaxKind.LiteralType ->
+        // let lt = t :?> LiteralTypeNode
+        // printfn "LiteralType %A" lt.literal
+        FsType.Mapped "obj" // TODO
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
         match eta.expression.kind with
@@ -320,7 +326,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
             let id = eta.expression :?> Identifier
             FsType.Mapped id.text
         | _ -> failwithf "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind
-    | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj"
+    | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj_Par"
     | _ -> failwithf "unsupported TypeNode kind: %A" t.kind
 
 let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
@@ -707,14 +713,24 @@ let rec visitModuleDeclaration(md: ModuleDeclaration): FsModule =
 
 let visitSourceFile(sf: SourceFile): FsFile =
     let modules = ResizeArray()
+
+    let gbl: FsModule =
+        {
+            Name = ""
+            Types = sf.statements |> List.ofSeq |> List.map visitStatement
+        }
+    modules.Add gbl
+
     sf.ForEachChild (fun nd ->
         match nd.kind with
         | SyntaxKind.ModuleDeclaration ->
             visitModuleDeclaration (nd :?> ModuleDeclaration) |> modules.Add
-        | SyntaxKind.ExportAssignment -> () // TODO
-        | SyntaxKind.EndOfFileToken -> ()
-        | SyntaxKind.FunctionDeclaration -> ()
-        | _ -> failwithf "unknown kind in SourceFile: %A" nd.kind
+        // | SyntaxKind.ExportAssignment -> () // TODO
+        // | SyntaxKind.EndOfFileToken -> ()
+        // | SyntaxKind.FunctionDeclaration -> ()
+        // | SyntaxKind.TypeAliasDeclaration -> ()
+        // | _ -> failwithf "unknown kind in SourceFile: %A" nd.kind
+        | _ -> ()
     )
     {
         Modules =
@@ -829,55 +845,58 @@ let printTypeParameters (tps: FsType list): string =
 let upperFirstLetter (s: string): string =
     sprintf "%s%s" (s.Substring(0,1).ToUpper()) (s.Substring 1)
 
-let printFile (file: FsFile) =
+let printFsFile (file: FsFile): ResizeArray<string> =
+    let lines = ResizeArray<string>()
+
     // TODO specify namespace
     // TODO customize open statements
-    printfn "namespace rec Fable.Import"
-    printfn "open System"
-    printfn "open System.Text.RegularExpressions" // TODO why
-    printfn "open Fable.Core"
-    printfn "open Fable.Import.JS"
+    sprintf "namespace rec Fable.Import" |> lines.Add
+    sprintf "open System" |> lines.Add
+    sprintf "open System.Text.RegularExpressions" |> lines.Add // TODO why
+    sprintf "open Fable.Core" |> lines.Add
+    sprintf "open Fable.Import.JS" |> lines.Add
 
     for md in file.Modules do
-        printfn ""
-        printfn "module %s =" md.Name
+        sprintf "" |> lines.Add
+        if md.Name <> "" then
+            sprintf "module %s =" md.Name |> lines.Add
         for i, tp in md.Types |> Seq.indexed do
             match tp with
             | FsType.Interface inf ->
-                printfn ""
-                printfn "    and [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters inf.TypeParameters)
+                sprintf "" |> lines.Add
+                sprintf "    type [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters inf.TypeParameters) |> lines.Add
                 let nLines = ref 0
                 for ih in inf.Inherits do
-                    printfn "        inherit %s" (printType ih)
+                    sprintf "        inherit %s" (printType ih) |> lines.Add
                     incr nLines
                 for mbr in inf.Members do
                     match mbr with
                     | FsType.Function f ->
-                        printfn "        %s" (printFunction f)
+                        sprintf "        %s" (printFunction f) |> lines.Add
                         incr nLines
                     | FsType.Property p ->
-                        printfn "        %s" (printProperty p)
+                        sprintf "        %s" (printProperty p) |> lines.Add
                         incr nLines
                     | _ -> ()
                 if !nLines = 0 then
-                    printfn "        interface end"
+                    sprintf "        interface end" |> lines.Add
             | FsType.Class cl ->
-                printfn ""
-                printfn "    %s %s%s =" (if i = 0 then "type" else "and") cl.ClassName.Value (printTypeParameters cl.TypeParameters)
+                sprintf "" |> lines.Add
+                sprintf "    type %s%s =" cl.ClassName.Value (printTypeParameters cl.TypeParameters) |> lines.Add
                 let nLines = ref 0
                 for mbr in cl.Members do
                     match mbr with
                     | FsType.Function f ->
-                        printfn "        %s" (printClassFunction f)
+                        sprintf "        %s" (printClassFunction f) |> lines.Add
                         incr nLines
                     | _ -> ()
                 if !nLines = 0 then
-                    printfn "        class end"
+                    sprintf "        class end" |> lines.Add
             | FsType.Enum en ->
-                printfn ""
+                sprintf "" |> lines.Add
                 match en.Type with
                 | FsEnumCaseType.Numeric ->
-                    printfn "    and [<RequireQualifiedAccess>] %s =" en.Name
+                    sprintf "    type [<RequireQualifiedAccess>] %s =" en.Name |> lines.Add
                     for cs in en.Cases do
                         let nm = cs.Name
                         let unm = upperFirstLetter nm
@@ -888,9 +907,9 @@ let printFile (file: FsFile) =
                             sprintf "        | [<CompiledName \"%s\">] %s" nm unm |> line.Add
                         if cs.Value.IsSome then
                             sprintf " = %s" cs.Value.Value |> line.Add
-                        printfn "%s" (line |> String.concat "")
+                        sprintf "%s" (line |> String.concat "") |> lines.Add
                 | FsEnumCaseType.String ->
-                    printfn "    and [<StringEnum>] [<RequireQualifiedAccess>] %s =" en.Name
+                    sprintf "    type [<StringEnum>] [<RequireQualifiedAccess>] %s =" en.Name |> lines.Add
                     for cs in en.Cases do
                         let nm = cs.Name
                         let unm = upperFirstLetter nm
@@ -899,15 +918,16 @@ let printFile (file: FsFile) =
                             sprintf "        | %s" nm |> line.Add
                         else
                             sprintf "        | [<CompiledName \"%s\">] %s" nm unm |> line.Add
-                        printfn "%s" (line |> String.concat "")
+                        sprintf "%s" (line |> String.concat "") |> lines.Add
                 | FsEnumCaseType.Unknown ->
-                    printfn "    and %s =" en.Name
-                    printfn "        obj"
+                    sprintf "    type %s =" en.Name |> lines.Add
+                    sprintf "        obj" |> lines.Add
             | FsType.Alias al ->
-                printfn ""
-                printfn "    and %s%s =" al.Name (printTypeParameters al.TypeParameters)
-                printfn "        %s" (printType al.Type)
+                sprintf "" |> lines.Add
+                sprintf "    type %s%s =" al.Name (printTypeParameters al.TypeParameters) |> lines.Add
+                sprintf "        %s" (printType al.Type) |> lines.Add
             | _ -> ()
+    lines
 
 let reserved =
     [
@@ -1024,12 +1044,32 @@ let escapeWord s =
     else
         s
 
-let printTypeScriptFile() =
-    let filePath = @"c:\Users\camer\fs\ts2fable\node_modules\typescript\lib\typescript.d.ts"
-    let code = Fs.readFileSync(filePath).toString()
-    let tsFile = ts.createSourceFile(filePath, code, ScriptTarget.ES2015, true)
+let printFile tsPath: unit =
+    let code = Fs.readFileSync(tsPath).toString()
+    let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
     let fsFile = visitSourceFile tsFile
-    printFile fsFile
-    ()
+    for line in printFsFile fsFile do
+        printfn "%s" line
 
-printTypeScriptFile()
+let writeFile tsPath fsPath: unit =
+    printfn "read %s and create %s" tsPath fsPath
+    // TODO
+
+let p = Node.Globals.``process``
+let argv = p.argv |> List.ofSeq
+// printfn "%A" argv
+
+if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
+    // printFile "node_modules/typescript/lib/typescript.d.ts"
+    printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
+
+else
+    let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".d.ts")
+    let fsfile = argv |> List.tryFind (fun s -> s.EndsWith ".fs")
+    
+    match tsfile with
+    | None -> failwithf "Please provide the path to a TypeScript definition file"
+    | Some tsf ->
+        match fsfile with
+        | None -> printFile tsf
+        | Some fsf -> writeFile tsf fsf
