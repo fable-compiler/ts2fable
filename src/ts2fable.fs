@@ -63,15 +63,7 @@ type FsParam =
 
 type FsFunction =
     {
-        Name: string
-        TypeParameters: FsType list
-        Params: FsParam list
-        ReturnType: FsType
-    }
-
-type FsFunctionType =
-    {
-        Name: string option
+        Name: string option // declarations have them, signatures do not
         TypeParameters: FsType list
         Params: FsParam list
         ReturnType: FsType
@@ -120,7 +112,6 @@ type FsType =
     | None // when it is not set
     | Mapped of string
     | Function of FsFunction
-    | FunctionType of FsFunctionType
     | Union of FsUnion
     | Alias of FsAlias
     | Generic of FsGenericType
@@ -267,7 +258,7 @@ let visitTypeReference(tr: TypeReferenceNode): FsType =
         }
         |>
         FsType.Generic
-let visitFunctionType(ft: FunctionTypeNode): FsFunctionType =
+let visitFunctionType(ft: FunctionTypeNode): FsFunction =
     {
         Name = ft.name |> Option.map getPropertyName
         TypeParameters = visitTypeParameters ft.typeParameters
@@ -281,7 +272,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
     match t.kind with
     | SyntaxKind.StringKeyword -> FsType.Mapped "string"
     | SyntaxKind.FunctionType ->
-        visitFunctionType (t :?> FunctionTypeNode) |> FsType.FunctionType
+        visitFunctionType (t :?> FunctionTypeNode) |> FsType.Function
     | SyntaxKind.TypeReference ->
         visitTypeReference (t :?> TypeReferenceNode)
     | SyntaxKind.ArrayType ->
@@ -343,7 +334,7 @@ let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
 
 let visitMethodSignature(ms: MethodSignature): FsFunction =
     {
-        Name = ms.name |> getPropertyName
+        Name = ms.name |> getPropertyName |> Some
         TypeParameters = visitTypeParameters ms.typeParameters
         Params = ms.parameters |> List.ofArray |> List.map visitParameterDeclaration
         ReturnType =
@@ -364,10 +355,7 @@ let visitPropertySignature(ps: PropertySignature): FsProperty =
 
 let visitFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
     {
-        Name =
-            match fd.name with
-            | None -> "TodoNamelessFunction"
-            | Some nm -> nm.text
+        Name = fd.name |> Option.map (fun id -> id.text)
         TypeParameters = visitTypeParameters fd.typeParameters
         Params = fd.parameters |> List.ofArray |> List.map visitParameterDeclaration
         ReturnType =
@@ -526,13 +514,6 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             ReturnType = fixType fix fn.ReturnType
         }
         |> FsType.Function
-    | FsType.FunctionType fn ->
-        { fn with
-            TypeParameters = fn.TypeParameters |> List.map (fixType fix)
-            Params = fn.Params |> List.map fixParam
-            ReturnType = fixType fix fn.ReturnType
-        }
-        |> FsType.FunctionType
     | FsType.Union un ->
         { un with
             Types = un.Types |> List.map (fixType fix)
@@ -562,7 +543,12 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Modules = f.Modules |> List.map fixModule
         }
         |> FsType.File
-    | _ -> tp
+    
+    // | _ -> tp
+    | FsType.Enum _ -> tp
+    | FsType.Mapped _ -> tp
+    | FsType.None _ -> tp
+    | FsType.TODO _ -> tp
     |> fix
 
 let fixTic (typeParameters: FsType list) (tp: FsType) =
@@ -623,6 +609,21 @@ let fixNodeArray(md: FsModule): FsModule =
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
+let fixEscapeWords(md: FsModule): FsModule =
+
+    let fix(tp: FsType): FsType =
+        match tp with
+        | FsType.Mapped s ->
+            escapeWord s |> FsType.Mapped
+        | FsType.Param pm ->
+            { pm with Name = escapeWord pm.Name } |> FsType.Param
+        | FsType.Function fn ->
+            { fn with Name = fn.Name |> Option.map escapeWord } |> FsType.Function
+        | FsType.Property pr ->
+            { pr with Name = escapeWord pr.Name } |> FsType.Property
+        | _ -> tp
+
+    { md with Types = md.Types |> List.map (fixType fix) }
 
 let addTicForGenericTypes(md: FsModule): FsModule =
     { md with
@@ -646,6 +647,7 @@ let visitSourceFile(sf: SourceFile): FsFile =
             |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
             |> List.map fixNodeArray
+            |> List.map fixEscapeWords
     }
 
 let printType (tp: FsType): string =
@@ -674,9 +676,13 @@ let printType (tp: FsType): string =
             g.TypeParameters |> List.map printType |> String.concat " * " |> line.Add
             ">" |> line.Add
         line |> String.concat ""
-    | FsType.FunctionType ft ->
+    | FsType.Function ft ->
         let line = ResizeArray()
-        let typs = (ft.Params |> List.map (fun p -> p.Type)) @ [ft.ReturnType]
+        let typs =
+            if ft.Params.Length = 0 then
+                [ FsType.Mapped "unit"; ft.ReturnType ]
+            else
+                (ft.Params |> List.map (fun p -> p.Type)) @ [ ft.ReturnType ]
         "Func<" |> line.Add
         typs |> List.map printType |> String.concat ", " |> line.Add
         ">"|> line.Add
@@ -690,11 +696,11 @@ let printType (tp: FsType): string =
 let printFunction (f: FsFunction): string =
     let line = ResizeArray()
     // TODO can interface methods not have generics?
-    // sprintf "abstract %s%s" (escapeWord f.Name) (printTypeParameters f.TypeParameters) |> line.Add
-    sprintf "abstract %s" (escapeWord f.Name) |> line.Add
+    // sprintf "abstract %s%s" f.Name.Value (printTypeParameters f.TypeParameters) |> line.Add
+    sprintf "abstract %s" f.Name.Value |> line.Add
     let prms = 
         f.Params |> List.map(fun p ->
-            sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) (printType p.Type)
+            sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name (printType p.Type)
         )
     if prms.Length = 0 then
         sprintf ": unit" |> line.Add
@@ -705,9 +711,10 @@ let printFunction (f: FsFunction): string =
 
 let printClassFunction (f: FsFunction): string =
     let line = ResizeArray()
-    sprintf "member __.%s%s" (escapeWord f.Name) (printTypeParameters f.TypeParameters) |> line.Add
+    sprintf "member __.%s%s" f.Name.Value (printTypeParameters f.TypeParameters) |> line.Add
     let prms = 
         f.Params |> List.map(fun p ->
+            // TODO escapeWord should be handled by fixEscapeWords
             sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) (printType p.Type)
         )
     if prms.Length = 0 then
@@ -718,7 +725,7 @@ let printClassFunction (f: FsFunction): string =
     line |> String.concat ""
 
 let printProperty (pr: FsProperty): string =
-    sprintf "abstract %s: %s%s with get, set" (escapeWord pr.Name) (printType pr.Type) (if pr.Option then " option" else "")
+    sprintf "abstract %s: %s%s with get, set" pr.Name (printType pr.Type) (if pr.Option then " option" else "")
 
 let printTypeParameters (tps: FsType list): string =
     if tps.Length = 0 then ""
