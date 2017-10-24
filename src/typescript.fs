@@ -3159,16 +3159,15 @@ module ts =
         abstract subModuleName: string with get, set
         abstract version: string with get, set
 
-    and Extension =
-        // | Ts = .ts
-        // | Tsx = .tsx
-        // | Dts = .d.ts
-        // | Js = .js
-        // | Jsx = .jsx
-        abstract TODO: string with get, set
+    and [<StringEnum>] [<RequireQualifiedAccess>] Extension =
+        | Ts
+        | Tsx
+        | Dts
+        | Js
+        | Jsx
 
     and [<AllowNullLiteral>] ResolvedModuleWithFailedLookupLocations =
-        abstract resolvedModule: U2<ResolvedModuleFull, obj> with get, set
+        abstract resolvedModule: ResolvedModuleFull option with get, set
 
     and [<AllowNullLiteral>] ResolvedTypeReferenceDirective =
         abstract primary: bool with get, set
@@ -3181,12 +3180,12 @@ module ts =
 
     and [<AllowNullLiteral>] CompilerHost =
         inherit ModuleResolutionHost
-        abstract writeFile: WriteFileCallback with get, set
         abstract getSourceFile: fileName: string * languageVersion: ScriptTarget * ?onError: Func<string, unit> -> SourceFile
         abstract getSourceFileByPath: fileName: string * path: Path * languageVersion: ScriptTarget * ?onError: Func<string, unit> -> SourceFile
         abstract getCancellationToken: unit -> CancellationToken
         abstract getDefaultLibFileName: options: CompilerOptions -> string
         abstract getDefaultLibLocation: unit -> string
+        abstract writeFile: WriteFileCallback with get, set
         abstract getCurrentDirectory: unit -> string
         abstract getDirectories: path: string -> ResizeArray<string>
         abstract getCanonicalFileName: fileName: string -> string
@@ -3495,7 +3494,7 @@ module ts =
         abstract isValidBraceCompletionAtPosition: fileName: string * position: float * openingBrace: float -> bool
         abstract getCodeFixesAtPosition: fileName: string * start: float * ``end``: float * errorCodes: ResizeArray<float> * formatOptions: FormatCodeSettings -> ResizeArray<CodeAction>
         abstract getApplicableRefactors: fileName: string * positionOrRaneg: U2<float, TextRange> -> ResizeArray<ApplicableRefactorInfo>
-        abstract getEditsForRefactor: fileName: string * formatOptions: FormatCodeSettings * positionOrRange: U2<float, TextRange> * refactorName: string * actionName: string -> U2<RefactorEditInfo, obj>
+        abstract getEditsForRefactor: fileName: string * formatOptions: FormatCodeSettings * positionOrRange: U2<float, TextRange> * refactorName: string * actionName: string -> RefactorEditInfo option
         abstract getEmitOutput: fileName: string * ?emitOnlyDtsFiles: bool -> EmitOutput
         abstract getProgram: unit -> Program
         abstract dispose: unit -> unit
@@ -3506,11 +3505,11 @@ module ts =
 
     and [<AllowNullLiteral>] ClassifiedSpan =
         abstract textSpan: TextSpan with get, set
-        // abstract classificationType: ClassificationTypeNames with get, set
+        abstract classificationType: ClassificationTypeNames with get, set
 
     and [<AllowNullLiteral>] NavigationBarItem =
         abstract text: string with get, set
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract kindModifiers: string with get, set
         abstract spans: ResizeArray<TextSpan> with get, set
         abstract childItems: ResizeArray<NavigationBarItem> with get, set
@@ -3520,7 +3519,7 @@ module ts =
 
     and [<AllowNullLiteral>] NavigationTree =
         abstract text: string with get, set
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract kindModifiers: string with get, set
         abstract spans: ResizeArray<TextSpan> with get, set
         abstract childItems: ResizeArray<NavigationTree> option with get, set
@@ -3528,13 +3527,11 @@ module ts =
     and [<AllowNullLiteral>] TodoCommentDescriptor =
         abstract text: string with get, set
         abstract priority: float with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] TodoComment =
         abstract descriptor: TodoCommentDescriptor with get, set
         abstract message: string with get, set
         abstract position: float with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] [<Import("TextChange","ts")>] TextChange() =
         class end
@@ -3542,12 +3539,10 @@ module ts =
     and [<AllowNullLiteral>] FileTextChanges =
         abstract fileName: string with get, set
         abstract textChanges: ResizeArray<TextChange> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] CodeAction =
         abstract description: string with get, set
         abstract changes: ResizeArray<FileTextChanges> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ApplicableRefactorInfo =
         abstract name: string with get, set
@@ -3564,16 +3559,13 @@ module ts =
     and [<AllowNullLiteral>] TextInsertion =
         abstract newText: string with get, set
         abstract caretOffset: float with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] DocumentSpan =
         abstract textSpan: TextSpan with get, set
         abstract fileName: string with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] RenameLocation =
         inherit DocumentSpan
-
 
     and [<AllowNullLiteral>] ReferenceEntry =
         inherit DocumentSpan
@@ -3583,39 +3575,37 @@ module ts =
 
     and [<AllowNullLiteral>] ImplementationLocation =
         inherit DocumentSpan
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
 
     and [<AllowNullLiteral>] DocumentHighlights =
         abstract fileName: string with get, set
         abstract highlightSpans: ResizeArray<HighlightSpan> with get, set
-        abstract TODO: string with get, set
 
-    // and HighlightSpanKind = // TODO
-    //     | none = none
-    //     | definition = definition
-    //     | reference = reference
-    //     | writtenReference = writtenReference
+    and [<StringEnum>] [<RequireQualifiedAccess>] HighlightSpanKind =
+        | [<CompiledName "none">] None
+        | [<CompiledName "definition">] Definition
+        | [<CompiledName "reference">] Reference
+        | [<CompiledName "writtenReference">] WrittenReference
 
     and [<AllowNullLiteral>] HighlightSpan =
         abstract fileName: string option with get, set
         abstract isInString: obj option with get, set
         abstract textSpan: TextSpan with get, set
-        // abstract kind: HighlightSpanKind with get, set
+        abstract kind: HighlightSpanKind with get, set
 
     and [<AllowNullLiteral>] NavigateToItem =
         abstract name: string with get, set
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract kindModifiers: string with get, set
         abstract matchKind: string with get, set
         abstract isCaseSensitive: bool with get, set
         abstract fileName: string with get, set
         abstract textSpan: TextSpan with get, set
         abstract containerName: string with get, set
-        // abstract containerKind: ScriptElementKind with get, set
-        abstract TODO: string with get, set
+        abstract containerKind: ScriptElementKind with get, set
 
-    and IndentStyle =
+    and [<RequireQualifiedAccess>] IndentStyle =
         | None = 0
         | Block = 1
         | Smart = 2
@@ -3675,11 +3665,10 @@ module ts =
     and [<AllowNullLiteral>] DefinitionInfo =
         abstract fileName: string with get, set
         abstract textSpan: TextSpan with get, set
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract name: string with get, set
-        // abstract containerKind: ScriptElementKind with get, set
+        abstract containerKind: ScriptElementKind with get, set
         abstract containerName: string with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ReferencedSymbolDefinitionInfo =
         inherit DefinitionInfo
@@ -3688,66 +3677,61 @@ module ts =
     and [<AllowNullLiteral>] ReferencedSymbol =
         abstract definition: ReferencedSymbolDefinitionInfo with get, set
         abstract references: ResizeArray<ReferenceEntry> with get, set
-        abstract TODO: string with get, set
 
-    and SymbolDisplayPartKind =
-        | aliasName = 0
-        | className = 1
-        | enumName = 2
-        | fieldName = 3
-        | interfaceName = 4
-        | keyword = 5
-        | lineBreak = 6
-        | numericLiteral = 7
-        | stringLiteral = 8
-        | localName = 9
-        | methodName = 10
-        | moduleName = 11
-        | operator = 12
-        | parameterName = 13
-        | propertyName = 14
-        | punctuation = 15
-        | space = 16
-        | text = 17
-        | typeParameterName = 18
-        | enumMemberName = 19
-        | functionName = 20
-        | regularExpressionLiteral = 21
+    and [<RequireQualifiedAccess>] SymbolDisplayPartKind =
+        | [<CompiledName "aliasName">] AliasName = 0
+        | [<CompiledName "className">] ClassName = 1
+        | [<CompiledName "enumName">] EnumName = 2
+        | [<CompiledName "fieldName">] FieldName = 3
+        | [<CompiledName "interfaceName">] InterfaceName = 4
+        | [<CompiledName "keyword">] Keyword = 5
+        | [<CompiledName "lineBreak">] LineBreak = 6
+        | [<CompiledName "numericLiteral">] NumericLiteral = 7
+        | [<CompiledName "stringLiteral">] StringLiteral = 8
+        | [<CompiledName "localName">] LocalName = 9
+        | [<CompiledName "methodName">] MethodName = 10
+        | [<CompiledName "moduleName">] ModuleName = 11
+        | [<CompiledName "operator">] Operator = 12
+        | [<CompiledName "parameterName">] ParameterName = 13
+        | [<CompiledName "propertyName">] PropertyName = 14
+        | [<CompiledName "punctuation">] Punctuation = 15
+        | [<CompiledName "space">] Space = 16
+        | [<CompiledName "text">] Text = 17
+        | [<CompiledName "typeParameterName">] TypeParameterName = 18
+        | [<CompiledName "enumMemberName">] EnumMemberName = 19
+        | [<CompiledName "functionName">] FunctionName = 20
+        | [<CompiledName "regularExpressionLiteral">] RegularExpressionLiteral = 21
 
     and [<AllowNullLiteral>] SymbolDisplayPart =
         abstract text: string with get, set
         abstract kind: string with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] JSDocTagInfo =
         abstract name: string with get, set
         abstract text: string option with get, set
 
     and [<AllowNullLiteral>] QuickInfo =
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract kindModifiers: string with get, set
         abstract textSpan: TextSpan with get, set
         abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
         abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
         abstract tags: ResizeArray<JSDocTagInfo> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] RenameInfo =
         abstract canRename: bool with get, set
         abstract localizedErrorMessage: string with get, set
         abstract displayName: string with get, set
         abstract fullDisplayName: string with get, set
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract kindModifiers: string with get, set
         abstract triggerSpan: TextSpan with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SignatureHelpParameter =
         abstract name: string with get, set
         abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
         abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
         abstract isOptional: bool with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SignatureHelpItem =
         abstract isVariadic: bool with get, set
@@ -3757,7 +3741,6 @@ module ts =
         abstract parameters: ResizeArray<SignatureHelpParameter> with get, set
         abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
         abstract tags: ResizeArray<JSDocTagInfo> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] SignatureHelpItems =
         abstract items: ResizeArray<SignatureHelpItem> with get, set
@@ -3765,44 +3748,39 @@ module ts =
         abstract selectedItemIndex: float with get, set
         abstract argumentIndex: float with get, set
         abstract argumentCount: float with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] CompletionInfo =
         abstract isGlobalCompletion: bool with get, set
         abstract isMemberCompletion: bool with get, set
         abstract isNewIdentifierLocation: bool with get, set
         abstract entries: ResizeArray<CompletionEntry> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] CompletionEntry =
         abstract name: string with get, set
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract kindModifiers: string with get, set
         abstract sortText: string with get, set
         abstract replacementSpan: TextSpan option with get, set
 
     and [<AllowNullLiteral>] CompletionEntryDetails =
         abstract name: string with get, set
-        // abstract kind: ScriptElementKind with get, set
+        abstract kind: ScriptElementKind with get, set
         abstract kindModifiers: string with get, set
         abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
         abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
         abstract tags: ResizeArray<JSDocTagInfo> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] OutliningSpan =
         abstract textSpan: TextSpan with get, set
         abstract hintSpan: TextSpan with get, set
         abstract bannerText: string with get, set
         abstract autoCollapse: bool with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] EmitOutput =
         abstract outputFiles: ResizeArray<OutputFile> with get, set
         abstract emitSkipped: bool with get, set
-        abstract TODO: string with get, set
 
-    and OutputFileType =
+    and [<RequireQualifiedAccess>] OutputFileType =
         | JavaScript = 0
         | SourceMap = 1
         | Declaration = 2
@@ -3811,9 +3789,8 @@ module ts =
         abstract name: string with get, set
         abstract writeByteOrderMark: bool with get, set
         abstract text: string with get, set
-        abstract TODO: string with get, set
 
-    and EndOfLineState =
+    and [<RequireQualifiedAccess>] EndOfLineState =
         | None = 0
         | InMultiLineCommentTrivia = 1
         | InSingleQuoteStringLiteral = 2
@@ -3822,7 +3799,7 @@ module ts =
         | InTemplateMiddleOrTail = 5
         | InTemplateSubstitutionPosition = 6
 
-    and TokenClass =
+    and [<RequireQualifiedAccess>] TokenClass =
         | Punctuation = 0
         | Keyword = 1
         | Operator = 2
@@ -3836,112 +3813,110 @@ module ts =
     and [<AllowNullLiteral>] ClassificationResult =
         abstract finalLexState: EndOfLineState with get, set
         abstract entries: ResizeArray<ClassificationInfo> with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] ClassificationInfo =
         abstract length: float with get, set
         abstract classification: TokenClass with get, set
-        abstract TODO: string with get, set
 
     and [<AllowNullLiteral>] Classifier =
         abstract getClassificationsForLine: text: string * lexState: EndOfLineState * syntacticClassifierAbsent: bool -> ClassificationResult
         abstract getEncodedLexicalClassifications: text: string * endOfLineState: EndOfLineState * syntacticClassifierAbsent: bool -> Classifications
 
-    // and ScriptElementKind = // TODO
-    //     | unknown =
-    //     | warning = warning
-    //     | keyword = keyword
-    //     | scriptElement = script
-    //     | moduleElement = module
-    //     | classElement = class
-    //     | localClassElement = local class
-    //     | interfaceElement = interface
-    //     | typeElement = type
-    //     | enumElement = enum
-    //     | enumMemberElement = enum member
-    //     | variableElement = var
-    //     | localVariableElement = local var
-    //     | functionElement = function
-    //     | localFunctionElement = local function
-    //     | memberFunctionElement = method
-    //     | memberGetAccessorElement = getter
-    //     | memberSetAccessorElement = setter
-    //     | memberVariableElement = property
-    //     | constructorImplementationElement = constructor
-    //     | callSignatureElement = call
-    //     | indexSignatureElement = index
-    //     | constructSignatureElement = construct
-    //     | parameterElement = parameter
-    //     | typeParameterElement = type parameter
-    //     | primitiveType = primitive type
-    //     | label = label
-    //     | alias = alias
-    //     | constElement = const
-    //     | letElement = let
-    //     | directory = directory
-    //     | externalModuleName = external module name
-    //     | jsxAttribute = JSX attribute
+    and [<StringEnum>] [<RequireQualifiedAccess>] ScriptElementKind =
+        | [<CompiledName "unknown">] Unknown
+        | [<CompiledName "warning">] Warning
+        | [<CompiledName "keyword">] Keyword
+        | [<CompiledName "scriptElement">] ScriptElement
+        | [<CompiledName "moduleElement">] ModuleElement
+        | [<CompiledName "classElement">] ClassElement
+        | [<CompiledName "localClassElement">] LocalClassElement
+        | [<CompiledName "interfaceElement">] InterfaceElement
+        | [<CompiledName "typeElement">] TypeElement
+        | [<CompiledName "enumElement">] EnumElement
+        | [<CompiledName "enumMemberElement">] EnumMemberElement
+        | [<CompiledName "variableElement">] VariableElement
+        | [<CompiledName "localVariableElement">] LocalVariableElement
+        | [<CompiledName "functionElement">] FunctionElement
+        | [<CompiledName "localFunctionElement">] LocalFunctionElement
+        | [<CompiledName "memberFunctionElement">] MemberFunctionElement
+        | [<CompiledName "memberGetAccessorElement">] MemberGetAccessorElement
+        | [<CompiledName "memberSetAccessorElement">] MemberSetAccessorElement
+        | [<CompiledName "memberVariableElement">] MemberVariableElement
+        | [<CompiledName "constructorImplementationElement">] ConstructorImplementationElement
+        | [<CompiledName "callSignatureElement">] CallSignatureElement
+        | [<CompiledName "indexSignatureElement">] IndexSignatureElement
+        | [<CompiledName "constructSignatureElement">] ConstructSignatureElement
+        | [<CompiledName "parameterElement">] ParameterElement
+        | [<CompiledName "typeParameterElement">] TypeParameterElement
+        | [<CompiledName "primitiveType">] PrimitiveType
+        | [<CompiledName "label">] Label
+        | [<CompiledName "alias">] Alias
+        | [<CompiledName "constElement">] ConstElement
+        | [<CompiledName "letElement">] LetElement
+        | [<CompiledName "directory">] Directory
+        | [<CompiledName "externalModuleName">] ExternalModuleName
+        | [<CompiledName "jsxAttribute">] JsxAttribute
 
-    // and ScriptElementKindModifier = // TODO
-    //     | none =
-    //     | publicMemberModifier = public
-    //     | privateMemberModifier = private
-    //     | protectedMemberModifier = protected
-    //     | exportedModifier = export
-    //     | ambientModifier = declare
-    //     | staticModifier = static
-    //     | abstractModifier = abstract
+    and [<StringEnum>] [<RequireQualifiedAccess>] ScriptElementKindModifier =
+        | [<CompiledName "none">] None
+        | [<CompiledName "publicMemberModifier">] PublicMemberModifier
+        | [<CompiledName "privateMemberModifier">] PrivateMemberModifier
+        | [<CompiledName "protectedMemberModifier">] ProtectedMemberModifier
+        | [<CompiledName "exportedModifier">] ExportedModifier
+        | [<CompiledName "ambientModifier">] AmbientModifier
+        | [<CompiledName "staticModifier">] StaticModifier
+        | [<CompiledName "abstractModifier">] AbstractModifier
 
-    // and ClassificationTypeNames = // TODO
-    //     | comment = comment
-    //     | identifier = identifier
-    //     | keyword = keyword
-    //     | numericLiteral = number
-    //     | operator = operator
-    //     | stringLiteral = string
-    //     | whiteSpace = whitespace
-    //     | text = text
-    //     | punctuation = punctuation
-    //     | className = class name
-    //     | enumName = enum name
-    //     | interfaceName = interface name
-    //     | moduleName = module name
-    //     | typeParameterName = type parameter name
-    //     | typeAliasName = type alias name
-    //     | parameterName = parameter name
-    //     | docCommentTagName = doc comment tag name
-    //     | jsxOpenTagName = jsx open tag name
-    //     | jsxCloseTagName = jsx close tag name
-    //     | jsxSelfClosingTagName = jsx self closing tag name
-    //     | jsxAttribute = jsx attribute
-    //     | jsxText = jsx text
-    //     | jsxAttributeStringLiteralValue = jsx attribute string literal value
+    and [<StringEnum>] [<RequireQualifiedAccess>] ClassificationTypeNames =
+        | [<CompiledName "comment">] Comment
+        | [<CompiledName "identifier">] Identifier
+        | [<CompiledName "keyword">] Keyword
+        | [<CompiledName "numericLiteral">] NumericLiteral
+        | [<CompiledName "operator">] Operator
+        | [<CompiledName "stringLiteral">] StringLiteral
+        | [<CompiledName "whiteSpace">] WhiteSpace
+        | [<CompiledName "text">] Text
+        | [<CompiledName "punctuation">] Punctuation
+        | [<CompiledName "className">] ClassName
+        | [<CompiledName "enumName">] EnumName
+        | [<CompiledName "interfaceName">] InterfaceName
+        | [<CompiledName "moduleName">] ModuleName
+        | [<CompiledName "typeParameterName">] TypeParameterName
+        | [<CompiledName "typeAliasName">] TypeAliasName
+        | [<CompiledName "parameterName">] ParameterName
+        | [<CompiledName "docCommentTagName">] DocCommentTagName
+        | [<CompiledName "jsxOpenTagName">] JsxOpenTagName
+        | [<CompiledName "jsxCloseTagName">] JsxCloseTagName
+        | [<CompiledName "jsxSelfClosingTagName">] JsxSelfClosingTagName
+        | [<CompiledName "jsxAttribute">] JsxAttribute
+        | [<CompiledName "jsxText">] JsxText
+        | [<CompiledName "jsxAttributeStringLiteralValue">] JsxAttributeStringLiteralValue
 
-    and ClassificationType =
-        | comment = 1
-        | identifier = 2
-        | keyword = 3
-        | numericLiteral = 4
-        | operator = 5
-        | stringLiteral = 6
-        | regularExpressionLiteral = 7
-        | whiteSpace = 8
-        | text = 9
-        | punctuation = 10
-        | className = 11
-        | enumName = 12
-        | interfaceName = 13
-        | moduleName = 14
-        | typeParameterName = 15
-        | typeAliasName = 16
-        | parameterName = 17
-        | docCommentTagName = 18
-        | jsxOpenTagName = 19
-        | jsxCloseTagName = 20
-        | jsxSelfClosingTagName = 21
-        | jsxAttribute = 22
-        | jsxText = 23
-        | jsxAttributeStringLiteralValue = 24
+    and [<RequireQualifiedAccess>] ClassificationType =
+        | [<CompiledName "comment">] Comment = 1
+        | [<CompiledName "identifier">] Identifier = 2
+        | [<CompiledName "keyword">] Keyword = 3
+        | [<CompiledName "numericLiteral">] NumericLiteral = 4
+        | [<CompiledName "operator">] Operator = 5
+        | [<CompiledName "stringLiteral">] StringLiteral = 6
+        | [<CompiledName "regularExpressionLiteral">] RegularExpressionLiteral = 7
+        | [<CompiledName "whiteSpace">] WhiteSpace = 8
+        | [<CompiledName "text">] Text = 9
+        | [<CompiledName "punctuation">] Punctuation = 10
+        | [<CompiledName "className">] ClassName = 11
+        | [<CompiledName "enumName">] EnumName = 12
+        | [<CompiledName "interfaceName">] InterfaceName = 13
+        | [<CompiledName "moduleName">] ModuleName = 14
+        | [<CompiledName "typeParameterName">] TypeParameterName = 15
+        | [<CompiledName "typeAliasName">] TypeAliasName = 16
+        | [<CompiledName "parameterName">] ParameterName = 17
+        | [<CompiledName "docCommentTagName">] DocCommentTagName = 18
+        | [<CompiledName "jsxOpenTagName">] JsxOpenTagName = 19
+        | [<CompiledName "jsxCloseTagName">] JsxCloseTagName = 20
+        | [<CompiledName "jsxSelfClosingTagName">] JsxSelfClosingTagName = 21
+        | [<CompiledName "jsxAttribute">] JsxAttribute = 22
+        | [<CompiledName "jsxText">] JsxText = 23
+        | [<CompiledName "jsxAttributeStringLiteralValue">] JsxAttributeStringLiteralValue = 24
 
     and [<AllowNullLiteral>] DocumentRegistry =
         abstract acquireDocument: fileName: string * compilationSettings: CompilerOptions * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile

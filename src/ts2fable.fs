@@ -5,6 +5,7 @@ open Fable.Import
 open Fable.Import.Node
 open Fable.Import.ts
 open System.Collections.Generic
+open System
 
 // our simplified F# AST
 // some names inspired by the actual F# AST:
@@ -25,9 +26,16 @@ type FsClass =
         Members: FsType list
     }
 
+[<RequireQualifiedAccess>]
+type FsEnumCaseType =
+    | Numeric
+    | String
+    | Unknown
+
 type FsEnumCase =
     {
         Name: string
+        Type: FsEnumCaseType
         Value: string option
     }
 
@@ -36,6 +44,15 @@ type FsEnum =
         Name: string
         Cases: FsEnumCase list
     }
+    with
+        member x.Type
+            with get() =
+                if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
+                    FsEnumCaseType.Unknown
+                else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
+                    FsEnumCaseType.String
+                else
+                    FsEnumCaseType.Numeric
 
 type FsParam =
     {
@@ -166,18 +183,27 @@ let getBindingyName(bn: BindingName): string =
         | U2.Case2 abp -> abp.getText()
 
 let visitEnumCase(em: EnumMember): FsEnumCase =
+    let name = em.name |> getPropertyName
+    let tp, value =
+        match em.initializer with
+        | None -> FsEnumCaseType.Unknown, None
+        | Some ep ->
+            match ep.kind with
+            | SyntaxKind.NumericLiteral ->
+                let nl = ep :?> NumericLiteral
+                FsEnumCaseType.Numeric, Some nl.text
+            // | _ -> None // TODO TypeScript string based enums #17
+            // https://github.com/fable-compiler/ts2fable/issues/17
+            | SyntaxKind.StringLiteral ->
+                let sl = ep :?> StringLiteral
+                FsEnumCaseType.String, Some sl.text
+            | SyntaxKind.PrefixUnaryExpression -> // TODO TypeScript Ternary
+                FsEnumCaseType.Unknown, None
+            | _ -> failwithf "EnumCase type not supported %A %A" ep.kind name
     {
-        Name = em.name |> getPropertyName
-        Value = 
-            match em.initializer with
-            | None -> None
-            | Some ep ->
-                match ep.kind with
-                | SyntaxKind.NumericLiteral ->
-                    let nl = ep :?> NumericLiteral
-                    Some nl.text
-                | _ -> None // TODO TypeScript string based enums #17
-                // https://github.com/fable-compiler/ts2fable/issues/17
+        Name = name
+        Type = tp
+        Value = value
     }
 
 let visitTypeParameters(tps: TypeParameterDeclaration array option): FsType list =
@@ -619,15 +645,16 @@ let visitSourceFile(sf: SourceFile): FsFile =
             |> List.map createGlobals
             |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
-            // |> List.map fixNodeArray
+            |> List.map fixNodeArray
     }
 
 let printType (tp: FsType): string =
     match tp with
     | FsType.Mapped s -> s
     | FsType.TODO -> "TODO"
-    | FsType.Array at ->
+    | FsType.Array at -> // TODO which is better
         sprintf "ResizeArray<%s>" (printType at)
+        // sprintf "%s array" (printType at)
     | FsType.Union un ->
         if un.Types.Length > 6 then
             "obj"
@@ -702,6 +729,10 @@ let printTypeParameters (tps: FsType list): string =
         line.Add ">"
         line |> String.concat ""
 
+let upperFirstLetter (s: string): string =
+    // sprintf "%c%s" (Char.ToUpper s.[0]) (s.Substring 1)
+    sprintf "%s%s" (s.Substring(0,1).ToUpper()) (s.Substring 1)
+
 let printFile (file: FsFile) =
     // TODO specify namespace
     // TODO customize open statements
@@ -748,11 +779,33 @@ let printFile (file: FsFile) =
                     printfn "        class end"
             | FsType.Enum en ->
                 printfn ""
-                printfn "    and %s =" en.Name
-                for cs in en.Cases do
-                    match cs.Value with
-                    | None -> printfn "        | %s" cs.Name
-                    | Some v -> printfn "        | %s = %s" cs.Name v
+                match en.Type with
+                | FsEnumCaseType.Numeric ->
+                    printfn "    and [<RequireQualifiedAccess>] %s =" en.Name
+                    for cs in en.Cases do
+                        let nm = cs.Name
+                        let unm = upperFirstLetter nm
+                        let line = ResizeArray()
+                        if nm.Equals unm then
+                            sprintf "        | %s" nm |> line.Add
+                        else
+                            sprintf "        | [<CompiledName \"%s\">] %s" nm unm |> line.Add
+                        if cs.Value.IsSome then
+                            sprintf " = %s" cs.Value.Value |> line.Add
+                        printfn "%s" (line |> String.concat "")
+                | FsEnumCaseType.String ->
+                    printfn "    and [<StringEnum>] [<RequireQualifiedAccess>] %s =" en.Name
+                    for cs in en.Cases do
+                        let nm = cs.Name
+                        let unm = upperFirstLetter nm
+                        let line = ResizeArray()
+                        if nm.Equals unm then
+                            sprintf "        | %s" nm |> line.Add
+                        else
+                            sprintf "        | [<CompiledName \"%s\">] %s" nm unm |> line.Add
+                        printfn "%s" (line |> String.concat "")
+                | FsEnumCaseType.Unknown ->
+                    printfn "        obj"
             | FsType.Alias al ->
                 printfn ""
                 printfn "    and %s%s =" al.Name (printTypeParameters al.TypeParameters)
