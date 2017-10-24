@@ -60,6 +60,7 @@ type FsParam =
     {
         Name: string
         Optional: bool
+        ParamArray: bool
         Type: FsType
     }
 
@@ -328,6 +329,7 @@ let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
     {
         Name = pd.name |> getBindingyName
         Optional = pd.questionToken.IsSome
+        ParamArray = pd.dotDotDotToken.IsSome
         Type = 
             match pd.``type`` with
             | Some t -> visitTypeNode t
@@ -716,7 +718,13 @@ let printFunction (f: FsFunction): string =
     sprintf "abstract %s" f.Name.Value |> line.Add
     let prms = 
         f.Params |> List.map(fun p ->
-            sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name (printType p.Type)
+            if p.ParamArray then
+                sprintf "[<ParamArray>] %s%s: %s" (if p.Optional then "?" else "") p.Name
+                    (match p.Type with
+                    | FsType.Array t -> printType t // inner type
+                    | _ -> failwithf "function with unsupported param array type: %s" f.Name.Value)
+            else
+                sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name (printType p.Type)
         )
     if prms.Length = 0 then
         sprintf ": unit" |> line.Add
@@ -731,7 +739,9 @@ let printClassFunction (f: FsFunction): string =
     let prms = 
         f.Params |> List.map(fun p ->
             // TODO escapeWord should be handled by fixEscapeWords
-            sprintf "%s%s: %s" (if p.Optional then "?" else "") (escapeWord p.Name) (printType p.Type)
+            sprintf "%s%s%s: %s"
+                (if p.ParamArray then "[<ParamArray>] " else "")
+                (if p.Optional then "?" else "") (escapeWord p.Name) (printType p.Type)
         )
     if prms.Length = 0 then
         sprintf "(" |> line.Add
