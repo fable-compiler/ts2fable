@@ -342,6 +342,9 @@ let rec readTypeNode(t: TypeNode): FsType =
         | SyntaxKind.Identifier ->
             let id = eta.expression :?> Identifier
             FsType.Mapped id.text
+        | SyntaxKind.PropertyAccessExpression ->
+            let pa = eta.expression :?> PropertyAccessExpression
+            pa.getText() |> FsType.Mapped
         | _ -> printfn "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind; FsType.TODO
     | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj"
     | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
@@ -1022,7 +1025,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     // printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
     writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/izitoast.fs"
     writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/typescript.fs"
-    // writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
+    writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
     // writeFile "node_modules/@types/react/index.d.ts" "src/bin/react.fs"
     // writeFile "node_modules/@types/node/index.d.ts" "src/bin/node.fs"
 
