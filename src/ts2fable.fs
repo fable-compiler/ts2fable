@@ -706,13 +706,13 @@ let fixEscapeWords(md: FsModule): FsModule =
     let fix(tp: FsType): FsType =
         match tp with
         | FsType.Mapped s ->
-            escapeWord s |> FsType.Mapped
+            Keywords.escapeWord s |> FsType.Mapped
         | FsType.Param pm ->
-            { pm with Name = escapeWord pm.Name } |> FsType.Param
+            { pm with Name = Keywords.escapeWord pm.Name } |> FsType.Param
         | FsType.Function fn ->
-            { fn with Name = fn.Name |> Option.map escapeWord } |> FsType.Function
+            { fn with Name = fn.Name |> Option.map Keywords.escapeWord } |> FsType.Function
         | FsType.Property pr ->
-            { pr with Name = escapeWord pr.Name } |> FsType.Property
+            { pr with Name = Keywords.escapeWord pr.Name } |> FsType.Property
         | _ -> tp
 
     { md with Types = md.Types |> List.map (fixType fix) }
@@ -900,9 +900,6 @@ let printTypeParameters (tps: FsType list): string =
         line.Add ">"
         line |> String.concat ""
 
-let upperFirstLetter (s: string): string =
-    sprintf "%s%s" (s.Substring(0,1).ToUpper()) (s.Substring 1)
-
 let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
     let indent =
         if md.Name <> "" then
@@ -951,7 +948,7 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
                 sprintf "%stype [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
                 for cs in en.Cases do
                     let nm = cs.Name
-                    let unm = upperFirstLetter nm
+                    let unm = Enum.createEnumName nm
                     let line = ResizeArray()
                     if nm.Equals unm then
                         sprintf "    | %s" nm |> line.Add
@@ -964,7 +961,7 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
                 sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
                 for cs in en.Cases do
                     let nm = cs.Name
-                    let unm = upperFirstLetter nm
+                    let unm = Enum.createEnumName nm
                     let line = ResizeArray()
                     if nm.Equals unm then
                         sprintf "    | %s" nm |> line.Add
@@ -995,121 +992,6 @@ let printFsFile (file: FsFile): ResizeArray<string> =
         |> List.filter (fun md -> md.Types.Length > 0)
         |> List.iter (printModule lines "")
     lines
-
-let reserved =
-    [
-        "atomic"
-        "break"
-        "checked"
-        "component"
-        "const"
-        "constraint"
-        "constructor"
-        "continue"
-        "eager"
-        "event"
-        "external"
-        "fixed"
-        "functor"
-        "include"
-        "measure"
-        "method"
-        "mixin"
-        "object"
-        "parallel"
-        "params"
-        "process"
-        "protected"
-        "pure"
-        "sealed"
-        "tailcall"
-        "trait"
-        "virtual"
-        "volatile"
-        "asr"
-        "land"
-        "lor"
-        "lsl"
-        "lsr"
-        "lxor"
-        "mod"
-        "sig"
-    ]
-    |> Set.ofList
-
-let keywords = 
-    [
-        "abstract"
-        "and"
-        "as"
-        "assert"
-        "base"
-        "begin"
-        "class"
-        "default"
-        "delegate"
-        "do"
-        "done"
-        "downcast"
-        "downto"
-        "elif"
-        "else"
-        "end"
-        "exception"
-        "extern"
-        "false"
-        "finally"
-        "for"
-        "fun"
-        "function"
-        "global"
-        "if"
-        "in"
-        "inherit"
-        "inline"
-        "interface"
-        "internal"
-        "lazy"
-        "let"
-        "match"
-        "member"
-        "module"
-        "mutable"
-        "namespace"
-        "new"
-        "null"
-        "of"
-        "open"
-        "or"
-        "override"
-        "private"
-        "public"
-        "rec"
-        "return"
-        "sig"
-        "static"
-        "struct"
-        "then"
-        "to"
-        "true"
-        "try"
-        "type"
-        "upcast"
-        "use"
-        "val"
-        "void"
-        "when"
-        "while"
-        "with"
-        "yield"
-    ]
-    |> Set.ofList
-
-let escapeWord s =
-    if reserved.Contains s || keywords.Contains s then
-        sprintf "``%s``" s
-    else
-        s
 
 let printFile tsPath: unit =
     let code = Fs.readFileSync(tsPath).toString()
