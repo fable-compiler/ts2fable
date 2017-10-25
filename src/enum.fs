@@ -47,5 +47,6 @@ let capitalize (input: string): string =
     // else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1) // Fable 1.2.3 bug Char.ToUpper not supported
     else sprintf "%s%s" (input.Substring(0,1).ToUpper()) (input.Substring 1)
 
-let createEnumName s = 
-    s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+let createEnumName s =
+    if String.IsNullOrWhiteSpace s then "Empty"
+    else s |> createEnumNameParts |> List.map capitalize |> String.concat ""

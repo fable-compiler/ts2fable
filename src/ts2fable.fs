@@ -279,6 +279,11 @@ let readFunctionType(ft: FunctionTypeNode): FsFunction =
             | Some t -> readTypeNode t
             | None -> FsType.Mapped "unit"
     }
+
+let removeQuotes (s:string): string =
+    if isNull s then ""
+    else s.Replace("\"","").Replace("'","")
+
 let rec readTypeNode(t: TypeNode): FsType =
     match t.kind with
     | SyntaxKind.StringKeyword -> FsType.Mapped "string"
@@ -328,7 +333,7 @@ let rec readTypeNode(t: TypeNode): FsType =
         let lt = t :?> LiteralTypeNode
         match lt.literal.kind with
         | SyntaxKind.StringLiteral ->
-            FsType.StringLiteral (lt.literal.getText().Replace("\"","").Replace("'",""))
+            FsType.StringLiteral (lt.literal.getText() |> removeQuotes)
         | _ ->
             FsType.Mapped "obj"
     | SyntaxKind.ExpressionWithTypeArguments ->
@@ -759,7 +764,7 @@ let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
     {
         Name =
             match md.name with
-            | U2.Case1 id -> id.getText()
+            | U2.Case1 id -> id.text
             | U2.Case2 sl -> sl.text
         Types = types |> List.ofSeq
     }
