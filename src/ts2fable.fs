@@ -1,5 +1,10 @@
 module rec ts2fable.App
 
+// This app has 3 main functions.
+// 1. Read a TypeScript file into a syntax tree.
+// 2. Fix the syntax tree.
+// 3. Print the syntax tree to a F# file.
+
 open Fable.Core
 open Fable.Import
 open Fable.Import.Node
@@ -7,7 +12,7 @@ open Fable.Import.ts
 open System.Collections.Generic
 open System
 
-// our simplified F# AST
+// our simplified syntax tree
 // some names inspired by the actual F# AST:
 // https://github.com/fsharp/FSharp.Compiler.Service/blob/master/src/fsharp/ast.fs
 
@@ -129,6 +134,7 @@ type FsType =
     | Module of FsModule
     | File of FsFile
     | Variable of FsVariable
+    | StringLiteral of string
 
 type FsModule =
     {
@@ -161,7 +167,7 @@ let getBindingyName(bn: BindingName): string =
         | U2.Case1 obp -> obp.getText()
         | U2.Case2 abp -> abp.getText()
 
-let visitEnumCase(em: EnumMember): FsEnumCase =
+let readEnumCase(em: EnumMember): FsEnumCase =
     let name = em.name |> getPropertyName
     let tp, value =
         match em.initializer with
@@ -185,7 +191,7 @@ let visitEnumCase(em: EnumMember): FsEnumCase =
         Value = value
     }
 
-let visitTypeParameters(tps: ResizeArray<TypeParameterDeclaration> option): FsType list =
+let readTypeParameters(tps: ResizeArray<TypeParameterDeclaration> option): FsType list =
     match tps with
     | None -> []
     | Some tps ->
@@ -193,52 +199,52 @@ let visitTypeParameters(tps: ResizeArray<TypeParameterDeclaration> option): FsTy
             tp.name.text |> FsType.Mapped
         )
 
-let visitInherits(hcs: ResizeArray<HeritageClause> option): FsType list =
+let readInherits(hcs: ResizeArray<HeritageClause> option): FsType list =
     match hcs with
     | None -> []
     | Some hcs ->
         hcs |> List.ofSeq |> List.collect (fun hc ->
             hc.types |> List.ofSeq |> List.map (fun eta ->
                 {
-                    Type = visitTypeNode eta
+                    Type = readTypeNode eta
                     TypeParameters =
                         match eta.typeArguments with
                         | None -> []
                         | Some tps ->
-                            tps |> List.ofSeq |> List.map visitTypeNode
+                            tps |> List.ofSeq |> List.map readTypeNode
                 }
                 |> FsType.Generic
             )
         )
 
-let visitInterface(id: InterfaceDeclaration): FsInterface =
+let readInterface(id: InterfaceDeclaration): FsInterface =
     {
         Name = id.name.text 
-        Inherits = visitInherits id.heritageClauses
-        Members = id.members |> List.ofSeq |> List.map visitTypeElement
-        TypeParameters = visitTypeParameters id.typeParameters
+        Inherits = readInherits id.heritageClauses
+        Members = id.members |> List.ofSeq |> List.map readTypeElement
+        TypeParameters = readTypeParameters id.typeParameters
     }
 
-let visitClass(cd: ClassDeclaration): FsClass =
+let readClass(cd: ClassDeclaration): FsClass =
     {
         ClassName = cd.name |> Option.map (fun nm -> nm.text) 
-        Inherits = visitInherits cd.heritageClauses
-        Members = [] // TODO cd.members |> List.ofSeq |> List.map visitTypeElement
-        TypeParameters = visitTypeParameters cd.typeParameters
+        Inherits = readInherits cd.heritageClauses
+        Members = [] // TODO cd.members |> List.ofSeq |> List.map readTypeElement
+        TypeParameters = readTypeParameters cd.typeParameters
     }
 
-let visitVariable(vb: VariableDeclaration): FsVariable =
+let readVariable(vb: VariableDeclaration): FsVariable =
     {
         Name = ""
     }
 
-let visitEnum(ed: EnumDeclaration): FsEnum =
+let readEnum(ed: EnumDeclaration): FsEnum =
     {
         Name = ed.name.text
-        Cases = ed.members |> List.ofSeq |> List.map visitEnumCase
+        Cases = ed.members |> List.ofSeq |> List.map readEnumCase
     }
 
-let visitTypeReference(tr: TypeReferenceNode): FsType =
+let readTypeReference(tr: TypeReferenceNode): FsType =
     match tr.typeArguments with
     | None ->
         let txt = tr.getText()
@@ -256,30 +262,30 @@ let visitTypeReference(tr: TypeReferenceNode): FsType =
                     qn.getText()
                 |> FsType.Mapped
             TypeParameters =
-                tas |> List.ofSeq |> List.map visitTypeNode
+                tas |> List.ofSeq |> List.map readTypeNode
         }
         |>
         FsType.Generic
-let visitFunctionType(ft: FunctionTypeNode): FsFunction =
+let readFunctionType(ft: FunctionTypeNode): FsFunction =
     {
         Name = ft.name |> Option.map getPropertyName
-        TypeParameters = visitTypeParameters ft.typeParameters
-        Params =  ft.parameters |> List.ofSeq |> List.map visitParameterDeclaration
+        TypeParameters = readTypeParameters ft.typeParameters
+        Params =  ft.parameters |> List.ofSeq |> List.map readParameterDeclaration
         ReturnType =
             match ft.``type`` with
-            | Some t -> visitTypeNode t
+            | Some t -> readTypeNode t
             | None -> FsType.Mapped "unit"
     }
-let rec visitTypeNode(t: TypeNode): FsType =
+let rec readTypeNode(t: TypeNode): FsType =
     match t.kind with
     | SyntaxKind.StringKeyword -> FsType.Mapped "string"
     | SyntaxKind.FunctionType ->
-        visitFunctionType (t :?> FunctionTypeNode) |> FsType.Function
+        readFunctionType (t :?> FunctionTypeNode) |> FsType.Function
     | SyntaxKind.TypeReference ->
-        visitTypeReference (t :?> TypeReferenceNode)
+        readTypeReference (t :?> TypeReferenceNode)
     | SyntaxKind.ArrayType ->
         let at = t :?> ArrayTypeNode
-        FsType.Array (visitTypeNode at.elementType)
+        FsType.Array (readTypeNode at.elementType)
     | SyntaxKind.NumberKeyword -> FsType.Mapped "float"
     | SyntaxKind.BooleanKeyword -> FsType.Mapped "bool"
     | SyntaxKind.UnionType ->
@@ -288,7 +294,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
         let isOption (t:TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
         {
             Option = typs |> List.exists isOption
-            Types = typs |> List.filter (isOption >> not) |> List.map visitTypeNode
+            Types = typs |> List.filter (isOption >> not) |> List.map readTypeNode
         }
         |> FsType.Union
     | SyntaxKind.AnyKeyword -> FsType.Mapped "obj"
@@ -296,7 +302,7 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.TupleType ->
         let tp = t :?> TupleTypeNode
         {
-            Types = tp.elementTypes |> List.ofSeq |> List.map visitTypeNode
+            Types = tp.elementTypes |> List.ofSeq |> List.map readTypeNode
         }
         |> FsType.Tuple
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
@@ -316,9 +322,12 @@ let rec visitTypeNode(t: TypeNode): FsType =
         // let tq = t :?> TypeQueryNode
         FsType.Mapped "obj"
     | SyntaxKind.LiteralType ->
-        // let lt = t :?> LiteralTypeNode
-        // printfn "LiteralType %A" lt.literal
-        FsType.Mapped "obj" // TODO
+        let lt = t :?> LiteralTypeNode
+        match lt.literal.kind with
+        | SyntaxKind.StringLiteral ->
+            FsType.StringLiteral (lt.literal.getText().Replace("\"",""))
+        | _ ->
+            FsType.Mapped "obj"
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
         match eta.expression.kind with
@@ -329,29 +338,29 @@ let rec visitTypeNode(t: TypeNode): FsType =
     | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj_Par"
     | _ -> failwithf "unsupported TypeNode kind: %A" t.kind
 
-let visitParameterDeclaration(pd: ParameterDeclaration): FsParam =
+let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
     {
         Name = pd.name |> getBindingyName
         Optional = pd.questionToken.IsSome
         ParamArray = pd.dotDotDotToken.IsSome
         Type = 
             match pd.``type`` with
-            | Some t -> visitTypeNode t
+            | Some t -> readTypeNode t
             | None -> FsType.Mapped "obj"
     }
 
-let visitMethodSignature(ms: MethodSignature): FsFunction =
+let readMethodSignature(ms: MethodSignature): FsFunction =
     {
         Name = ms.name |> getPropertyName |> Some
-        TypeParameters = visitTypeParameters ms.typeParameters
-        Params = ms.parameters |> List.ofSeq |> List.map visitParameterDeclaration
+        TypeParameters = readTypeParameters ms.typeParameters
+        Params = ms.parameters |> List.ofSeq |> List.map readParameterDeclaration
         ReturnType =
             match ms.``type`` with
-            | Some t -> visitTypeNode t
+            | Some t -> readTypeNode t
             | None -> FsType.Mapped "unit"
     }
 
-let visitPropertySignature(ps: PropertySignature): FsProperty =
+let readPropertySignature(ps: PropertySignature): FsProperty =
     {
         Emit = None
         Name = ps.name |> getPropertyName
@@ -359,21 +368,21 @@ let visitPropertySignature(ps: PropertySignature): FsProperty =
         Type = 
             match ps.``type`` with
             | None -> FsType.None 
-            | Some tp -> visitTypeNode tp
+            | Some tp -> readTypeNode tp
     }
 
-let visitFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
+let readFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
     {
         Name = fd.name |> Option.map (fun id -> id.text)
-        TypeParameters = visitTypeParameters fd.typeParameters
-        Params = fd.parameters |> List.ofSeq |> List.map visitParameterDeclaration
+        TypeParameters = readTypeParameters fd.typeParameters
+        Params = fd.parameters |> List.ofSeq |> List.map readParameterDeclaration
         ReturnType =
             match fd.``type`` with
-            | Some t -> visitTypeNode t
+            | Some t -> readTypeNode t
             | None -> FsType.Mapped "unit"
     }
 
-let visitIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
+let readIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
     {
         Emit = Some "$0[$1]{{=$2}}"
         Name = "Item"
@@ -381,17 +390,17 @@ let visitIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
         Type = 
             match ps.``type`` with
             | None -> FsType.None 
-            | Some tp -> visitTypeNode tp
+            | Some tp -> readTypeNode tp
     }
 
-let visitTypeElement(te: TypeElement): FsType =
+let readTypeElement(te: TypeElement): FsType =
     match te.kind with
     | SyntaxKind.IndexSignature ->
-        visitIndexSignature (te :?> IndexSignatureDeclaration) |> FsType.Property
+        readIndexSignature (te :?> IndexSignatureDeclaration) |> FsType.Property
     | SyntaxKind.MethodSignature ->
-        visitMethodSignature (te :?> MethodSignature) |> FsType.Function
+        readMethodSignature (te :?> MethodSignature) |> FsType.Function
     | SyntaxKind.PropertySignature ->
-        visitPropertySignature (te :?> PropertySignature) |> FsType.Property
+        readPropertySignature (te :?> PropertySignature) |> FsType.Property
     | SyntaxKind.CallSignature ->
         // member = getMethod(node, { name: "Invoke" });
         // member.emit = "$0($1...)";
@@ -404,29 +413,56 @@ let visitTypeElement(te: TypeElement): FsType =
          FsType.TODO
     | _ -> failwithf "unsupported TypeElement kind: %A" te.kind
 
-let visitAliasDeclaration(d: TypeAliasDeclaration): FsAlias =
-    {
-        Name = d.name.text
-        Type = d.``type`` |> visitTypeNode
-        TypeParameters = visitTypeParameters d.typeParameters
-    }
+let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
+    let tp = d.``type`` |> readTypeNode
+    let name = d.name.text
+    printfn "alias %s" name
+    let asAlias() =
+        {
+            Name = name
+            Type = tp
+            TypeParameters = readTypeParameters d.typeParameters
+        }
+        |> FsType.Alias
+    match tp with
+    | FsType.Union un ->
+        let sls = un.Types |> List.choose asStringLiteral
+        printfn "alias union %s" name
+        printfn "lenght %d %d" un.Types.Length sls.Length
+        for utp in un.Types do
+            printfn "  unt %A" utp
+        if un.Types.Length = sls.Length then
+            // It is a string literal type. Map it is a string enum.
+            {
+                Name = name
+                Cases = sls |> List.map (fun sl ->
+                    {
+                        Name = sl
+                        Type = FsEnumCaseType.String
+                        Value = None
+                    }
+                )
+            }
+            |> FsType.Enum
+        else asAlias()
+    | _ -> asAlias()
 
-let visitStatement(sd: Statement): FsType =
+let readStatement(sd: Statement): FsType =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
-        visitInterface (sd :?> InterfaceDeclaration) |> FsType.Interface
+        readInterface (sd :?> InterfaceDeclaration) |> FsType.Interface
     | SyntaxKind.EnumDeclaration ->
-        visitEnum (sd :?> EnumDeclaration) |> FsType.Enum
+        readEnum (sd :?> EnumDeclaration) |> FsType.Enum
     | SyntaxKind.TypeAliasDeclaration ->
-        visitAliasDeclaration (sd :?> TypeAliasDeclaration) |> FsType.Alias
+        readAliasDeclaration (sd :?> TypeAliasDeclaration)
     | SyntaxKind.ClassDeclaration ->
-        visitClass (sd :?> ClassDeclaration) |> FsType.Class
+        readClass (sd :?> ClassDeclaration) |> FsType.Class
     | SyntaxKind.VariableStatement ->
-        visitVariable (sd :?> VariableDeclaration) |> FsType.Variable
+        readVariable (sd :?> VariableDeclaration) |> FsType.Variable
     | SyntaxKind.FunctionDeclaration ->
-        visitFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
+        readFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
     | SyntaxKind.ModuleDeclaration ->
-        visitModuleDeclaration (sd :?> ModuleDeclaration) |> FsType.Module
+        readModuleDeclaration (sd :?> ModuleDeclaration) |> FsType.Module
     | _ -> failwithf "unsupported Statement kind: %A" sd.kind
 
 let mergeTypes(tps: FsType list): FsType list =
@@ -477,25 +513,29 @@ let mergeModules(mds: FsModule list): FsModule list =
     list |> List.ofSeq
 
 let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
-let asMapped (tp: FsType) = match tp with | FsType.Mapped v -> Some v | _ -> None
 let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
 let asClass (tp: FsType) = match tp with | FsType.Class v -> Some v | _ -> None
 let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
+let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
 
-let isFunction tp = asFunction tp |> Option.isSome
+let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
+let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
 
 let createGlobals(md: FsModule): FsModule =
     let fns = md.Types |> List.filter isFunction
-    let cl: FsClass =
-        {
-            ClassName = Some "Globals"
-            Inherits = []
-            TypeParameters = []
-            Members = fns
+    if fns.Length = 0 then
+        md
+    else
+        let cl: FsClass =
+            {
+                ClassName = Some "Globals"
+                Inherits = []
+                TypeParameters = []
+                Members = fns
+            }
+        { md with
+            Types = [ FsType.Class cl ] @ md.Types
         }
-    { md with
-        Types = [ FsType.Class cl ] @ md.Types
-    }
 
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     // fix children first, then curren type
@@ -599,12 +639,12 @@ let fixTic (typeParameters: FsType list) (tp: FsType) =
         let list = typeParameters |> List.map printType
         let set = list |> Set.ofList
         let fix (t: FsType): FsType =
-            match asMapped t with
-            | None -> t
-            | Some s -> 
+            match t with
+            | FsType.Mapped s ->
                 if set.Contains s then
                     sprintf "'%s" s |> FsType.Mapped
                 else t
+            | _ -> t
         fixType fix tp
 
 let addTicForGenericFunctions(md: FsModule): FsModule =
@@ -640,12 +680,12 @@ let fixNodeArray(md: FsModule): FsModule =
         match asGeneric tp with
         | None -> tp
         | Some gn ->
-            match asMapped gn.Type with
-            | None -> tp
-            | Some s ->
+            match gn.Type with
+            | FsType.Mapped s ->
                 if s.Equals "NodeArray" && gn.TypeParameters.Length = 1 then
                     gn.TypeParameters.[0] |> FsType.Array
                 else tp
+            | _ -> tp
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
@@ -690,17 +730,17 @@ let addTicForGenericTypes(md: FsModule): FsModule =
             )
     }
 
-let rec visitModuleDeclaration(md: ModuleDeclaration): FsModule =
+let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
     let types = ResizeArray()
     md.ForEachChild (fun nd ->
         match nd.kind with
         | SyntaxKind.ModuleBlock ->
             let mb = nd :?> ModuleBlock
-            mb.statements |> List.ofSeq |> List.map visitStatement |> List.iter types.Add
+            mb.statements |> List.ofSeq |> List.map readStatement |> List.iter types.Add
         | SyntaxKind.DeclareKeyword -> ()
         | SyntaxKind.Identifier -> ()
         | SyntaxKind.ModuleDeclaration ->
-            visitModuleDeclaration (nd :?> ModuleDeclaration) |> FsType.Module |> types.Add
+            readModuleDeclaration (nd :?> ModuleDeclaration) |> FsType.Module |> types.Add
         | _ -> failwithf "unknown kind in ModuleDeclaration: %A" nd.kind
     )
     {
@@ -711,20 +751,20 @@ let rec visitModuleDeclaration(md: ModuleDeclaration): FsModule =
         Types = types |> List.ofSeq
     }
 
-let visitSourceFile(sf: SourceFile): FsFile =
+let readSourceFile(sf: SourceFile): FsFile =
     let modules = ResizeArray()
 
     let gbl: FsModule =
         {
             Name = ""
-            Types = sf.statements |> List.ofSeq |> List.map visitStatement
+            Types = sf.statements |> List.ofSeq |> List.map readStatement
         }
     modules.Add gbl
 
     sf.ForEachChild (fun nd ->
         match nd.kind with
         | SyntaxKind.ModuleDeclaration ->
-            visitModuleDeclaration (nd :?> ModuleDeclaration) |> modules.Add
+            readModuleDeclaration (nd :?> ModuleDeclaration) |> modules.Add
         // | SyntaxKind.ExportAssignment -> () // TODO
         // | SyntaxKind.EndOfFileToken -> ()
         // | SyntaxKind.FunctionDeclaration -> ()
@@ -1052,7 +1092,7 @@ let escapeWord s =
 let printFile tsPath: unit =
     let code = Fs.readFileSync(tsPath).toString()
     let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
-    let fsFile = visitSourceFile tsFile
+    let fsFile = readSourceFile tsFile
     for line in printFsFile fsFile do
         printfn "%s" line
 
