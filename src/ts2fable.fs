@@ -316,6 +316,7 @@ let rec readTypeNode(t: TypeNode): FsType =
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
     | SyntaxKind.ThisType ->
         // TODO map to the actual type of this
+        printfn "TODO map `this`"
         FsType.Mapped "obj"
     | SyntaxKind.TypePredicate -> FsType.Mapped "bool"
     | SyntaxKind.TypeLiteral ->
@@ -325,7 +326,7 @@ let rec readTypeNode(t: TypeNode): FsType =
     | SyntaxKind.IntersectionType -> FsType.Mapped "obj"
     | SyntaxKind.IndexedAccessType ->
         // function createKeywordTypeNode(kind: KeywordTypeNode["kind"]): KeywordTypeNode;
-        FsType.Mapped "obj" // TODO
+        FsType.Mapped "obj" // TODO?
     | SyntaxKind.TypeQuery ->
         // let tq = t :?> TypeQueryNode
         FsType.Mapped "obj"
@@ -347,6 +348,9 @@ let rec readTypeNode(t: TypeNode): FsType =
             pa.getText() |> FsType.Mapped
         | _ -> printfn "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind; FsType.TODO
     | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj"
+    | SyntaxKind.MappedType ->
+        printfn "TODO mapped types"
+        FsType.TODO
     | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
 
 let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
@@ -416,12 +420,14 @@ let readTypeElement(te: TypeElement): FsType =
         // member = getMethod(node, { name: "Invoke" });
         // member.emit = "$0($1...)";
         // ifc.methods.push(member);
+        printfn "TODO call members"
         FsType.TODO
     | SyntaxKind.ConstructSignature ->
         // member = getMethod(node, { name: "Create" });
         // member.emit = "new $0($1...)";
         // ifc.methods.push(member);
-         FsType.TODO
+        printfn "TODO construct members"
+        FsType.TODO
     | _ -> printfn "unsupported TypeElement kind: %A" te.kind; FsType.TODO
 
 let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
@@ -470,8 +476,13 @@ let readStatement(sd: Statement): FsType =
     | SyntaxKind.ModuleDeclaration ->
         readModuleDeclaration (sd :?> ModuleDeclaration) |> FsType.Module
     | SyntaxKind.ExportAssignment ->
+        printfn "TODO export statements"
         FsType.TODO
     | SyntaxKind.ImportDeclaration ->
+        printfn "TODO import statements"
+        FsType.TODO
+    | SyntaxKind.NamespaceExportDeclaration ->
+        printfn "TODO namespace exports"
         FsType.TODO
     | _ -> printfn "unsupported Statement kind: %A" sd.kind; FsType.TODO
 
@@ -1025,7 +1036,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     // printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
     writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/izitoast.fs"
     writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/typescript.fs"
-    writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
+    // writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
     // writeFile "node_modules/@types/react/index.d.ts" "src/bin/react.fs"
     // writeFile "node_modules/@types/node/index.d.ts" "src/bin/node.fs"
 
