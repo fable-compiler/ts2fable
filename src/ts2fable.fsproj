@@ -4,6 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="typescript.fs" />
+    <Compile Include="keywords.fs" />
+    <Compile Include="enum.fs" />
     <Compile Include="ts2fable.fs" />
   </ItemGroup>
   <ItemGroup>
