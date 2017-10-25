@@ -338,7 +338,7 @@ let rec readTypeNode(t: TypeNode): FsType =
             let id = eta.expression :?> Identifier
             FsType.Mapped id.text
         | _ -> failwithf "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind
-    | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj_Par"
+    | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj"
     | _ -> failwithf "unsupported TypeNode kind: %A" t.kind
 
 let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
@@ -461,6 +461,8 @@ let readStatement(sd: Statement): FsType =
         readFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
     | SyntaxKind.ModuleDeclaration ->
         readModuleDeclaration (sd :?> ModuleDeclaration) |> FsType.Module
+    | SyntaxKind.ExportAssignment ->
+        FsType.TODO
     | _ -> failwithf "unsupported Statement kind: %A" sd.kind
 
 let mergeTypes(tps: FsType list): FsType list =
@@ -898,9 +900,9 @@ let upperFirstLetter (s: string): string =
     sprintf "%s%s" (s.Substring(0,1).ToUpper()) (s.Substring 1)
 
 let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
-
     let indent =
         if md.Name <> "" then
+            "" |> lines.Add
             sprintf "module %s =" md.Name |> lines.Add
             sprintf "%s    " indent 
         else indent
@@ -985,7 +987,9 @@ let printFsFile (file: FsFile): ResizeArray<string> =
     sprintf "open Fable.Core" |> lines.Add
     sprintf "open Fable.Import.JS" |> lines.Add
 
-    file.Modules |> List.iter (printModule lines "")
+    file.Modules
+        |> List.filter (fun md -> md.Types.Length > 0)
+        |> List.iter (printModule lines "")
     lines
 
 let reserved =
@@ -1110,9 +1114,14 @@ let printFile tsPath: unit =
     for line in printFsFile fsFile do
         printfn "%s" line
 
-let writeFile tsPath fsPath: unit =
-    printfn "read %s and create %s" tsPath fsPath
-    // TODO
+let writeFile tsPath (fsPath: string): unit =
+    let code = Fs.readFileSync(tsPath).toString()
+    let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
+    let fsFile = readSourceFile tsFile
+    let file = Fs.createWriteStream fsPath
+    for line in printFsFile fsFile do
+        file.write(sprintf "%s%c" line '\n') |> ignore
+    file.``end``()
 
 let p = Node.Globals.``process``
 let argv = p.argv |> List.ofSeq
@@ -1121,9 +1130,10 @@ let argv = p.argv |> List.ofSeq
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     // printFile "node_modules/typescript/lib/typescript.d.ts"
     printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
+    writeFile "node_modules/typescript/lib/typescript.d.ts" "src/typescript2.fs"
 
 else
-    let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".d.ts")
+    let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")
     let fsfile = argv |> List.tryFind (fun s -> s.EndsWith ".fs")
     
     match tsfile with
