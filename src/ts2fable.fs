@@ -113,6 +113,7 @@ type FsTuple =
 type FsVariable =
     {
         Name: string
+        Type: FsType
     }
 
 [<RequireQualifiedAccess>]
@@ -159,7 +160,7 @@ let getPropertyName(pn: PropertyName): string =
     | U4.Case3 nl -> nl.text
     | U4.Case4 cpn -> cpn.getText()
 
-let getBindingyName(bn: BindingName): string =
+let getBindingName(bn: BindingName): string =
     match bn with
     | U2.Case1 id -> id.text
     | U2.Case2 bp -> // BindingPattern
@@ -233,9 +234,11 @@ let readClass(cd: ClassDeclaration): FsClass =
         TypeParameters = readTypeParameters cd.typeParameters
     }
 
-let readVariable(vb: VariableDeclaration): FsVariable =
+let readVariable(vb: VariableStatement): FsVariable =
+    let vd = vb.declarationList.declarations.[0] // TODO more than 1
     {
-        Name = ""
+        Name = vd.name |> getBindingName
+        Type = vd.``type`` |> Option.map readTypeNode |> Option.defaultValue (FsType.Mapped "obj")
     }
 
 let readEnum(ed: EnumDeclaration): FsEnum =
@@ -340,7 +343,7 @@ let rec readTypeNode(t: TypeNode): FsType =
 
 let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
     {
-        Name = pd.name |> getBindingyName
+        Name = pd.name |> getBindingName
         Optional = pd.questionToken.IsSome
         ParamArray = pd.dotDotDotToken.IsSome
         Type = 
@@ -416,7 +419,6 @@ let readTypeElement(te: TypeElement): FsType =
 let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
     let tp = d.``type`` |> readTypeNode
     let name = d.name.text
-    printfn "alias %s" name
     let asAlias() =
         {
             Name = name
@@ -427,10 +429,6 @@ let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
     match tp with
     | FsType.Union un ->
         let sls = un.Types |> List.choose asStringLiteral
-        printfn "alias union %s" name
-        printfn "lenght %d %d" un.Types.Length sls.Length
-        for utp in un.Types do
-            printfn "  unt %A" utp
         if un.Types.Length = sls.Length then
             // It is a string literal type. Map it is a string enum.
             {
@@ -458,7 +456,7 @@ let readStatement(sd: Statement): FsType =
     | SyntaxKind.ClassDeclaration ->
         readClass (sd :?> ClassDeclaration) |> FsType.Class
     | SyntaxKind.VariableStatement ->
-        readVariable (sd :?> VariableDeclaration) |> FsType.Variable
+        readVariable (sd :?> VariableStatement) |> FsType.Variable
     | SyntaxKind.FunctionDeclaration ->
         readFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
     | SyntaxKind.ModuleDeclaration ->
@@ -522,16 +520,21 @@ let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
 let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
 
 let createGlobals(md: FsModule): FsModule =
-    let fns = md.Types |> List.filter isFunction
-    if fns.Length = 0 then
+    let tps = md.Types |> List.filter (fun t ->
+        match t with
+        | FsType.Variable _ -> true
+        | FsType.Function _ -> true
+        | _ -> false
+    )
+    if tps.Length = 0 then
         md
     else
         let cl: FsClass =
             {
-                ClassName = Some "Globals"
+                ClassName = Some "[<Erase>] Globals" // TODO attributes
                 Inherits = []
                 TypeParameters = []
-                Members = fns
+                Members = tps
             }
         { md with
             Types = [ FsType.Class cl ] @ md.Types
@@ -622,13 +625,18 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Modules = f.Modules |> List.map fixModule
         }
         |> FsType.File
+    | FsType.Variable vb ->
+        { vb with
+            Type = fixType fix vb.Type
+        }
+        |> FsType.Variable
     
     // | _ -> tp
     | FsType.Enum _ -> tp
     | FsType.Mapped _ -> tp
     | FsType.None _ -> tp
     | FsType.TODO _ -> tp
-    | FsType.Variable _ -> tp
+    | FsType.StringLiteral _ -> tp
 
     |> fix // current type
 
@@ -825,6 +833,10 @@ let printType (tp: FsType): string =
         let line = ResizeArray()
         tp.Types |> List.map printType |> String.concat " * " |> line.Add
         line |> String.concat ""
+    | FsType.Variable vb ->
+        let vtp = vb.Type |> printType
+        sprintf "[<Global>] static member %s with get(): %s = jsNative and set(v: %s): unit = jsNative"
+            vb.Name vtp vtp
     | _ -> failwithf "unsupported printType %A" tp
 
 let printFunction (f: FsFunction): string =
@@ -921,7 +933,9 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
                 | FsType.Function f ->
                     sprintf "%s    %s" indent (printClassFunction f) |> lines.Add
                     incr nLines
-                | _ -> ()
+                | _ ->
+                    sprintf "%s    %s" indent (printType mbr) |> lines.Add
+                    incr nLines
             if !nLines = 0 then
                 sprintf "%s    class end" indent |> lines.Add
         | FsType.Enum en ->
