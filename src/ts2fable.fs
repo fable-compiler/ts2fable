@@ -845,6 +845,81 @@ let printTypeParameters (tps: FsType list): string =
 let upperFirstLetter (s: string): string =
     sprintf "%s%s" (s.Substring(0,1).ToUpper()) (s.Substring 1)
 
+let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
+
+    let indent =
+        if md.Name <> "" then
+            sprintf "module %s =" md.Name |> lines.Add
+            sprintf "%s    " indent 
+        else indent
+    for tp in md.Types do
+        match tp with
+        | FsType.Interface inf ->
+            sprintf "" |> lines.Add
+            sprintf "%stype [<AllowNullLiteral>] %s%s =" indent inf.Name (printTypeParameters inf.TypeParameters) |> lines.Add
+            let nLines = ref 0
+            for ih in inf.Inherits do
+                sprintf "%s    inherit %s" indent (printType ih) |> lines.Add
+                incr nLines
+            for mbr in inf.Members do
+                match mbr with
+                | FsType.Function f ->
+                    sprintf "%s    %s" indent (printFunction f) |> lines.Add
+                    incr nLines
+                | FsType.Property p ->
+                    sprintf "%s    %s" indent (printProperty p) |> lines.Add
+                    incr nLines
+                | _ -> ()
+            if !nLines = 0 then
+                sprintf "%s    interface end" indent |> lines.Add
+        | FsType.Class cl ->
+            sprintf "" |> lines.Add
+            sprintf "%stype %s%s =" indent cl.ClassName.Value (printTypeParameters cl.TypeParameters) |> lines.Add
+            let nLines = ref 0
+            for mbr in cl.Members do
+                match mbr with
+                | FsType.Function f ->
+                    sprintf "%s    %s" indent (printClassFunction f) |> lines.Add
+                    incr nLines
+                | _ -> ()
+            if !nLines = 0 then
+                sprintf "%s    class end" indent |> lines.Add
+        | FsType.Enum en ->
+            sprintf "" |> lines.Add
+            match en.Type with
+            | FsEnumCaseType.Numeric ->
+                sprintf "%stype [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
+                for cs in en.Cases do
+                    let nm = cs.Name
+                    let unm = upperFirstLetter nm
+                    let line = ResizeArray()
+                    if nm.Equals unm then
+                        sprintf "    | %s" nm |> line.Add
+                    else
+                        sprintf "    | [<CompiledName \"%s\">] %s" nm unm |> line.Add
+                    if cs.Value.IsSome then
+                        sprintf " = %s" cs.Value.Value |> line.Add
+                    sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
+            | FsEnumCaseType.String ->
+                sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
+                for cs in en.Cases do
+                    let nm = cs.Name
+                    let unm = upperFirstLetter nm
+                    let line = ResizeArray()
+                    if nm.Equals unm then
+                        sprintf "    | %s" nm |> line.Add
+                    else
+                        sprintf "    | [<CompiledName \"%s\">] %s" nm unm |> line.Add
+                    sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
+            | FsEnumCaseType.Unknown ->
+                sprintf "%stype %s =" indent en.Name |> lines.Add
+                sprintf "%s    obj" indent |> lines.Add
+        | FsType.Alias al ->
+            sprintf "" |> lines.Add
+            sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
+            sprintf "%s    %s" indent (printType al.Type) |> lines.Add
+        | _ -> ()
+
 let printFsFile (file: FsFile): ResizeArray<string> =
     let lines = ResizeArray<string>()
 
@@ -856,77 +931,7 @@ let printFsFile (file: FsFile): ResizeArray<string> =
     sprintf "open Fable.Core" |> lines.Add
     sprintf "open Fable.Import.JS" |> lines.Add
 
-    for md in file.Modules do
-        sprintf "" |> lines.Add
-        if md.Name <> "" then
-            sprintf "module %s =" md.Name |> lines.Add
-        for i, tp in md.Types |> Seq.indexed do
-            match tp with
-            | FsType.Interface inf ->
-                sprintf "" |> lines.Add
-                sprintf "    type [<AllowNullLiteral>] %s%s =" inf.Name (printTypeParameters inf.TypeParameters) |> lines.Add
-                let nLines = ref 0
-                for ih in inf.Inherits do
-                    sprintf "        inherit %s" (printType ih) |> lines.Add
-                    incr nLines
-                for mbr in inf.Members do
-                    match mbr with
-                    | FsType.Function f ->
-                        sprintf "        %s" (printFunction f) |> lines.Add
-                        incr nLines
-                    | FsType.Property p ->
-                        sprintf "        %s" (printProperty p) |> lines.Add
-                        incr nLines
-                    | _ -> ()
-                if !nLines = 0 then
-                    sprintf "        interface end" |> lines.Add
-            | FsType.Class cl ->
-                sprintf "" |> lines.Add
-                sprintf "    type %s%s =" cl.ClassName.Value (printTypeParameters cl.TypeParameters) |> lines.Add
-                let nLines = ref 0
-                for mbr in cl.Members do
-                    match mbr with
-                    | FsType.Function f ->
-                        sprintf "        %s" (printClassFunction f) |> lines.Add
-                        incr nLines
-                    | _ -> ()
-                if !nLines = 0 then
-                    sprintf "        class end" |> lines.Add
-            | FsType.Enum en ->
-                sprintf "" |> lines.Add
-                match en.Type with
-                | FsEnumCaseType.Numeric ->
-                    sprintf "    type [<RequireQualifiedAccess>] %s =" en.Name |> lines.Add
-                    for cs in en.Cases do
-                        let nm = cs.Name
-                        let unm = upperFirstLetter nm
-                        let line = ResizeArray()
-                        if nm.Equals unm then
-                            sprintf "        | %s" nm |> line.Add
-                        else
-                            sprintf "        | [<CompiledName \"%s\">] %s" nm unm |> line.Add
-                        if cs.Value.IsSome then
-                            sprintf " = %s" cs.Value.Value |> line.Add
-                        sprintf "%s" (line |> String.concat "") |> lines.Add
-                | FsEnumCaseType.String ->
-                    sprintf "    type [<StringEnum>] [<RequireQualifiedAccess>] %s =" en.Name |> lines.Add
-                    for cs in en.Cases do
-                        let nm = cs.Name
-                        let unm = upperFirstLetter nm
-                        let line = ResizeArray()
-                        if nm.Equals unm then
-                            sprintf "        | %s" nm |> line.Add
-                        else
-                            sprintf "        | [<CompiledName \"%s\">] %s" nm unm |> line.Add
-                        sprintf "%s" (line |> String.concat "") |> lines.Add
-                | FsEnumCaseType.Unknown ->
-                    sprintf "    type %s =" en.Name |> lines.Add
-                    sprintf "        obj" |> lines.Add
-            | FsType.Alias al ->
-                sprintf "" |> lines.Add
-                sprintf "    type %s%s =" al.Name (printTypeParameters al.TypeParameters) |> lines.Add
-                sprintf "        %s" (printType al.Type) |> lines.Add
-            | _ -> ()
+    file.Modules |> List.iter (printModule lines "")
     lines
 
 let reserved =
