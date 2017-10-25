@@ -328,7 +328,7 @@ let rec readTypeNode(t: TypeNode): FsType =
         let lt = t :?> LiteralTypeNode
         match lt.literal.kind with
         | SyntaxKind.StringLiteral ->
-            FsType.StringLiteral (lt.literal.getText().Replace("\"",""))
+            FsType.StringLiteral (lt.literal.getText().Replace("\"","").Replace("'",""))
         | _ ->
             FsType.Mapped "obj"
     | SyntaxKind.ExpressionWithTypeArguments ->
@@ -337,9 +337,9 @@ let rec readTypeNode(t: TypeNode): FsType =
         | SyntaxKind.Identifier ->
             let id = eta.expression :?> Identifier
             FsType.Mapped id.text
-        | _ -> failwithf "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind
+        | _ -> printfn "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind; FsType.TODO
     | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj"
-    | _ -> failwithf "unsupported TypeNode kind: %A" t.kind
+    | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
 
 let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
     {
@@ -414,7 +414,7 @@ let readTypeElement(te: TypeElement): FsType =
         // member.emit = "new $0($1...)";
         // ifc.methods.push(member);
          FsType.TODO
-    | _ -> failwithf "unsupported TypeElement kind: %A" te.kind
+    | _ -> printfn "unsupported TypeElement kind: %A" te.kind; FsType.TODO
 
 let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
     let tp = d.``type`` |> readTypeNode
@@ -463,7 +463,9 @@ let readStatement(sd: Statement): FsType =
         readModuleDeclaration (sd :?> ModuleDeclaration) |> FsType.Module
     | SyntaxKind.ExportAssignment ->
         FsType.TODO
-    | _ -> failwithf "unsupported Statement kind: %A" sd.kind
+    | SyntaxKind.ImportDeclaration ->
+        FsType.TODO
+    | _ -> printfn "unsupported Statement kind: %A" sd.kind; FsType.TODO
 
 let mergeTypes(tps: FsType list): FsType list =
     let index = Dictionary<string,int>()
@@ -751,7 +753,8 @@ let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
         | SyntaxKind.Identifier -> ()
         | SyntaxKind.ModuleDeclaration ->
             readModuleDeclaration (nd :?> ModuleDeclaration) |> FsType.Module |> types.Add
-        | _ -> failwithf "unknown kind in ModuleDeclaration: %A" nd.kind
+        | SyntaxKind.StringLiteral -> ()
+        | _ -> printfn "unknown kind in ModuleDeclaration: %A" nd.kind
     )
     {
         Name =
@@ -839,7 +842,8 @@ let printType (tp: FsType): string =
         let vtp = vb.Type |> printType
         sprintf "[<Global>] static member %s with get(): %s = jsNative and set(v: %s): unit = jsNative"
             vb.Name vtp vtp
-    | _ -> failwithf "unsupported printType %A" tp
+    | FsType.StringLiteral _ -> "string"
+    | _ -> printfn "unsupported printType %A" tp; "TODO"
 
 let printFunction (f: FsFunction): string =
     let line = ResizeArray()
@@ -1128,9 +1132,12 @@ let argv = p.argv |> List.ofSeq
 // printfn "%A" argv
 
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
-    // printFile "node_modules/typescript/lib/typescript.d.ts"
-    printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
-    writeFile "node_modules/typescript/lib/typescript.d.ts" "src/typescript2.fs"
+    // printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
+    writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/izitoast.fs"
+    writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/typescript.fs"
+    // writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
+    // writeFile "node_modules/@types/react/index.d.ts" "src/bin/react.fs"
+    // writeFile "node_modules/@types/node/index.d.ts" "src/bin/node.fs"
 
 else
     let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")
