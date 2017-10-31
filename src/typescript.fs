@@ -1048,7 +1048,7 @@ module ts =
         abstract getText: ?sourceFile: SourceFile -> string
         abstract getFirstToken: ?sourceFile: SourceFile -> Node
         abstract getLastToken: ?sourceFile: SourceFile -> Node
-        abstract forEachChild: cbNode: Func<Node, 'T option> * ?cbNodeArray: Func<ResizeArray<Node>, 'T option> -> 'T option
+        abstract forEachChild: cbNode: (Node -> 'T option) * ?cbNodeArray: (ResizeArray<Node> -> 'T option) -> 'T option
 
     type [<AllowNullLiteral>] NodeArray<'T> =
         inherit ReadonlyArray<'T>

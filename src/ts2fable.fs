@@ -149,9 +149,8 @@ type FsFile =
     }
 
 type Node with
-    member x.ForEachChild cbNode =
-        let func = Func<_,_>(fun (node:Node) -> cbNode node; None)
-        x.forEachChild<unit>(func) |> ignore
+    member x.ForEachChild (cbNode: Node -> unit) =
+        x.forEachChild<unit> (fun nd -> cbNode nd; None) |> ignore
 
 let getPropertyName(pn: PropertyName): string =
     match pn with
@@ -849,9 +848,9 @@ let printType (tp: FsType): string =
                 [ FsType.Mapped "unit"; ft.ReturnType ]
             else
                 (ft.Params |> List.map (fun p -> p.Type)) @ [ ft.ReturnType ]
-        "Func<" |> line.Add
-        typs |> List.map printType |> String.concat ", " |> line.Add
-        ">"|> line.Add
+        "(" |> line.Add
+        typs |> List.map printType |> String.concat " -> " |> line.Add
+        ")"|> line.Add
         line |> String.concat ""
     | FsType.Tuple tp ->
         let line = ResizeArray()
