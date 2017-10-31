@@ -145,6 +145,7 @@ type FsModule =
 
 type FsFile =
     {
+        Name: string
         Modules: FsModule list
     }
 
@@ -541,19 +542,14 @@ let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringL
 let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
 let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
 
-let createGlobals(md: FsModule): FsModule =
-    let tps = md.Types |> List.filter (fun t ->
-        match t with
-        | FsType.Variable _ -> true
-        | FsType.Function _ -> true
-        | _ -> false
-    )
+let createIExports(md: FsModule): FsModule =
+    let tps = md.Types |> List.filter isFunction
     if tps.Length = 0 then
         md
     else
         let cl: FsClass =
             {
-                ClassName = Some "[<Erase>] Globals" // TODO attributes
+                ClassName = Some "IExports"
                 Inherits = []
                 TypeParameters = []
                 Members = tps
@@ -782,7 +778,7 @@ let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
         Types = types |> List.ofSeq
     }
 
-let readSourceFile(sf: SourceFile): FsFile =
+let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
     let modules = ResizeArray()
 
     let gbl: FsModule =
@@ -803,12 +799,16 @@ let readSourceFile(sf: SourceFile): FsFile =
         // | _ -> failwithf "unknown kind in SourceFile: %A" nd.kind
         | _ -> ()
     )
+    let path = Fable.Import.Node.Exports.Path
+    let name = path.basename(tsPath, path.extname(tsPath)) // TODO ensure valid name
+    let name2 = path.basename(name, path.extname(name)) // twice because of .d.ts
     {
+        Name = name2
         Modules =
             modules
             |> List.ofSeq
             |> mergeModules
-            |> List.map createGlobals
+            |> List.map createIExports
             |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
             |> List.map fixNodeArray
@@ -856,10 +856,6 @@ let printType (tp: FsType): string =
         let line = ResizeArray()
         tp.Types |> List.map printType |> String.concat " * " |> line.Add
         line |> String.concat ""
-    | FsType.Variable vb ->
-        let vtp = vb.Type |> printType
-        sprintf "[<Global>] static member %s with get(): %s = jsNative and set(v: %s): unit = jsNative"
-            vb.Name vtp vtp
     | FsType.StringLiteral _ -> "string"
     | _ -> printfn "unsupported printType %A" tp; "TODO"
 
@@ -993,6 +989,9 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
             sprintf "" |> lines.Add
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
+        | FsType.Variable vb ->
+            let vtp = vb.Type |> printType
+            sprintf "let [<Import(\"*\",\"%s\")>] %s: %s = jsNative" vb.Name vb.Name vtp |> lines.Add
         | _ -> ()
 
 let printFsFile (file: FsFile): ResizeArray<string> =
@@ -1000,7 +999,7 @@ let printFsFile (file: FsFile): ResizeArray<string> =
 
     // TODO specify namespace
     // TODO customize open statements
-    sprintf "namespace rec Fable.Import" |> lines.Add
+    sprintf "module rec Fable.Import.%s" file.Name |> lines.Add
     sprintf "open System" |> lines.Add
     sprintf "open System.Text.RegularExpressions" |> lines.Add // TODO why
     sprintf "open Fable.Core" |> lines.Add
@@ -1014,14 +1013,14 @@ let printFsFile (file: FsFile): ResizeArray<string> =
 let printFile tsPath: unit =
     let code = Fs.readFileSync(tsPath).toString()
     let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
-    let fsFile = readSourceFile tsFile
+    let fsFile =  readSourceFile tsPath tsFile
     for line in printFsFile fsFile do
         printfn "%s" line
 
 let writeFile tsPath (fsPath: string): unit =
     let code = Fs.readFileSync(tsPath).toString()
     let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
-    let fsFile = readSourceFile tsFile
+    let fsFile = readSourceFile tsPath tsFile
     let file = Fs.createWriteStream fsPath
     for line in printFsFile fsFile do
         file.write(sprintf "%s%c" line '\n') |> ignore
