@@ -5,7 +5,7 @@ open Fable.Core
 open Fable.Import.JS
 
 type [<Erase>] Globals =
-    member __.setTimeout(handler: Func<ResizeArray<obj>, unit>, timeout: float): obj = jsNative
+    member __.setTimeout(handler: (ResizeArray<obj> -> unit), timeout: float): obj = jsNative
     member __.clearTimeout(handle: obj): unit = jsNative
 
 module ts =
@@ -22,10 +22,10 @@ module ts =
         member __.isWhiteSpaceSingleLine(ch: float): bool = jsNative
         member __.isLineBreak(ch: float): bool = jsNative
         member __.couldStartTrivia(text: string, pos: float): bool = jsNative
-        member __.forEachLeadingCommentRange<'T, 'U>(text: string, pos: float, cb: Func<float, float, CommentKind, bool, 'T, 'U>, ?state: 'T): 'U option = jsNative
-        member __.forEachTrailingCommentRange<'T, 'U>(text: string, pos: float, cb: Func<float, float, CommentKind, bool, 'T, 'U>, ?state: 'T): 'U option = jsNative
-        member __.reduceEachLeadingCommentRange<'T, 'U>(text: string, pos: float, cb: Func<float, float, CommentKind, bool, 'T, 'U, 'U>, state: 'T, initial: 'U): 'U = jsNative
-        member __.reduceEachTrailingCommentRange<'T, 'U>(text: string, pos: float, cb: Func<float, float, CommentKind, bool, 'T, 'U, 'U>, state: 'T, initial: 'U): 'U = jsNative
+        member __.forEachLeadingCommentRange<'T, 'U>(text: string, pos: float, cb: (float -> float -> CommentKind -> bool -> 'T -> 'U), ?state: 'T): 'U option = jsNative
+        member __.forEachTrailingCommentRange<'T, 'U>(text: string, pos: float, cb: (float -> float -> CommentKind -> bool -> 'T -> 'U), ?state: 'T): 'U option = jsNative
+        member __.reduceEachLeadingCommentRange<'T, 'U>(text: string, pos: float, cb: (float -> float -> CommentKind -> bool -> 'T -> 'U -> 'U), state: 'T, initial: 'U): 'U = jsNative
+        member __.reduceEachTrailingCommentRange<'T, 'U>(text: string, pos: float, cb: (float -> float -> CommentKind -> bool -> 'T -> 'U -> 'U), state: 'T, initial: 'U): 'U = jsNative
         member __.getLeadingCommentRanges(text: string, pos: float): ResizeArray<CommentRange> option = jsNative
         member __.getTrailingCommentRanges(text: string, pos: float): ResizeArray<CommentRange> option = jsNative
         member __.getShebang(text: string): string option = jsNative
@@ -59,10 +59,10 @@ module ts =
         member __.getCombinedNodeFlags(node: Node): NodeFlags = jsNative
         member __.validateLocaleAndSetLanguage(locale: string, sys: obj, ?errors: Push<Diagnostic>): unit = jsNative
         member __.getOriginalNode(node: Node): Node = jsNative
-        member __.getOriginalNode<'T>(node: Node, nodeTest: Func<Node, bool>): 'T = jsNative
+        member __.getOriginalNode<'T>(node: Node, nodeTest: (Node -> bool)): 'T = jsNative
         member __.isParseTreeNode(node: Node): bool = jsNative
         member __.getParseTreeNode(node: Node): Node = jsNative
-        member __.getParseTreeNode<'T>(node: Node, ?nodeTest: Func<Node, bool>): 'T = jsNative
+        member __.getParseTreeNode<'T>(node: Node, ?nodeTest: (Node -> bool)): 'T = jsNative
         member __.unescapeLeadingUnderscores(identifier: __String): string = jsNative
         member __.unescapeIdentifier(id: string): string = jsNative
         member __.getNameOfDeclaration(declaration: Declaration): DeclarationName option = jsNative
@@ -245,7 +245,7 @@ module ts =
         member __.isCaseOrDefaultClause(node: Node): bool = jsNative
         member __.isJSDocCommentContainingNode(node: Node): bool = jsNative
         member __.createNode(kind: SyntaxKind, ?pos: float, ?``end``: float): Node = jsNative
-        member __.forEachChild<'T>(node: Node, cbNode: Func<Node, 'T option>, ?cbNodes: Func<ResizeArray<Node>, 'T option>): 'T option = jsNative
+        member __.forEachChild<'T>(node: Node, cbNode: (Node -> 'T option), ?cbNodes: (ResizeArray<Node> -> 'T option)): 'T option = jsNative
         member __.createSourceFile(fileName: string, sourceText: string, languageVersion: ScriptTarget, ?setParentNodes: bool, ?scriptKind: ScriptKind): SourceFile = jsNative
         member __.parseIsolatedEntityName(text: string, languageVersion: ScriptTarget): EntityName = jsNative
         member __.parseJsonText(fileName: string, sourceText: string): JsonSourceFile = jsNative
@@ -254,7 +254,7 @@ module ts =
         member __.getEffectiveTypeRoots(options: CompilerOptions, host: obj): ResizeArray<string> option = jsNative
         member __.resolveTypeReferenceDirective(typeReferenceDirectiveName: string, containingFile: string option, options: CompilerOptions, host: ModuleResolutionHost): ResolvedTypeReferenceDirectiveWithFailedLookupLocations = jsNative
         member __.getAutomaticTypeDirectiveNames(options: CompilerOptions, host: ModuleResolutionHost): ResizeArray<string> = jsNative
-        member __.createModuleResolutionCache(currentDirectory: string, getCanonicalFileName: Func<string, string>): ModuleResolutionCache = jsNative
+        member __.createModuleResolutionCache(currentDirectory: string, getCanonicalFileName: (string -> string)): ModuleResolutionCache = jsNative
         member __.resolveModuleName(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: ModuleResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
         member __.nodeModuleNameResolver(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: ModuleResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
         member __.classicNameResolver(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: NonRelativeModuleNameResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
@@ -553,7 +553,7 @@ module ts =
         member __.setEmitFlags<'T>(node: 'T, emitFlags: EmitFlags): 'T = jsNative
         member __.getSourceMapRange(node: Node): SourceMapRange = jsNative
         member __.setSourceMapRange<'T>(node: 'T, range: SourceMapRange option): 'T = jsNative
-        member __.createSourceMapSource(fileName: string, text: string, ?skipTrivia: Func<float, float>): SourceMapSource = jsNative
+        member __.createSourceMapSource(fileName: string, text: string, ?skipTrivia: (float -> float)): SourceMapSource = jsNative
         member __.getTokenSourceMapRange(node: Node, token: SyntaxKind): SourceMapRange option = jsNative
         member __.setTokenSourceMapRange<'T>(node: 'T, token: SyntaxKind, range: SourceMapRange option): 'T = jsNative
         member __.getCommentRange(node: Node): TextRange = jsNative
@@ -570,12 +570,12 @@ module ts =
         member __.addEmitHelpers<'T>(node: 'T, helpers: ResizeArray<EmitHelper> option): 'T = jsNative
         member __.removeEmitHelper(node: Node, helper: EmitHelper): bool = jsNative
         member __.getEmitHelpers(node: Node): ResizeArray<EmitHelper> option = jsNative
-        member __.moveEmitHelpers(source: Node, target: Node, predicate: Func<EmitHelper, bool>): unit = jsNative
+        member __.moveEmitHelpers(source: Node, target: Node, predicate: (EmitHelper -> bool)): unit = jsNative
         member __.setOriginalNode<'T>(node: 'T, original: Node option): 'T = jsNative
-        member __.visitNode<'T>(node: 'T, visitor: Visitor, ?test: Func<Node, bool>, ?lift: Func<ResizeArray<Node>, 'T>): 'T = jsNative
-        member __.visitNode<'T>(node: 'T option, visitor: Visitor, ?test: Func<Node, bool>, ?lift: Func<ResizeArray<Node>, 'T>): 'T option = jsNative
-        member __.visitNodes<'T>(nodes: ResizeArray<'T>, visitor: Visitor, ?test: Func<Node, bool>, ?start: float, ?count: float): ResizeArray<'T> = jsNative
-        member __.visitNodes<'T>(nodes: ResizeArray<'T> option, visitor: Visitor, ?test: Func<Node, bool>, ?start: float, ?count: float): ResizeArray<'T> option = jsNative
+        member __.visitNode<'T>(node: 'T, visitor: Visitor, ?test: (Node -> bool), ?lift: (ResizeArray<Node> -> 'T)): 'T = jsNative
+        member __.visitNode<'T>(node: 'T option, visitor: Visitor, ?test: (Node -> bool), ?lift: (ResizeArray<Node> -> 'T)): 'T option = jsNative
+        member __.visitNodes<'T>(nodes: ResizeArray<'T>, visitor: Visitor, ?test: (Node -> bool), ?start: float, ?count: float): ResizeArray<'T> = jsNative
+        member __.visitNodes<'T>(nodes: ResizeArray<'T> option, visitor: Visitor, ?test: (Node -> bool), ?start: float, ?count: float): ResizeArray<'T> option = jsNative
         member __.visitLexicalEnvironment(statements: ResizeArray<Statement>, visitor: Visitor, context: TransformationContext, ?start: float, ?ensureUseStrict: bool): ResizeArray<Statement> = jsNative
         member __.visitParameterList(nodes: ResizeArray<ParameterDeclaration>, visitor: Visitor, context: TransformationContext, ?nodesVisitor: obj): ResizeArray<ParameterDeclaration> = jsNative
         member __.visitFunctionBody(node: FunctionBody, visitor: Visitor, context: TransformationContext): FunctionBody = jsNative
@@ -584,7 +584,7 @@ module ts =
         member __.visitEachChild<'T>(node: 'T, visitor: Visitor, context: TransformationContext): 'T = jsNative
         member __.visitEachChild<'T>(node: 'T option, visitor: Visitor, context: TransformationContext, ?nodesVisitor: obj, ?tokenVisitor: Visitor): 'T option = jsNative
         member __.createPrinter(?printerOptions: PrinterOptions, ?handlers: PrintHandlers): Printer = jsNative
-        member __.findConfigFile(searchPath: string, fileExists: Func<string, bool>, ?configName: string): string = jsNative
+        member __.findConfigFile(searchPath: string, fileExists: (string -> bool), ?configName: string): string = jsNative
         member __.resolveTripleslashReference(moduleName: string, containingFile: string): string = jsNative
         member __.createCompilerHost(options: CompilerOptions, ?setParentNodes: bool): CompilerHost = jsNative
         member __.getPreEmitDiagnostics(program: Program, ?sourceFile: SourceFile, ?cancellationToken: CancellationToken): ResizeArray<Diagnostic> = jsNative
@@ -592,10 +592,10 @@ module ts =
         member __.formatDiagnosticsWithColorAndContext(diagnostics: ResizeArray<Diagnostic>, host: FormatDiagnosticsHost): string = jsNative
         member __.flattenDiagnosticMessageText(messageText: U2<string, DiagnosticMessageChain>, newLine: string): string = jsNative
         member __.createProgram(rootNames: ResizeArray<string>, options: CompilerOptions, ?host: CompilerHost, ?oldProgram: Program): Program = jsNative
-        member __.parseCommandLine(commandLine: ReadonlyArray<string>, ?readFile: Func<string, string option>): ParsedCommandLine = jsNative
-        member __.readConfigFile(fileName: string, readFile: Func<string, string option>): obj = jsNative
+        member __.parseCommandLine(commandLine: ReadonlyArray<string>, ?readFile: (string -> string option)): ParsedCommandLine = jsNative
+        member __.readConfigFile(fileName: string, readFile: (string -> string option)): obj = jsNative
         member __.parseConfigFileTextToJson(fileName: string, jsonText: string): obj = jsNative
-        member __.readJsonConfigFile(fileName: string, readFile: Func<string, string option>): JsonSourceFile = jsNative
+        member __.readJsonConfigFile(fileName: string, readFile: (string -> string option)): JsonSourceFile = jsNative
         member __.convertToObject(sourceFile: JsonSourceFile, errors: Push<Diagnostic>): obj = jsNative
         member __.parseJsonConfigFileContent(json: obj, host: ParseConfigHost, basePath: string, ?existingOptions: CompilerOptions, ?configFileName: string, ?resolutionStack: ResizeArray<Path>, ?extraFileExtensions: ReadonlyArray<JsFileExtensionInfo>): ParsedCommandLine = jsNative
         member __.parseJsonSourceFileConfigFileContent(sourceFile: JsonSourceFile, host: ParseConfigHost, basePath: string, ?existingOptions: CompilerOptions, ?configFileName: string, ?resolutionStack: ResizeArray<Path>, ?extraFileExtensions: ReadonlyArray<JsFileExtensionInfo>): ParsedCommandLine = jsNative
@@ -624,7 +624,7 @@ module ts =
     type [<AllowNullLiteral>] ReadonlyMap<'T> =
         abstract get: key: string -> 'T option
         abstract has: key: string -> bool
-        abstract forEach: action: Func<'T, string, unit> -> unit
+        abstract forEach: action: ('T -> string -> unit) -> unit
         abstract size: float with get, set
         abstract keys: unit -> Iterator<string>
         abstract values: unit -> Iterator<'T>
@@ -2880,7 +2880,7 @@ module ts =
     type [<AllowNullLiteral>] ReadonlyUnderscoreEscapedMap<'T> =
         abstract get: key: __String -> 'T option
         abstract has: key: __String -> bool
-        abstract forEach: action: Func<'T, __String, unit> -> unit
+        abstract forEach: action: ('T -> __String -> unit) -> unit
         abstract size: float with get, set
         abstract keys: unit -> Iterator<__String>
         abstract values: unit -> Iterator<'T>
@@ -3095,7 +3095,7 @@ module ts =
         obj
 
     type TypeComparer =
-        Func<Type, Type, bool, Ternary>
+        (Type -> Type -> bool -> Ternary)
 
     type [<AllowNullLiteral>] JsFileExtensionInfo =
         abstract extension: string with get, set
@@ -3328,8 +3328,8 @@ module ts =
 
     type [<AllowNullLiteral>] CompilerHost =
         inherit ModuleResolutionHost
-        abstract getSourceFile: fileName: string * languageVersion: ScriptTarget * ?onError: Func<string, unit> -> SourceFile
-        abstract getSourceFileByPath: fileName: string * path: Path * languageVersion: ScriptTarget * ?onError: Func<string, unit> -> SourceFile
+        abstract getSourceFile: fileName: string * languageVersion: ScriptTarget * ?onError: (string -> unit) -> SourceFile
+        abstract getSourceFileByPath: fileName: string * path: Path * languageVersion: ScriptTarget * ?onError: (string -> unit) -> SourceFile
         abstract getCancellationToken: unit -> CancellationToken
         abstract getDefaultLibFileName: options: CompilerOptions -> string
         abstract getDefaultLibLocation: unit -> string
@@ -3350,7 +3350,7 @@ module ts =
     type [<AllowNullLiteral>] SourceMapSource =
         abstract fileName: string with get, set
         abstract text: string with get, set
-        abstract skipTrivia: Func<float, float> option with get, set
+        abstract skipTrivia: (float -> float) option with get, set
         abstract getLineAndCharacterOfPosition: pos: float -> LineAndCharacter
 
     type [<RequireQualifiedAccess>] EmitFlags =
@@ -3408,26 +3408,26 @@ module ts =
         abstract readEmitHelpers: unit -> ResizeArray<EmitHelper> option
         abstract enableSubstitution: kind: SyntaxKind -> unit
         abstract isSubstitutionEnabled: node: Node -> bool
-        abstract onSubstituteNode: Func<EmitHint, Node, Node> with get, set
+        abstract onSubstituteNode: (EmitHint -> Node -> Node) with get, set
         abstract enableEmitNotification: kind: SyntaxKind -> unit
         abstract isEmitNotificationEnabled: node: Node -> bool
-        abstract onEmitNode: Func<EmitHint, Node, Func<EmitHint, Node, unit>, unit> with get, set
+        abstract onEmitNode: (EmitHint -> Node -> (EmitHint -> Node -> unit) -> unit) with get, set
 
     type [<AllowNullLiteral>] TransformationResult<'T> =
         abstract transformed: ResizeArray<'T> with get, set
         abstract diagnostics: ResizeArray<Diagnostic> option with get, set
         abstract substituteNode: hint: EmitHint * node: Node -> Node
-        abstract emitNodeWithNotification: hint: EmitHint * node: Node * emitCallback: Func<EmitHint, Node, unit> -> unit
+        abstract emitNodeWithNotification: hint: EmitHint * node: Node * emitCallback: (EmitHint -> Node -> unit) -> unit
         abstract dispose: unit -> unit
 
     type TransformerFactory<'T> =
-        Func<TransformationContext, Transformer<'T>>
+        (TransformationContext -> Transformer<'T>)
 
     type Transformer<'T> =
-        Func<'T, 'T>
+        ('T -> 'T)
 
     type Visitor =
-        Func<Node, VisitResult<Node>>
+        (Node -> VisitResult<Node>)
 
     type VisitResult<'T> =
         U2<'T, ResizeArray<'T>> option
@@ -3439,7 +3439,7 @@ module ts =
 
     type [<AllowNullLiteral>] PrintHandlers =
         abstract hasGlobalName: name: string -> bool
-        abstract onEmitNode: hint: EmitHint * node: Node * emitCallback: Func<EmitHint, Node, unit> -> unit
+        abstract onEmitNode: hint: EmitHint * node: Node * emitCallback: (EmitHint -> Node -> unit) -> unit
         abstract substituteNode: hint: EmitHint * node: Node -> Node
 
     type [<AllowNullLiteral>] PrinterOptions =
@@ -3464,10 +3464,10 @@ module ts =
         | Deleted = 2
 
     type FileWatcherCallback =
-        Func<string, FileWatcherEventKind, unit>
+        (string -> FileWatcherEventKind -> unit)
 
     type DirectoryWatcherCallback =
-        Func<string, unit>
+        (string -> unit)
 
     type [<AllowNullLiteral>] WatchedFile =
         abstract fileName: string with get, set
@@ -3497,7 +3497,7 @@ module ts =
         abstract getMemoryUsage: unit -> float
         abstract exit: ?exitCode: float -> unit
         abstract realpath: path: string -> string
-        abstract setTimeout: callback: Func<ResizeArray<obj>, unit> * ms: float * [<ParamArray>] args: obj -> obj
+        abstract setTimeout: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: obj -> obj
         abstract clearTimeout: timeoutId: obj -> unit
 
     type [<AllowNullLiteral>] FileWatcher =
@@ -3538,9 +3538,9 @@ module ts =
         abstract setScriptTarget: scriptTarget: ScriptTarget -> unit
         abstract setLanguageVariant: variant: LanguageVariant -> unit
         abstract setTextPos: textPos: float -> unit
-        abstract lookAhead: callback: Func<unit, 'T> -> 'T
-        abstract scanRange: start: float * length: float * callback: Func<unit, 'T> -> 'T
-        abstract tryScan: callback: Func<unit, 'T> -> 'T
+        abstract lookAhead: callback: (unit -> 'T) -> 'T
+        abstract scanRange: start: float * length: float * callback: (unit -> 'T) -> 'T
+        abstract tryScan: callback: (unit -> 'T) -> 'T
 
     type [<AllowNullLiteral>] ModuleResolutionCache =
         inherit NonRelativeModuleNameResolutionCache
