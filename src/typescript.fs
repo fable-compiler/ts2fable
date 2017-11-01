@@ -1,20 +1,22 @@
-namespace rec Fable.Import
+module rec Fable.Import.typescript
 open System
 open System.Text.RegularExpressions
 open Fable.Core
 open Fable.Import.JS
 
-type [<Erase>] Globals =
+type IExports =
     member __.setTimeout(handler: (ResizeArray<obj> -> unit), timeout: float): obj = jsNative
     member __.clearTimeout(handle: obj): unit = jsNative
 
+let [<Import("*","typescript")>] ts: ts.IExports = jsNative
+
 module ts =
 
-    type [<Erase>] Globals =
-        [<Global>] static member versionMajorMinor with get(): obj = jsNative and set(v: obj): unit = jsNative
-        [<Global>] static member version with get(): string = jsNative and set(v: string): unit = jsNative
+    type IExports =
+        member __.versionMajorMinor with get(): obj = jsNative and set(v: obj): unit = jsNative
+        member __.version with get(): string = jsNative and set(v: string): unit = jsNative
         member __.getNodeMajorVersion(): float = jsNative
-        [<Global>] static member sys with get(): System = jsNative and set(v: System): unit = jsNative
+        member __.sys with get(): System = jsNative and set(v: System): unit = jsNative
         member __.tokenToString(t: SyntaxKind): string option = jsNative
         member __.getPositionOfLineAndCharacter(sourceFile: SourceFile, line: float, character: float): float = jsNative
         member __.getLineAndCharacterOfPosition(sourceFile: SourceFileLike, position: float): LineAndCharacter = jsNative
@@ -49,7 +51,7 @@ module ts =
         member __.textChangeRangeNewSpan(range: TextChangeRange): TextSpan = jsNative
         member __.textChangeRangeIsUnchanged(range: TextChangeRange): bool = jsNative
         member __.createTextChangeRange(span: TextSpan, newLength: float): TextChangeRange = jsNative
-        [<Global>] static member unchangedTextChangeRange with get(): TextChangeRange = jsNative and set(v: TextChangeRange): unit = jsNative
+        member __.unchangedTextChangeRange with get(): TextChangeRange = jsNative and set(v: TextChangeRange): unit = jsNative
         member __.collapseTextChangeRangesAcrossMultipleVersions(changes: ReadonlyArray<TextChangeRange>): TextChangeRange = jsNative
         member __.getTypeParameterOwner(d: Declaration): Declaration = jsNative
         member __.isParameterPropertyDeclaration(node: Node): bool = jsNative
@@ -606,13 +608,13 @@ module ts =
         member __.preProcessFile(sourceText: string, ?readImportFiles: bool, ?detectJavaScriptImports: bool): PreProcessedFileInfo = jsNative
         member __.transpileModule(input: string, transpileOptions: TranspileOptions): TranspileOutput = jsNative
         member __.transpile(input: string, ?compilerOptions: CompilerOptions, ?fileName: string, ?diagnostics: ResizeArray<Diagnostic>, ?moduleName: string): string = jsNative
-        [<Global>] static member servicesVersion with get(): obj = jsNative and set(v: obj): unit = jsNative
+        member __.servicesVersion with get(): obj = jsNative and set(v: obj): unit = jsNative
         member __.toEditorSettings(options: U2<EditorOptions, EditorSettings>): EditorSettings = jsNative
         member __.displayPartsToString(displayParts: ResizeArray<SymbolDisplayPart>): string = jsNative
         member __.getDefaultCompilerOptions(): CompilerOptions = jsNative
         member __.getSupportedCodeFixes(): ResizeArray<string> = jsNative
         member __.createLanguageServiceSourceFile(fileName: string, scriptSnapshot: IScriptSnapshot, scriptTarget: ScriptTarget, version: string, setNodeParents: bool, ?scriptKind: ScriptKind): SourceFile = jsNative
-        [<Global>] static member disableIncrementalParsing with get(): bool = jsNative and set(v: bool): unit = jsNative
+        member __.disableIncrementalParsing with get(): bool = jsNative and set(v: bool): unit = jsNative
         member __.updateLanguageServiceSourceFile(sourceFile: SourceFile, scriptSnapshot: IScriptSnapshot, version: string, textChangeRange: TextChangeRange, ?aggressiveChecks: bool): SourceFile = jsNative
         member __.createLanguageService(host: LanguageServiceHost, ?documentRegistry: DocumentRegistry): LanguageService = jsNative
         member __.getDefaultLibFilePath(options: CompilerOptions): string = jsNative
