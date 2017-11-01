@@ -2582,7 +2582,7 @@ module ts =
         abstract readFile: path: string -> string option
 
     type [<AllowNullLiteral>] WriteFileCallback =
-        interface end
+        [<Emit "$0($1...)">] abstract Invoke: fileName: string * data: string * writeByteOrderMark: bool * ?onError: (string -> unit) * ?sourceFiles: ReadonlyArray<SourceFile> -> unit
 
     type OperationCanceledException =
         class end
@@ -3511,7 +3511,7 @@ module ts =
         abstract referenceCount: float with get, set
 
     type [<AllowNullLiteral>] ErrorCallback =
-        interface end
+        [<Emit "$0($1...)">] abstract Invoke: message: DiagnosticMessage * length: float -> unit
 
     type [<AllowNullLiteral>] Scanner =
         abstract getStartPos: unit -> float

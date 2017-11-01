@@ -71,6 +71,7 @@ type FsParam =
 
 type FsFunction =
     {
+        Emit: string option
         Name: string option // declarations have them, signatures do not
         TypeParameters: FsType list
         Params: FsParam list
@@ -290,6 +291,7 @@ let readTypeReference(tr: TypeReferenceNode): FsType =
         FsType.Generic
 let readFunctionType(ft: FunctionTypeNode): FsFunction =
     {
+        Emit = None
         Name = ft.name |> Option.map getPropertyName
         TypeParameters = readTypeParameters ft.typeParameters
         Params =  ft.parameters |> List.ofSeq |> List.map readParameterDeclaration
@@ -375,6 +377,7 @@ let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
 
 let readMethodSignature(ms: MethodSignature): FsFunction =
     {
+        Emit = None
         Name = ms.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters ms.typeParameters
         Params = ms.parameters |> List.ofSeq |> List.map readParameterDeclaration
@@ -397,6 +400,7 @@ let readPropertySignature(ps: PropertySignature): FsProperty =
 
 let readFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
     {
+        Emit = None
         Name = fd.name |> Option.map (fun id -> id.text)
         TypeParameters = readTypeParameters fd.typeParameters
         Params = fd.parameters |> List.ofSeq |> List.map readParameterDeclaration
@@ -417,6 +421,18 @@ let readIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
             | Some tp -> readTypeNode tp
     }
 
+let readCallSignature(cs: CallSignatureDeclaration): FsFunction =
+    {
+        Emit = Some "$0($1...)"
+        Name = Some "Invoke"
+        TypeParameters = []
+        Params = cs.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        ReturnType =
+            match cs.``type`` with
+            | Some t -> readTypeNode t
+            | None -> FsType.Mapped "unit"
+    }
+
 let readTypeElement(te: TypeElement): FsType =
     match te.kind with
     | SyntaxKind.IndexSignature ->
@@ -426,11 +442,7 @@ let readTypeElement(te: TypeElement): FsType =
     | SyntaxKind.PropertySignature ->
         readPropertySignature (te :?> PropertySignature) |> FsType.Property
     | SyntaxKind.CallSignature ->
-        // member = getMethod(node, { name: "Invoke" });
-        // member.emit = "$0($1...)";
-        // ifc.methods.push(member);
-        printfn "TODO call members"
-        FsType.TODO
+        readCallSignature(te :?> CallSignatureDeclaration) |> FsType.Function
     | SyntaxKind.ConstructSignature ->
         // member = getMethod(node, { name: "Create" });
         // member.emit = "new $0($1...)";
@@ -981,8 +993,7 @@ let printType (tp: FsType): string =
 
 let printFunction (f: FsFunction): string =
     let line = ResizeArray()
-    // TODO can interface methods not have generics?
-    // sprintf "abstract %s%s" f.Name.Value (printTypeParameters f.TypeParameters) |> line.Add
+    if f.Emit.IsSome then sprintf "[<Emit \"%s\">] " f.Emit.Value |> line.Add
     sprintf "abstract %s" f.Name.Value |> line.Add
     let prms = 
         f.Params |> List.map(fun p ->
