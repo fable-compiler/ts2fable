@@ -803,6 +803,20 @@ let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
         Types = types |> List.ofSeq
     }
 
+/// add a namespace to each export statement so they can be imported
+let rec fixExportNamespace (ns: string list) (md: FsModule): FsModule =
+    let newNs = if String.IsNullOrEmpty md.Name then ns else ns @ [md.Name]
+    { md with
+        Types = md.Types |> List.map (fun tp ->
+            match tp with
+            | FsType.Module submd ->
+                fixExportNamespace newNs submd |> FsType.Module
+            | FsType.Export ep ->
+                { ep with Namespace = newNs } |> FsType.Export
+            | _ -> tp
+        )
+    }
+
 let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
     let modules = ResizeArray()
 
@@ -833,6 +847,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             modules
             |> List.ofSeq
             |> mergeModules
+            |> List.map (fixExportNamespace [name2])
             |> List.map createIExports
             |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
@@ -1025,7 +1040,7 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
         | FsType.Export ep ->
             sprintf "" |> lines.Add
             let ns = ep.Namespace |> String.concat "."
-            sprintf "%slet [<Import(\"*\",\"%s\")>] %s: IExport = jsNative" indent ns ep.Variable |> lines.Add
+            sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s.IExports = jsNative" indent ns ep.Variable ep.Variable |> lines.Add
         | _ -> ()
 
 let printFsFile (file: FsFile): ResizeArray<string> =
