@@ -1092,7 +1092,7 @@ module ts =
         Token<SyntaxKind>
 
     type Modifier =
-        obj
+        Token<SyntaxKind>
 
     type ModifiersArray =
         ResizeArray<Modifier>
