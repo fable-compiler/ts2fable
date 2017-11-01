@@ -156,6 +156,7 @@ type FsModule =
 type FsFile =
     {
         Name: string
+        Opens: string list
         Modules: FsModule list
     }
 
@@ -904,6 +905,29 @@ let fixThis(md: FsModule): FsModule =
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
+let fixOpens(f: FsFile): FsFile =
+
+    let isBrowser (name: string) =
+        name.StartsWith "HTML"
+
+    let mutable hasBrowser = false
+
+    let fix(tp: FsType): FsType =
+        match tp with
+        | FsType.Mapped s ->
+            if isBrowser s then
+                hasBrowser <- true
+            tp
+        | _ -> tp
+
+    f |> FsType.File |> fixType fix |> ignore
+
+    { f with
+        Opens =
+            if hasBrowser then f.Opens @ ["Fable.Import.Browser"]
+            else f.Opens
+    }
+
 let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
     let modules = ResizeArray()
 
@@ -928,8 +952,18 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
     let path = Fable.Import.Node.Exports.Path
     let name = path.basename(tsPath, path.extname(tsPath)) // TODO ensure valid name
     let name2 = path.basename(name, path.extname(name)) // twice because of .d.ts
+
+    let opens = 
+        [
+            "System"
+            // "System.Text.RegularExpressions"
+            "Fable.Core"
+            "Fable.Import.JS"
+        ]
+
     {
         Name = name2
+        Opens = opens
         Modules =
             modules
             |> List.ofSeq
@@ -945,6 +979,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             |> List.map fixDuplicatesInUnion
             
     }
+    |> fixOpens
 
 let printType (tp: FsType): string =
     match tp with
@@ -1129,13 +1164,10 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
 let printFsFile (file: FsFile): ResizeArray<string> =
     let lines = ResizeArray<string>()
 
-    // TODO specify namespace
-    // TODO customize open statements
     sprintf "module rec Fable.Import.%s" file.Name |> lines.Add
-    sprintf "open System" |> lines.Add
-    sprintf "open System.Text.RegularExpressions" |> lines.Add // TODO why
-    sprintf "open Fable.Core" |> lines.Add
-    sprintf "open Fable.Import.JS" |> lines.Add
+
+    for opn in file.Opens do
+        sprintf "open %s" opn |> lines.Add
 
     file.Modules
         |> List.filter (fun md -> md.Types.Length > 0)
