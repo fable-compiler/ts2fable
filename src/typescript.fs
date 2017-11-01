@@ -634,7 +634,7 @@ module ts =
 
     type [<AllowNullLiteral>] Map<'T> =
         inherit ReadonlyMap<'T>
-        abstract set: key: string * value: 'T -> obj
+        abstract set: key: string * value: 'T -> Map<'T>
         abstract delete: key: string -> bool
         abstract clear: unit -> unit
 
@@ -2890,7 +2890,7 @@ module ts =
 
     type [<AllowNullLiteral>] UnderscoreEscapedMap<'T> =
         inherit ReadonlyUnderscoreEscapedMap<'T>
-        abstract set: key: __String * value: 'T -> obj
+        abstract set: key: __String * value: 'T -> UnderscoreEscapedMap<'T>
         abstract delete: key: __String -> bool
         abstract clear: unit -> unit
 
