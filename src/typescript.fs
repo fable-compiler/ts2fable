@@ -1,4 +1,4 @@
-namespace rec Fable.Import
+module rec Fable.Import.typescript
 open System
 open System.Text.RegularExpressions
 open Fable.Core
@@ -8,11 +8,13 @@ type [<Erase>] Globals =
     member __.setTimeout(handler: (ResizeArray<obj> -> unit), timeout: float): obj = jsNative
     member __.clearTimeout(handle: obj): unit = jsNative
 
+let [<Import("*","typescript")>] ts: ts.IExport = jsNative
+
 module ts =
 
-    type [<Erase>] Globals =
+    type IExport =
         [<Global>] static member versionMajorMinor with get(): obj = jsNative and set(v: obj): unit = jsNative
-        [<Global>] static member version with get(): string = jsNative and set(v: string): unit = jsNative
+        member __.version with get(): string = jsNative and set(v: string): unit = jsNative
         member __.getNodeMajorVersion(): float = jsNative
         [<Global>] static member sys with get(): System = jsNative and set(v: System): unit = jsNative
         member __.tokenToString(t: SyntaxKind): string option = jsNative

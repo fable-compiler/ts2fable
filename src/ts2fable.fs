@@ -8,15 +8,14 @@ module rec ts2fable.App
 open Fable.Core
 open Fable.Import
 open Fable.Import.Node
-open Fable.Import.ts
+open Fable.Import.typescript
+open Fable.Import.typescript.ts
 open System.Collections.Generic
 open System
 
 // our simplified syntax tree
 // some names inspired by the actual F# AST:
 // https://github.com/fsharp/FSharp.Compiler.Service/blob/master/src/fsharp/ast.fs
-
-let [<Import("*","typescript")>] ts: ts.Globals = jsNative
 
 type FsInterface =
     {
@@ -116,6 +115,12 @@ type FsVariable =
         Type: FsType
     }
 
+type FsExport =
+    {
+        Namespace: string list
+        Variable: string
+    }
+
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
@@ -136,6 +141,7 @@ type FsType =
     | File of FsFile
     | Variable of FsVariable
     | StringLiteral of string
+    | Export of FsExport
 
 type FsModule =
     {
@@ -339,14 +345,7 @@ let rec readTypeNode(t: TypeNode): FsType =
             FsType.Mapped "obj"
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
-        match eta.expression.kind with
-        | SyntaxKind.Identifier ->
-            let id = eta.expression :?> Identifier
-            FsType.Mapped id.text
-        | SyntaxKind.PropertyAccessExpression ->
-            let pa = eta.expression :?> PropertyAccessExpression
-            pa.getText() |> FsType.Mapped
-        | _ -> printfn "unsupported TypeNode ExpressionWithTypeArguments kind: %A" eta.expression.kind; FsType.TODO
+        readExpressionText eta.expression |> FsType.Mapped
     | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj"
     | SyntaxKind.MappedType ->
         printfn "TODO mapped types"
@@ -459,6 +458,26 @@ let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
         else asAlias()
     | _ -> asAlias()
 
+let readExpressionText(ep: Expression): string =
+    match ep.kind with
+    | SyntaxKind.Identifier ->
+        let id = ep :?> Identifier
+        id.text
+    | SyntaxKind.PropertyAccessExpression ->
+        let pa = ep :?> PropertyAccessExpression
+        pa.getText()
+    | _ ->
+        printfn "readExpressionText kind not yet supported: %A" ep.kind
+        ep.getText()
+
+let readExportAssignment(ea: ExportAssignment): FsType =
+    let var = readExpressionText ea.expression
+    {
+        Namespace = []
+        Variable = var
+    }
+    |> FsType.Export
+
 let readStatement(sd: Statement): FsType =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
@@ -476,8 +495,7 @@ let readStatement(sd: Statement): FsType =
     | SyntaxKind.ModuleDeclaration ->
         readModuleDeclaration (sd :?> ModuleDeclaration) |> FsType.Module
     | SyntaxKind.ExportAssignment ->
-        printfn "TODO export statements"
-        FsType.TODO
+        readExportAssignment(sd :?> ExportAssignment)
     | SyntaxKind.ImportDeclaration ->
         printfn "TODO import statements"
         FsType.TODO
@@ -543,7 +561,13 @@ let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
 let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
 
 let createIExports(md: FsModule): FsModule =
-    let tps = md.Types |> List.filter isFunction
+    let tps = md.Types |> List.filter (fun t ->
+        match t with
+        | FsType.Variable _ -> true
+        | FsType.Function _ -> true
+        | _ -> false
+    )
+    // let tps = md.Types |> List.filter isFunction
     if tps.Length = 0 then
         md
     else
@@ -655,6 +679,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.None _ -> tp
     | FsType.TODO _ -> tp
     | FsType.StringLiteral _ -> tp
+    | FsType.Export _ -> tp
 
     |> fix // current type
 
@@ -856,6 +881,10 @@ let printType (tp: FsType): string =
         let line = ResizeArray()
         tp.Types |> List.map printType |> String.concat " * " |> line.Add
         line |> String.concat ""
+    | FsType.Variable vb ->
+        let vtp = vb.Type |> printType
+        sprintf "member __.%s with get(): %s = jsNative and set(v: %s): unit = jsNative"
+            vb.Name vtp vtp
     | FsType.StringLiteral _ -> "string"
     | _ -> printfn "unsupported printType %A" tp; "TODO"
 
@@ -989,9 +1018,14 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
             sprintf "" |> lines.Add
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
-        | FsType.Variable vb ->
-            let vtp = vb.Type |> printType
-            sprintf "let [<Import(\"*\",\"%s\")>] %s: %s = jsNative" vb.Name vb.Name vtp |> lines.Add
+        // | FsType.Variable vb ->
+        //     sprintf "" |> lines.Add
+        //     let vtp = vb.Type |> printType
+        //     sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s = jsNative" indent vb.Name vb.Name vtp |> lines.Add
+        | FsType.Export ep ->
+            sprintf "" |> lines.Add
+            let ns = ep.Namespace |> String.concat "."
+            sprintf "%slet [<Import(\"*\",\"%s\")>] %s: IExport = jsNative" indent ns ep.Variable |> lines.Add
         | _ -> ()
 
 let printFsFile (file: FsFile): ResizeArray<string> =
@@ -1031,6 +1065,7 @@ let argv = p.argv |> List.ofSeq
 // printfn "%A" argv
 
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
+    printfn "ts.version: %s" ts.version
     // printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
     writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/izitoast.fs"
     writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/typescript.fs"
