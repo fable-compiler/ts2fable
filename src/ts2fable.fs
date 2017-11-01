@@ -144,6 +144,7 @@ type FsType =
     | Variable of FsVariable
     | StringLiteral of string
     | Import of FsImport
+    | This
 
 type FsModule =
     {
@@ -332,10 +333,7 @@ let rec readTypeNode(t: TypeNode): FsType =
         }
         |> FsType.Tuple
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
-    | SyntaxKind.ThisType ->
-        // TODO map to the actual type of this
-        printfn "TODO map `this`"
-        FsType.Mapped "obj"
+    | SyntaxKind.ThisType -> FsType.This
     | SyntaxKind.TypePredicate -> FsType.Mapped "bool"
     | SyntaxKind.TypeLiteral ->
         // let tl = t :?> TypeLiteralNode
@@ -693,6 +691,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.TODO _ -> tp
     | FsType.StringLiteral _ -> tp
     | FsType.Import _ -> tp
+    | FsType.This -> tp
 
     |> fix // current type
 
@@ -863,6 +862,36 @@ let rec fixImport (ns: string list) (md: FsModule): FsModule =
         )
     }
 
+/// replaces `this` with a reference to the interface type
+let fixThis(md: FsModule): FsModule =
+
+    let fix(tp: FsType): FsType =
+        match tp with
+        | FsType.Interface it ->
+            { it with
+                Members = it.Members |> List.map (fun mbr -> 
+                    match mbr with
+                    | FsType.Function f ->
+                        { f with
+                            ReturnType =
+                                match f.ReturnType with
+                                | FsType.This ->
+                                    {
+                                        Type = FsType.Mapped it.Name
+                                        TypeParameters = it.TypeParameters
+                                    }
+                                    |> FsType.Generic
+                                | _ -> f.ReturnType
+                        }
+                        |> FsType.Function
+                    | _ -> mbr
+                )
+            }
+            |> FsType.Interface
+        | _ -> tp
+
+    { md with Types = md.Types |> List.map (fixType fix) }
+
 let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
     let modules = ResizeArray()
 
@@ -895,12 +924,14 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             |> mergeModules
             |> List.map (fixImport [name2])
             |> List.map createIExports
+            |> List.map fixThis
             |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
             |> List.map fixNodeArray
             |> List.map fixEscapeWords
             |> List.map fixDateTime
             |> List.map fixDuplicatesInUnion
+            
     }
 
 let printType (tp: FsType): string =
