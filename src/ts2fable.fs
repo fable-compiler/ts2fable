@@ -782,6 +782,28 @@ let fixDateTime(md: FsModule): FsModule =
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
+let fixDuplicatesInUnion(md: FsModule): FsModule =
+
+    let fix(tp: FsType): FsType =
+        match tp with
+        | FsType.Union un ->
+            let set = HashSet<_>()
+            let tps = un.Types |> List.choose (fun tp -> 
+                    if set.Contains tp then
+                        None
+                    else
+                        set.Add tp |> ignore
+                        Some tp
+                )
+            if tps.Length > 6 then
+                // add U7 and U8 union types https://github.com/fable-compiler/Fable/issues/1211
+                FsType.Mapped "obj"
+            else 
+                { un with Types = tps } |> FsType.Union
+        | _ -> tp
+
+    { md with Types = md.Types |> List.map (fixType fix) }
+
 let addTicForGenericTypes(md: FsModule): FsModule =
     { md with
         Types =
@@ -878,6 +900,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             |> List.map fixNodeArray
             |> List.map fixEscapeWords
             |> List.map fixDateTime
+            |> List.map fixDuplicatesInUnion
     }
 
 let printType (tp: FsType): string =
@@ -887,9 +910,7 @@ let printType (tp: FsType): string =
     | FsType.Array at ->
         sprintf "ResizeArray<%s>" (printType at)
     | FsType.Union un ->
-        if un.Types.Length > 6 then
-            "obj"
-        else if un.Types.Length = 1 then
+        if un.Types.Length = 1 then
             sprintf "%s%s" (printType un.Types.[0]) (if un.Option then " option" else "")
         else
             let line = ResizeArray()
