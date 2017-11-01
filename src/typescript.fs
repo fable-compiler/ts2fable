@@ -3,621 +3,621 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
-type IExports =
-    member __.setTimeout(handler: (ResizeArray<obj> -> unit), timeout: float): obj = jsNative
-    member __.clearTimeout(handle: obj): unit = jsNative
+type [<AllowNullLiteral>] IExports =
+    abstract setTimeout: handler: (ResizeArray<obj> -> unit) * timeout: float -> obj
+    abstract clearTimeout: handle: obj -> unit
 
 let [<Import("*","typescript")>] ts: ts.IExports = jsNative
 
 module ts =
 
-    type IExports =
-        member __.versionMajorMinor with get(): obj = jsNative and set(v: obj): unit = jsNative
-        member __.version with get(): string = jsNative and set(v: string): unit = jsNative
-        member __.getNodeMajorVersion(): float = jsNative
-        member __.sys with get(): System = jsNative and set(v: System): unit = jsNative
-        member __.tokenToString(t: SyntaxKind): string option = jsNative
-        member __.getPositionOfLineAndCharacter(sourceFile: SourceFile, line: float, character: float): float = jsNative
-        member __.getLineAndCharacterOfPosition(sourceFile: SourceFileLike, position: float): LineAndCharacter = jsNative
-        member __.isWhiteSpaceLike(ch: float): bool = jsNative
-        member __.isWhiteSpaceSingleLine(ch: float): bool = jsNative
-        member __.isLineBreak(ch: float): bool = jsNative
-        member __.couldStartTrivia(text: string, pos: float): bool = jsNative
-        member __.forEachLeadingCommentRange<'T, 'U>(text: string, pos: float, cb: (float -> float -> CommentKind -> bool -> 'T -> 'U), ?state: 'T): 'U option = jsNative
-        member __.forEachTrailingCommentRange<'T, 'U>(text: string, pos: float, cb: (float -> float -> CommentKind -> bool -> 'T -> 'U), ?state: 'T): 'U option = jsNative
-        member __.reduceEachLeadingCommentRange<'T, 'U>(text: string, pos: float, cb: (float -> float -> CommentKind -> bool -> 'T -> 'U -> 'U), state: 'T, initial: 'U): 'U = jsNative
-        member __.reduceEachTrailingCommentRange<'T, 'U>(text: string, pos: float, cb: (float -> float -> CommentKind -> bool -> 'T -> 'U -> 'U), state: 'T, initial: 'U): 'U = jsNative
-        member __.getLeadingCommentRanges(text: string, pos: float): ResizeArray<CommentRange> option = jsNative
-        member __.getTrailingCommentRanges(text: string, pos: float): ResizeArray<CommentRange> option = jsNative
-        member __.getShebang(text: string): string option = jsNative
-        member __.isIdentifierStart(ch: float, languageVersion: ScriptTarget): bool = jsNative
-        member __.isIdentifierPart(ch: float, languageVersion: ScriptTarget): bool = jsNative
-        member __.createScanner(languageVersion: ScriptTarget, skipTrivia: bool, ?languageVariant: LanguageVariant, ?text: string, ?onError: ErrorCallback, ?start: float, ?length: float): Scanner = jsNative
-        member __.getDefaultLibFileName(options: CompilerOptions): string = jsNative
-        member __.textSpanEnd(span: TextSpan): float = jsNative
-        member __.textSpanIsEmpty(span: TextSpan): bool = jsNative
-        member __.textSpanContainsPosition(span: TextSpan, position: float): bool = jsNative
-        member __.textSpanContainsTextSpan(span: TextSpan, other: TextSpan): bool = jsNative
-        member __.textSpanOverlapsWith(span: TextSpan, other: TextSpan): bool = jsNative
-        member __.textSpanOverlap(span1: TextSpan, span2: TextSpan): TextSpan = jsNative
-        member __.textSpanIntersectsWithTextSpan(span: TextSpan, other: TextSpan): bool = jsNative
-        member __.textSpanIntersectsWith(span: TextSpan, start: float, length: float): bool = jsNative
-        member __.decodedTextSpanIntersectsWith(start1: float, length1: float, start2: float, length2: float): bool = jsNative
-        member __.textSpanIntersectsWithPosition(span: TextSpan, position: float): bool = jsNative
-        member __.textSpanIntersection(span1: TextSpan, span2: TextSpan): TextSpan = jsNative
-        member __.createTextSpan(start: float, length: float): TextSpan = jsNative
-        member __.createTextSpanFromBounds(start: float, ``end``: float): TextSpan = jsNative
-        member __.textChangeRangeNewSpan(range: TextChangeRange): TextSpan = jsNative
-        member __.textChangeRangeIsUnchanged(range: TextChangeRange): bool = jsNative
-        member __.createTextChangeRange(span: TextSpan, newLength: float): TextChangeRange = jsNative
-        member __.unchangedTextChangeRange with get(): TextChangeRange = jsNative and set(v: TextChangeRange): unit = jsNative
-        member __.collapseTextChangeRangesAcrossMultipleVersions(changes: ReadonlyArray<TextChangeRange>): TextChangeRange = jsNative
-        member __.getTypeParameterOwner(d: Declaration): Declaration = jsNative
-        member __.isParameterPropertyDeclaration(node: Node): bool = jsNative
-        member __.isEmptyBindingPattern(node: BindingName): bool = jsNative
-        member __.isEmptyBindingElement(node: BindingElement): bool = jsNative
-        member __.getCombinedModifierFlags(node: Node): ModifierFlags = jsNative
-        member __.getCombinedNodeFlags(node: Node): NodeFlags = jsNative
-        member __.validateLocaleAndSetLanguage(locale: string, sys: obj, ?errors: Push<Diagnostic>): unit = jsNative
-        member __.getOriginalNode(node: Node): Node = jsNative
-        member __.getOriginalNode<'T>(node: Node, nodeTest: (Node -> bool)): 'T = jsNative
-        member __.isParseTreeNode(node: Node): bool = jsNative
-        member __.getParseTreeNode(node: Node): Node = jsNative
-        member __.getParseTreeNode<'T>(node: Node, ?nodeTest: (Node -> bool)): 'T = jsNative
-        member __.unescapeLeadingUnderscores(identifier: __String): string = jsNative
-        member __.unescapeIdentifier(id: string): string = jsNative
-        member __.getNameOfDeclaration(declaration: Declaration): DeclarationName option = jsNative
-        member __.isNumericLiteral(node: Node): bool = jsNative
-        member __.isStringLiteral(node: Node): bool = jsNative
-        member __.isJsxText(node: Node): bool = jsNative
-        member __.isRegularExpressionLiteral(node: Node): bool = jsNative
-        member __.isNoSubstitutionTemplateLiteral(node: Node): bool = jsNative
-        member __.isTemplateHead(node: Node): bool = jsNative
-        member __.isTemplateMiddle(node: Node): bool = jsNative
-        member __.isTemplateTail(node: Node): bool = jsNative
-        member __.isIdentifier(node: Node): bool = jsNative
-        member __.isQualifiedName(node: Node): bool = jsNative
-        member __.isComputedPropertyName(node: Node): bool = jsNative
-        member __.isTypeParameterDeclaration(node: Node): bool = jsNative
-        member __.isParameter(node: Node): bool = jsNative
-        member __.isDecorator(node: Node): bool = jsNative
-        member __.isPropertySignature(node: Node): bool = jsNative
-        member __.isPropertyDeclaration(node: Node): bool = jsNative
-        member __.isMethodSignature(node: Node): bool = jsNative
-        member __.isMethodDeclaration(node: Node): bool = jsNative
-        member __.isConstructorDeclaration(node: Node): bool = jsNative
-        member __.isGetAccessorDeclaration(node: Node): bool = jsNative
-        member __.isSetAccessorDeclaration(node: Node): bool = jsNative
-        member __.isCallSignatureDeclaration(node: Node): bool = jsNative
-        member __.isConstructSignatureDeclaration(node: Node): bool = jsNative
-        member __.isIndexSignatureDeclaration(node: Node): bool = jsNative
-        member __.isTypePredicateNode(node: Node): bool = jsNative
-        member __.isTypeReferenceNode(node: Node): bool = jsNative
-        member __.isFunctionTypeNode(node: Node): bool = jsNative
-        member __.isConstructorTypeNode(node: Node): bool = jsNative
-        member __.isTypeQueryNode(node: Node): bool = jsNative
-        member __.isTypeLiteralNode(node: Node): bool = jsNative
-        member __.isArrayTypeNode(node: Node): bool = jsNative
-        member __.isTupleTypeNode(node: Node): bool = jsNative
-        member __.isUnionTypeNode(node: Node): bool = jsNative
-        member __.isIntersectionTypeNode(node: Node): bool = jsNative
-        member __.isParenthesizedTypeNode(node: Node): bool = jsNative
-        member __.isThisTypeNode(node: Node): bool = jsNative
-        member __.isTypeOperatorNode(node: Node): bool = jsNative
-        member __.isIndexedAccessTypeNode(node: Node): bool = jsNative
-        member __.isMappedTypeNode(node: Node): bool = jsNative
-        member __.isLiteralTypeNode(node: Node): bool = jsNative
-        member __.isObjectBindingPattern(node: Node): bool = jsNative
-        member __.isArrayBindingPattern(node: Node): bool = jsNative
-        member __.isBindingElement(node: Node): bool = jsNative
-        member __.isArrayLiteralExpression(node: Node): bool = jsNative
-        member __.isObjectLiteralExpression(node: Node): bool = jsNative
-        member __.isPropertyAccessExpression(node: Node): bool = jsNative
-        member __.isElementAccessExpression(node: Node): bool = jsNative
-        member __.isCallExpression(node: Node): bool = jsNative
-        member __.isNewExpression(node: Node): bool = jsNative
-        member __.isTaggedTemplateExpression(node: Node): bool = jsNative
-        member __.isTypeAssertion(node: Node): bool = jsNative
-        member __.isParenthesizedExpression(node: Node): bool = jsNative
-        member __.skipPartiallyEmittedExpressions(node: Expression): Expression = jsNative
-        member __.skipPartiallyEmittedExpressions(node: Node): Node = jsNative
-        member __.isFunctionExpression(node: Node): bool = jsNative
-        member __.isArrowFunction(node: Node): bool = jsNative
-        member __.isDeleteExpression(node: Node): bool = jsNative
-        member __.isTypeOfExpression(node: Node): bool = jsNative
-        member __.isVoidExpression(node: Node): bool = jsNative
-        member __.isAwaitExpression(node: Node): bool = jsNative
-        member __.isPrefixUnaryExpression(node: Node): bool = jsNative
-        member __.isPostfixUnaryExpression(node: Node): bool = jsNative
-        member __.isBinaryExpression(node: Node): bool = jsNative
-        member __.isConditionalExpression(node: Node): bool = jsNative
-        member __.isTemplateExpression(node: Node): bool = jsNative
-        member __.isYieldExpression(node: Node): bool = jsNative
-        member __.isSpreadElement(node: Node): bool = jsNative
-        member __.isClassExpression(node: Node): bool = jsNative
-        member __.isOmittedExpression(node: Node): bool = jsNative
-        member __.isExpressionWithTypeArguments(node: Node): bool = jsNative
-        member __.isAsExpression(node: Node): bool = jsNative
-        member __.isNonNullExpression(node: Node): bool = jsNative
-        member __.isMetaProperty(node: Node): bool = jsNative
-        member __.isTemplateSpan(node: Node): bool = jsNative
-        member __.isSemicolonClassElement(node: Node): bool = jsNative
-        member __.isBlock(node: Node): bool = jsNative
-        member __.isVariableStatement(node: Node): bool = jsNative
-        member __.isEmptyStatement(node: Node): bool = jsNative
-        member __.isExpressionStatement(node: Node): bool = jsNative
-        member __.isIfStatement(node: Node): bool = jsNative
-        member __.isDoStatement(node: Node): bool = jsNative
-        member __.isWhileStatement(node: Node): bool = jsNative
-        member __.isForStatement(node: Node): bool = jsNative
-        member __.isForInStatement(node: Node): bool = jsNative
-        member __.isForOfStatement(node: Node): bool = jsNative
-        member __.isContinueStatement(node: Node): bool = jsNative
-        member __.isBreakStatement(node: Node): bool = jsNative
-        member __.isReturnStatement(node: Node): bool = jsNative
-        member __.isWithStatement(node: Node): bool = jsNative
-        member __.isSwitchStatement(node: Node): bool = jsNative
-        member __.isLabeledStatement(node: Node): bool = jsNative
-        member __.isThrowStatement(node: Node): bool = jsNative
-        member __.isTryStatement(node: Node): bool = jsNative
-        member __.isDebuggerStatement(node: Node): bool = jsNative
-        member __.isVariableDeclaration(node: Node): bool = jsNative
-        member __.isVariableDeclarationList(node: Node): bool = jsNative
-        member __.isFunctionDeclaration(node: Node): bool = jsNative
-        member __.isClassDeclaration(node: Node): bool = jsNative
-        member __.isInterfaceDeclaration(node: Node): bool = jsNative
-        member __.isTypeAliasDeclaration(node: Node): bool = jsNative
-        member __.isEnumDeclaration(node: Node): bool = jsNative
-        member __.isModuleDeclaration(node: Node): bool = jsNative
-        member __.isModuleBlock(node: Node): bool = jsNative
-        member __.isCaseBlock(node: Node): bool = jsNative
-        member __.isNamespaceExportDeclaration(node: Node): bool = jsNative
-        member __.isImportEqualsDeclaration(node: Node): bool = jsNative
-        member __.isImportDeclaration(node: Node): bool = jsNative
-        member __.isImportClause(node: Node): bool = jsNative
-        member __.isNamespaceImport(node: Node): bool = jsNative
-        member __.isNamedImports(node: Node): bool = jsNative
-        member __.isImportSpecifier(node: Node): bool = jsNative
-        member __.isExportAssignment(node: Node): bool = jsNative
-        member __.isExportDeclaration(node: Node): bool = jsNative
-        member __.isNamedExports(node: Node): bool = jsNative
-        member __.isExportSpecifier(node: Node): bool = jsNative
-        member __.isMissingDeclaration(node: Node): bool = jsNative
-        member __.isExternalModuleReference(node: Node): bool = jsNative
-        member __.isJsxElement(node: Node): bool = jsNative
-        member __.isJsxSelfClosingElement(node: Node): bool = jsNative
-        member __.isJsxOpeningElement(node: Node): bool = jsNative
-        member __.isJsxClosingElement(node: Node): bool = jsNative
-        member __.isJsxAttribute(node: Node): bool = jsNative
-        member __.isJsxAttributes(node: Node): bool = jsNative
-        member __.isJsxSpreadAttribute(node: Node): bool = jsNative
-        member __.isJsxExpression(node: Node): bool = jsNative
-        member __.isCaseClause(node: Node): bool = jsNative
-        member __.isDefaultClause(node: Node): bool = jsNative
-        member __.isHeritageClause(node: Node): bool = jsNative
-        member __.isCatchClause(node: Node): bool = jsNative
-        member __.isPropertyAssignment(node: Node): bool = jsNative
-        member __.isShorthandPropertyAssignment(node: Node): bool = jsNative
-        member __.isSpreadAssignment(node: Node): bool = jsNative
-        member __.isEnumMember(node: Node): bool = jsNative
-        member __.isSourceFile(node: Node): bool = jsNative
-        member __.isBundle(node: Node): bool = jsNative
-        member __.isJSDocTypeExpression(node: Node): bool = jsNative
-        member __.isJSDocAllType(node: JSDocAllType): bool = jsNative
-        member __.isJSDocUnknownType(node: Node): bool = jsNative
-        member __.isJSDocNullableType(node: Node): bool = jsNative
-        member __.isJSDocNonNullableType(node: Node): bool = jsNative
-        member __.isJSDocOptionalType(node: Node): bool = jsNative
-        member __.isJSDocFunctionType(node: Node): bool = jsNative
-        member __.isJSDocVariadicType(node: Node): bool = jsNative
-        member __.isJSDoc(node: Node): bool = jsNative
-        member __.isJSDocAugmentsTag(node: Node): bool = jsNative
-        member __.isJSDocParameterTag(node: Node): bool = jsNative
-        member __.isJSDocReturnTag(node: Node): bool = jsNative
-        member __.isJSDocTypeTag(node: Node): bool = jsNative
-        member __.isJSDocTemplateTag(node: Node): bool = jsNative
-        member __.isJSDocTypedefTag(node: Node): bool = jsNative
-        member __.isJSDocPropertyTag(node: Node): bool = jsNative
-        member __.isJSDocPropertyLikeTag(node: Node): bool = jsNative
-        member __.isJSDocTypeLiteral(node: Node): bool = jsNative
-        member __.isToken(n: Node): bool = jsNative
-        member __.isLiteralExpression(node: Node): bool = jsNative
-        member __.isTemplateMiddleOrTemplateTail(node: Node): bool = jsNative
-        member __.isStringTextContainingNode(node: Node): bool = jsNative
-        member __.isModifier(node: Node): bool = jsNative
-        member __.isEntityName(node: Node): bool = jsNative
-        member __.isPropertyName(node: Node): bool = jsNative
-        member __.isBindingName(node: Node): bool = jsNative
-        member __.isFunctionLike(node: Node): bool = jsNative
-        member __.isClassElement(node: Node): bool = jsNative
-        member __.isClassLike(node: Node): bool = jsNative
-        member __.isAccessor(node: Node): bool = jsNative
-        member __.isTypeElement(node: Node): bool = jsNative
-        member __.isObjectLiteralElementLike(node: Node): bool = jsNative
-        member __.isTypeNode(node: Node): bool = jsNative
-        member __.isFunctionOrConstructorTypeNode(node: Node): bool = jsNative
-        member __.isPropertyAccessOrQualifiedName(node: Node): bool = jsNative
-        member __.isCallLikeExpression(node: Node): bool = jsNative
-        member __.isCallOrNewExpression(node: Node): bool = jsNative
-        member __.isTemplateLiteral(node: Node): bool = jsNative
-        member __.isAssertionExpression(node: Node): bool = jsNative
-        member __.isIterationStatement(node: Node, lookInLabeledStatements: bool): bool = jsNative
-        member __.isJsxOpeningLikeElement(node: Node): bool = jsNative
-        member __.isCaseOrDefaultClause(node: Node): bool = jsNative
-        member __.isJSDocCommentContainingNode(node: Node): bool = jsNative
-        member __.createNode(kind: SyntaxKind, ?pos: float, ?``end``: float): Node = jsNative
-        member __.forEachChild<'T>(node: Node, cbNode: (Node -> 'T option), ?cbNodes: (ResizeArray<Node> -> 'T option)): 'T option = jsNative
-        member __.createSourceFile(fileName: string, sourceText: string, languageVersion: ScriptTarget, ?setParentNodes: bool, ?scriptKind: ScriptKind): SourceFile = jsNative
-        member __.parseIsolatedEntityName(text: string, languageVersion: ScriptTarget): EntityName = jsNative
-        member __.parseJsonText(fileName: string, sourceText: string): JsonSourceFile = jsNative
-        member __.isExternalModule(file: SourceFile): bool = jsNative
-        member __.updateSourceFile(sourceFile: SourceFile, newText: string, textChangeRange: TextChangeRange, ?aggressiveChecks: bool): SourceFile = jsNative
-        member __.getEffectiveTypeRoots(options: CompilerOptions, host: obj): ResizeArray<string> option = jsNative
-        member __.resolveTypeReferenceDirective(typeReferenceDirectiveName: string, containingFile: string option, options: CompilerOptions, host: ModuleResolutionHost): ResolvedTypeReferenceDirectiveWithFailedLookupLocations = jsNative
-        member __.getAutomaticTypeDirectiveNames(options: CompilerOptions, host: ModuleResolutionHost): ResizeArray<string> = jsNative
-        member __.createModuleResolutionCache(currentDirectory: string, getCanonicalFileName: (string -> string)): ModuleResolutionCache = jsNative
-        member __.resolveModuleName(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: ModuleResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
-        member __.nodeModuleNameResolver(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: ModuleResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
-        member __.classicNameResolver(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, ?cache: NonRelativeModuleNameResolutionCache): ResolvedModuleWithFailedLookupLocations = jsNative
-        member __.createNodeArray<'T>(?elements: ReadonlyArray<'T>, ?hasTrailingComma: bool): ResizeArray<'T> = jsNative
-        member __.createLiteral(value: string): StringLiteral = jsNative
-        member __.createLiteral(value: float): NumericLiteral = jsNative
-        member __.createLiteral(value: bool): BooleanLiteral = jsNative
-        member __.createLiteral(sourceNode: U3<StringLiteral, NumericLiteral, Identifier>): StringLiteral = jsNative
-        member __.createLiteral(value: U3<string, float, bool>): PrimaryExpression = jsNative
-        member __.createNumericLiteral(value: string): NumericLiteral = jsNative
-        member __.createIdentifier(text: string): Identifier = jsNative
-        member __.updateIdentifier(node: Identifier, typeArguments: ResizeArray<TypeNode> option): Identifier = jsNative
-        member __.createTempVariable(recordTempVariable: obj option): Identifier = jsNative
-        member __.createLoopVariable(): Identifier = jsNative
-        member __.createUniqueName(text: string): Identifier = jsNative
-        member __.getGeneratedNameForNode(node: Node): Identifier = jsNative
-        member __.createToken<'TKind>(token: 'TKind): Token<'TKind> = jsNative
-        member __.createSuper(): SuperExpression = jsNative
-        member __.createThis(): obj = jsNative
-        member __.createNull(): obj = jsNative
-        member __.createTrue(): obj = jsNative
-        member __.createFalse(): obj = jsNative
-        member __.createQualifiedName(left: EntityName, right: U2<string, Identifier>): QualifiedName = jsNative
-        member __.updateQualifiedName(node: QualifiedName, left: EntityName, right: Identifier): QualifiedName = jsNative
-        member __.createComputedPropertyName(expression: Expression): ComputedPropertyName = jsNative
-        member __.updateComputedPropertyName(node: ComputedPropertyName, expression: Expression): ComputedPropertyName = jsNative
-        member __.createTypeParameterDeclaration(name: U2<string, Identifier>, ?``constraint``: TypeNode, ?defaultType: TypeNode): TypeParameterDeclaration = jsNative
-        member __.updateTypeParameterDeclaration(node: TypeParameterDeclaration, name: Identifier, ``constraint``: TypeNode option, defaultType: TypeNode option): TypeParameterDeclaration = jsNative
-        member __.createParameter(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, dotDotDotToken: DotDotDotToken option, name: U2<string, BindingName>, ?questionToken: QuestionToken, ?``type``: TypeNode, ?initializer: Expression): ParameterDeclaration = jsNative
-        member __.updateParameter(node: ParameterDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, dotDotDotToken: DotDotDotToken option, name: U2<string, BindingName>, questionToken: QuestionToken option, ``type``: TypeNode option, initializer: Expression option): ParameterDeclaration = jsNative
-        member __.createDecorator(expression: Expression): Decorator = jsNative
-        member __.updateDecorator(node: Decorator, expression: Expression): Decorator = jsNative
-        member __.createPropertySignature(modifiers: ReadonlyArray<Modifier> option, name: U2<PropertyName, string>, questionToken: QuestionToken option, ``type``: TypeNode option, initializer: Expression option): PropertySignature = jsNative
-        member __.updatePropertySignature(node: PropertySignature, modifiers: ReadonlyArray<Modifier> option, name: PropertyName, questionToken: QuestionToken option, ``type``: TypeNode option, initializer: Expression option): PropertySignature = jsNative
-        member __.createProperty(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, PropertyName>, questionToken: QuestionToken option, ``type``: TypeNode option, initializer: Expression option): PropertyDeclaration = jsNative
-        member __.updateProperty(node: PropertyDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, PropertyName>, questionToken: QuestionToken option, ``type``: TypeNode option, initializer: Expression option): PropertyDeclaration = jsNative
-        member __.createMethodSignature(typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, name: U2<string, PropertyName>, questionToken: QuestionToken option): MethodSignature = jsNative
-        member __.updateMethodSignature(node: MethodSignature, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option, name: PropertyName, questionToken: QuestionToken option): MethodSignature = jsNative
-        member __.createMethod(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, asteriskToken: AsteriskToken option, name: U2<string, PropertyName>, questionToken: QuestionToken option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block option): MethodDeclaration = jsNative
-        member __.updateMethod(node: MethodDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, asteriskToken: AsteriskToken option, name: PropertyName, questionToken: QuestionToken option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block option): MethodDeclaration = jsNative
-        member __.createConstructor(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, parameters: ReadonlyArray<ParameterDeclaration>, body: Block option): ConstructorDeclaration = jsNative
-        member __.updateConstructor(node: ConstructorDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, parameters: ReadonlyArray<ParameterDeclaration>, body: Block option): ConstructorDeclaration = jsNative
-        member __.createGetAccessor(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, PropertyName>, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block option): GetAccessorDeclaration = jsNative
-        member __.updateGetAccessor(node: GetAccessorDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: PropertyName, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block option): GetAccessorDeclaration = jsNative
-        member __.createSetAccessor(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, PropertyName>, parameters: ReadonlyArray<ParameterDeclaration>, body: Block option): SetAccessorDeclaration = jsNative
-        member __.updateSetAccessor(node: SetAccessorDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: PropertyName, parameters: ReadonlyArray<ParameterDeclaration>, body: Block option): SetAccessorDeclaration = jsNative
-        member __.createCallSignature(typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): CallSignatureDeclaration = jsNative
-        member __.updateCallSignature(node: CallSignatureDeclaration, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): CallSignatureDeclaration = jsNative
-        member __.createConstructSignature(typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructSignatureDeclaration = jsNative
-        member __.updateConstructSignature(node: ConstructSignatureDeclaration, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructSignatureDeclaration = jsNative
-        member __.createIndexSignature(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode): IndexSignatureDeclaration = jsNative
-        member __.updateIndexSignature(node: IndexSignatureDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode): IndexSignatureDeclaration = jsNative
-        member __.createKeywordTypeNode(kind: obj): KeywordTypeNode = jsNative
-        member __.createTypePredicateNode(parameterName: U3<Identifier, ThisTypeNode, string>, ``type``: TypeNode): TypePredicateNode = jsNative
-        member __.updateTypePredicateNode(node: TypePredicateNode, parameterName: U2<Identifier, ThisTypeNode>, ``type``: TypeNode): TypePredicateNode = jsNative
-        member __.createTypeReferenceNode(typeName: U2<string, EntityName>, typeArguments: ReadonlyArray<TypeNode> option): TypeReferenceNode = jsNative
-        member __.updateTypeReferenceNode(node: TypeReferenceNode, typeName: EntityName, typeArguments: ResizeArray<TypeNode> option): TypeReferenceNode = jsNative
-        member __.createFunctionTypeNode(typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): FunctionTypeNode = jsNative
-        member __.updateFunctionTypeNode(node: FunctionTypeNode, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): FunctionTypeNode = jsNative
-        member __.createConstructorTypeNode(typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructorTypeNode = jsNative
-        member __.updateConstructorTypeNode(node: ConstructorTypeNode, typeParameters: ResizeArray<TypeParameterDeclaration> option, parameters: ResizeArray<ParameterDeclaration>, ``type``: TypeNode option): ConstructorTypeNode = jsNative
-        member __.createTypeQueryNode(exprName: EntityName): TypeQueryNode = jsNative
-        member __.updateTypeQueryNode(node: TypeQueryNode, exprName: EntityName): TypeQueryNode = jsNative
-        member __.createTypeLiteralNode(members: ReadonlyArray<TypeElement>): TypeLiteralNode = jsNative
-        member __.updateTypeLiteralNode(node: TypeLiteralNode, members: ResizeArray<TypeElement>): TypeLiteralNode = jsNative
-        member __.createArrayTypeNode(elementType: TypeNode): ArrayTypeNode = jsNative
-        member __.updateArrayTypeNode(node: ArrayTypeNode, elementType: TypeNode): ArrayTypeNode = jsNative
-        member __.createTupleTypeNode(elementTypes: ReadonlyArray<TypeNode>): TupleTypeNode = jsNative
-        member __.updateTypleTypeNode(node: TupleTypeNode, elementTypes: ReadonlyArray<TypeNode>): TupleTypeNode = jsNative
-        member __.createUnionTypeNode(types: ResizeArray<TypeNode>): UnionTypeNode = jsNative
-        member __.updateUnionTypeNode(node: UnionTypeNode, types: ResizeArray<TypeNode>): UnionTypeNode = jsNative
-        member __.createIntersectionTypeNode(types: ResizeArray<TypeNode>): IntersectionTypeNode = jsNative
-        member __.updateIntersectionTypeNode(node: IntersectionTypeNode, types: ResizeArray<TypeNode>): IntersectionTypeNode = jsNative
-        member __.createUnionOrIntersectionTypeNode(kind: SyntaxKind, types: ReadonlyArray<TypeNode>): UnionOrIntersectionTypeNode = jsNative
-        member __.createParenthesizedType(``type``: TypeNode): ParenthesizedTypeNode = jsNative
-        member __.updateParenthesizedType(node: ParenthesizedTypeNode, ``type``: TypeNode): ParenthesizedTypeNode = jsNative
-        member __.createThisTypeNode(): ThisTypeNode = jsNative
-        member __.createTypeOperatorNode(``type``: TypeNode): TypeOperatorNode = jsNative
-        member __.updateTypeOperatorNode(node: TypeOperatorNode, ``type``: TypeNode): TypeOperatorNode = jsNative
-        member __.createIndexedAccessTypeNode(objectType: TypeNode, indexType: TypeNode): IndexedAccessTypeNode = jsNative
-        member __.updateIndexedAccessTypeNode(node: IndexedAccessTypeNode, objectType: TypeNode, indexType: TypeNode): IndexedAccessTypeNode = jsNative
-        member __.createMappedTypeNode(readonlyToken: ReadonlyToken option, typeParameter: TypeParameterDeclaration, questionToken: QuestionToken option, ``type``: TypeNode option): MappedTypeNode = jsNative
-        member __.updateMappedTypeNode(node: MappedTypeNode, readonlyToken: ReadonlyToken option, typeParameter: TypeParameterDeclaration, questionToken: QuestionToken option, ``type``: TypeNode option): MappedTypeNode = jsNative
-        member __.createLiteralTypeNode(literal: Expression): LiteralTypeNode = jsNative
-        member __.updateLiteralTypeNode(node: LiteralTypeNode, literal: Expression): LiteralTypeNode = jsNative
-        member __.createObjectBindingPattern(elements: ReadonlyArray<BindingElement>): ObjectBindingPattern = jsNative
-        member __.updateObjectBindingPattern(node: ObjectBindingPattern, elements: ReadonlyArray<BindingElement>): ObjectBindingPattern = jsNative
-        member __.createArrayBindingPattern(elements: ReadonlyArray<ArrayBindingElement>): ArrayBindingPattern = jsNative
-        member __.updateArrayBindingPattern(node: ArrayBindingPattern, elements: ReadonlyArray<ArrayBindingElement>): ArrayBindingPattern = jsNative
-        member __.createBindingElement(dotDotDotToken: DotDotDotToken option, propertyName: U2<string, PropertyName> option, name: U2<string, BindingName>, ?initializer: Expression): BindingElement = jsNative
-        member __.updateBindingElement(node: BindingElement, dotDotDotToken: DotDotDotToken option, propertyName: PropertyName option, name: BindingName, initializer: Expression option): BindingElement = jsNative
-        member __.createArrayLiteral(?elements: ReadonlyArray<Expression>, ?multiLine: bool): ArrayLiteralExpression = jsNative
-        member __.updateArrayLiteral(node: ArrayLiteralExpression, elements: ReadonlyArray<Expression>): ArrayLiteralExpression = jsNative
-        member __.createObjectLiteral(?properties: ReadonlyArray<ObjectLiteralElementLike>, ?multiLine: bool): ObjectLiteralExpression = jsNative
-        member __.updateObjectLiteral(node: ObjectLiteralExpression, properties: ReadonlyArray<ObjectLiteralElementLike>): ObjectLiteralExpression = jsNative
-        member __.createPropertyAccess(expression: Expression, name: U2<string, Identifier>): PropertyAccessExpression = jsNative
-        member __.updatePropertyAccess(node: PropertyAccessExpression, expression: Expression, name: Identifier): PropertyAccessExpression = jsNative
-        member __.createElementAccess(expression: Expression, index: U2<float, Expression>): ElementAccessExpression = jsNative
-        member __.updateElementAccess(node: ElementAccessExpression, expression: Expression, argumentExpression: Expression): ElementAccessExpression = jsNative
-        member __.createCall(expression: Expression, typeArguments: ReadonlyArray<TypeNode> option, argumentsArray: ReadonlyArray<Expression>): CallExpression = jsNative
-        member __.updateCall(node: CallExpression, expression: Expression, typeArguments: ReadonlyArray<TypeNode> option, argumentsArray: ReadonlyArray<Expression>): CallExpression = jsNative
-        member __.createNew(expression: Expression, typeArguments: ReadonlyArray<TypeNode> option, argumentsArray: ReadonlyArray<Expression> option): NewExpression = jsNative
-        member __.updateNew(node: NewExpression, expression: Expression, typeArguments: ReadonlyArray<TypeNode> option, argumentsArray: ReadonlyArray<Expression> option): NewExpression = jsNative
-        member __.createTaggedTemplate(tag: Expression, template: TemplateLiteral): TaggedTemplateExpression = jsNative
-        member __.updateTaggedTemplate(node: TaggedTemplateExpression, tag: Expression, template: TemplateLiteral): TaggedTemplateExpression = jsNative
-        member __.createTypeAssertion(``type``: TypeNode, expression: Expression): TypeAssertion = jsNative
-        member __.updateTypeAssertion(node: TypeAssertion, ``type``: TypeNode, expression: Expression): TypeAssertion = jsNative
-        member __.createParen(expression: Expression): ParenthesizedExpression = jsNative
-        member __.updateParen(node: ParenthesizedExpression, expression: Expression): ParenthesizedExpression = jsNative
-        member __.createFunctionExpression(modifiers: ReadonlyArray<Modifier> option, asteriskToken: AsteriskToken option, name: U2<string, Identifier> option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block): FunctionExpression = jsNative
-        member __.updateFunctionExpression(node: FunctionExpression, modifiers: ReadonlyArray<Modifier> option, asteriskToken: AsteriskToken option, name: Identifier option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block): FunctionExpression = jsNative
-        member __.createArrowFunction(modifiers: ReadonlyArray<Modifier> option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, equalsGreaterThanToken: EqualsGreaterThanToken option, body: ConciseBody): ArrowFunction = jsNative
-        member __.updateArrowFunction(node: ArrowFunction, modifiers: ReadonlyArray<Modifier> option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: ConciseBody): ArrowFunction = jsNative
-        member __.updateArrowFunction(node: ArrowFunction, modifiers: ReadonlyArray<Modifier> option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, equalsGreaterThanToken: Token<SyntaxKind>, body: ConciseBody): ArrowFunction = jsNative
-        member __.createDelete(expression: Expression): DeleteExpression = jsNative
-        member __.updateDelete(node: DeleteExpression, expression: Expression): DeleteExpression = jsNative
-        member __.createTypeOf(expression: Expression): TypeOfExpression = jsNative
-        member __.updateTypeOf(node: TypeOfExpression, expression: Expression): TypeOfExpression = jsNative
-        member __.createVoid(expression: Expression): VoidExpression = jsNative
-        member __.updateVoid(node: VoidExpression, expression: Expression): VoidExpression = jsNative
-        member __.createAwait(expression: Expression): AwaitExpression = jsNative
-        member __.updateAwait(node: AwaitExpression, expression: Expression): AwaitExpression = jsNative
-        member __.createPrefix(operator: PrefixUnaryOperator, operand: Expression): PrefixUnaryExpression = jsNative
-        member __.updatePrefix(node: PrefixUnaryExpression, operand: Expression): PrefixUnaryExpression = jsNative
-        member __.createPostfix(operand: Expression, operator: PostfixUnaryOperator): PostfixUnaryExpression = jsNative
-        member __.updatePostfix(node: PostfixUnaryExpression, operand: Expression): PostfixUnaryExpression = jsNative
-        member __.createBinary(left: Expression, operator: U2<BinaryOperator, BinaryOperatorToken>, right: Expression): BinaryExpression = jsNative
-        member __.updateBinary(node: BinaryExpression, left: Expression, right: Expression, ?operator: U2<BinaryOperator, BinaryOperatorToken>): BinaryExpression = jsNative
-        member __.createConditional(condition: Expression, whenTrue: Expression, whenFalse: Expression): ConditionalExpression = jsNative
-        member __.createConditional(condition: Expression, questionToken: QuestionToken, whenTrue: Expression, colonToken: ColonToken, whenFalse: Expression): ConditionalExpression = jsNative
-        member __.updateConditional(node: ConditionalExpression, condition: Expression, whenTrue: Expression, whenFalse: Expression): ConditionalExpression = jsNative
-        member __.updateConditional(node: ConditionalExpression, condition: Expression, questionToken: Token<SyntaxKind>, whenTrue: Expression, colonToken: Token<SyntaxKind>, whenFalse: Expression): ConditionalExpression = jsNative
-        member __.createTemplateExpression(head: TemplateHead, templateSpans: ReadonlyArray<TemplateSpan>): TemplateExpression = jsNative
-        member __.updateTemplateExpression(node: TemplateExpression, head: TemplateHead, templateSpans: ReadonlyArray<TemplateSpan>): TemplateExpression = jsNative
-        member __.createYield(?expression: Expression): YieldExpression = jsNative
-        member __.createYield(asteriskToken: AsteriskToken, expression: Expression): YieldExpression = jsNative
-        member __.updateYield(node: YieldExpression, asteriskToken: AsteriskToken option, expression: Expression): YieldExpression = jsNative
-        member __.createSpread(expression: Expression): SpreadElement = jsNative
-        member __.updateSpread(node: SpreadElement, expression: Expression): SpreadElement = jsNative
-        member __.createClassExpression(modifiers: ReadonlyArray<Modifier> option, name: U2<string, Identifier> option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, heritageClauses: ReadonlyArray<HeritageClause>, members: ReadonlyArray<ClassElement>): ClassExpression = jsNative
-        member __.updateClassExpression(node: ClassExpression, modifiers: ReadonlyArray<Modifier> option, name: Identifier option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, heritageClauses: ReadonlyArray<HeritageClause>, members: ReadonlyArray<ClassElement>): ClassExpression = jsNative
-        member __.createOmittedExpression(): OmittedExpression = jsNative
-        member __.createExpressionWithTypeArguments(typeArguments: ReadonlyArray<TypeNode>, expression: Expression): ExpressionWithTypeArguments = jsNative
-        member __.updateExpressionWithTypeArguments(node: ExpressionWithTypeArguments, typeArguments: ReadonlyArray<TypeNode>, expression: Expression): ExpressionWithTypeArguments = jsNative
-        member __.createAsExpression(expression: Expression, ``type``: TypeNode): AsExpression = jsNative
-        member __.updateAsExpression(node: AsExpression, expression: Expression, ``type``: TypeNode): AsExpression = jsNative
-        member __.createNonNullExpression(expression: Expression): NonNullExpression = jsNative
-        member __.updateNonNullExpression(node: NonNullExpression, expression: Expression): NonNullExpression = jsNative
-        member __.createMetaProperty(keywordToken: obj, name: Identifier): MetaProperty = jsNative
-        member __.updateMetaProperty(node: MetaProperty, name: Identifier): MetaProperty = jsNative
-        member __.createTemplateSpan(expression: Expression, literal: U2<TemplateMiddle, TemplateTail>): TemplateSpan = jsNative
-        member __.updateTemplateSpan(node: TemplateSpan, expression: Expression, literal: U2<TemplateMiddle, TemplateTail>): TemplateSpan = jsNative
-        member __.createSemicolonClassElement(): SemicolonClassElement = jsNative
-        member __.createBlock(statements: ReadonlyArray<Statement>, ?multiLine: bool): Block = jsNative
-        member __.updateBlock(node: Block, statements: ReadonlyArray<Statement>): Block = jsNative
-        member __.createVariableStatement(modifiers: ReadonlyArray<Modifier> option, declarationList: U2<VariableDeclarationList, ReadonlyArray<VariableDeclaration>>): VariableStatement = jsNative
-        member __.updateVariableStatement(node: VariableStatement, modifiers: ReadonlyArray<Modifier> option, declarationList: VariableDeclarationList): VariableStatement = jsNative
-        member __.createEmptyStatement(): EmptyStatement = jsNative
-        member __.createStatement(expression: Expression): ExpressionStatement = jsNative
-        member __.updateStatement(node: ExpressionStatement, expression: Expression): ExpressionStatement = jsNative
-        member __.createIf(expression: Expression, thenStatement: Statement, ?elseStatement: Statement): IfStatement = jsNative
-        member __.updateIf(node: IfStatement, expression: Expression, thenStatement: Statement, elseStatement: Statement option): IfStatement = jsNative
-        member __.createDo(statement: Statement, expression: Expression): DoStatement = jsNative
-        member __.updateDo(node: DoStatement, statement: Statement, expression: Expression): DoStatement = jsNative
-        member __.createWhile(expression: Expression, statement: Statement): WhileStatement = jsNative
-        member __.updateWhile(node: WhileStatement, expression: Expression, statement: Statement): WhileStatement = jsNative
-        member __.createFor(initializer: ForInitializer option, condition: Expression option, incrementor: Expression option, statement: Statement): ForStatement = jsNative
-        member __.updateFor(node: ForStatement, initializer: ForInitializer option, condition: Expression option, incrementor: Expression option, statement: Statement): ForStatement = jsNative
-        member __.createForIn(initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement = jsNative
-        member __.updateForIn(node: ForInStatement, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement = jsNative
-        member __.createForOf(awaitModifier: AwaitKeywordToken, initializer: ForInitializer, expression: Expression, statement: Statement): ForOfStatement = jsNative
-        member __.updateForOf(node: ForOfStatement, awaitModifier: AwaitKeywordToken, initializer: ForInitializer, expression: Expression, statement: Statement): ForOfStatement = jsNative
-        member __.createContinue(?label: U2<string, Identifier>): ContinueStatement = jsNative
-        member __.updateContinue(node: ContinueStatement, label: Identifier option): ContinueStatement = jsNative
-        member __.createBreak(?label: U2<string, Identifier>): BreakStatement = jsNative
-        member __.updateBreak(node: BreakStatement, label: Identifier option): BreakStatement = jsNative
-        member __.createReturn(?expression: Expression): ReturnStatement = jsNative
-        member __.updateReturn(node: ReturnStatement, expression: Expression option): ReturnStatement = jsNative
-        member __.createWith(expression: Expression, statement: Statement): WithStatement = jsNative
-        member __.updateWith(node: WithStatement, expression: Expression, statement: Statement): WithStatement = jsNative
-        member __.createSwitch(expression: Expression, caseBlock: CaseBlock): SwitchStatement = jsNative
-        member __.updateSwitch(node: SwitchStatement, expression: Expression, caseBlock: CaseBlock): SwitchStatement = jsNative
-        member __.createLabel(label: U2<string, Identifier>, statement: Statement): LabeledStatement = jsNative
-        member __.updateLabel(node: LabeledStatement, label: Identifier, statement: Statement): LabeledStatement = jsNative
-        member __.createThrow(expression: Expression): ThrowStatement = jsNative
-        member __.updateThrow(node: ThrowStatement, expression: Expression): ThrowStatement = jsNative
-        member __.createTry(tryBlock: Block, catchClause: CatchClause option, finallyBlock: Block option): TryStatement = jsNative
-        member __.updateTry(node: TryStatement, tryBlock: Block, catchClause: CatchClause option, finallyBlock: Block option): TryStatement = jsNative
-        member __.createDebuggerStatement(): DebuggerStatement = jsNative
-        member __.createVariableDeclaration(name: U2<string, BindingName>, ?``type``: TypeNode, ?initializer: Expression): VariableDeclaration = jsNative
-        member __.updateVariableDeclaration(node: VariableDeclaration, name: BindingName, ``type``: TypeNode option, initializer: Expression option): VariableDeclaration = jsNative
-        member __.createVariableDeclarationList(declarations: ReadonlyArray<VariableDeclaration>, ?flags: NodeFlags): VariableDeclarationList = jsNative
-        member __.updateVariableDeclarationList(node: VariableDeclarationList, declarations: ReadonlyArray<VariableDeclaration>): VariableDeclarationList = jsNative
-        member __.createFunctionDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, asteriskToken: AsteriskToken option, name: U2<string, Identifier> option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block option): FunctionDeclaration = jsNative
-        member __.updateFunctionDeclaration(node: FunctionDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, asteriskToken: AsteriskToken option, name: Identifier option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, parameters: ReadonlyArray<ParameterDeclaration>, ``type``: TypeNode option, body: Block option): FunctionDeclaration = jsNative
-        member __.createClassDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, Identifier> option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, heritageClauses: ReadonlyArray<HeritageClause>, members: ReadonlyArray<ClassElement>): ClassDeclaration = jsNative
-        member __.updateClassDeclaration(node: ClassDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: Identifier option, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, heritageClauses: ReadonlyArray<HeritageClause>, members: ReadonlyArray<ClassElement>): ClassDeclaration = jsNative
-        member __.createInterfaceDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, Identifier>, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, heritageClauses: ReadonlyArray<HeritageClause> option, members: ReadonlyArray<TypeElement>): InterfaceDeclaration = jsNative
-        member __.updateInterfaceDeclaration(node: InterfaceDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: Identifier, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, heritageClauses: ReadonlyArray<HeritageClause> option, members: ReadonlyArray<TypeElement>): InterfaceDeclaration = jsNative
-        member __.createTypeAliasDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, Identifier>, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, ``type``: TypeNode): TypeAliasDeclaration = jsNative
-        member __.updateTypeAliasDeclaration(node: TypeAliasDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: Identifier, typeParameters: ReadonlyArray<TypeParameterDeclaration> option, ``type``: TypeNode): TypeAliasDeclaration = jsNative
-        member __.createEnumDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, Identifier>, members: ReadonlyArray<EnumMember>): EnumDeclaration = jsNative
-        member __.updateEnumDeclaration(node: EnumDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: Identifier, members: ReadonlyArray<EnumMember>): EnumDeclaration = jsNative
-        member __.createModuleDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: ModuleName, body: ModuleBody option, ?flags: NodeFlags): ModuleDeclaration = jsNative
-        member __.updateModuleDeclaration(node: ModuleDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: ModuleName, body: ModuleBody option): ModuleDeclaration = jsNative
-        member __.createModuleBlock(statements: ReadonlyArray<Statement>): ModuleBlock = jsNative
-        member __.updateModuleBlock(node: ModuleBlock, statements: ReadonlyArray<Statement>): ModuleBlock = jsNative
-        member __.createCaseBlock(clauses: ReadonlyArray<CaseOrDefaultClause>): CaseBlock = jsNative
-        member __.updateCaseBlock(node: CaseBlock, clauses: ReadonlyArray<CaseOrDefaultClause>): CaseBlock = jsNative
-        member __.createNamespaceExportDeclaration(name: U2<string, Identifier>): NamespaceExportDeclaration = jsNative
-        member __.updateNamespaceExportDeclaration(node: NamespaceExportDeclaration, name: Identifier): NamespaceExportDeclaration = jsNative
-        member __.createImportEqualsDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: U2<string, Identifier>, moduleReference: ModuleReference): ImportEqualsDeclaration = jsNative
-        member __.updateImportEqualsDeclaration(node: ImportEqualsDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, name: Identifier, moduleReference: ModuleReference): ImportEqualsDeclaration = jsNative
-        member __.createImportDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, importClause: ImportClause option, ?moduleSpecifier: Expression): ImportDeclaration = jsNative
-        member __.updateImportDeclaration(node: ImportDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, importClause: ImportClause option, moduleSpecifier: Expression option): ImportDeclaration = jsNative
-        member __.createImportClause(name: Identifier option, namedBindings: NamedImportBindings option): ImportClause = jsNative
-        member __.updateImportClause(node: ImportClause, name: Identifier option, namedBindings: NamedImportBindings option): ImportClause = jsNative
-        member __.createNamespaceImport(name: Identifier): NamespaceImport = jsNative
-        member __.updateNamespaceImport(node: NamespaceImport, name: Identifier): NamespaceImport = jsNative
-        member __.createNamedImports(elements: ReadonlyArray<ImportSpecifier>): NamedImports = jsNative
-        member __.updateNamedImports(node: NamedImports, elements: ReadonlyArray<ImportSpecifier>): NamedImports = jsNative
-        member __.createImportSpecifier(propertyName: Identifier option, name: Identifier): ImportSpecifier = jsNative
-        member __.updateImportSpecifier(node: ImportSpecifier, propertyName: Identifier option, name: Identifier): ImportSpecifier = jsNative
-        member __.createExportAssignment(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, isExportEquals: bool, expression: Expression): ExportAssignment = jsNative
-        member __.updateExportAssignment(node: ExportAssignment, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, expression: Expression): ExportAssignment = jsNative
-        member __.createExportDeclaration(decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, exportClause: NamedExports option, ?moduleSpecifier: Expression): ExportDeclaration = jsNative
-        member __.updateExportDeclaration(node: ExportDeclaration, decorators: ReadonlyArray<Decorator> option, modifiers: ReadonlyArray<Modifier> option, exportClause: NamedExports option, moduleSpecifier: Expression option): ExportDeclaration = jsNative
-        member __.createNamedExports(elements: ReadonlyArray<ExportSpecifier>): NamedExports = jsNative
-        member __.updateNamedExports(node: NamedExports, elements: ReadonlyArray<ExportSpecifier>): NamedExports = jsNative
-        member __.createExportSpecifier(propertyName: U2<string, Identifier> option, name: U2<string, Identifier>): ExportSpecifier = jsNative
-        member __.updateExportSpecifier(node: ExportSpecifier, propertyName: Identifier option, name: Identifier): ExportSpecifier = jsNative
-        member __.createExternalModuleReference(expression: Expression): ExternalModuleReference = jsNative
-        member __.updateExternalModuleReference(node: ExternalModuleReference, expression: Expression): ExternalModuleReference = jsNative
-        member __.createJsxElement(openingElement: JsxOpeningElement, children: ReadonlyArray<JsxChild>, closingElement: JsxClosingElement): JsxElement = jsNative
-        member __.updateJsxElement(node: JsxElement, openingElement: JsxOpeningElement, children: ReadonlyArray<JsxChild>, closingElement: JsxClosingElement): JsxElement = jsNative
-        member __.createJsxSelfClosingElement(tagName: JsxTagNameExpression, attributes: JsxAttributes): JsxSelfClosingElement = jsNative
-        member __.updateJsxSelfClosingElement(node: JsxSelfClosingElement, tagName: JsxTagNameExpression, attributes: JsxAttributes): JsxSelfClosingElement = jsNative
-        member __.createJsxOpeningElement(tagName: JsxTagNameExpression, attributes: JsxAttributes): JsxOpeningElement = jsNative
-        member __.updateJsxOpeningElement(node: JsxOpeningElement, tagName: JsxTagNameExpression, attributes: JsxAttributes): JsxOpeningElement = jsNative
-        member __.createJsxClosingElement(tagName: JsxTagNameExpression): JsxClosingElement = jsNative
-        member __.updateJsxClosingElement(node: JsxClosingElement, tagName: JsxTagNameExpression): JsxClosingElement = jsNative
-        member __.createJsxAttribute(name: Identifier, initializer: U2<StringLiteral, JsxExpression>): JsxAttribute = jsNative
-        member __.updateJsxAttribute(node: JsxAttribute, name: Identifier, initializer: U2<StringLiteral, JsxExpression>): JsxAttribute = jsNative
-        member __.createJsxAttributes(properties: ReadonlyArray<JsxAttributeLike>): JsxAttributes = jsNative
-        member __.updateJsxAttributes(node: JsxAttributes, properties: ReadonlyArray<JsxAttributeLike>): JsxAttributes = jsNative
-        member __.createJsxSpreadAttribute(expression: Expression): JsxSpreadAttribute = jsNative
-        member __.updateJsxSpreadAttribute(node: JsxSpreadAttribute, expression: Expression): JsxSpreadAttribute = jsNative
-        member __.createJsxExpression(dotDotDotToken: DotDotDotToken option, expression: Expression option): JsxExpression = jsNative
-        member __.updateJsxExpression(node: JsxExpression, expression: Expression option): JsxExpression = jsNative
-        member __.createCaseClause(expression: Expression, statements: ReadonlyArray<Statement>): CaseClause = jsNative
-        member __.updateCaseClause(node: CaseClause, expression: Expression, statements: ReadonlyArray<Statement>): CaseClause = jsNative
-        member __.createDefaultClause(statements: ReadonlyArray<Statement>): DefaultClause = jsNative
-        member __.updateDefaultClause(node: DefaultClause, statements: ReadonlyArray<Statement>): DefaultClause = jsNative
-        member __.createHeritageClause(token: obj, types: ReadonlyArray<ExpressionWithTypeArguments>): HeritageClause = jsNative
-        member __.updateHeritageClause(node: HeritageClause, types: ReadonlyArray<ExpressionWithTypeArguments>): HeritageClause = jsNative
-        member __.createCatchClause(variableDeclaration: U2<string, VariableDeclaration> option, block: Block): CatchClause = jsNative
-        member __.updateCatchClause(node: CatchClause, variableDeclaration: VariableDeclaration option, block: Block): CatchClause = jsNative
-        member __.createPropertyAssignment(name: U2<string, PropertyName>, initializer: Expression): PropertyAssignment = jsNative
-        member __.updatePropertyAssignment(node: PropertyAssignment, name: PropertyName, initializer: Expression): PropertyAssignment = jsNative
-        member __.createShorthandPropertyAssignment(name: U2<string, Identifier>, ?objectAssignmentInitializer: Expression): ShorthandPropertyAssignment = jsNative
-        member __.updateShorthandPropertyAssignment(node: ShorthandPropertyAssignment, name: Identifier, objectAssignmentInitializer: Expression option): ShorthandPropertyAssignment = jsNative
-        member __.createSpreadAssignment(expression: Expression): SpreadAssignment = jsNative
-        member __.updateSpreadAssignment(node: SpreadAssignment, expression: Expression): SpreadAssignment = jsNative
-        member __.createEnumMember(name: U2<string, PropertyName>, ?initializer: Expression): EnumMember = jsNative
-        member __.updateEnumMember(node: EnumMember, name: PropertyName, initializer: Expression option): EnumMember = jsNative
-        member __.updateSourceFileNode(node: SourceFile, statements: ReadonlyArray<Statement>): SourceFile = jsNative
-        member __.getMutableClone<'T>(node: 'T): 'T = jsNative
-        member __.createNotEmittedStatement(original: Node): NotEmittedStatement = jsNative
-        member __.createPartiallyEmittedExpression(expression: Expression, ?original: Node): PartiallyEmittedExpression = jsNative
-        member __.updatePartiallyEmittedExpression(node: PartiallyEmittedExpression, expression: Expression): PartiallyEmittedExpression = jsNative
-        member __.createCommaList(elements: ReadonlyArray<Expression>): CommaListExpression = jsNative
-        member __.updateCommaList(node: CommaListExpression, elements: ReadonlyArray<Expression>): CommaListExpression = jsNative
-        member __.createBundle(sourceFiles: ResizeArray<SourceFile>): Bundle = jsNative
-        member __.updateBundle(node: Bundle, sourceFiles: ResizeArray<SourceFile>): Bundle = jsNative
-        member __.createImmediatelyInvokedFunctionExpression(statements: ResizeArray<Statement>): CallExpression = jsNative
-        member __.createImmediatelyInvokedFunctionExpression(statements: ResizeArray<Statement>, param: ParameterDeclaration, paramValue: Expression): CallExpression = jsNative
-        member __.createImmediatelyInvokedArrowFunction(statements: ResizeArray<Statement>): CallExpression = jsNative
-        member __.createImmediatelyInvokedArrowFunction(statements: ResizeArray<Statement>, param: ParameterDeclaration, paramValue: Expression): CallExpression = jsNative
-        member __.createComma(left: Expression, right: Expression): Expression = jsNative
-        member __.createLessThan(left: Expression, right: Expression): Expression = jsNative
-        member __.createAssignment(left: U2<ObjectLiteralExpression, ArrayLiteralExpression>, right: Expression): DestructuringAssignment = jsNative
-        member __.createAssignment(left: Expression, right: Expression): BinaryExpression = jsNative
-        member __.createStrictEquality(left: Expression, right: Expression): BinaryExpression = jsNative
-        member __.createStrictInequality(left: Expression, right: Expression): BinaryExpression = jsNative
-        member __.createAdd(left: Expression, right: Expression): BinaryExpression = jsNative
-        member __.createSubtract(left: Expression, right: Expression): BinaryExpression = jsNative
-        member __.createPostfixIncrement(operand: Expression): PostfixUnaryExpression = jsNative
-        member __.createLogicalAnd(left: Expression, right: Expression): BinaryExpression = jsNative
-        member __.createLogicalOr(left: Expression, right: Expression): BinaryExpression = jsNative
-        member __.createLogicalNot(operand: Expression): PrefixUnaryExpression = jsNative
-        member __.createVoidZero(): VoidExpression = jsNative
-        member __.createExportDefault(expression: Expression): ExportAssignment = jsNative
-        member __.createExternalModuleExport(exportName: Identifier): ExportDeclaration = jsNative
-        member __.disposeEmitNodes(sourceFile: SourceFile): unit = jsNative
-        member __.setTextRange<'T>(range: 'T, location: TextRange option): 'T = jsNative
-        member __.setEmitFlags<'T>(node: 'T, emitFlags: EmitFlags): 'T = jsNative
-        member __.getSourceMapRange(node: Node): SourceMapRange = jsNative
-        member __.setSourceMapRange<'T>(node: 'T, range: SourceMapRange option): 'T = jsNative
-        member __.createSourceMapSource(fileName: string, text: string, ?skipTrivia: (float -> float)): SourceMapSource = jsNative
-        member __.getTokenSourceMapRange(node: Node, token: SyntaxKind): SourceMapRange option = jsNative
-        member __.setTokenSourceMapRange<'T>(node: 'T, token: SyntaxKind, range: SourceMapRange option): 'T = jsNative
-        member __.getCommentRange(node: Node): TextRange = jsNative
-        member __.setCommentRange<'T>(node: 'T, range: TextRange): 'T = jsNative
-        member __.getSyntheticLeadingComments(node: Node): ResizeArray<SynthesizedComment> option = jsNative
-        member __.setSyntheticLeadingComments<'T>(node: 'T, comments: ResizeArray<SynthesizedComment>): 'T = jsNative
-        member __.addSyntheticLeadingComment<'T>(node: 'T, kind: SyntaxKind, text: string, ?hasTrailingNewLine: bool): 'T = jsNative
-        member __.getSyntheticTrailingComments(node: Node): ResizeArray<SynthesizedComment> option = jsNative
-        member __.setSyntheticTrailingComments<'T>(node: 'T, comments: ResizeArray<SynthesizedComment>): 'T = jsNative
-        member __.addSyntheticTrailingComment<'T>(node: 'T, kind: SyntaxKind, text: string, ?hasTrailingNewLine: bool): 'T = jsNative
-        member __.getConstantValue(node: U2<PropertyAccessExpression, ElementAccessExpression>): U2<string, float> = jsNative
-        member __.setConstantValue(node: U2<PropertyAccessExpression, ElementAccessExpression>, value: U2<string, float>): U2<PropertyAccessExpression, ElementAccessExpression> = jsNative
-        member __.addEmitHelper<'T>(node: 'T, helper: EmitHelper): 'T = jsNative
-        member __.addEmitHelpers<'T>(node: 'T, helpers: ResizeArray<EmitHelper> option): 'T = jsNative
-        member __.removeEmitHelper(node: Node, helper: EmitHelper): bool = jsNative
-        member __.getEmitHelpers(node: Node): ResizeArray<EmitHelper> option = jsNative
-        member __.moveEmitHelpers(source: Node, target: Node, predicate: (EmitHelper -> bool)): unit = jsNative
-        member __.setOriginalNode<'T>(node: 'T, original: Node option): 'T = jsNative
-        member __.visitNode<'T>(node: 'T, visitor: Visitor, ?test: (Node -> bool), ?lift: (ResizeArray<Node> -> 'T)): 'T = jsNative
-        member __.visitNode<'T>(node: 'T option, visitor: Visitor, ?test: (Node -> bool), ?lift: (ResizeArray<Node> -> 'T)): 'T option = jsNative
-        member __.visitNodes<'T>(nodes: ResizeArray<'T>, visitor: Visitor, ?test: (Node -> bool), ?start: float, ?count: float): ResizeArray<'T> = jsNative
-        member __.visitNodes<'T>(nodes: ResizeArray<'T> option, visitor: Visitor, ?test: (Node -> bool), ?start: float, ?count: float): ResizeArray<'T> option = jsNative
-        member __.visitLexicalEnvironment(statements: ResizeArray<Statement>, visitor: Visitor, context: TransformationContext, ?start: float, ?ensureUseStrict: bool): ResizeArray<Statement> = jsNative
-        member __.visitParameterList(nodes: ResizeArray<ParameterDeclaration>, visitor: Visitor, context: TransformationContext, ?nodesVisitor: obj): ResizeArray<ParameterDeclaration> = jsNative
-        member __.visitFunctionBody(node: FunctionBody, visitor: Visitor, context: TransformationContext): FunctionBody = jsNative
-        member __.visitFunctionBody(node: FunctionBody option, visitor: Visitor, context: TransformationContext): FunctionBody option = jsNative
-        member __.visitFunctionBody(node: ConciseBody, visitor: Visitor, context: TransformationContext): ConciseBody = jsNative
-        member __.visitEachChild<'T>(node: 'T, visitor: Visitor, context: TransformationContext): 'T = jsNative
-        member __.visitEachChild<'T>(node: 'T option, visitor: Visitor, context: TransformationContext, ?nodesVisitor: obj, ?tokenVisitor: Visitor): 'T option = jsNative
-        member __.createPrinter(?printerOptions: PrinterOptions, ?handlers: PrintHandlers): Printer = jsNative
-        member __.findConfigFile(searchPath: string, fileExists: (string -> bool), ?configName: string): string = jsNative
-        member __.resolveTripleslashReference(moduleName: string, containingFile: string): string = jsNative
-        member __.createCompilerHost(options: CompilerOptions, ?setParentNodes: bool): CompilerHost = jsNative
-        member __.getPreEmitDiagnostics(program: Program, ?sourceFile: SourceFile, ?cancellationToken: CancellationToken): ResizeArray<Diagnostic> = jsNative
-        member __.formatDiagnostics(diagnostics: ResizeArray<Diagnostic>, host: FormatDiagnosticsHost): string = jsNative
-        member __.formatDiagnosticsWithColorAndContext(diagnostics: ResizeArray<Diagnostic>, host: FormatDiagnosticsHost): string = jsNative
-        member __.flattenDiagnosticMessageText(messageText: U2<string, DiagnosticMessageChain>, newLine: string): string = jsNative
-        member __.createProgram(rootNames: ResizeArray<string>, options: CompilerOptions, ?host: CompilerHost, ?oldProgram: Program): Program = jsNative
-        member __.parseCommandLine(commandLine: ReadonlyArray<string>, ?readFile: (string -> string option)): ParsedCommandLine = jsNative
-        member __.readConfigFile(fileName: string, readFile: (string -> string option)): obj = jsNative
-        member __.parseConfigFileTextToJson(fileName: string, jsonText: string): obj = jsNative
-        member __.readJsonConfigFile(fileName: string, readFile: (string -> string option)): JsonSourceFile = jsNative
-        member __.convertToObject(sourceFile: JsonSourceFile, errors: Push<Diagnostic>): obj = jsNative
-        member __.parseJsonConfigFileContent(json: obj, host: ParseConfigHost, basePath: string, ?existingOptions: CompilerOptions, ?configFileName: string, ?resolutionStack: ResizeArray<Path>, ?extraFileExtensions: ReadonlyArray<JsFileExtensionInfo>): ParsedCommandLine = jsNative
-        member __.parseJsonSourceFileConfigFileContent(sourceFile: JsonSourceFile, host: ParseConfigHost, basePath: string, ?existingOptions: CompilerOptions, ?configFileName: string, ?resolutionStack: ResizeArray<Path>, ?extraFileExtensions: ReadonlyArray<JsFileExtensionInfo>): ParsedCommandLine = jsNative
-        member __.convertCompilerOptionsFromJson(jsonOptions: obj, basePath: string, ?configFileName: string): obj = jsNative
-        member __.convertTypeAcquisitionFromJson(jsonOptions: obj, basePath: string, ?configFileName: string): obj = jsNative
-        member __.createClassifier(): Classifier = jsNative
-        member __.createDocumentRegistry(?useCaseSensitiveFileNames: bool, ?currentDirectory: string): DocumentRegistry = jsNative
-        member __.preProcessFile(sourceText: string, ?readImportFiles: bool, ?detectJavaScriptImports: bool): PreProcessedFileInfo = jsNative
-        member __.transpileModule(input: string, transpileOptions: TranspileOptions): TranspileOutput = jsNative
-        member __.transpile(input: string, ?compilerOptions: CompilerOptions, ?fileName: string, ?diagnostics: ResizeArray<Diagnostic>, ?moduleName: string): string = jsNative
-        member __.servicesVersion with get(): obj = jsNative and set(v: obj): unit = jsNative
-        member __.toEditorSettings(options: U2<EditorOptions, EditorSettings>): EditorSettings = jsNative
-        member __.displayPartsToString(displayParts: ResizeArray<SymbolDisplayPart>): string = jsNative
-        member __.getDefaultCompilerOptions(): CompilerOptions = jsNative
-        member __.getSupportedCodeFixes(): ResizeArray<string> = jsNative
-        member __.createLanguageServiceSourceFile(fileName: string, scriptSnapshot: IScriptSnapshot, scriptTarget: ScriptTarget, version: string, setNodeParents: bool, ?scriptKind: ScriptKind): SourceFile = jsNative
-        member __.disableIncrementalParsing with get(): bool = jsNative and set(v: bool): unit = jsNative
-        member __.updateLanguageServiceSourceFile(sourceFile: SourceFile, scriptSnapshot: IScriptSnapshot, version: string, textChangeRange: TextChangeRange, ?aggressiveChecks: bool): SourceFile = jsNative
-        member __.createLanguageService(host: LanguageServiceHost, ?documentRegistry: DocumentRegistry): LanguageService = jsNative
-        member __.getDefaultLibFilePath(options: CompilerOptions): string = jsNative
-        member __.transform<'T>(source: U2<'T, ResizeArray<'T>>, transformers: ResizeArray<TransformerFactory<'T>>, ?compilerOptions: CompilerOptions): TransformationResult<'T> = jsNative
+    type [<AllowNullLiteral>] IExports =
+        abstract versionMajorMinor: obj with get, set
+        abstract version: string with get, set
+        abstract getNodeMajorVersion: unit -> float
+        abstract sys: System with get, set
+        abstract tokenToString: t: SyntaxKind -> string option
+        abstract getPositionOfLineAndCharacter: sourceFile: SourceFile * line: float * character: float -> float
+        abstract getLineAndCharacterOfPosition: sourceFile: SourceFileLike * position: float -> LineAndCharacter
+        abstract isWhiteSpaceLike: ch: float -> bool
+        abstract isWhiteSpaceSingleLine: ch: float -> bool
+        abstract isLineBreak: ch: float -> bool
+        abstract couldStartTrivia: text: string * pos: float -> bool
+        abstract forEachLeadingCommentRange: text: string * pos: float * cb: (float -> float -> CommentKind -> bool -> 'T -> 'U) * ?state: 'T -> 'U option
+        abstract forEachTrailingCommentRange: text: string * pos: float * cb: (float -> float -> CommentKind -> bool -> 'T -> 'U) * ?state: 'T -> 'U option
+        abstract reduceEachLeadingCommentRange: text: string * pos: float * cb: (float -> float -> CommentKind -> bool -> 'T -> 'U -> 'U) * state: 'T * initial: 'U -> 'U
+        abstract reduceEachTrailingCommentRange: text: string * pos: float * cb: (float -> float -> CommentKind -> bool -> 'T -> 'U -> 'U) * state: 'T * initial: 'U -> 'U
+        abstract getLeadingCommentRanges: text: string * pos: float -> ResizeArray<CommentRange> option
+        abstract getTrailingCommentRanges: text: string * pos: float -> ResizeArray<CommentRange> option
+        abstract getShebang: text: string -> string option
+        abstract isIdentifierStart: ch: float * languageVersion: ScriptTarget -> bool
+        abstract isIdentifierPart: ch: float * languageVersion: ScriptTarget -> bool
+        abstract createScanner: languageVersion: ScriptTarget * skipTrivia: bool * ?languageVariant: LanguageVariant * ?text: string * ?onError: ErrorCallback * ?start: float * ?length: float -> Scanner
+        abstract getDefaultLibFileName: options: CompilerOptions -> string
+        abstract textSpanEnd: span: TextSpan -> float
+        abstract textSpanIsEmpty: span: TextSpan -> bool
+        abstract textSpanContainsPosition: span: TextSpan * position: float -> bool
+        abstract textSpanContainsTextSpan: span: TextSpan * other: TextSpan -> bool
+        abstract textSpanOverlapsWith: span: TextSpan * other: TextSpan -> bool
+        abstract textSpanOverlap: span1: TextSpan * span2: TextSpan -> TextSpan
+        abstract textSpanIntersectsWithTextSpan: span: TextSpan * other: TextSpan -> bool
+        abstract textSpanIntersectsWith: span: TextSpan * start: float * length: float -> bool
+        abstract decodedTextSpanIntersectsWith: start1: float * length1: float * start2: float * length2: float -> bool
+        abstract textSpanIntersectsWithPosition: span: TextSpan * position: float -> bool
+        abstract textSpanIntersection: span1: TextSpan * span2: TextSpan -> TextSpan
+        abstract createTextSpan: start: float * length: float -> TextSpan
+        abstract createTextSpanFromBounds: start: float * ``end``: float -> TextSpan
+        abstract textChangeRangeNewSpan: range: TextChangeRange -> TextSpan
+        abstract textChangeRangeIsUnchanged: range: TextChangeRange -> bool
+        abstract createTextChangeRange: span: TextSpan * newLength: float -> TextChangeRange
+        abstract unchangedTextChangeRange: TextChangeRange with get, set
+        abstract collapseTextChangeRangesAcrossMultipleVersions: changes: ReadonlyArray<TextChangeRange> -> TextChangeRange
+        abstract getTypeParameterOwner: d: Declaration -> Declaration
+        abstract isParameterPropertyDeclaration: node: Node -> bool
+        abstract isEmptyBindingPattern: node: BindingName -> bool
+        abstract isEmptyBindingElement: node: BindingElement -> bool
+        abstract getCombinedModifierFlags: node: Node -> ModifierFlags
+        abstract getCombinedNodeFlags: node: Node -> NodeFlags
+        abstract validateLocaleAndSetLanguage: locale: string * sys: obj * ?errors: Push<Diagnostic> -> unit
+        abstract getOriginalNode: node: Node -> Node
+        abstract getOriginalNode: node: Node * nodeTest: (Node -> bool) -> 'T
+        abstract isParseTreeNode: node: Node -> bool
+        abstract getParseTreeNode: node: Node -> Node
+        abstract getParseTreeNode: node: Node * ?nodeTest: (Node -> bool) -> 'T
+        abstract unescapeLeadingUnderscores: identifier: __String -> string
+        abstract unescapeIdentifier: id: string -> string
+        abstract getNameOfDeclaration: declaration: Declaration -> DeclarationName option
+        abstract isNumericLiteral: node: Node -> bool
+        abstract isStringLiteral: node: Node -> bool
+        abstract isJsxText: node: Node -> bool
+        abstract isRegularExpressionLiteral: node: Node -> bool
+        abstract isNoSubstitutionTemplateLiteral: node: Node -> bool
+        abstract isTemplateHead: node: Node -> bool
+        abstract isTemplateMiddle: node: Node -> bool
+        abstract isTemplateTail: node: Node -> bool
+        abstract isIdentifier: node: Node -> bool
+        abstract isQualifiedName: node: Node -> bool
+        abstract isComputedPropertyName: node: Node -> bool
+        abstract isTypeParameterDeclaration: node: Node -> bool
+        abstract isParameter: node: Node -> bool
+        abstract isDecorator: node: Node -> bool
+        abstract isPropertySignature: node: Node -> bool
+        abstract isPropertyDeclaration: node: Node -> bool
+        abstract isMethodSignature: node: Node -> bool
+        abstract isMethodDeclaration: node: Node -> bool
+        abstract isConstructorDeclaration: node: Node -> bool
+        abstract isGetAccessorDeclaration: node: Node -> bool
+        abstract isSetAccessorDeclaration: node: Node -> bool
+        abstract isCallSignatureDeclaration: node: Node -> bool
+        abstract isConstructSignatureDeclaration: node: Node -> bool
+        abstract isIndexSignatureDeclaration: node: Node -> bool
+        abstract isTypePredicateNode: node: Node -> bool
+        abstract isTypeReferenceNode: node: Node -> bool
+        abstract isFunctionTypeNode: node: Node -> bool
+        abstract isConstructorTypeNode: node: Node -> bool
+        abstract isTypeQueryNode: node: Node -> bool
+        abstract isTypeLiteralNode: node: Node -> bool
+        abstract isArrayTypeNode: node: Node -> bool
+        abstract isTupleTypeNode: node: Node -> bool
+        abstract isUnionTypeNode: node: Node -> bool
+        abstract isIntersectionTypeNode: node: Node -> bool
+        abstract isParenthesizedTypeNode: node: Node -> bool
+        abstract isThisTypeNode: node: Node -> bool
+        abstract isTypeOperatorNode: node: Node -> bool
+        abstract isIndexedAccessTypeNode: node: Node -> bool
+        abstract isMappedTypeNode: node: Node -> bool
+        abstract isLiteralTypeNode: node: Node -> bool
+        abstract isObjectBindingPattern: node: Node -> bool
+        abstract isArrayBindingPattern: node: Node -> bool
+        abstract isBindingElement: node: Node -> bool
+        abstract isArrayLiteralExpression: node: Node -> bool
+        abstract isObjectLiteralExpression: node: Node -> bool
+        abstract isPropertyAccessExpression: node: Node -> bool
+        abstract isElementAccessExpression: node: Node -> bool
+        abstract isCallExpression: node: Node -> bool
+        abstract isNewExpression: node: Node -> bool
+        abstract isTaggedTemplateExpression: node: Node -> bool
+        abstract isTypeAssertion: node: Node -> bool
+        abstract isParenthesizedExpression: node: Node -> bool
+        abstract skipPartiallyEmittedExpressions: node: Expression -> Expression
+        abstract skipPartiallyEmittedExpressions: node: Node -> Node
+        abstract isFunctionExpression: node: Node -> bool
+        abstract isArrowFunction: node: Node -> bool
+        abstract isDeleteExpression: node: Node -> bool
+        abstract isTypeOfExpression: node: Node -> bool
+        abstract isVoidExpression: node: Node -> bool
+        abstract isAwaitExpression: node: Node -> bool
+        abstract isPrefixUnaryExpression: node: Node -> bool
+        abstract isPostfixUnaryExpression: node: Node -> bool
+        abstract isBinaryExpression: node: Node -> bool
+        abstract isConditionalExpression: node: Node -> bool
+        abstract isTemplateExpression: node: Node -> bool
+        abstract isYieldExpression: node: Node -> bool
+        abstract isSpreadElement: node: Node -> bool
+        abstract isClassExpression: node: Node -> bool
+        abstract isOmittedExpression: node: Node -> bool
+        abstract isExpressionWithTypeArguments: node: Node -> bool
+        abstract isAsExpression: node: Node -> bool
+        abstract isNonNullExpression: node: Node -> bool
+        abstract isMetaProperty: node: Node -> bool
+        abstract isTemplateSpan: node: Node -> bool
+        abstract isSemicolonClassElement: node: Node -> bool
+        abstract isBlock: node: Node -> bool
+        abstract isVariableStatement: node: Node -> bool
+        abstract isEmptyStatement: node: Node -> bool
+        abstract isExpressionStatement: node: Node -> bool
+        abstract isIfStatement: node: Node -> bool
+        abstract isDoStatement: node: Node -> bool
+        abstract isWhileStatement: node: Node -> bool
+        abstract isForStatement: node: Node -> bool
+        abstract isForInStatement: node: Node -> bool
+        abstract isForOfStatement: node: Node -> bool
+        abstract isContinueStatement: node: Node -> bool
+        abstract isBreakStatement: node: Node -> bool
+        abstract isReturnStatement: node: Node -> bool
+        abstract isWithStatement: node: Node -> bool
+        abstract isSwitchStatement: node: Node -> bool
+        abstract isLabeledStatement: node: Node -> bool
+        abstract isThrowStatement: node: Node -> bool
+        abstract isTryStatement: node: Node -> bool
+        abstract isDebuggerStatement: node: Node -> bool
+        abstract isVariableDeclaration: node: Node -> bool
+        abstract isVariableDeclarationList: node: Node -> bool
+        abstract isFunctionDeclaration: node: Node -> bool
+        abstract isClassDeclaration: node: Node -> bool
+        abstract isInterfaceDeclaration: node: Node -> bool
+        abstract isTypeAliasDeclaration: node: Node -> bool
+        abstract isEnumDeclaration: node: Node -> bool
+        abstract isModuleDeclaration: node: Node -> bool
+        abstract isModuleBlock: node: Node -> bool
+        abstract isCaseBlock: node: Node -> bool
+        abstract isNamespaceExportDeclaration: node: Node -> bool
+        abstract isImportEqualsDeclaration: node: Node -> bool
+        abstract isImportDeclaration: node: Node -> bool
+        abstract isImportClause: node: Node -> bool
+        abstract isNamespaceImport: node: Node -> bool
+        abstract isNamedImports: node: Node -> bool
+        abstract isImportSpecifier: node: Node -> bool
+        abstract isExportAssignment: node: Node -> bool
+        abstract isExportDeclaration: node: Node -> bool
+        abstract isNamedExports: node: Node -> bool
+        abstract isExportSpecifier: node: Node -> bool
+        abstract isMissingDeclaration: node: Node -> bool
+        abstract isExternalModuleReference: node: Node -> bool
+        abstract isJsxElement: node: Node -> bool
+        abstract isJsxSelfClosingElement: node: Node -> bool
+        abstract isJsxOpeningElement: node: Node -> bool
+        abstract isJsxClosingElement: node: Node -> bool
+        abstract isJsxAttribute: node: Node -> bool
+        abstract isJsxAttributes: node: Node -> bool
+        abstract isJsxSpreadAttribute: node: Node -> bool
+        abstract isJsxExpression: node: Node -> bool
+        abstract isCaseClause: node: Node -> bool
+        abstract isDefaultClause: node: Node -> bool
+        abstract isHeritageClause: node: Node -> bool
+        abstract isCatchClause: node: Node -> bool
+        abstract isPropertyAssignment: node: Node -> bool
+        abstract isShorthandPropertyAssignment: node: Node -> bool
+        abstract isSpreadAssignment: node: Node -> bool
+        abstract isEnumMember: node: Node -> bool
+        abstract isSourceFile: node: Node -> bool
+        abstract isBundle: node: Node -> bool
+        abstract isJSDocTypeExpression: node: Node -> bool
+        abstract isJSDocAllType: node: JSDocAllType -> bool
+        abstract isJSDocUnknownType: node: Node -> bool
+        abstract isJSDocNullableType: node: Node -> bool
+        abstract isJSDocNonNullableType: node: Node -> bool
+        abstract isJSDocOptionalType: node: Node -> bool
+        abstract isJSDocFunctionType: node: Node -> bool
+        abstract isJSDocVariadicType: node: Node -> bool
+        abstract isJSDoc: node: Node -> bool
+        abstract isJSDocAugmentsTag: node: Node -> bool
+        abstract isJSDocParameterTag: node: Node -> bool
+        abstract isJSDocReturnTag: node: Node -> bool
+        abstract isJSDocTypeTag: node: Node -> bool
+        abstract isJSDocTemplateTag: node: Node -> bool
+        abstract isJSDocTypedefTag: node: Node -> bool
+        abstract isJSDocPropertyTag: node: Node -> bool
+        abstract isJSDocPropertyLikeTag: node: Node -> bool
+        abstract isJSDocTypeLiteral: node: Node -> bool
+        abstract isToken: n: Node -> bool
+        abstract isLiteralExpression: node: Node -> bool
+        abstract isTemplateMiddleOrTemplateTail: node: Node -> bool
+        abstract isStringTextContainingNode: node: Node -> bool
+        abstract isModifier: node: Node -> bool
+        abstract isEntityName: node: Node -> bool
+        abstract isPropertyName: node: Node -> bool
+        abstract isBindingName: node: Node -> bool
+        abstract isFunctionLike: node: Node -> bool
+        abstract isClassElement: node: Node -> bool
+        abstract isClassLike: node: Node -> bool
+        abstract isAccessor: node: Node -> bool
+        abstract isTypeElement: node: Node -> bool
+        abstract isObjectLiteralElementLike: node: Node -> bool
+        abstract isTypeNode: node: Node -> bool
+        abstract isFunctionOrConstructorTypeNode: node: Node -> bool
+        abstract isPropertyAccessOrQualifiedName: node: Node -> bool
+        abstract isCallLikeExpression: node: Node -> bool
+        abstract isCallOrNewExpression: node: Node -> bool
+        abstract isTemplateLiteral: node: Node -> bool
+        abstract isAssertionExpression: node: Node -> bool
+        abstract isIterationStatement: node: Node * lookInLabeledStatements: bool -> bool
+        abstract isJsxOpeningLikeElement: node: Node -> bool
+        abstract isCaseOrDefaultClause: node: Node -> bool
+        abstract isJSDocCommentContainingNode: node: Node -> bool
+        abstract createNode: kind: SyntaxKind * ?pos: float * ?``end``: float -> Node
+        abstract forEachChild: node: Node * cbNode: (Node -> 'T option) * ?cbNodes: (ResizeArray<Node> -> 'T option) -> 'T option
+        abstract createSourceFile: fileName: string * sourceText: string * languageVersion: ScriptTarget * ?setParentNodes: bool * ?scriptKind: ScriptKind -> SourceFile
+        abstract parseIsolatedEntityName: text: string * languageVersion: ScriptTarget -> EntityName
+        abstract parseJsonText: fileName: string * sourceText: string -> JsonSourceFile
+        abstract isExternalModule: file: SourceFile -> bool
+        abstract updateSourceFile: sourceFile: SourceFile * newText: string * textChangeRange: TextChangeRange * ?aggressiveChecks: bool -> SourceFile
+        abstract getEffectiveTypeRoots: options: CompilerOptions * host: obj -> ResizeArray<string> option
+        abstract resolveTypeReferenceDirective: typeReferenceDirectiveName: string * containingFile: string option * options: CompilerOptions * host: ModuleResolutionHost -> ResolvedTypeReferenceDirectiveWithFailedLookupLocations
+        abstract getAutomaticTypeDirectiveNames: options: CompilerOptions * host: ModuleResolutionHost -> ResizeArray<string>
+        abstract createModuleResolutionCache: currentDirectory: string * getCanonicalFileName: (string -> string) -> ModuleResolutionCache
+        abstract resolveModuleName: moduleName: string * containingFile: string * compilerOptions: CompilerOptions * host: ModuleResolutionHost * ?cache: ModuleResolutionCache -> ResolvedModuleWithFailedLookupLocations
+        abstract nodeModuleNameResolver: moduleName: string * containingFile: string * compilerOptions: CompilerOptions * host: ModuleResolutionHost * ?cache: ModuleResolutionCache -> ResolvedModuleWithFailedLookupLocations
+        abstract classicNameResolver: moduleName: string * containingFile: string * compilerOptions: CompilerOptions * host: ModuleResolutionHost * ?cache: NonRelativeModuleNameResolutionCache -> ResolvedModuleWithFailedLookupLocations
+        abstract createNodeArray: ?elements: ReadonlyArray<'T> * ?hasTrailingComma: bool -> ResizeArray<'T>
+        abstract createLiteral: value: string -> StringLiteral
+        abstract createLiteral: value: float -> NumericLiteral
+        abstract createLiteral: value: bool -> BooleanLiteral
+        abstract createLiteral: sourceNode: U3<StringLiteral, NumericLiteral, Identifier> -> StringLiteral
+        abstract createLiteral: value: U3<string, float, bool> -> PrimaryExpression
+        abstract createNumericLiteral: value: string -> NumericLiteral
+        abstract createIdentifier: text: string -> Identifier
+        abstract updateIdentifier: node: Identifier * typeArguments: ResizeArray<TypeNode> option -> Identifier
+        abstract createTempVariable: recordTempVariable: obj option -> Identifier
+        abstract createLoopVariable: unit -> Identifier
+        abstract createUniqueName: text: string -> Identifier
+        abstract getGeneratedNameForNode: node: Node -> Identifier
+        abstract createToken: token: 'TKind -> Token<'TKind>
+        abstract createSuper: unit -> SuperExpression
+        abstract createThis: unit -> obj
+        abstract createNull: unit -> obj
+        abstract createTrue: unit -> obj
+        abstract createFalse: unit -> obj
+        abstract createQualifiedName: left: EntityName * right: U2<string, Identifier> -> QualifiedName
+        abstract updateQualifiedName: node: QualifiedName * left: EntityName * right: Identifier -> QualifiedName
+        abstract createComputedPropertyName: expression: Expression -> ComputedPropertyName
+        abstract updateComputedPropertyName: node: ComputedPropertyName * expression: Expression -> ComputedPropertyName
+        abstract createTypeParameterDeclaration: name: U2<string, Identifier> * ?``constraint``: TypeNode * ?defaultType: TypeNode -> TypeParameterDeclaration
+        abstract updateTypeParameterDeclaration: node: TypeParameterDeclaration * name: Identifier * ``constraint``: TypeNode option * defaultType: TypeNode option -> TypeParameterDeclaration
+        abstract createParameter: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * dotDotDotToken: DotDotDotToken option * name: U2<string, BindingName> * ?questionToken: QuestionToken * ?``type``: TypeNode * ?initializer: Expression -> ParameterDeclaration
+        abstract updateParameter: node: ParameterDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * dotDotDotToken: DotDotDotToken option * name: U2<string, BindingName> * questionToken: QuestionToken option * ``type``: TypeNode option * initializer: Expression option -> ParameterDeclaration
+        abstract createDecorator: expression: Expression -> Decorator
+        abstract updateDecorator: node: Decorator * expression: Expression -> Decorator
+        abstract createPropertySignature: modifiers: ReadonlyArray<Modifier> option * name: U2<PropertyName, string> * questionToken: QuestionToken option * ``type``: TypeNode option * initializer: Expression option -> PropertySignature
+        abstract updatePropertySignature: node: PropertySignature * modifiers: ReadonlyArray<Modifier> option * name: PropertyName * questionToken: QuestionToken option * ``type``: TypeNode option * initializer: Expression option -> PropertySignature
+        abstract createProperty: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, PropertyName> * questionToken: QuestionToken option * ``type``: TypeNode option * initializer: Expression option -> PropertyDeclaration
+        abstract updateProperty: node: PropertyDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, PropertyName> * questionToken: QuestionToken option * ``type``: TypeNode option * initializer: Expression option -> PropertyDeclaration
+        abstract createMethodSignature: typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * name: U2<string, PropertyName> * questionToken: QuestionToken option -> MethodSignature
+        abstract updateMethodSignature: node: MethodSignature * typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option * name: PropertyName * questionToken: QuestionToken option -> MethodSignature
+        abstract createMethod: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * asteriskToken: AsteriskToken option * name: U2<string, PropertyName> * questionToken: QuestionToken option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: Block option -> MethodDeclaration
+        abstract updateMethod: node: MethodDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * asteriskToken: AsteriskToken option * name: PropertyName * questionToken: QuestionToken option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: Block option -> MethodDeclaration
+        abstract createConstructor: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * parameters: ReadonlyArray<ParameterDeclaration> * body: Block option -> ConstructorDeclaration
+        abstract updateConstructor: node: ConstructorDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * parameters: ReadonlyArray<ParameterDeclaration> * body: Block option -> ConstructorDeclaration
+        abstract createGetAccessor: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, PropertyName> * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: Block option -> GetAccessorDeclaration
+        abstract updateGetAccessor: node: GetAccessorDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: PropertyName * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: Block option -> GetAccessorDeclaration
+        abstract createSetAccessor: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, PropertyName> * parameters: ReadonlyArray<ParameterDeclaration> * body: Block option -> SetAccessorDeclaration
+        abstract updateSetAccessor: node: SetAccessorDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: PropertyName * parameters: ReadonlyArray<ParameterDeclaration> * body: Block option -> SetAccessorDeclaration
+        abstract createCallSignature: typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option -> CallSignatureDeclaration
+        abstract updateCallSignature: node: CallSignatureDeclaration * typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option -> CallSignatureDeclaration
+        abstract createConstructSignature: typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option -> ConstructSignatureDeclaration
+        abstract updateConstructSignature: node: ConstructSignatureDeclaration * typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option -> ConstructSignatureDeclaration
+        abstract createIndexSignature: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode -> IndexSignatureDeclaration
+        abstract updateIndexSignature: node: IndexSignatureDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode -> IndexSignatureDeclaration
+        abstract createKeywordTypeNode: kind: obj -> KeywordTypeNode
+        abstract createTypePredicateNode: parameterName: U3<Identifier, ThisTypeNode, string> * ``type``: TypeNode -> TypePredicateNode
+        abstract updateTypePredicateNode: node: TypePredicateNode * parameterName: U2<Identifier, ThisTypeNode> * ``type``: TypeNode -> TypePredicateNode
+        abstract createTypeReferenceNode: typeName: U2<string, EntityName> * typeArguments: ReadonlyArray<TypeNode> option -> TypeReferenceNode
+        abstract updateTypeReferenceNode: node: TypeReferenceNode * typeName: EntityName * typeArguments: ResizeArray<TypeNode> option -> TypeReferenceNode
+        abstract createFunctionTypeNode: typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option -> FunctionTypeNode
+        abstract updateFunctionTypeNode: node: FunctionTypeNode * typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option -> FunctionTypeNode
+        abstract createConstructorTypeNode: typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option -> ConstructorTypeNode
+        abstract updateConstructorTypeNode: node: ConstructorTypeNode * typeParameters: ResizeArray<TypeParameterDeclaration> option * parameters: ResizeArray<ParameterDeclaration> * ``type``: TypeNode option -> ConstructorTypeNode
+        abstract createTypeQueryNode: exprName: EntityName -> TypeQueryNode
+        abstract updateTypeQueryNode: node: TypeQueryNode * exprName: EntityName -> TypeQueryNode
+        abstract createTypeLiteralNode: members: ReadonlyArray<TypeElement> -> TypeLiteralNode
+        abstract updateTypeLiteralNode: node: TypeLiteralNode * members: ResizeArray<TypeElement> -> TypeLiteralNode
+        abstract createArrayTypeNode: elementType: TypeNode -> ArrayTypeNode
+        abstract updateArrayTypeNode: node: ArrayTypeNode * elementType: TypeNode -> ArrayTypeNode
+        abstract createTupleTypeNode: elementTypes: ReadonlyArray<TypeNode> -> TupleTypeNode
+        abstract updateTypleTypeNode: node: TupleTypeNode * elementTypes: ReadonlyArray<TypeNode> -> TupleTypeNode
+        abstract createUnionTypeNode: types: ResizeArray<TypeNode> -> UnionTypeNode
+        abstract updateUnionTypeNode: node: UnionTypeNode * types: ResizeArray<TypeNode> -> UnionTypeNode
+        abstract createIntersectionTypeNode: types: ResizeArray<TypeNode> -> IntersectionTypeNode
+        abstract updateIntersectionTypeNode: node: IntersectionTypeNode * types: ResizeArray<TypeNode> -> IntersectionTypeNode
+        abstract createUnionOrIntersectionTypeNode: kind: SyntaxKind * types: ReadonlyArray<TypeNode> -> UnionOrIntersectionTypeNode
+        abstract createParenthesizedType: ``type``: TypeNode -> ParenthesizedTypeNode
+        abstract updateParenthesizedType: node: ParenthesizedTypeNode * ``type``: TypeNode -> ParenthesizedTypeNode
+        abstract createThisTypeNode: unit -> ThisTypeNode
+        abstract createTypeOperatorNode: ``type``: TypeNode -> TypeOperatorNode
+        abstract updateTypeOperatorNode: node: TypeOperatorNode * ``type``: TypeNode -> TypeOperatorNode
+        abstract createIndexedAccessTypeNode: objectType: TypeNode * indexType: TypeNode -> IndexedAccessTypeNode
+        abstract updateIndexedAccessTypeNode: node: IndexedAccessTypeNode * objectType: TypeNode * indexType: TypeNode -> IndexedAccessTypeNode
+        abstract createMappedTypeNode: readonlyToken: ReadonlyToken option * typeParameter: TypeParameterDeclaration * questionToken: QuestionToken option * ``type``: TypeNode option -> MappedTypeNode
+        abstract updateMappedTypeNode: node: MappedTypeNode * readonlyToken: ReadonlyToken option * typeParameter: TypeParameterDeclaration * questionToken: QuestionToken option * ``type``: TypeNode option -> MappedTypeNode
+        abstract createLiteralTypeNode: literal: Expression -> LiteralTypeNode
+        abstract updateLiteralTypeNode: node: LiteralTypeNode * literal: Expression -> LiteralTypeNode
+        abstract createObjectBindingPattern: elements: ReadonlyArray<BindingElement> -> ObjectBindingPattern
+        abstract updateObjectBindingPattern: node: ObjectBindingPattern * elements: ReadonlyArray<BindingElement> -> ObjectBindingPattern
+        abstract createArrayBindingPattern: elements: ReadonlyArray<ArrayBindingElement> -> ArrayBindingPattern
+        abstract updateArrayBindingPattern: node: ArrayBindingPattern * elements: ReadonlyArray<ArrayBindingElement> -> ArrayBindingPattern
+        abstract createBindingElement: dotDotDotToken: DotDotDotToken option * propertyName: U2<string, PropertyName> option * name: U2<string, BindingName> * ?initializer: Expression -> BindingElement
+        abstract updateBindingElement: node: BindingElement * dotDotDotToken: DotDotDotToken option * propertyName: PropertyName option * name: BindingName * initializer: Expression option -> BindingElement
+        abstract createArrayLiteral: ?elements: ReadonlyArray<Expression> * ?multiLine: bool -> ArrayLiteralExpression
+        abstract updateArrayLiteral: node: ArrayLiteralExpression * elements: ReadonlyArray<Expression> -> ArrayLiteralExpression
+        abstract createObjectLiteral: ?properties: ReadonlyArray<ObjectLiteralElementLike> * ?multiLine: bool -> ObjectLiteralExpression
+        abstract updateObjectLiteral: node: ObjectLiteralExpression * properties: ReadonlyArray<ObjectLiteralElementLike> -> ObjectLiteralExpression
+        abstract createPropertyAccess: expression: Expression * name: U2<string, Identifier> -> PropertyAccessExpression
+        abstract updatePropertyAccess: node: PropertyAccessExpression * expression: Expression * name: Identifier -> PropertyAccessExpression
+        abstract createElementAccess: expression: Expression * index: U2<float, Expression> -> ElementAccessExpression
+        abstract updateElementAccess: node: ElementAccessExpression * expression: Expression * argumentExpression: Expression -> ElementAccessExpression
+        abstract createCall: expression: Expression * typeArguments: ReadonlyArray<TypeNode> option * argumentsArray: ReadonlyArray<Expression> -> CallExpression
+        abstract updateCall: node: CallExpression * expression: Expression * typeArguments: ReadonlyArray<TypeNode> option * argumentsArray: ReadonlyArray<Expression> -> CallExpression
+        abstract createNew: expression: Expression * typeArguments: ReadonlyArray<TypeNode> option * argumentsArray: ReadonlyArray<Expression> option -> NewExpression
+        abstract updateNew: node: NewExpression * expression: Expression * typeArguments: ReadonlyArray<TypeNode> option * argumentsArray: ReadonlyArray<Expression> option -> NewExpression
+        abstract createTaggedTemplate: tag: Expression * template: TemplateLiteral -> TaggedTemplateExpression
+        abstract updateTaggedTemplate: node: TaggedTemplateExpression * tag: Expression * template: TemplateLiteral -> TaggedTemplateExpression
+        abstract createTypeAssertion: ``type``: TypeNode * expression: Expression -> TypeAssertion
+        abstract updateTypeAssertion: node: TypeAssertion * ``type``: TypeNode * expression: Expression -> TypeAssertion
+        abstract createParen: expression: Expression -> ParenthesizedExpression
+        abstract updateParen: node: ParenthesizedExpression * expression: Expression -> ParenthesizedExpression
+        abstract createFunctionExpression: modifiers: ReadonlyArray<Modifier> option * asteriskToken: AsteriskToken option * name: U2<string, Identifier> option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: Block -> FunctionExpression
+        abstract updateFunctionExpression: node: FunctionExpression * modifiers: ReadonlyArray<Modifier> option * asteriskToken: AsteriskToken option * name: Identifier option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: Block -> FunctionExpression
+        abstract createArrowFunction: modifiers: ReadonlyArray<Modifier> option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * equalsGreaterThanToken: EqualsGreaterThanToken option * body: ConciseBody -> ArrowFunction
+        abstract updateArrowFunction: node: ArrowFunction * modifiers: ReadonlyArray<Modifier> option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: ConciseBody -> ArrowFunction
+        abstract updateArrowFunction: node: ArrowFunction * modifiers: ReadonlyArray<Modifier> option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * equalsGreaterThanToken: Token<SyntaxKind> * body: ConciseBody -> ArrowFunction
+        abstract createDelete: expression: Expression -> DeleteExpression
+        abstract updateDelete: node: DeleteExpression * expression: Expression -> DeleteExpression
+        abstract createTypeOf: expression: Expression -> TypeOfExpression
+        abstract updateTypeOf: node: TypeOfExpression * expression: Expression -> TypeOfExpression
+        abstract createVoid: expression: Expression -> VoidExpression
+        abstract updateVoid: node: VoidExpression * expression: Expression -> VoidExpression
+        abstract createAwait: expression: Expression -> AwaitExpression
+        abstract updateAwait: node: AwaitExpression * expression: Expression -> AwaitExpression
+        abstract createPrefix: operator: PrefixUnaryOperator * operand: Expression -> PrefixUnaryExpression
+        abstract updatePrefix: node: PrefixUnaryExpression * operand: Expression -> PrefixUnaryExpression
+        abstract createPostfix: operand: Expression * operator: PostfixUnaryOperator -> PostfixUnaryExpression
+        abstract updatePostfix: node: PostfixUnaryExpression * operand: Expression -> PostfixUnaryExpression
+        abstract createBinary: left: Expression * operator: U2<BinaryOperator, BinaryOperatorToken> * right: Expression -> BinaryExpression
+        abstract updateBinary: node: BinaryExpression * left: Expression * right: Expression * ?operator: U2<BinaryOperator, BinaryOperatorToken> -> BinaryExpression
+        abstract createConditional: condition: Expression * whenTrue: Expression * whenFalse: Expression -> ConditionalExpression
+        abstract createConditional: condition: Expression * questionToken: QuestionToken * whenTrue: Expression * colonToken: ColonToken * whenFalse: Expression -> ConditionalExpression
+        abstract updateConditional: node: ConditionalExpression * condition: Expression * whenTrue: Expression * whenFalse: Expression -> ConditionalExpression
+        abstract updateConditional: node: ConditionalExpression * condition: Expression * questionToken: Token<SyntaxKind> * whenTrue: Expression * colonToken: Token<SyntaxKind> * whenFalse: Expression -> ConditionalExpression
+        abstract createTemplateExpression: head: TemplateHead * templateSpans: ReadonlyArray<TemplateSpan> -> TemplateExpression
+        abstract updateTemplateExpression: node: TemplateExpression * head: TemplateHead * templateSpans: ReadonlyArray<TemplateSpan> -> TemplateExpression
+        abstract createYield: ?expression: Expression -> YieldExpression
+        abstract createYield: asteriskToken: AsteriskToken * expression: Expression -> YieldExpression
+        abstract updateYield: node: YieldExpression * asteriskToken: AsteriskToken option * expression: Expression -> YieldExpression
+        abstract createSpread: expression: Expression -> SpreadElement
+        abstract updateSpread: node: SpreadElement * expression: Expression -> SpreadElement
+        abstract createClassExpression: modifiers: ReadonlyArray<Modifier> option * name: U2<string, Identifier> option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * heritageClauses: ReadonlyArray<HeritageClause> * members: ReadonlyArray<ClassElement> -> ClassExpression
+        abstract updateClassExpression: node: ClassExpression * modifiers: ReadonlyArray<Modifier> option * name: Identifier option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * heritageClauses: ReadonlyArray<HeritageClause> * members: ReadonlyArray<ClassElement> -> ClassExpression
+        abstract createOmittedExpression: unit -> OmittedExpression
+        abstract createExpressionWithTypeArguments: typeArguments: ReadonlyArray<TypeNode> * expression: Expression -> ExpressionWithTypeArguments
+        abstract updateExpressionWithTypeArguments: node: ExpressionWithTypeArguments * typeArguments: ReadonlyArray<TypeNode> * expression: Expression -> ExpressionWithTypeArguments
+        abstract createAsExpression: expression: Expression * ``type``: TypeNode -> AsExpression
+        abstract updateAsExpression: node: AsExpression * expression: Expression * ``type``: TypeNode -> AsExpression
+        abstract createNonNullExpression: expression: Expression -> NonNullExpression
+        abstract updateNonNullExpression: node: NonNullExpression * expression: Expression -> NonNullExpression
+        abstract createMetaProperty: keywordToken: obj * name: Identifier -> MetaProperty
+        abstract updateMetaProperty: node: MetaProperty * name: Identifier -> MetaProperty
+        abstract createTemplateSpan: expression: Expression * literal: U2<TemplateMiddle, TemplateTail> -> TemplateSpan
+        abstract updateTemplateSpan: node: TemplateSpan * expression: Expression * literal: U2<TemplateMiddle, TemplateTail> -> TemplateSpan
+        abstract createSemicolonClassElement: unit -> SemicolonClassElement
+        abstract createBlock: statements: ReadonlyArray<Statement> * ?multiLine: bool -> Block
+        abstract updateBlock: node: Block * statements: ReadonlyArray<Statement> -> Block
+        abstract createVariableStatement: modifiers: ReadonlyArray<Modifier> option * declarationList: U2<VariableDeclarationList, ReadonlyArray<VariableDeclaration>> -> VariableStatement
+        abstract updateVariableStatement: node: VariableStatement * modifiers: ReadonlyArray<Modifier> option * declarationList: VariableDeclarationList -> VariableStatement
+        abstract createEmptyStatement: unit -> EmptyStatement
+        abstract createStatement: expression: Expression -> ExpressionStatement
+        abstract updateStatement: node: ExpressionStatement * expression: Expression -> ExpressionStatement
+        abstract createIf: expression: Expression * thenStatement: Statement * ?elseStatement: Statement -> IfStatement
+        abstract updateIf: node: IfStatement * expression: Expression * thenStatement: Statement * elseStatement: Statement option -> IfStatement
+        abstract createDo: statement: Statement * expression: Expression -> DoStatement
+        abstract updateDo: node: DoStatement * statement: Statement * expression: Expression -> DoStatement
+        abstract createWhile: expression: Expression * statement: Statement -> WhileStatement
+        abstract updateWhile: node: WhileStatement * expression: Expression * statement: Statement -> WhileStatement
+        abstract createFor: initializer: ForInitializer option * condition: Expression option * incrementor: Expression option * statement: Statement -> ForStatement
+        abstract updateFor: node: ForStatement * initializer: ForInitializer option * condition: Expression option * incrementor: Expression option * statement: Statement -> ForStatement
+        abstract createForIn: initializer: ForInitializer * expression: Expression * statement: Statement -> ForInStatement
+        abstract updateForIn: node: ForInStatement * initializer: ForInitializer * expression: Expression * statement: Statement -> ForInStatement
+        abstract createForOf: awaitModifier: AwaitKeywordToken * initializer: ForInitializer * expression: Expression * statement: Statement -> ForOfStatement
+        abstract updateForOf: node: ForOfStatement * awaitModifier: AwaitKeywordToken * initializer: ForInitializer * expression: Expression * statement: Statement -> ForOfStatement
+        abstract createContinue: ?label: U2<string, Identifier> -> ContinueStatement
+        abstract updateContinue: node: ContinueStatement * label: Identifier option -> ContinueStatement
+        abstract createBreak: ?label: U2<string, Identifier> -> BreakStatement
+        abstract updateBreak: node: BreakStatement * label: Identifier option -> BreakStatement
+        abstract createReturn: ?expression: Expression -> ReturnStatement
+        abstract updateReturn: node: ReturnStatement * expression: Expression option -> ReturnStatement
+        abstract createWith: expression: Expression * statement: Statement -> WithStatement
+        abstract updateWith: node: WithStatement * expression: Expression * statement: Statement -> WithStatement
+        abstract createSwitch: expression: Expression * caseBlock: CaseBlock -> SwitchStatement
+        abstract updateSwitch: node: SwitchStatement * expression: Expression * caseBlock: CaseBlock -> SwitchStatement
+        abstract createLabel: label: U2<string, Identifier> * statement: Statement -> LabeledStatement
+        abstract updateLabel: node: LabeledStatement * label: Identifier * statement: Statement -> LabeledStatement
+        abstract createThrow: expression: Expression -> ThrowStatement
+        abstract updateThrow: node: ThrowStatement * expression: Expression -> ThrowStatement
+        abstract createTry: tryBlock: Block * catchClause: CatchClause option * finallyBlock: Block option -> TryStatement
+        abstract updateTry: node: TryStatement * tryBlock: Block * catchClause: CatchClause option * finallyBlock: Block option -> TryStatement
+        abstract createDebuggerStatement: unit -> DebuggerStatement
+        abstract createVariableDeclaration: name: U2<string, BindingName> * ?``type``: TypeNode * ?initializer: Expression -> VariableDeclaration
+        abstract updateVariableDeclaration: node: VariableDeclaration * name: BindingName * ``type``: TypeNode option * initializer: Expression option -> VariableDeclaration
+        abstract createVariableDeclarationList: declarations: ReadonlyArray<VariableDeclaration> * ?flags: NodeFlags -> VariableDeclarationList
+        abstract updateVariableDeclarationList: node: VariableDeclarationList * declarations: ReadonlyArray<VariableDeclaration> -> VariableDeclarationList
+        abstract createFunctionDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * asteriskToken: AsteriskToken option * name: U2<string, Identifier> option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: Block option -> FunctionDeclaration
+        abstract updateFunctionDeclaration: node: FunctionDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * asteriskToken: AsteriskToken option * name: Identifier option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * parameters: ReadonlyArray<ParameterDeclaration> * ``type``: TypeNode option * body: Block option -> FunctionDeclaration
+        abstract createClassDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, Identifier> option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * heritageClauses: ReadonlyArray<HeritageClause> * members: ReadonlyArray<ClassElement> -> ClassDeclaration
+        abstract updateClassDeclaration: node: ClassDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: Identifier option * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * heritageClauses: ReadonlyArray<HeritageClause> * members: ReadonlyArray<ClassElement> -> ClassDeclaration
+        abstract createInterfaceDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, Identifier> * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * heritageClauses: ReadonlyArray<HeritageClause> option * members: ReadonlyArray<TypeElement> -> InterfaceDeclaration
+        abstract updateInterfaceDeclaration: node: InterfaceDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: Identifier * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * heritageClauses: ReadonlyArray<HeritageClause> option * members: ReadonlyArray<TypeElement> -> InterfaceDeclaration
+        abstract createTypeAliasDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, Identifier> * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * ``type``: TypeNode -> TypeAliasDeclaration
+        abstract updateTypeAliasDeclaration: node: TypeAliasDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: Identifier * typeParameters: ReadonlyArray<TypeParameterDeclaration> option * ``type``: TypeNode -> TypeAliasDeclaration
+        abstract createEnumDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, Identifier> * members: ReadonlyArray<EnumMember> -> EnumDeclaration
+        abstract updateEnumDeclaration: node: EnumDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: Identifier * members: ReadonlyArray<EnumMember> -> EnumDeclaration
+        abstract createModuleDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: ModuleName * body: ModuleBody option * ?flags: NodeFlags -> ModuleDeclaration
+        abstract updateModuleDeclaration: node: ModuleDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: ModuleName * body: ModuleBody option -> ModuleDeclaration
+        abstract createModuleBlock: statements: ReadonlyArray<Statement> -> ModuleBlock
+        abstract updateModuleBlock: node: ModuleBlock * statements: ReadonlyArray<Statement> -> ModuleBlock
+        abstract createCaseBlock: clauses: ReadonlyArray<CaseOrDefaultClause> -> CaseBlock
+        abstract updateCaseBlock: node: CaseBlock * clauses: ReadonlyArray<CaseOrDefaultClause> -> CaseBlock
+        abstract createNamespaceExportDeclaration: name: U2<string, Identifier> -> NamespaceExportDeclaration
+        abstract updateNamespaceExportDeclaration: node: NamespaceExportDeclaration * name: Identifier -> NamespaceExportDeclaration
+        abstract createImportEqualsDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: U2<string, Identifier> * moduleReference: ModuleReference -> ImportEqualsDeclaration
+        abstract updateImportEqualsDeclaration: node: ImportEqualsDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * name: Identifier * moduleReference: ModuleReference -> ImportEqualsDeclaration
+        abstract createImportDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * importClause: ImportClause option * ?moduleSpecifier: Expression -> ImportDeclaration
+        abstract updateImportDeclaration: node: ImportDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * importClause: ImportClause option * moduleSpecifier: Expression option -> ImportDeclaration
+        abstract createImportClause: name: Identifier option * namedBindings: NamedImportBindings option -> ImportClause
+        abstract updateImportClause: node: ImportClause * name: Identifier option * namedBindings: NamedImportBindings option -> ImportClause
+        abstract createNamespaceImport: name: Identifier -> NamespaceImport
+        abstract updateNamespaceImport: node: NamespaceImport * name: Identifier -> NamespaceImport
+        abstract createNamedImports: elements: ReadonlyArray<ImportSpecifier> -> NamedImports
+        abstract updateNamedImports: node: NamedImports * elements: ReadonlyArray<ImportSpecifier> -> NamedImports
+        abstract createImportSpecifier: propertyName: Identifier option * name: Identifier -> ImportSpecifier
+        abstract updateImportSpecifier: node: ImportSpecifier * propertyName: Identifier option * name: Identifier -> ImportSpecifier
+        abstract createExportAssignment: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * isExportEquals: bool * expression: Expression -> ExportAssignment
+        abstract updateExportAssignment: node: ExportAssignment * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * expression: Expression -> ExportAssignment
+        abstract createExportDeclaration: decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * exportClause: NamedExports option * ?moduleSpecifier: Expression -> ExportDeclaration
+        abstract updateExportDeclaration: node: ExportDeclaration * decorators: ReadonlyArray<Decorator> option * modifiers: ReadonlyArray<Modifier> option * exportClause: NamedExports option * moduleSpecifier: Expression option -> ExportDeclaration
+        abstract createNamedExports: elements: ReadonlyArray<ExportSpecifier> -> NamedExports
+        abstract updateNamedExports: node: NamedExports * elements: ReadonlyArray<ExportSpecifier> -> NamedExports
+        abstract createExportSpecifier: propertyName: U2<string, Identifier> option * name: U2<string, Identifier> -> ExportSpecifier
+        abstract updateExportSpecifier: node: ExportSpecifier * propertyName: Identifier option * name: Identifier -> ExportSpecifier
+        abstract createExternalModuleReference: expression: Expression -> ExternalModuleReference
+        abstract updateExternalModuleReference: node: ExternalModuleReference * expression: Expression -> ExternalModuleReference
+        abstract createJsxElement: openingElement: JsxOpeningElement * children: ReadonlyArray<JsxChild> * closingElement: JsxClosingElement -> JsxElement
+        abstract updateJsxElement: node: JsxElement * openingElement: JsxOpeningElement * children: ReadonlyArray<JsxChild> * closingElement: JsxClosingElement -> JsxElement
+        abstract createJsxSelfClosingElement: tagName: JsxTagNameExpression * attributes: JsxAttributes -> JsxSelfClosingElement
+        abstract updateJsxSelfClosingElement: node: JsxSelfClosingElement * tagName: JsxTagNameExpression * attributes: JsxAttributes -> JsxSelfClosingElement
+        abstract createJsxOpeningElement: tagName: JsxTagNameExpression * attributes: JsxAttributes -> JsxOpeningElement
+        abstract updateJsxOpeningElement: node: JsxOpeningElement * tagName: JsxTagNameExpression * attributes: JsxAttributes -> JsxOpeningElement
+        abstract createJsxClosingElement: tagName: JsxTagNameExpression -> JsxClosingElement
+        abstract updateJsxClosingElement: node: JsxClosingElement * tagName: JsxTagNameExpression -> JsxClosingElement
+        abstract createJsxAttribute: name: Identifier * initializer: U2<StringLiteral, JsxExpression> -> JsxAttribute
+        abstract updateJsxAttribute: node: JsxAttribute * name: Identifier * initializer: U2<StringLiteral, JsxExpression> -> JsxAttribute
+        abstract createJsxAttributes: properties: ReadonlyArray<JsxAttributeLike> -> JsxAttributes
+        abstract updateJsxAttributes: node: JsxAttributes * properties: ReadonlyArray<JsxAttributeLike> -> JsxAttributes
+        abstract createJsxSpreadAttribute: expression: Expression -> JsxSpreadAttribute
+        abstract updateJsxSpreadAttribute: node: JsxSpreadAttribute * expression: Expression -> JsxSpreadAttribute
+        abstract createJsxExpression: dotDotDotToken: DotDotDotToken option * expression: Expression option -> JsxExpression
+        abstract updateJsxExpression: node: JsxExpression * expression: Expression option -> JsxExpression
+        abstract createCaseClause: expression: Expression * statements: ReadonlyArray<Statement> -> CaseClause
+        abstract updateCaseClause: node: CaseClause * expression: Expression * statements: ReadonlyArray<Statement> -> CaseClause
+        abstract createDefaultClause: statements: ReadonlyArray<Statement> -> DefaultClause
+        abstract updateDefaultClause: node: DefaultClause * statements: ReadonlyArray<Statement> -> DefaultClause
+        abstract createHeritageClause: token: obj * types: ReadonlyArray<ExpressionWithTypeArguments> -> HeritageClause
+        abstract updateHeritageClause: node: HeritageClause * types: ReadonlyArray<ExpressionWithTypeArguments> -> HeritageClause
+        abstract createCatchClause: variableDeclaration: U2<string, VariableDeclaration> option * block: Block -> CatchClause
+        abstract updateCatchClause: node: CatchClause * variableDeclaration: VariableDeclaration option * block: Block -> CatchClause
+        abstract createPropertyAssignment: name: U2<string, PropertyName> * initializer: Expression -> PropertyAssignment
+        abstract updatePropertyAssignment: node: PropertyAssignment * name: PropertyName * initializer: Expression -> PropertyAssignment
+        abstract createShorthandPropertyAssignment: name: U2<string, Identifier> * ?objectAssignmentInitializer: Expression -> ShorthandPropertyAssignment
+        abstract updateShorthandPropertyAssignment: node: ShorthandPropertyAssignment * name: Identifier * objectAssignmentInitializer: Expression option -> ShorthandPropertyAssignment
+        abstract createSpreadAssignment: expression: Expression -> SpreadAssignment
+        abstract updateSpreadAssignment: node: SpreadAssignment * expression: Expression -> SpreadAssignment
+        abstract createEnumMember: name: U2<string, PropertyName> * ?initializer: Expression -> EnumMember
+        abstract updateEnumMember: node: EnumMember * name: PropertyName * initializer: Expression option -> EnumMember
+        abstract updateSourceFileNode: node: SourceFile * statements: ReadonlyArray<Statement> -> SourceFile
+        abstract getMutableClone: node: 'T -> 'T
+        abstract createNotEmittedStatement: original: Node -> NotEmittedStatement
+        abstract createPartiallyEmittedExpression: expression: Expression * ?original: Node -> PartiallyEmittedExpression
+        abstract updatePartiallyEmittedExpression: node: PartiallyEmittedExpression * expression: Expression -> PartiallyEmittedExpression
+        abstract createCommaList: elements: ReadonlyArray<Expression> -> CommaListExpression
+        abstract updateCommaList: node: CommaListExpression * elements: ReadonlyArray<Expression> -> CommaListExpression
+        abstract createBundle: sourceFiles: ResizeArray<SourceFile> -> Bundle
+        abstract updateBundle: node: Bundle * sourceFiles: ResizeArray<SourceFile> -> Bundle
+        abstract createImmediatelyInvokedFunctionExpression: statements: ResizeArray<Statement> -> CallExpression
+        abstract createImmediatelyInvokedFunctionExpression: statements: ResizeArray<Statement> * param: ParameterDeclaration * paramValue: Expression -> CallExpression
+        abstract createImmediatelyInvokedArrowFunction: statements: ResizeArray<Statement> -> CallExpression
+        abstract createImmediatelyInvokedArrowFunction: statements: ResizeArray<Statement> * param: ParameterDeclaration * paramValue: Expression -> CallExpression
+        abstract createComma: left: Expression * right: Expression -> Expression
+        abstract createLessThan: left: Expression * right: Expression -> Expression
+        abstract createAssignment: left: U2<ObjectLiteralExpression, ArrayLiteralExpression> * right: Expression -> DestructuringAssignment
+        abstract createAssignment: left: Expression * right: Expression -> BinaryExpression
+        abstract createStrictEquality: left: Expression * right: Expression -> BinaryExpression
+        abstract createStrictInequality: left: Expression * right: Expression -> BinaryExpression
+        abstract createAdd: left: Expression * right: Expression -> BinaryExpression
+        abstract createSubtract: left: Expression * right: Expression -> BinaryExpression
+        abstract createPostfixIncrement: operand: Expression -> PostfixUnaryExpression
+        abstract createLogicalAnd: left: Expression * right: Expression -> BinaryExpression
+        abstract createLogicalOr: left: Expression * right: Expression -> BinaryExpression
+        abstract createLogicalNot: operand: Expression -> PrefixUnaryExpression
+        abstract createVoidZero: unit -> VoidExpression
+        abstract createExportDefault: expression: Expression -> ExportAssignment
+        abstract createExternalModuleExport: exportName: Identifier -> ExportDeclaration
+        abstract disposeEmitNodes: sourceFile: SourceFile -> unit
+        abstract setTextRange: range: 'T * location: TextRange option -> 'T
+        abstract setEmitFlags: node: 'T * emitFlags: EmitFlags -> 'T
+        abstract getSourceMapRange: node: Node -> SourceMapRange
+        abstract setSourceMapRange: node: 'T * range: SourceMapRange option -> 'T
+        abstract createSourceMapSource: fileName: string * text: string * ?skipTrivia: (float -> float) -> SourceMapSource
+        abstract getTokenSourceMapRange: node: Node * token: SyntaxKind -> SourceMapRange option
+        abstract setTokenSourceMapRange: node: 'T * token: SyntaxKind * range: SourceMapRange option -> 'T
+        abstract getCommentRange: node: Node -> TextRange
+        abstract setCommentRange: node: 'T * range: TextRange -> 'T
+        abstract getSyntheticLeadingComments: node: Node -> ResizeArray<SynthesizedComment> option
+        abstract setSyntheticLeadingComments: node: 'T * comments: ResizeArray<SynthesizedComment> -> 'T
+        abstract addSyntheticLeadingComment: node: 'T * kind: SyntaxKind * text: string * ?hasTrailingNewLine: bool -> 'T
+        abstract getSyntheticTrailingComments: node: Node -> ResizeArray<SynthesizedComment> option
+        abstract setSyntheticTrailingComments: node: 'T * comments: ResizeArray<SynthesizedComment> -> 'T
+        abstract addSyntheticTrailingComment: node: 'T * kind: SyntaxKind * text: string * ?hasTrailingNewLine: bool -> 'T
+        abstract getConstantValue: node: U2<PropertyAccessExpression, ElementAccessExpression> -> U2<string, float>
+        abstract setConstantValue: node: U2<PropertyAccessExpression, ElementAccessExpression> * value: U2<string, float> -> U2<PropertyAccessExpression, ElementAccessExpression>
+        abstract addEmitHelper: node: 'T * helper: EmitHelper -> 'T
+        abstract addEmitHelpers: node: 'T * helpers: ResizeArray<EmitHelper> option -> 'T
+        abstract removeEmitHelper: node: Node * helper: EmitHelper -> bool
+        abstract getEmitHelpers: node: Node -> ResizeArray<EmitHelper> option
+        abstract moveEmitHelpers: source: Node * target: Node * predicate: (EmitHelper -> bool) -> unit
+        abstract setOriginalNode: node: 'T * original: Node option -> 'T
+        abstract visitNode: node: 'T * visitor: Visitor * ?test: (Node -> bool) * ?lift: (ResizeArray<Node> -> 'T) -> 'T
+        abstract visitNode: node: 'T option * visitor: Visitor * ?test: (Node -> bool) * ?lift: (ResizeArray<Node> -> 'T) -> 'T option
+        abstract visitNodes: nodes: ResizeArray<'T> * visitor: Visitor * ?test: (Node -> bool) * ?start: float * ?count: float -> ResizeArray<'T>
+        abstract visitNodes: nodes: ResizeArray<'T> option * visitor: Visitor * ?test: (Node -> bool) * ?start: float * ?count: float -> ResizeArray<'T> option
+        abstract visitLexicalEnvironment: statements: ResizeArray<Statement> * visitor: Visitor * context: TransformationContext * ?start: float * ?ensureUseStrict: bool -> ResizeArray<Statement>
+        abstract visitParameterList: nodes: ResizeArray<ParameterDeclaration> * visitor: Visitor * context: TransformationContext * ?nodesVisitor: obj -> ResizeArray<ParameterDeclaration>
+        abstract visitFunctionBody: node: FunctionBody * visitor: Visitor * context: TransformationContext -> FunctionBody
+        abstract visitFunctionBody: node: FunctionBody option * visitor: Visitor * context: TransformationContext -> FunctionBody option
+        abstract visitFunctionBody: node: ConciseBody * visitor: Visitor * context: TransformationContext -> ConciseBody
+        abstract visitEachChild: node: 'T * visitor: Visitor * context: TransformationContext -> 'T
+        abstract visitEachChild: node: 'T option * visitor: Visitor * context: TransformationContext * ?nodesVisitor: obj * ?tokenVisitor: Visitor -> 'T option
+        abstract createPrinter: ?printerOptions: PrinterOptions * ?handlers: PrintHandlers -> Printer
+        abstract findConfigFile: searchPath: string * fileExists: (string -> bool) * ?configName: string -> string
+        abstract resolveTripleslashReference: moduleName: string * containingFile: string -> string
+        abstract createCompilerHost: options: CompilerOptions * ?setParentNodes: bool -> CompilerHost
+        abstract getPreEmitDiagnostics: program: Program * ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
+        abstract formatDiagnostics: diagnostics: ResizeArray<Diagnostic> * host: FormatDiagnosticsHost -> string
+        abstract formatDiagnosticsWithColorAndContext: diagnostics: ResizeArray<Diagnostic> * host: FormatDiagnosticsHost -> string
+        abstract flattenDiagnosticMessageText: messageText: U2<string, DiagnosticMessageChain> * newLine: string -> string
+        abstract createProgram: rootNames: ResizeArray<string> * options: CompilerOptions * ?host: CompilerHost * ?oldProgram: Program -> Program
+        abstract parseCommandLine: commandLine: ReadonlyArray<string> * ?readFile: (string -> string option) -> ParsedCommandLine
+        abstract readConfigFile: fileName: string * readFile: (string -> string option) -> obj
+        abstract parseConfigFileTextToJson: fileName: string * jsonText: string -> obj
+        abstract readJsonConfigFile: fileName: string * readFile: (string -> string option) -> JsonSourceFile
+        abstract convertToObject: sourceFile: JsonSourceFile * errors: Push<Diagnostic> -> obj
+        abstract parseJsonConfigFileContent: json: obj * host: ParseConfigHost * basePath: string * ?existingOptions: CompilerOptions * ?configFileName: string * ?resolutionStack: ResizeArray<Path> * ?extraFileExtensions: ReadonlyArray<JsFileExtensionInfo> -> ParsedCommandLine
+        abstract parseJsonSourceFileConfigFileContent: sourceFile: JsonSourceFile * host: ParseConfigHost * basePath: string * ?existingOptions: CompilerOptions * ?configFileName: string * ?resolutionStack: ResizeArray<Path> * ?extraFileExtensions: ReadonlyArray<JsFileExtensionInfo> -> ParsedCommandLine
+        abstract convertCompilerOptionsFromJson: jsonOptions: obj * basePath: string * ?configFileName: string -> obj
+        abstract convertTypeAcquisitionFromJson: jsonOptions: obj * basePath: string * ?configFileName: string -> obj
+        abstract createClassifier: unit -> Classifier
+        abstract createDocumentRegistry: ?useCaseSensitiveFileNames: bool * ?currentDirectory: string -> DocumentRegistry
+        abstract preProcessFile: sourceText: string * ?readImportFiles: bool * ?detectJavaScriptImports: bool -> PreProcessedFileInfo
+        abstract transpileModule: input: string * transpileOptions: TranspileOptions -> TranspileOutput
+        abstract transpile: input: string * ?compilerOptions: CompilerOptions * ?fileName: string * ?diagnostics: ResizeArray<Diagnostic> * ?moduleName: string -> string
+        abstract servicesVersion: obj with get, set
+        abstract toEditorSettings: options: U2<EditorOptions, EditorSettings> -> EditorSettings
+        abstract displayPartsToString: displayParts: ResizeArray<SymbolDisplayPart> -> string
+        abstract getDefaultCompilerOptions: unit -> CompilerOptions
+        abstract getSupportedCodeFixes: unit -> ResizeArray<string>
+        abstract createLanguageServiceSourceFile: fileName: string * scriptSnapshot: IScriptSnapshot * scriptTarget: ScriptTarget * version: string * setNodeParents: bool * ?scriptKind: ScriptKind -> SourceFile
+        abstract disableIncrementalParsing: bool with get, set
+        abstract updateLanguageServiceSourceFile: sourceFile: SourceFile * scriptSnapshot: IScriptSnapshot * version: string * textChangeRange: TextChangeRange * ?aggressiveChecks: bool -> SourceFile
+        abstract createLanguageService: host: LanguageServiceHost * ?documentRegistry: DocumentRegistry -> LanguageService
+        abstract getDefaultLibFilePath: options: CompilerOptions -> string
+        abstract transform: source: U2<'T, ResizeArray<'T>> * transformers: ResizeArray<TransformerFactory<'T>> * ?compilerOptions: CompilerOptions -> TransformationResult<'T>
 
     type [<AllowNullLiteral>] MapLike<'T> =
         [<Emit "$0[$1]{{=$2}}">] abstract Item: index: string -> 'T with get, set
@@ -2583,8 +2583,8 @@ module ts =
     type [<AllowNullLiteral>] WriteFileCallback =
         [<Emit "$0($1...)">] abstract Invoke: fileName: string * data: string * writeByteOrderMark: bool * ?onError: (string -> unit) * ?sourceFiles: ReadonlyArray<SourceFile> -> unit
 
-    type OperationCanceledException =
-        class end
+    type [<AllowNullLiteral>] OperationCanceledException =
+        interface end
 
     type [<AllowNullLiteral>] CancellationToken =
         abstract isCancellationRequested: unit -> bool
@@ -3682,8 +3682,9 @@ module ts =
         abstract message: string with get, set
         abstract position: float with get, set
 
-    type TextChange =
-        class end
+    type [<AllowNullLiteral>] TextChange =
+        abstract span: TextSpan with get, set
+        abstract newText: string with get, set
 
     type [<AllowNullLiteral>] FileTextChanges =
         abstract fileName: string with get, set

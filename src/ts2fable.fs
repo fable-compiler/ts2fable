@@ -25,14 +25,6 @@ type FsInterface =
         Members: FsType list
     }
 
-type FsClass =
-    {
-        ClassName: string option
-        TypeParameters: FsType list
-        Inherits: FsType list
-        Members: FsType list
-    }
-
 [<RequireQualifiedAccess>]
 type FsEnumCaseType =
     | Numeric
@@ -127,7 +119,6 @@ type FsImport =
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
-    | Class of FsClass
     | Enum of FsEnum
     | Property of FsProperty
     | Param of FsParam
@@ -233,15 +224,18 @@ let readInterface(id: InterfaceDeclaration): FsInterface =
     {
         Name = id.name.text 
         Inherits = readInherits id.heritageClauses
-        Members = id.members |> List.ofSeq |> List.map readTypeElement
+        Members = id.members |> List.ofSeq |> List.map readNamedDeclaration
         TypeParameters = readTypeParameters id.typeParameters
     }
 
-let readClass(cd: ClassDeclaration): FsClass =
+let readClass(cd: ClassDeclaration): FsInterface =
     {
-        ClassName = cd.name |> Option.map (fun nm -> nm.text) 
+        Name =
+            match cd.name with
+            | None -> "TODO_NoClassName"
+            | Some id -> id.text
         Inherits = readInherits cd.heritageClauses
-        Members = [] // TODO cd.members |> List.ofSeq |> List.map readTypeElement
+        Members = cd.members |> List.ofSeq |> List.map readNamedDeclaration
         TypeParameters = readTypeParameters cd.typeParameters
     }
 
@@ -339,8 +333,9 @@ let rec readTypeNode(t: TypeNode): FsType =
     | SyntaxKind.ThisType -> FsType.This
     | SyntaxKind.TypePredicate -> FsType.Mapped "bool"
     | SyntaxKind.TypeLiteral ->
-        // let tl = t :?> TypeLiteralNode
+        let tl = t :?> TypeLiteralNode
         // printfn "TypeLiteral %A" tl
+        // printfn "  %s" (tl.getText())
         FsType.Mapped "obj"
     | SyntaxKind.IntersectionType -> FsType.Mapped "obj"
     | SyntaxKind.IndexedAccessType ->
@@ -399,6 +394,17 @@ let readPropertySignature(ps: PropertySignature): FsProperty =
             | Some tp -> readTypeNode tp
     }
 
+let readPropertyDeclaration(pd: PropertyDeclaration): FsProperty =
+    {
+        Emit = None
+        Name = pd.name |> getPropertyName
+        Option = pd.questionToken.IsSome
+        Type = 
+            match pd.``type`` with
+            | None -> FsType.None 
+            | Some tp -> readTypeNode tp
+    }
+
 let readFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
     {
         Emit = None
@@ -434,7 +440,7 @@ let readCallSignature(cs: CallSignatureDeclaration): FsFunction =
             | None -> FsType.Mapped "unit"
     }
 
-let readTypeElement(te: TypeElement): FsType =
+let readNamedDeclaration(te: NamedDeclaration): FsType =
     match te.kind with
     | SyntaxKind.IndexSignature ->
         readIndexSignature (te :?> IndexSignatureDeclaration) |> FsType.Property
@@ -450,7 +456,9 @@ let readTypeElement(te: TypeElement): FsType =
         // ifc.methods.push(member);
         printfn "TODO construct members"
         FsType.TODO
-    | _ -> printfn "unsupported TypeElement kind: %A" te.kind; FsType.TODO
+    | SyntaxKind.PropertyDeclaration ->
+        readPropertyDeclaration (te :?> PropertyDeclaration) |> FsType.Property
+    | _ -> printfn "unsupported NamedDeclaration kind: %A" te.kind; FsType.TODO
 
 let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
     let tp = d.``type`` |> readTypeNode
@@ -511,7 +519,7 @@ let readStatement(sd: Statement): FsType =
     | SyntaxKind.TypeAliasDeclaration ->
         readAliasDeclaration (sd :?> TypeAliasDeclaration)
     | SyntaxKind.ClassDeclaration ->
-        readClass (sd :?> ClassDeclaration) |> FsType.Class
+        readClass (sd :?> ClassDeclaration) |> FsType.Interface
     | SyntaxKind.VariableStatement ->
         readVariable (sd :?> VariableStatement) |> FsType.Variable
     | SyntaxKind.FunctionDeclaration ->
@@ -577,7 +585,6 @@ let mergeModules(mds: FsModule list): FsModule list =
 
 let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
 let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
-let asClass (tp: FsType) = match tp with | FsType.Class v -> Some v | _ -> None
 let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
 let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
 
@@ -591,19 +598,18 @@ let createIExports(md: FsModule): FsModule =
         | FsType.Function _ -> true
         | _ -> false
     )
-    // let tps = md.Types |> List.filter isFunction
     if tps.Length = 0 then
         md
     else
-        let cl: FsClass =
+        let cl: FsInterface =
             {
-                ClassName = Some "IExports"
+                Name = "IExports"
                 Inherits = []
                 TypeParameters = []
                 Members = tps
             }
         { md with
-            Types = [ FsType.Class cl ] @ md.Types
+            Types = [ FsType.Interface cl ] @ md.Types
         }
 
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
@@ -637,12 +643,6 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Members = it.Members |> List.map (fixType fix)
         }
         |> FsType.Interface
-    | FsType.Class cl ->
-        { cl with
-            TypeParameters = cl.TypeParameters |> List.map (fixType fix)
-            Members = cl.Members |> List.map (fixType fix)
-        }
-        |> FsType.Class
     | FsType.Property pr ->
         { pr with
             Type = fixType fix pr.Type
@@ -737,15 +737,6 @@ let addTicForGenericFunctions(md: FsModule): FsModule =
                         )
                     }
                     |> FsType.Interface
-                | FsType.Class cl ->
-                    { cl with
-                        Members = cl.Members |> List.map (fun mbr ->
-                            match asFunction mbr with
-                            | None -> mbr
-                            | Some fn -> fixTic fn.TypeParameters mbr
-                        )
-                    }
-                    |> FsType.Class
                 | _ -> tp
             )
     }
@@ -822,7 +813,6 @@ let addTicForGenericTypes(md: FsModule): FsModule =
             md.Types |> List.map (fun tp ->
                 match tp with
                 | FsType.Interface it -> fixTic it.TypeParameters tp
-                | FsType.Class cl -> fixTic cl.TypeParameters tp
                 | FsType.Alias al -> fixTic al.TypeParameters tp
                 | _ -> tp
             )
@@ -1021,8 +1011,7 @@ let printType (tp: FsType): string =
         line |> String.concat ""
     | FsType.Variable vb ->
         let vtp = vb.Type |> printType
-        sprintf "member __.%s with get(): %s = jsNative and set(v: %s): unit = jsNative"
-            vb.Name vtp vtp
+        sprintf "abstract %s: %s with get, set" vb.Name vtp
     | FsType.StringLiteral _ -> "string"
     | _ -> printfn "unsupported printType %A" tp; "TODO"
 
@@ -1046,23 +1035,6 @@ let printFunction (f: FsFunction): string =
         sprintf ": %s" (prms |> String.concat " * ") |> line.Add
     sprintf " -> %s" (printType f.ReturnType) |> line.Add
     line |> String.concat ""
-
-let printClassFunction (f: FsFunction): string =
-    let line = ResizeArray()
-    sprintf "member __.%s%s" f.Name.Value (printTypeParameters f.TypeParameters) |> line.Add
-    let prms = 
-        f.Params |> List.map(fun p ->
-            sprintf "%s%s%s: %s"
-                (if p.ParamArray then "[<ParamArray>] " else "")
-                (if p.Optional then "?" else "") p.Name (printType p.Type)
-        )
-    if prms.Length = 0 then
-        sprintf "(" |> line.Add
-    else
-        sprintf "(%s" (prms |> String.concat ", ") |> line.Add
-    sprintf "): %s = jsNative" (printType f.ReturnType) |> line.Add
-    line |> String.concat ""
-
 let printProperty (pr: FsProperty): string =
     sprintf "%sabstract %s: %s%s%s with get, set"
         (if pr.Emit.IsSome then sprintf "[<Emit \"%s\">] " pr.Emit.Value else "")
@@ -1104,23 +1076,11 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
                 | FsType.Property p ->
                     sprintf "%s    %s" indent (printProperty p) |> lines.Add
                     incr nLines
-                | _ -> ()
-            if !nLines = 0 then
-                sprintf "%s    interface end" indent |> lines.Add
-        | FsType.Class cl ->
-            sprintf "" |> lines.Add
-            sprintf "%stype %s%s =" indent cl.ClassName.Value (printTypeParameters cl.TypeParameters) |> lines.Add
-            let nLines = ref 0
-            for mbr in cl.Members do
-                match mbr with
-                | FsType.Function f ->
-                    sprintf "%s    %s" indent (printClassFunction f) |> lines.Add
-                    incr nLines
                 | _ ->
                     sprintf "%s    %s" indent (printType mbr) |> lines.Add
                     incr nLines
             if !nLines = 0 then
-                sprintf "%s    class end" indent |> lines.Add
+                sprintf "%s    interface end" indent |> lines.Add
         | FsType.Enum en ->
             sprintf "" |> lines.Add
             match en.Type with
