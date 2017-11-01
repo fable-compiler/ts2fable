@@ -111,14 +111,16 @@ type FsTuple =
 
 type FsVariable =
     {
+        HasDeclare: bool
         Name: string
         Type: FsType
     }
 
-type FsExport =
+type FsImport =
     {
         Namespace: string list
         Variable: string
+        Type: string
     }
 
 [<RequireQualifiedAccess>]
@@ -141,7 +143,7 @@ type FsType =
     | File of FsFile
     | Variable of FsVariable
     | StringLiteral of string
-    | Export of FsExport
+    | Import of FsImport
 
 type FsModule =
     {
@@ -241,8 +243,18 @@ let readClass(cd: ClassDeclaration): FsClass =
     }
 
 let readVariable(vb: VariableStatement): FsVariable =
+    let mutable hasDeclare = false
+    match vb.modifiers with
+    | None -> ()
+    | Some mds ->
+        for md in mds do
+            if md.kind = SyntaxKind.DeclareKeyword then
+                hasDeclare <- true
+
     let vd = vb.declarationList.declarations.[0] // TODO more than 1
+
     {
+        HasDeclare = hasDeclare
         Name = vd.name |> getBindingName
         Type = vd.``type`` |> Option.map readTypeNode |> Option.defaultValue (FsType.Mapped "obj")
     }
@@ -475,8 +487,9 @@ let readExportAssignment(ea: ExportAssignment): FsType =
     {
         Namespace = []
         Variable = var
+        Type = sprintf "%s.IExports" var
     }
-    |> FsType.Export
+    |> FsType.Import
 
 let readStatement(sd: Statement): FsType =
     match sd.kind with
@@ -679,7 +692,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.None _ -> tp
     | FsType.TODO _ -> tp
     | FsType.StringLiteral _ -> tp
-    | FsType.Export _ -> tp
+    | FsType.Import _ -> tp
 
     |> fix // current type
 
@@ -803,16 +816,27 @@ let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
         Types = types |> List.ofSeq
     }
 
-/// add a namespace to each export statement so they can be imported
-let rec fixExportNamespace (ns: string list) (md: FsModule): FsModule =
+/// add a namespace to import
+/// and convert `declare` variables to imports
+let rec fixImport (ns: string list) (md: FsModule): FsModule =
     let newNs = if String.IsNullOrEmpty md.Name then ns else ns @ [md.Name]
     { md with
         Types = md.Types |> List.map (fun tp ->
             match tp with
             | FsType.Module submd ->
-                fixExportNamespace newNs submd |> FsType.Module
-            | FsType.Export ep ->
-                { ep with Namespace = newNs } |> FsType.Export
+                fixImport newNs submd |> FsType.Module
+            | FsType.Import ep ->
+                { ep with Namespace = newNs } |> FsType.Import
+            | FsType.Variable vb ->
+                if vb.HasDeclare then
+                    {
+                        Namespace = newNs
+                        Variable = vb.Name
+                        Type = printType vb.Type
+                    }
+                    |> FsType.Import
+                else
+                    vb  |> FsType.Variable
             | _ -> tp
         )
     }
@@ -847,7 +871,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             modules
             |> List.ofSeq
             |> mergeModules
-            |> List.map (fixExportNamespace [name2])
+            |> List.map (fixImport [name2])
             |> List.map createIExports
             |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
@@ -1033,14 +1057,10 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
             sprintf "" |> lines.Add
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
-        // | FsType.Variable vb ->
-        //     sprintf "" |> lines.Add
-        //     let vtp = vb.Type |> printType
-        //     sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s = jsNative" indent vb.Name vb.Name vtp |> lines.Add
-        | FsType.Export ep ->
+        | FsType.Import ip ->
             sprintf "" |> lines.Add
-            let ns = ep.Namespace |> String.concat "."
-            sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s.IExports = jsNative" indent ns ep.Variable ep.Variable |> lines.Add
+            let ns = ip.Namespace |> String.concat "."
+            sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s = jsNative" indent ns ip.Variable ip.Type |> lines.Add
         | _ -> ()
 
 let printFsFile (file: FsFile): ResizeArray<string> =
