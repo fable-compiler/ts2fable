@@ -330,7 +330,7 @@ module ts =
         member __.updateUnionTypeNode(node: UnionTypeNode, types: ResizeArray<TypeNode>): UnionTypeNode = jsNative
         member __.createIntersectionTypeNode(types: ResizeArray<TypeNode>): IntersectionTypeNode = jsNative
         member __.updateIntersectionTypeNode(node: IntersectionTypeNode, types: ResizeArray<TypeNode>): IntersectionTypeNode = jsNative
-        member __.createUnionOrIntersectionTypeNode(kind: U2<SyntaxKind, SyntaxKind>, types: ReadonlyArray<TypeNode>): UnionOrIntersectionTypeNode = jsNative
+        member __.createUnionOrIntersectionTypeNode(kind: SyntaxKind, types: ReadonlyArray<TypeNode>): UnionOrIntersectionTypeNode = jsNative
         member __.createParenthesizedType(``type``: TypeNode): ParenthesizedTypeNode = jsNative
         member __.updateParenthesizedType(node: ParenthesizedTypeNode, ``type``: TypeNode): ParenthesizedTypeNode = jsNative
         member __.createThisTypeNode(): ThisTypeNode = jsNative
@@ -562,10 +562,10 @@ module ts =
         member __.setCommentRange<'T>(node: 'T, range: TextRange): 'T = jsNative
         member __.getSyntheticLeadingComments(node: Node): ResizeArray<SynthesizedComment> option = jsNative
         member __.setSyntheticLeadingComments<'T>(node: 'T, comments: ResizeArray<SynthesizedComment>): 'T = jsNative
-        member __.addSyntheticLeadingComment<'T>(node: 'T, kind: U2<SyntaxKind, SyntaxKind>, text: string, ?hasTrailingNewLine: bool): 'T = jsNative
+        member __.addSyntheticLeadingComment<'T>(node: 'T, kind: SyntaxKind, text: string, ?hasTrailingNewLine: bool): 'T = jsNative
         member __.getSyntheticTrailingComments(node: Node): ResizeArray<SynthesizedComment> option = jsNative
         member __.setSyntheticTrailingComments<'T>(node: 'T, comments: ResizeArray<SynthesizedComment>): 'T = jsNative
-        member __.addSyntheticTrailingComment<'T>(node: 'T, kind: U2<SyntaxKind, SyntaxKind>, text: string, ?hasTrailingNewLine: bool): 'T = jsNative
+        member __.addSyntheticTrailingComment<'T>(node: 'T, kind: SyntaxKind, text: string, ?hasTrailingNewLine: bool): 'T = jsNative
         member __.getConstantValue(node: U2<PropertyAccessExpression, ElementAccessExpression>): U2<string, float> = jsNative
         member __.setConstantValue(node: U2<PropertyAccessExpression, ElementAccessExpression>, value: U2<string, float>): U2<PropertyAccessExpression, ElementAccessExpression> = jsNative
         member __.addEmitHelper<'T>(node: 'T, helper: EmitHelper): 'T = jsNative
@@ -639,7 +639,7 @@ module ts =
         abstract clear: unit -> unit
 
     type [<AllowNullLiteral>] Iterator<'T> =
-        abstract next: unit -> U2<obj, obj>
+        abstract next: unit -> obj
 
     type [<AllowNullLiteral>] Push<'T> =
         abstract push: [<ParamArray>] values: 'T -> unit
@@ -1364,7 +1364,7 @@ module ts =
 
     type [<AllowNullLiteral>] KeywordTypeNode =
         inherit TypeNode
-        abstract kind: obj with get, set
+        abstract kind: SyntaxKind with get, set
 
     type [<AllowNullLiteral>] ThisTypeNode =
         inherit TypeNode
@@ -1493,7 +1493,7 @@ module ts =
         abstract _updateExpressionBrand: obj with get, set
 
     type PrefixUnaryOperator =
-        U6<SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type [<AllowNullLiteral>] PrefixUnaryExpression =
         inherit UpdateExpression
@@ -1502,7 +1502,7 @@ module ts =
         abstract operand: UnaryExpression with get, set
 
     type PostfixUnaryOperator =
-        U2<SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type [<AllowNullLiteral>] PostfixUnaryExpression =
         inherit UpdateExpression
@@ -1530,7 +1530,7 @@ module ts =
     type [<AllowNullLiteral>] BooleanLiteral =
         inherit PrimaryExpression
         inherit TypeNode
-        abstract kind: U2<SyntaxKind, SyntaxKind> with get, set
+        abstract kind: SyntaxKind with get, set
 
     type [<AllowNullLiteral>] ThisExpression =
         inherit PrimaryExpression
@@ -1575,49 +1575,49 @@ module ts =
         SyntaxKind
 
     type MultiplicativeOperator =
-        U3<SyntaxKind, SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type MultiplicativeOperatorOrHigher =
         U2<ExponentiationOperator, MultiplicativeOperator>
 
     type AdditiveOperator =
-        U2<SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type AdditiveOperatorOrHigher =
         U2<MultiplicativeOperatorOrHigher, AdditiveOperator>
 
     type ShiftOperator =
-        U3<SyntaxKind, SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type ShiftOperatorOrHigher =
         U2<AdditiveOperatorOrHigher, ShiftOperator>
 
     type RelationalOperator =
-        U6<SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type RelationalOperatorOrHigher =
         U2<ShiftOperatorOrHigher, RelationalOperator>
 
     type EqualityOperator =
-        U4<SyntaxKind, SyntaxKind, SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type EqualityOperatorOrHigher =
         U2<RelationalOperatorOrHigher, EqualityOperator>
 
     type BitwiseOperator =
-        U3<SyntaxKind, SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type BitwiseOperatorOrHigher =
         U2<EqualityOperatorOrHigher, BitwiseOperator>
 
     type LogicalOperator =
-        U2<SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type LogicalOperatorOrHigher =
         U2<BitwiseOperatorOrHigher, LogicalOperator>
 
     type CompoundAssignmentOperator =
-        obj
+        SyntaxKind
 
     type AssignmentOperator =
         U2<SyntaxKind, CompoundAssignmentOperator>
@@ -2171,7 +2171,7 @@ module ts =
         inherit Node
         abstract kind: SyntaxKind with get, set
         abstract parent: U3<InterfaceDeclaration, ClassDeclaration, ClassExpression> option with get, set
-        abstract token: U2<SyntaxKind, SyntaxKind> with get, set
+        abstract token: SyntaxKind with get, set
         abstract types: ResizeArray<ExpressionWithTypeArguments> with get, set
 
     type [<AllowNullLiteral>] TypeAliasDeclaration =
@@ -2329,7 +2329,7 @@ module ts =
         abstract enabled: bool with get, set
 
     type CommentKind =
-        U2<SyntaxKind, SyntaxKind>
+        SyntaxKind
 
     type [<AllowNullLiteral>] CommentRange =
         inherit TextRange
@@ -2877,7 +2877,7 @@ module ts =
         | Default
 
     type __String =
-        U3<obj, obj, InternalSymbolName>
+        U2<obj, InternalSymbolName>
 
     type [<AllowNullLiteral>] ReadonlyUnderscoreEscapedMap<'T> =
         abstract get: key: __String -> 'T option
