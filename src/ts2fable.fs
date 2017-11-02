@@ -1272,6 +1272,8 @@ let printFsFile (file: FsFile): ResizeArray<string> =
         |> List.iter (printModule lines "")
     lines
 
+let [<Import("*","typescript")>] ts: ts.IExports = jsNative
+
 let printFile tsPath: unit =
     let code = Fs.readFileSync(tsPath).toString()
     let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
