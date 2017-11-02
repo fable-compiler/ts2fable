@@ -19,15 +19,8 @@ open System
 
 type FsInterface =
     {
+        IsStatic: bool // contains only static functions
         Name: string
-        TypeParameters: FsType list
-        Inherits: FsType list
-        Members: FsType list
-    }
-
-type FsClass =
-    {
-        ClassName: string option
         TypeParameters: FsType list
         Inherits: FsType list
         Members: FsType list
@@ -72,6 +65,7 @@ type FsParam =
 type FsFunction =
     {
         Emit: string option
+        IsStatic: bool
         Name: string option // declarations have them, signatures do not
         TypeParameters: FsType list
         Params: FsParam list
@@ -127,7 +121,6 @@ type FsImport =
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
-    | Class of FsClass
     | Enum of FsEnum
     | Property of FsProperty
     | Param of FsParam
@@ -231,33 +224,34 @@ let readInherits(hcs: ResizeArray<HeritageClause> option): FsType list =
 
 let readInterface(id: InterfaceDeclaration): FsInterface =
     {
+        IsStatic = false
         Name = id.name.text 
         Inherits = readInherits id.heritageClauses
-        Members = id.members |> List.ofSeq |> List.map readTypeElement
+        Members = id.members |> List.ofSeq |> List.map readNamedDeclaration
         TypeParameters = readTypeParameters id.typeParameters
     }
 
-let readClass(cd: ClassDeclaration): FsClass =
+let readClass(cd: ClassDeclaration): FsInterface =
     {
-        ClassName = cd.name |> Option.map (fun nm -> nm.text) 
+        IsStatic = false
+        Name =
+            match cd.name with
+            | None -> "TODO_NoClassName"
+            | Some id -> id.text
         Inherits = readInherits cd.heritageClauses
-        Members = [] // TODO cd.members |> List.ofSeq |> List.map readTypeElement
+        Members = cd.members |> List.ofSeq |> List.map readNamedDeclaration
         TypeParameters = readTypeParameters cd.typeParameters
     }
 
+let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
+    match modifiers with
+    | None -> false
+    | Some mds -> mds |> Seq.exists (fun md -> md.kind = kind)
+
 let readVariable(vb: VariableStatement): FsVariable =
-    let mutable hasDeclare = false
-    match vb.modifiers with
-    | None -> ()
-    | Some mds ->
-        for md in mds do
-            if md.kind = SyntaxKind.DeclareKeyword then
-                hasDeclare <- true
-
     let vd = vb.declarationList.declarations.[0] // TODO more than 1
-
     {
-        HasDeclare = hasDeclare
+        HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers
         Name = vd.name |> getBindingName
         Type = vd.``type`` |> Option.map readTypeNode |> Option.defaultValue (FsType.Mapped "obj")
     }
@@ -293,6 +287,7 @@ let readTypeReference(tr: TypeReferenceNode): FsType =
 let readFunctionType(ft: FunctionTypeNode): FsFunction =
     {
         Emit = None
+        IsStatic = hasModifier SyntaxKind.StaticKeyword ft.modifiers
         Name = ft.name |> Option.map getPropertyName
         TypeParameters = readTypeParameters ft.typeParameters
         Params =  ft.parameters |> List.ofSeq |> List.map readParameterDeclaration
@@ -339,8 +334,9 @@ let rec readTypeNode(t: TypeNode): FsType =
     | SyntaxKind.ThisType -> FsType.This
     | SyntaxKind.TypePredicate -> FsType.Mapped "bool"
     | SyntaxKind.TypeLiteral ->
-        // let tl = t :?> TypeLiteralNode
+        let tl = t :?> TypeLiteralNode
         // printfn "TypeLiteral %A" tl
+        // printfn "  %s" (tl.getText())
         FsType.Mapped "obj"
     | SyntaxKind.IntersectionType -> FsType.Mapped "obj"
     | SyntaxKind.IndexedAccessType ->
@@ -379,6 +375,7 @@ let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
 let readMethodSignature(ms: MethodSignature): FsFunction =
     {
         Emit = None
+        IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters ms.typeParameters
         Params = ms.parameters |> List.ofSeq |> List.map readParameterDeclaration
@@ -388,6 +385,18 @@ let readMethodSignature(ms: MethodSignature): FsFunction =
             | None -> FsType.Mapped "unit"
     }
 
+let readMethodDeclaration(ms: MethodDeclaration): FsFunction =
+    {
+        Emit = None
+        IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
+        Name = ms.name |> getPropertyName |> Some
+        TypeParameters = readTypeParameters ms.typeParameters
+        Params = ms.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        ReturnType =
+            match ms.``type`` with
+            | Some t -> readTypeNode t
+            | None -> FsType.Mapped "unit"
+    }
 let readPropertySignature(ps: PropertySignature): FsProperty =
     {
         Emit = None
@@ -399,9 +408,21 @@ let readPropertySignature(ps: PropertySignature): FsProperty =
             | Some tp -> readTypeNode tp
     }
 
+let readPropertyDeclaration(pd: PropertyDeclaration): FsProperty =
+    {
+        Emit = None
+        Name = pd.name |> getPropertyName
+        Option = pd.questionToken.IsSome
+        Type = 
+            match pd.``type`` with
+            | None -> FsType.None 
+            | Some tp -> readTypeNode tp
+    }
+
 let readFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
     {
         Emit = None
+        IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
         Name = fd.name |> Option.map (fun id -> id.text)
         TypeParameters = readTypeParameters fd.typeParameters
         Params = fd.parameters |> List.ofSeq |> List.map readParameterDeclaration
@@ -425,6 +446,7 @@ let readIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
 let readCallSignature(cs: CallSignatureDeclaration): FsFunction =
     {
         Emit = Some "$0($1...)"
+        IsStatic = false // TODO ?
         Name = Some "Invoke"
         TypeParameters = []
         Params = cs.parameters |> List.ofSeq |> List.map readParameterDeclaration
@@ -434,7 +456,27 @@ let readCallSignature(cs: CallSignatureDeclaration): FsFunction =
             | None -> FsType.Mapped "unit"
     }
 
-let readTypeElement(te: TypeElement): FsType =
+let readConstructSignatureDeclaration(cs: ConstructSignatureDeclaration): FsFunction =
+    {
+        Emit = Some "new $0($1...)"
+        IsStatic = true
+        Name = Some "Create"
+        TypeParameters = cs.typeParameters |> readTypeParameters
+        Params = cs.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        ReturnType = FsType.This
+    }
+
+let readConstructorDeclaration(cs: ConstructorDeclaration): FsFunction =
+    {
+        Emit = Some "new $0($1...)"
+        IsStatic = true
+        Name = Some "Create"
+        TypeParameters = cs.typeParameters |> readTypeParameters
+        Params = cs.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        ReturnType = FsType.This
+    }
+
+let readNamedDeclaration(te: NamedDeclaration): FsType =
     match te.kind with
     | SyntaxKind.IndexSignature ->
         readIndexSignature (te :?> IndexSignatureDeclaration) |> FsType.Property
@@ -445,12 +487,14 @@ let readTypeElement(te: TypeElement): FsType =
     | SyntaxKind.CallSignature ->
         readCallSignature(te :?> CallSignatureDeclaration) |> FsType.Function
     | SyntaxKind.ConstructSignature ->
-        // member = getMethod(node, { name: "Create" });
-        // member.emit = "new $0($1...)";
-        // ifc.methods.push(member);
-        printfn "TODO construct members"
-        FsType.TODO
-    | _ -> printfn "unsupported TypeElement kind: %A" te.kind; FsType.TODO
+        readConstructSignatureDeclaration(te :?> ConstructSignatureDeclaration) |> FsType.Function
+    | SyntaxKind.Constructor ->
+        readConstructorDeclaration(te :?> ConstructorDeclaration) |> FsType.Function
+    | SyntaxKind.PropertyDeclaration ->
+        readPropertyDeclaration (te :?> PropertyDeclaration) |> FsType.Property
+    | SyntaxKind.MethodDeclaration ->
+        readMethodDeclaration (te :?> MethodDeclaration) |> FsType.Function
+    | _ -> printfn "unsupported NamedDeclaration kind: %A" te.kind; FsType.TODO
 
 let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
     let tp = d.``type`` |> readTypeNode
@@ -511,7 +555,7 @@ let readStatement(sd: Statement): FsType =
     | SyntaxKind.TypeAliasDeclaration ->
         readAliasDeclaration (sd :?> TypeAliasDeclaration)
     | SyntaxKind.ClassDeclaration ->
-        readClass (sd :?> ClassDeclaration) |> FsType.Class
+        readClass (sd :?> ClassDeclaration) |> FsType.Interface
     | SyntaxKind.VariableStatement ->
         readVariable (sd :?> VariableStatement) |> FsType.Variable
     | SyntaxKind.FunctionDeclaration ->
@@ -540,9 +584,7 @@ let mergeTypes(tps: FsType list): FsType list =
                 match a with
                 | FsType.Interface ai ->
                     list.[i] <-
-                        {
-                            Name = ai.Name
-                            TypeParameters = ai.TypeParameters
+                        { ai with
                             Inherits = List.append ai.Inherits bi.Inherits
                             Members = List.append ai.Members bi.Members
                         }
@@ -577,58 +619,76 @@ let mergeModules(mds: FsModule list): FsModule list =
 
 let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
 let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
-let asClass (tp: FsType) = match tp with | FsType.Class v -> Some v | _ -> None
 let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
 let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
 
 let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
 let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
 
-let createIExports(md: FsModule): FsModule =
-    let tps = md.Types |> List.filter (fun t ->
-        match t with
-        | FsType.Variable _ -> true
-        | FsType.Function _ -> true
-        | _ -> false
+let createIExports (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+
+            let tps = md.Types |> List.collect(fun t ->
+                match t with
+                | FsType.Variable _ -> [t]
+                | FsType.Function _ -> [t]
+                | FsType.Interface it ->
+                    if it.IsStatic then
+                        [
+                            // add a property for accessing the static class
+                            {
+                                Emit = None
+                                Name = it.Name.Replace("Static","")
+                                Option = false
+                                Type = it.Name |> FsType.Mapped
+                            }
+                            |> FsType.Property
+                        ]
+                    else []
+                | _ -> []
+            )
+            if tps.Length = 0 then
+                tp
+            else
+                let cl: FsInterface =
+                    {
+                        IsStatic = false
+                        Name = "IExports"
+                        Inherits = []
+                        TypeParameters = []
+                        Members = tps
+                    }
+                { md with
+                    Types = [ FsType.Interface cl ] @ md.Types
+                }
+                |> FsType.Module
+        | _ -> tp
     )
-    // let tps = md.Types |> List.filter isFunction
-    if tps.Length = 0 then
-        md
-    else
-        let cl: FsClass =
-            {
-                ClassName = Some "IExports"
-                Inherits = []
-                TypeParameters = []
-                Members = tps
-            }
-        { md with
-            Types = [ FsType.Class cl ] @ md.Types
+
+let fixModule (fix: FsType -> FsType) (a: FsModule) =
+    let b =
+        { a with
+            Types = a.Types |> List.map (fixType fix)
         }
+        |> FsType.Module |> fix
+    match b with
+    | FsType.Module c -> c
+    | _ -> failwithf "module must be mapped to module"
+
+let fixParam (fix: FsType -> FsType) (a: FsParam) =
+    let b =
+        { a with
+            Type = fixType fix a.Type
+        }
+        |> FsType.Param |> fix
+    match b with
+    | FsType.Param c -> c
+    | _ -> failwithf "param must be mapped to param"
 
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     // fix children first, then curren type
-
-    let fixModule (a: FsModule) =
-        let b =
-            { a with
-                Types = a.Types |> List.map (fixType fix)
-            }
-            |> FsType.Module |> fix
-        match b with
-        | FsType.Module c -> c
-        | _ -> failwithf "module must be mapped to module"
-
-    let fixParam (a: FsParam) =
-        let b =
-            { a with
-                Type = fixType fix a.Type
-            }
-            |> FsType.Param |> fix
-        match b with
-        | FsType.Param c -> c
-        | _ -> failwithf "param must be mapped to param"
-    
     match tp with
     | FsType.Interface it ->
         { it with
@@ -637,12 +697,6 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Members = it.Members |> List.map (fixType fix)
         }
         |> FsType.Interface
-    | FsType.Class cl ->
-        { cl with
-            TypeParameters = cl.TypeParameters |> List.map (fixType fix)
-            Members = cl.Members |> List.map (fixType fix)
-        }
-        |> FsType.Class
     | FsType.Property pr ->
         { pr with
             Type = fixType fix pr.Type
@@ -658,7 +712,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.Function fn ->
         { fn with
             TypeParameters = fn.TypeParameters |> List.map (fixType fix)
-            Params = fn.Params |> List.map fixParam
+            Params = fn.Params |> List.map (fixParam fix)
             ReturnType = fixType fix fn.ReturnType
         }
         |> FsType.Function
@@ -685,10 +739,10 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
         }
         |> FsType.Tuple
     | FsType.Module md ->
-        fixModule md |> FsType.Module
+        fixModule fix md |> FsType.Module
      | FsType.File f ->
         { f with
-            Modules = f.Modules |> List.map fixModule
+            Modules = f.Modules |> List.map (fixModule fix)
         }
         |> FsType.File
     | FsType.Variable vb ->
@@ -723,32 +777,20 @@ let fixTic (typeParameters: FsType list) (tp: FsType) =
             | _ -> t
         fixType fix tp
 
-let addTicForGenericFunctions(md: FsModule): FsModule =
-    { md with
-        Types =
-            md.Types |> List.map (fun tp ->
-                match tp with
-                | FsType.Interface it ->
-                    { it with
-                        Members = it.Members |> List.map (fun mbr ->
-                            match asFunction mbr with
-                            | None -> mbr
-                            | Some fn -> fixTic fn.TypeParameters mbr
-                        )
-                    }
-                    |> FsType.Interface
-                | FsType.Class cl ->
-                    { cl with
-                        Members = cl.Members |> List.map (fun mbr ->
-                            match asFunction mbr with
-                            | None -> mbr
-                            | Some fn -> fixTic fn.TypeParameters mbr
-                        )
-                    }
-                    |> FsType.Class
-                | _ -> tp
-            )
-    }
+let addTicForGenericFunctions(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            { it with
+                Members = it.Members |> List.map (fun mbr ->
+                    match asFunction mbr with
+                    | None -> mbr
+                    | Some fn -> fixTic fn.TypeParameters mbr
+                )
+            }
+            |> FsType.Interface
+        | _ -> tp
+    )
 
 let fixNodeArray(md: FsModule): FsModule =
 
@@ -822,7 +864,6 @@ let addTicForGenericTypes(md: FsModule): FsModule =
             md.Types |> List.map (fun tp ->
                 match tp with
                 | FsType.Interface it -> fixTic it.TypeParameters tp
-                | FsType.Class cl -> fixTic cl.TypeParameters tp
                 | FsType.Alias al -> fixTic al.TypeParameters tp
                 | _ -> tp
             )
@@ -905,6 +946,52 @@ let fixThis(md: FsModule): FsModule =
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
+let isStatic (tp: FsType) =
+    match tp with
+    | FsType.Function fn -> fn.IsStatic
+    | FsType.Interface it -> it.IsStatic
+    | _ -> false
+
+type FsInterface with
+    member x.HasStaticMembers with get() = x.Members |> List.exists isStatic
+    member x.StaticMembers with get() = x.Members |> List.filter isStatic
+    member x.NonStaticMembers with get() = x.Members |> List.filter (not << isStatic)
+
+let fixStatic(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+            { md with
+                Types = md.Types |> List.collect (fun tp2 ->
+                    match tp2 with
+                    | FsType.Interface it ->
+                        if it.HasStaticMembers then
+                            [
+                                { it with
+                                    Members = it.NonStaticMembers
+                                }
+                                |> FsType.Interface
+
+                                { it with
+                                    IsStatic = true
+                                    Name = sprintf "%sStatic" it.Name
+                                    Inherits = []
+                                    Members = it.StaticMembers
+                                }
+                                |> FsType.Interface
+                            ]
+                        else
+                            [tp2]
+                    | _ -> [tp2]
+                )
+            }
+            |> FsType.Module
+        | _ -> tp
+    )
+
+let fixFile (fix: FsType -> FsType) (f: FsFile): FsFile =
+    { f with Modules = f.Modules |> List.map (fixModule fix) }
+
 let fixOpens(f: FsFile): FsFile =
 
     let isBrowser (name: string) =
@@ -969,17 +1056,17 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             |> List.ofSeq
             |> mergeModules
             |> List.map (fixImport [name2])
-            |> List.map createIExports
             |> List.map fixThis
-            |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
             |> List.map fixNodeArray
             |> List.map fixEscapeWords
             |> List.map fixDateTime
             |> List.map fixDuplicatesInUnion
-            
     }
     |> fixOpens
+    |> fixStatic
+    |> createIExports
+    |> addTicForGenericFunctions
 
 let printType (tp: FsType): string =
     match tp with
@@ -1021,8 +1108,7 @@ let printType (tp: FsType): string =
         line |> String.concat ""
     | FsType.Variable vb ->
         let vtp = vb.Type |> printType
-        sprintf "member __.%s with get(): %s = jsNative and set(v: %s): unit = jsNative"
-            vb.Name vtp vtp
+        sprintf "abstract %s: %s with get, set" vb.Name vtp
     | FsType.StringLiteral _ -> "string"
     | _ -> printfn "unsupported printType %A" tp; "TODO"
 
@@ -1046,23 +1132,6 @@ let printFunction (f: FsFunction): string =
         sprintf ": %s" (prms |> String.concat " * ") |> line.Add
     sprintf " -> %s" (printType f.ReturnType) |> line.Add
     line |> String.concat ""
-
-let printClassFunction (f: FsFunction): string =
-    let line = ResizeArray()
-    sprintf "member __.%s%s" f.Name.Value (printTypeParameters f.TypeParameters) |> line.Add
-    let prms = 
-        f.Params |> List.map(fun p ->
-            sprintf "%s%s%s: %s"
-                (if p.ParamArray then "[<ParamArray>] " else "")
-                (if p.Optional then "?" else "") p.Name (printType p.Type)
-        )
-    if prms.Length = 0 then
-        sprintf "(" |> line.Add
-    else
-        sprintf "(%s" (prms |> String.concat ", ") |> line.Add
-    sprintf "): %s = jsNative" (printType f.ReturnType) |> line.Add
-    line |> String.concat ""
-
 let printProperty (pr: FsProperty): string =
     sprintf "%sabstract %s: %s%s%s with get, set"
         (if pr.Emit.IsSome then sprintf "[<Emit \"%s\">] " pr.Emit.Value else "")
@@ -1104,23 +1173,11 @@ let printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): un
                 | FsType.Property p ->
                     sprintf "%s    %s" indent (printProperty p) |> lines.Add
                     incr nLines
-                | _ -> ()
-            if !nLines = 0 then
-                sprintf "%s    interface end" indent |> lines.Add
-        | FsType.Class cl ->
-            sprintf "" |> lines.Add
-            sprintf "%stype %s%s =" indent cl.ClassName.Value (printTypeParameters cl.TypeParameters) |> lines.Add
-            let nLines = ref 0
-            for mbr in cl.Members do
-                match mbr with
-                | FsType.Function f ->
-                    sprintf "%s    %s" indent (printClassFunction f) |> lines.Add
-                    incr nLines
                 | _ ->
                     sprintf "%s    %s" indent (printType mbr) |> lines.Add
                     incr nLines
             if !nLines = 0 then
-                sprintf "%s    class end" indent |> lines.Add
+                sprintf "%s    interface end" indent |> lines.Add
         | FsType.Enum en ->
             sprintf "" |> lines.Add
             match en.Type with
