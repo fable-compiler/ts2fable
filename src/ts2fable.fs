@@ -686,27 +686,23 @@ let createIExports (f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixModule (fix: FsType -> FsType) (a: FsModule) =
-    let b =
+let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
+
+    let fixModule (a: FsModule): FsModule =
         { a with
             Types = a.Types |> List.map (fixType fix)
         }
-        |> FsType.Module |> fix
-    match b with
-    | FsType.Module c -> c
-    | _ -> failwithf "module must be mapped to module"
 
-let fixParam (fix: FsType -> FsType) (a: FsParam) =
-    let b =
-        { a with
-            Type = fixType fix a.Type
-        }
-        |> FsType.Param |> fix
-    match b with
-    | FsType.Param c -> c
-    | _ -> failwithf "param must be mapped to param"
+    let fixParam (a: FsParam): FsParam =
+        let b =
+            { a with
+                Type = fixType fix a.Type
+            }
+            |> FsType.Param |> fix
+        match b with
+        | FsType.Param c -> c
+        | _ -> failwithf "param must be mapped to param"
 
-let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     // fix children first, then curren type
     match tp with
     | FsType.Interface it ->
@@ -731,7 +727,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.Function fn ->
         { fn with
             TypeParameters = fn.TypeParameters |> List.map (fixType fix)
-            Params = fn.Params |> List.map (fixParam fix)
+            Params = fn.Params |> List.map fixParam
             ReturnType = fixType fix fn.ReturnType
         }
         |> FsType.Function
@@ -758,10 +754,10 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
         }
         |> FsType.Tuple
     | FsType.Module md ->
-        fixModule fix md |> FsType.Module
+        fixModule md |> FsType.Module
      | FsType.File f ->
         { f with
-            Modules = f.Modules |> List.map (fixModule fix)
+            Modules = f.Modules |> List.map fixModule
         }
         |> FsType.File
     | FsType.Variable vb ->
@@ -1035,7 +1031,13 @@ let fixStatic(f: FsFile): FsFile =
     )
 
 let fixFile (fix: FsType -> FsType) (f: FsFile): FsFile =
-    { f with Modules = f.Modules |> List.map (fixModule fix) }
+    { f with
+        Modules = 
+            f.Modules 
+            |> List.map FsType.Module 
+            |> List.map (fixType fix) 
+            |> List.choose asModule
+    }
 
 let fixOpens(f: FsFile): FsFile =
 
@@ -1091,7 +1093,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             |> List.map FsType.Module
             |> mergeModules
             |> List.choose asModule
-            |> List.map (fixImport [name2])
+            // |> List.map (fixImport [name2])
             |> List.map fixThis
             |> List.map fixNodeArray
             |> List.map fixEscapeWords
@@ -1100,7 +1102,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
     }
     |> fixOpens
     |> fixStatic
-    // |> createIExports
+    |> createIExports
     |> addTicForGenericFunctions
     |> addTicForGenericTypes
     |> fixOverloadingOnStringParameters
