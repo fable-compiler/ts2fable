@@ -792,6 +792,35 @@ let addTicForGenericFunctions(f: FsFile): FsFile =
         | _ -> tp
     )
 
+let isStringLiteralParam (p: FsParam): bool = isStringLiteral p.Type
+
+type FsFunction with
+    member x.HasStringLiteralParams with get() = x.Params |> List.exists isStringLiteralParam
+    member x.StringLiteralParams with get() = x.Params |> List.filter isStringLiteralParam
+    member x.NonStringLiteralParams with get() = x.Params |> List.filter (not << isStringLiteralParam)
+
+let escapeFunctionName (s: string): string =
+    if s.Contains "-" then sprintf "``%s``" s
+    else s
+
+// https://github.com/Microsoft/TypeScript/blob/master/doc/spec.md#18-overloading-on-string-parameters
+let fixOverloadingOnStringParameters(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Function fn ->
+            if fn.Params.Length > 0 && isStringLiteralParam fn.Params.[0] then
+                let p0 = fn.Params.[0]
+                let p0sl = (asStringLiteral p0.Type).Value
+                { fn with
+                    Emit = sprintf "$0.%s('%s',$1...)" fn.Name.Value p0sl |> Some
+                    Name = sprintf "%s_%s" fn.Name.Value p0sl |> escapeFunctionName |> Some
+                    Params = fn.Params.[1..]
+                }
+                |> FsType.Function
+            else tp
+        | _ -> tp
+    )
+
 let fixNodeArray(md: FsModule): FsModule =
 
     let fix(tp: FsType): FsType =
@@ -1067,6 +1096,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
     |> fixStatic
     |> createIExports
     |> addTicForGenericFunctions
+    |> fixOverloadingOnStringParameters
 
 let printType (tp: FsType): string =
     match tp with
@@ -1256,7 +1286,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     // printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
     writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/izitoast.fs"
     writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/typescript.fs"
-    // writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
+    writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
     // writeFile "node_modules/@types/react/index.d.ts" "src/bin/react.fs"
     // writeFile "node_modules/@types/node/index.d.ts" "src/bin/node.fs"
 
