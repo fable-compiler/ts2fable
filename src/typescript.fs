@@ -7,8 +7,6 @@ type [<AllowNullLiteral>] IExports =
     abstract setTimeout: handler: (ResizeArray<obj> -> unit) * timeout: float -> obj
     abstract clearTimeout: handle: obj -> unit
 
-let [<Import("*","typescript")>] ts: ts.IExports = jsNative
-
 module ts =
 
     type [<AllowNullLiteral>] IExports =
@@ -3567,6 +3565,11 @@ module ts =
         abstract getLength: unit -> float
         abstract getChangeRange: oldSnapshot: IScriptSnapshot -> TextChangeRange option
         abstract dispose: unit -> unit
+
+    module ScriptSnapshot =
+
+        type [<AllowNullLiteral>] IExports =
+            abstract fromString: text: string -> IScriptSnapshot
 
     type [<AllowNullLiteral>] PreProcessedFileInfo =
         abstract referencedFiles: ResizeArray<FileReference> with get, set
