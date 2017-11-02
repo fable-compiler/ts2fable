@@ -625,27 +625,47 @@ let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringL
 let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
 let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
 
-let createIExports(md: FsModule): FsModule =
-    let tps = md.Types |> List.filter (fun t ->
-        match t with
-        | FsType.Variable _ -> true
-        | FsType.Function _ -> true
-        | _ -> false
+let createIExports (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+
+            let tps = md.Types |> List.collect(fun t ->
+                match t with
+                | FsType.Variable _ -> [t]
+                | FsType.Function _ -> [t]
+                | FsType.Interface it ->
+                    if it.IsStatic then
+                        [
+                            // add a property for accessing the static class
+                            {
+                                Emit = None
+                                Name = it.Name.Replace("Static","")
+                                Option = false
+                                Type = it.Name |> FsType.Mapped
+                            }
+                            |> FsType.Property
+                        ]
+                    else []
+                | _ -> []
+            )
+            if tps.Length = 0 then
+                tp
+            else
+                let cl: FsInterface =
+                    {
+                        IsStatic = false
+                        Name = "IExports"
+                        Inherits = []
+                        TypeParameters = []
+                        Members = tps
+                    }
+                { md with
+                    Types = [ FsType.Interface cl ] @ md.Types
+                }
+                |> FsType.Module
+        | _ -> tp
     )
-    if tps.Length = 0 then
-        md
-    else
-        let cl: FsInterface =
-            {
-                IsStatic = false
-                Name = "IExports"
-                Inherits = []
-                TypeParameters = []
-                Members = tps
-            }
-        { md with
-            Types = [ FsType.Interface cl ] @ md.Types
-        }
 
 let fixModule (fix: FsType -> FsType) (a: FsModule) =
     let b =
@@ -757,23 +777,20 @@ let fixTic (typeParameters: FsType list) (tp: FsType) =
             | _ -> t
         fixType fix tp
 
-let addTicForGenericFunctions(md: FsModule): FsModule =
-    { md with
-        Types =
-            md.Types |> List.map (fun tp ->
-                match tp with
-                | FsType.Interface it ->
-                    { it with
-                        Members = it.Members |> List.map (fun mbr ->
-                            match asFunction mbr with
-                            | None -> mbr
-                            | Some fn -> fixTic fn.TypeParameters mbr
-                        )
-                    }
-                    |> FsType.Interface
-                | _ -> tp
-            )
-    }
+let addTicForGenericFunctions(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            { it with
+                Members = it.Members |> List.map (fun mbr ->
+                    match asFunction mbr with
+                    | None -> mbr
+                    | Some fn -> fixTic fn.TypeParameters mbr
+                )
+            }
+            |> FsType.Interface
+        | _ -> tp
+    )
 
 let fixNodeArray(md: FsModule): FsModule =
 
@@ -941,8 +958,7 @@ type FsInterface with
     member x.NonStaticMembers with get() = x.Members |> List.filter (not << isStatic)
 
 let fixStatic(f: FsFile): FsFile =
-
-    let fix(tp: FsType): FsType =
+    f |> fixFile (fun tp ->
         match tp with
         | FsType.Module md ->
             { md with
@@ -957,6 +973,7 @@ let fixStatic(f: FsFile): FsFile =
                                 |> FsType.Interface
 
                                 { it with
+                                    IsStatic = true
                                     Name = sprintf "%sStatic" it.Name
                                     Inherits = []
                                     Members = it.StaticMembers
@@ -970,7 +987,9 @@ let fixStatic(f: FsFile): FsFile =
             }
             |> FsType.Module
         | _ -> tp
+    )
 
+let fixFile (fix: FsType -> FsType) (f: FsFile): FsFile =
     { f with Modules = f.Modules |> List.map (fixModule fix) }
 
 let fixOpens(f: FsFile): FsFile =
@@ -1037,18 +1056,17 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             |> List.ofSeq
             |> mergeModules
             |> List.map (fixImport [name2])
-            |> List.map createIExports
             |> List.map fixThis
-            |> List.map addTicForGenericFunctions
             |> List.map addTicForGenericTypes
             |> List.map fixNodeArray
             |> List.map fixEscapeWords
             |> List.map fixDateTime
             |> List.map fixDuplicatesInUnion
-            
     }
     |> fixOpens
     |> fixStatic
+    |> createIExports
+    |> addTicForGenericFunctions
 
 let printType (tp: FsType): string =
     match tp with
