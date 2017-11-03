@@ -159,11 +159,13 @@ type Node with
         x.forEachChild<unit> (fun nd -> cbNode nd; None) |> ignore
 
 let getPropertyName(pn: PropertyName): string =
+    // let nm =
     match pn with
-    | U4.Case1 id -> id.getText()
+    | U4.Case1 id -> id.getText().Replace("\"","")
     | U4.Case2 sl -> sl.getText()
     | U4.Case3 nl -> nl.getText()
     | U4.Case4 cpn -> cpn.getText()
+    // nm // some getText() have quotes
 
 let getBindingName(bn: BindingName): string =
     match bn with
