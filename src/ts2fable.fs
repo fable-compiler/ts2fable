@@ -160,14 +160,14 @@ type Node with
 
 let getPropertyName(pn: PropertyName): string =
     match pn with
-    | U4.Case1 id -> id.text
-    | U4.Case2 sl -> sl.text
-    | U4.Case3 nl -> nl.text
+    | U4.Case1 id -> id.getText()
+    | U4.Case2 sl -> sl.getText()
+    | U4.Case3 nl -> nl.getText()
     | U4.Case4 cpn -> cpn.getText()
 
 let getBindingName(bn: BindingName): string =
     match bn with
-    | U2.Case1 id -> id.text
+    | U2.Case1 id -> id.getText()
     | U2.Case2 bp -> // BindingPattern
         match bp with
         | U2.Case1 obp -> obp.getText()
@@ -200,7 +200,7 @@ let readTypeParameters(tps: ResizeArray<TypeParameterDeclaration> option): FsTyp
     | None -> []
     | Some tps ->
         tps |> List.ofSeq |> List.map (fun tp ->
-            tp.name.text |> FsType.Mapped
+            tp.name.getText() |> FsType.Mapped
         )
 
 let readInherits(hcs: ResizeArray<HeritageClause> option): FsType list =
@@ -224,7 +224,7 @@ let readInherits(hcs: ResizeArray<HeritageClause> option): FsType list =
 let readInterface(id: InterfaceDeclaration): FsInterface =
     {
         IsStatic = false
-        Name = id.name.text 
+        Name = id.name.getText()
         Inherits = readInherits id.heritageClauses
         Members = id.members |> List.ofSeq |> List.map readNamedDeclaration
         TypeParameters = readTypeParameters id.typeParameters
@@ -236,7 +236,7 @@ let readClass(cd: ClassDeclaration): FsInterface =
         Name =
             match cd.name with
             | None -> "TODO_NoClassName"
-            | Some id -> id.text
+            | Some id -> id.getText()
         Inherits = readInherits cd.heritageClauses
         Members = cd.members |> List.ofSeq |> List.map readNamedDeclaration
         TypeParameters = readTypeParameters cd.typeParameters
@@ -257,7 +257,7 @@ let readVariable(vb: VariableStatement): FsVariable =
 
 let readEnum(ed: EnumDeclaration): FsEnum =
     {
-        Name = ed.name.text
+        Name = ed.name.getText()
         Cases = ed.members |> List.ofSeq |> List.map readEnumCase
     }
 
@@ -272,17 +272,17 @@ let readTypeReference(tr: TypeReferenceNode): FsType =
     | Some tas ->
         {
             Type =
-                match tr.typeName with
-                | U2.Case1 id ->
-                    id.text
-                | U2.Case2 qn ->
-                    qn.getText()
-                |> FsType.Mapped
+                let typeName =
+                    match tr.typeName with
+                    | U2.Case1 id -> id.getText()
+                    | U2.Case2 qn -> qn.getText()
+                if isNull typeName then
+                    failwithf "readTypeReference type name is null: %s" (tr.getText())
+                typeName |> FsType.Mapped
             TypeParameters =
                 tas |> List.ofSeq |> List.map readTypeNode
         }
-        |>
-        FsType.Generic
+        |> FsType.Generic
 let readFunctionType(ft: FunctionTypeNode): FsFunction =
     {
         Emit = None
@@ -426,7 +426,7 @@ let readFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
     {
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
-        Name = fd.name |> Option.map (fun id -> id.text)
+        Name = fd.name |> Option.map (fun id -> id.getText())
         TypeParameters = readTypeParameters fd.typeParameters
         Params = fd.parameters |> List.ofSeq |> List.map readParameterDeclaration
         ReturnType =
@@ -503,7 +503,7 @@ let readNamedDeclaration(te: NamedDeclaration): FsType =
 
 let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
     let tp = d.``type`` |> readTypeNode
-    let name = d.name.text
+    let name = d.name.getText()
     let asAlias() =
         {
             Name = name
@@ -534,7 +534,7 @@ let readExpressionText(ep: Expression): string =
     match ep.kind with
     | SyntaxKind.Identifier ->
         let id = ep :?> Identifier
-        id.text
+        id.getText()
     | SyntaxKind.PropertyAccessExpression ->
         let pa = ep :?> PropertyAccessExpression
         pa.getText()
@@ -776,8 +776,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Type = fixType fix vb.Type
         }
         |> FsType.Variable
-    
-    // | _ -> tp
+
     | FsType.Enum _ -> tp
     | FsType.Mapped _ -> tp
     | FsType.None _ -> tp
@@ -895,9 +894,8 @@ let fixDateTime(md: FsModule): FsModule =
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
-let fixDuplicatesInUnion(md: FsModule): FsModule =
-
-    let fix(tp: FsType): FsType =
+let fixDuplicatesInUnion (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
         match tp with
         | FsType.Union un ->
             let set = HashSet<_>()
@@ -914,8 +912,7 @@ let fixDuplicatesInUnion(md: FsModule): FsModule =
             else 
                 { un with Types = tps } |> FsType.Union
         | _ -> tp
-
-    { md with Types = md.Types |> List.map (fixType fix) }
+    )
 
 let addTicForGenericTypes(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
@@ -943,8 +940,8 @@ let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
     {
         Name =
             match md.name with
-            | U2.Case1 id -> id.text
-            | U2.Case2 sl -> sl.text
+            | U2.Case1 id -> id.getText()
+            | U2.Case2 sl -> sl.getText()
         Types = types |> List.ofSeq
     }
 
@@ -1114,7 +1111,6 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             |> List.map fixNodeArray
             |> List.map fixEscapeWords
             |> List.map fixDateTime
-            |> List.map fixDuplicatesInUnion
     }
     |> fixOpens
     |> fixStatic
@@ -1122,6 +1118,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
     |> addTicForGenericFunctions
     |> addTicForGenericTypes
     |> fixOverloadingOnStringParameters
+    |> fixDuplicatesInUnion
 
 let printType (tp: FsType): string =
     match tp with
