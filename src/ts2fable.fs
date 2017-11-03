@@ -75,6 +75,7 @@ type FsFunction =
 type FsProperty =
     {
         Emit: string option
+        Index: FsParam option
         Name: string
         Option: bool
         Type: FsType
@@ -182,8 +183,6 @@ let readEnumCase(em: EnumMember): FsEnumCase =
             | SyntaxKind.NumericLiteral ->
                 let nl = ep :?> NumericLiteral
                 FsEnumCaseType.Numeric, Some nl.text
-            // | _ -> None // TODO TypeScript string based enums #17
-            // https://github.com/fable-compiler/ts2fable/issues/17
             | SyntaxKind.StringLiteral ->
                 let sl = ep :?> StringLiteral
                 FsEnumCaseType.String, Some sl.text
@@ -357,8 +356,10 @@ let rec readTypeNode(t: TypeNode): FsType =
         readExpressionText eta.expression |> FsType.Mapped
     | SyntaxKind.ParenthesizedType -> FsType.Mapped "obj"
     | SyntaxKind.MappedType ->
-        printfn "TODO mapped types"
-        FsType.TODO
+        let mt = t :?> MappedTypeNode
+        // TODO map mapped types https://github.com/fable-compiler/ts2fable/issues/44
+        // printfn "TODO mapped types %s" (mt.getText())
+        FsType.Mapped "obj"
     | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
 
 let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
@@ -400,6 +401,7 @@ let readMethodDeclaration(ms: MethodDeclaration): FsFunction =
 let readPropertySignature(ps: PropertySignature): FsProperty =
     {
         Emit = None
+        Index = None
         Name = ps.name |> getPropertyName
         Option = ps.questionToken.IsSome
         Type = 
@@ -411,6 +413,7 @@ let readPropertySignature(ps: PropertySignature): FsProperty =
 let readPropertyDeclaration(pd: PropertyDeclaration): FsProperty =
     {
         Emit = None
+        Index = None
         Name = pd.name |> getPropertyName
         Option = pd.questionToken.IsSome
         Type = 
@@ -433,8 +436,10 @@ let readFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
     }
 
 let readIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
+    let pm = readParameterDeclaration ps.parameters.[0]
     {
         Emit = Some "$0[$1]{{=$2}}"
+        Index = Some pm
         Name = "Item"
         Option = ps.questionToken.IsSome
         Type = 
@@ -566,11 +571,15 @@ let readStatement(sd: Statement): FsType =
     | SyntaxKind.ExportAssignment ->
         readExportAssignment(sd :?> ExportAssignment)
     | SyntaxKind.ImportDeclaration ->
-        printfn "TODO import statements"
+        // https://github.com/fable-compiler/ts2fable/issues/21
+        // printfn "TODO import statements"
         FsType.TODO
     | SyntaxKind.NamespaceExportDeclaration ->
         // let ns = sd :?> NamespaceExportDeclaration
-        FsType.None
+        FsType.TODO
+    | SyntaxKind.ExportDeclaration ->
+        // printfn "TODO export statements"
+        FsType.TODO
     | _ -> printfn "unsupported Statement kind: %A" sd.kind; FsType.TODO
 
 let mergeTypes(tps: FsType list): FsType list =
@@ -659,6 +668,7 @@ let createIExports (f: FsFile): FsFile =
                             // add a property for accessing the static class
                             {
                                 Emit = None
+                                Index = None
                                 Name = it.Name.Replace("Static","")
                                 Option = false
                                 Type = it.Name |> FsType.Mapped
@@ -714,6 +724,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
         |> FsType.Interface
     | FsType.Property pr ->
         { pr with
+            Index = Option.map fixParam pr.Index
             Type = fixType fix pr.Type
         }
         |> FsType.Property 
@@ -863,6 +874,10 @@ let fixEscapeWords(md: FsModule): FsModule =
             { fn with Name = fn.Name |> Option.map Keywords.escapeWord } |> FsType.Function
         | FsType.Property pr ->
             { pr with Name = Keywords.escapeWord pr.Name } |> FsType.Property
+        | FsType.Interface it ->
+            { it with Name = Keywords.escapeWord it.Name } |> FsType.Interface
+        | FsType.Module md ->
+            { md with Name = Keywords.escapeWord md.Name } |> FsType.Module
         | _ -> tp
 
     { md with Types = md.Types |> List.map (fixType fix) }
@@ -922,6 +937,7 @@ let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
         | SyntaxKind.ModuleDeclaration ->
             readModuleDeclaration (nd :?> ModuleDeclaration) |> FsType.Module |> types.Add
         | SyntaxKind.StringLiteral -> ()
+        | SyntaxKind.ExportKeyword -> ()
         | _ -> printfn "unknown kind in ModuleDeclaration: %A" nd.kind
     )
     {
@@ -1175,7 +1191,10 @@ let printProperty (pr: FsProperty): string =
     sprintf "%sabstract %s: %s%s%s with get, set"
         (if pr.Emit.IsSome then sprintf "[<Emit \"%s\">] " pr.Emit.Value else "")
         pr.Name
-        (if pr.Emit.IsSome then "index: string -> " else "") // TODO will only work with indexed
+        (   match pr.Index with
+            | None -> ""
+            | Some idx -> sprintf "%s: %s -> " idx.Name (printType idx.Type)
+        )
         (printType pr.Type)
         (if pr.Option then " option" else "")
 
@@ -1300,8 +1319,8 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/izitoast.fs"
     writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/typescript.fs"
     writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
-    // writeFile "node_modules/@types/react/index.d.ts" "src/bin/react.fs"
-    // writeFile "node_modules/@types/node/index.d.ts" "src/bin/node.fs"
+    writeFile "node_modules/@types/react/index.d.ts" "src/bin/react.fs"
+    writeFile "node_modules/@types/node/index.d.ts" "src/bin/node.fs"
 
 else
     let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")

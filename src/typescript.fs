@@ -3203,14 +3203,14 @@ module ts =
         abstract traceResolution: bool option with get, set
         abstract types: ResizeArray<string> option with get, set
         abstract typeRoots: ResizeArray<string> option with get, set
-        [<Emit "$0[$1]{{=$2}}">] abstract Item: index: string -> U2<CompilerOptionsValue, JsonSourceFile> option with get, set
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: option: string -> U2<CompilerOptionsValue, JsonSourceFile> option with get, set
 
     type [<AllowNullLiteral>] TypeAcquisition =
         abstract enableAutoDiscovery: bool option with get, set
         abstract enable: bool option with get, set
         abstract ``include``: ResizeArray<string> option with get, set
         abstract exclude: ResizeArray<string> option with get, set
-        [<Emit "$0[$1]{{=$2}}">] abstract Item: index: string -> U2<ResizeArray<string>, bool> option with get, set
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: option: string -> U2<ResizeArray<string>, bool> option with get, set
 
     type [<AllowNullLiteral>] DiscoverTypingsInfo =
         abstract fileNames: ResizeArray<string> with get, set
