@@ -160,7 +160,7 @@ type Node with
 
 let getPropertyName(pn: PropertyName): string =
     match pn with
-    | U4.Case1 id -> id.getText()
+    | U4.Case1 id -> id.getText().Replace("\"","")
     | U4.Case2 sl -> sl.getText()
     | U4.Case3 nl -> nl.getText()
     | U4.Case4 cpn -> cpn.getText()
