@@ -8,8 +8,8 @@ module rec ts2fable.App
 open Fable.Core
 open Fable.Import
 open Fable.Import.Node
-open Fable.Import.typescript
-open Fable.Import.typescript.ts
+open Fable.Import.TypeScript
+open Fable.Import.TypeScript.ts
 open System.Collections.Generic
 open System
 
@@ -824,10 +824,6 @@ type FsFunction with
     member x.StringLiteralParams with get() = x.Params |> List.filter isStringLiteralParam
     member x.NonStringLiteralParams with get() = x.Params |> List.filter (not << isStringLiteralParam)
 
-let escapeFunctionName (s: string): string =
-    if s.Contains "-" then sprintf "``%s``" s
-    else s
-
 // https://github.com/Microsoft/TypeScript/blob/master/doc/spec.md#18-overloading-on-string-parameters
 let fixOverloadingOnStringParameters(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
@@ -838,7 +834,7 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                 let p0sl = (asStringLiteral p0.Type).Value
                 { fn with
                     Emit = sprintf "$0.%s('%s',$1...)" fn.Name.Value p0sl |> Some
-                    Name = sprintf "%s_%s" fn.Name.Value p0sl |> escapeFunctionName |> Some
+                    Name = sprintf "%s_%s" fn.Name.Value p0sl |> Some
                     Params = fn.Params.[1..]
                 }
                 |> FsType.Function
@@ -861,9 +857,8 @@ let fixNodeArray(md: FsModule): FsModule =
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
-let fixEscapeWords(md: FsModule): FsModule =
-
-    let fix(tp: FsType): FsType =
+let fixEscapeWords(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
         match tp with
         | FsType.Mapped s ->
             Keywords.escapeWord s |> FsType.Mapped
@@ -877,9 +872,12 @@ let fixEscapeWords(md: FsModule): FsModule =
             { it with Name = Keywords.escapeWord it.Name } |> FsType.Interface
         | FsType.Module md ->
             { md with Name = Keywords.escapeWord md.Name } |> FsType.Module
+        | FsType.Variable vb ->
+            { vb with Name = Keywords.escapeWord vb.Name } |> FsType.Variable
+        | FsType.Alias al ->
+            { al with Name = Keywords.escapeWord al.Name } |> FsType.Alias
         | _ -> tp
-
-    { md with Types = md.Types |> List.map (fixType fix) }
+    )
 
 let fixDateTime(md: FsModule): FsModule =
 
@@ -922,6 +920,11 @@ let addTicForGenericTypes(f: FsFile): FsFile =
         | _ -> tp
     )
 
+let readModuleName(mn: ModuleName): string =
+    match mn with
+    | U2.Case1 id -> id.getText().Replace("\"","")
+    | U2.Case2 sl -> sl.getText()
+
 let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
     let types = ResizeArray()
     md.ForEachChild (fun nd ->
@@ -938,10 +941,7 @@ let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
         | _ -> printfn "unknown kind in ModuleDeclaration: %A" nd.kind
     )
     {
-        Name =
-            match md.name with
-            | U2.Case1 id -> id.getText()
-            | U2.Case2 sl -> sl.getText()
+        Name = readModuleName md.name
         Types = types |> List.ofSeq
     }
 
@@ -1076,7 +1076,7 @@ let fixOpens(f: FsFile): FsFile =
             else f.Opens
     }
 
-let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
+let readSourceFile (tsPath: string) (ns: string) (sf: SourceFile): FsFile =
     let modules = ResizeArray()
 
     let gbl: FsModule =
@@ -1086,10 +1086,6 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
         }
     modules.Add gbl
 
-    let path = Fable.Import.Node.Exports.Path
-    let name = path.basename(tsPath, path.extname(tsPath)) // TODO ensure valid name
-    let name2 = path.basename(name, path.extname(name)) // twice because of .d.ts
-
     let opens = 
         [
             "System"
@@ -1098,7 +1094,7 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             "Fable.Import.JS"
         ]
     {
-        Name = name2
+        Name = ns
         Opens = opens
         Modules =
             modules
@@ -1106,15 +1102,15 @@ let readSourceFile (tsPath: string) (sf: SourceFile): FsFile =
             |> List.map FsType.Module
             |> mergeModules
             |> List.choose asModule
-            // |> List.map (fixImport [name2])
+            // |> List.map (fixImport [ns])
             |> List.map fixThis
             |> List.map fixNodeArray
-            |> List.map fixEscapeWords
             |> List.map fixDateTime
     }
     |> fixOpens
     |> fixStatic
     |> createIExports
+    |> fixEscapeWords
     |> addTicForGenericFunctions
     |> addTicForGenericTypes
     |> fixOverloadingOnStringParameters
@@ -1278,7 +1274,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
 let printFsFile (file: FsFile): ResizeArray<string> =
     let lines = ResizeArray<string>()
 
-    sprintf "module rec Fable.Import.%s" file.Name |> lines.Add
+    sprintf "module rec %s" file.Name |> lines.Add
 
     for opn in file.Opens do
         sprintf "open %s" opn |> lines.Add
@@ -1290,17 +1286,15 @@ let printFsFile (file: FsFile): ResizeArray<string> =
 
 let [<Import("*","typescript")>] ts: ts.IExports = jsNative
 
-let printFile tsPath: unit =
-    let code = Fs.readFileSync(tsPath).toString()
-    let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
-    let fsFile =  readSourceFile tsPath tsFile
-    for line in printFsFile fsFile do
-        printfn "%s" line
-
 let writeFile tsPath (fsPath: string): unit =
     let code = Fs.readFileSync(tsPath).toString()
     let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
-    let fsFile = readSourceFile tsPath tsFile
+
+    // use the F# file name as the module namespace
+    let path = Fable.Import.Node.Exports.Path
+    let ns = path.basename(fsPath, path.extname(fsPath)) // TODO ensure valid name
+
+    let fsFile = readSourceFile tsPath ns tsFile
     let file = Fs.createWriteStream fsPath
     for line in printFsFile fsFile do
         file.write(sprintf "%s%c" line '\n') |> ignore
@@ -1310,22 +1304,21 @@ let p = Node.Globals.``process``
 let argv = p.argv |> List.ofSeq
 // printfn "%A" argv
 
+// if run via `dotnet fable npm-build` or `dotnet fable npm-start`
+// TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
-    // printFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
-    writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/izitoast.fs"
-    writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/typescript.fs"
-    writeFile "node_modules/@types/electron/index.d.ts" "src/bin/electron.fs"
-    writeFile "node_modules/@types/react/index.d.ts" "src/bin/react.fs"
-    writeFile "node_modules/@types/node/index.d.ts" "src/bin/node.fs"
+    writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/Fable.Import.IziToast.fs"
+    writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/Fable.Import.TypeScript.fs"
+    writeFile "node_modules/@types/electron/index.d.ts" "src/bin/Fable.Import.Electron.fs"
+    writeFile "node_modules/@types/react/index.d.ts" "src/bin/Fable.Import.React.fs"
+    writeFile "node_modules/@types/node/index.d.ts" "src/bin/Fable.Import.Node.fs"
 
 else
     let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")
     let fsfile = argv |> List.tryFind (fun s -> s.EndsWith ".fs")
     
-    match tsfile with
-    | None -> failwithf "Please provide the path to a TypeScript definition file"
-    | Some tsf ->
-        match fsfile with
-        | None -> printFile tsf
-        | Some fsf -> writeFile tsf fsf
+    match tsfile, fsfile with
+    | None, _ -> failwithf "Please provide the path to a TypeScript definition file"
+    | _, None -> failwithf "Please provide the path to the F# file to be written "
+    | Some tsf, Some fsf -> writeFile tsf fsf
