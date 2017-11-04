@@ -12,20 +12,17 @@ Please use yarn so you will use the exact same versions of everything that was u
 yarn
 ```
 
-### npm/yarn Commands
-
-``` 
-yarn build // Compiles the TypeScript Code into ./dist
-
-yarn ver // Outputs the installed version of TypeScript
-
-yarn run-new // Outputs the Fable code to the window using the new TS version
-yarn run-orig // Outputs the Fable code using the current version
-
-yarn run-both // Outputs both the new and the original to the output directory 
+```
+cd src
+dotnet restore
+dotnet fable npm-build
+node ..\dist\ts2fable.js ..\node_modules\typescript\lib\typescript.d.ts bin\Fable.Import.TypeScript.fs
 ```
 
-After this, you can use Visual Studio Code to compare the orig file to the new file.
+You can also have it watch the files with:
+```
+dotnet fable npm-start
+```
 
 ### Debugging
 
@@ -41,14 +38,11 @@ Install it with npm and run the `ts2fable` command on a TypeScript declaration f
 
 ```
 npm install -g ts2fable
-ts2fable react.d.ts
+ts2fable node_modules/@types/react/index.d.ts Fable.Import.React.fs
 ```
 
-The parser just displays the results on screen, but you can
-redirect the output to a file:
-```
-ts2fable react.d.ts > Fable.Import.React.fs
-```
+The F# namespace in taken from the output filename. In this example, it is `Fable.Import.React`.
+
 
 You can find more information about how to interact with JavaScript
 from F# [here](https://github.com/fable-compiler/Fable/blob/master/docs/source/docs/interacting.md).

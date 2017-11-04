@@ -1,4 +1,4 @@
-module rec Fable.Import.typescript
+module rec Fable.Import.TypeScript
 open System
 open Fable.Core
 open Fable.Import.JS
