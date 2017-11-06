@@ -20,6 +20,7 @@ $v = "$version$versionSuffix"
 yarn
 
 Set-Location $psscriptroot\src
+dotnet restore
 dotnet fable npm-build
 
 Set-Location $psscriptroot
