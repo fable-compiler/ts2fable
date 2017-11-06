@@ -4,22 +4,47 @@
 
 ## Usage
 
-Install it with npm and run the `ts2fable` command on a TypeScript declaration file.
+Install it with yarn or npm. With yarn it is:
+```
+yarn global add ts2fable
+```
 
+With npm it is:
 ```
 npm install -g ts2fable
-ts2fable react.d.ts
 ```
 
-The parser just displays the results on screen, but you can
-redirect the output to a file:
+Run the `ts2fable` command on a TypeScript declaration file and also specify the F# output file. The F# namespace in taken from the output filename. In this example, it is `Fable.Import.React`.
+
 ```
-ts2fable react.d.ts > Fable.Import.React.fs
+yarn add @types/react --dev
+ts2fable node_modules/@types/react/index.d.ts Fable.Import.React.fs
 ```
 
 You can find more information about how to interact with JavaScript
 from F# [here](https://github.com/fable-compiler/Fable/blob/master/docs/source/docs/interacting.md).
-Please note the parser is not perfect and some tweaking by hand may be needed.
+Please note the parser is not perfect and some tweaking by hand may be needed. Please submit bugs as [issues on GitHub](https://github.com/fable-compiler/ts2fable/issues).
+
+## Contributing
+```
+git clone https://github.com/fable-compiler/ts2fable
+```
+Please use yarn so you will use the exact same versions of everything that was used during development
+```
+yarn
+```
+
+```
+cd src
+dotnet restore
+dotnet fable npm-build
+node ..\dist\ts2fable.js ..\node_modules\typescript\lib\typescript.d.ts bin\Fable.Import.TypeScript.fs
+```
+
+You can also have it watch the files with:
+```
+dotnet fable npm-start
+```
 
 ## Conventions
 

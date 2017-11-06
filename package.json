@@ -1,17 +1,21 @@
 {
   "name": "ts2fable",
-  "version": "0.1.23",
+  "version": "0.2.0-build.2",
   "description": "TypeScript definition files parser for fable-compiler",
-  "main": "ts2fable.js",
+  "main": "./dist/ts2fable.js",
   "bin": {
-    "ts2fable": "./ts2fable.js"
+    "ts2fable": "./dist/ts2fable.js"
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "fable-splitter -c splitter.config.js",
+    "start": "fable-splitter -c splitter.config.js -w"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fable-compiler/Fable/src/ts2fable"
+    "url": "https://github.com/fable-compiler/ts2fable"
   },
   "keywords": [
     "fable",
@@ -23,10 +27,21 @@
   "author": "Alfonso Garcia-Caro (https://twitter.com/alfonsogcnunez)",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/fable-compiler/Fable/issues"
+    "url": "https://github.com/fable-compiler/ts2fable/issues"
   },
-  "homepage": "https://github.com/fable-compiler/Fable#readme",
+  "homepage": "https://github.com/fable-compiler/ts2fable#readme",
   "dependencies": {
-    "typescript": "^2.3.2"
+    "typescript": "2.5.3"
+  },
+  "devDependencies": {
+    "@types/electron": "^1.4.35",
+    "@types/node": "^7.0.12",
+    "@types/react": "^15.0.20",
+    "babel-core": "6.26.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "cross-env": "^4.0.0",
+    "fable-splitter": "0.1.20",
+    "fable-utils": "1.0.6",
+    "izitoast": "^1.1.5"
   }
 }
