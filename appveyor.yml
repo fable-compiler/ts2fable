@@ -11,7 +11,7 @@ build_script:
 test: off
 
 artifacts:
-  - path: *.tgz
+  - path: '*.tgz'
 
 cache:
   - "%LOCALAPPDATA%\\Yarn"
