@@ -1,11 +1,14 @@
 {
   "name": "ts2fable",
-  "version": "0.1.23",
+  "version": "0.2.0-build.2",
   "description": "TypeScript definition files parser for fable-compiler",
   "main": "./dist/ts2fable.js",
   "bin": {
     "ts2fable": "./dist/ts2fable.js"
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "fable-splitter -c splitter.config.js",
     "start": "fable-splitter -c splitter.config.js -w"
