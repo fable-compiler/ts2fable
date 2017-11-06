@@ -29,6 +29,6 @@ yarn version --new-version $v --no-git-tag-version
 $js = "dist/ts2fable.js"
 @("#!/usr/bin/env node") + (get-content $js) | set-content $js
 
-# yarn pack is packing to many files
+# yarn pack is packing to0 many files
 npm pack
 tar tf ts2fable-$v.tgz
