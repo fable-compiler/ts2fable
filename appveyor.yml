@@ -1,0 +1,17 @@
+image: Visual Studio 2017
+
+install:
+  - ps: Install-Product node '' x64
+
+build_script:
+  - ps: |
+      .\build.ps1
+      if ($lastexitcode -ne 0){ exit $lastexitcode }
+
+test: off
+
+artifacts:
+  - path: *.tgz
+
+cache:
+  - "%LOCALAPPDATA%\\Yarn"
