@@ -1,6 +1,6 @@
 {
   "name": "ts2fable",
-  "version": "0.2.0",
+  "version": "0.2.0-build.2",
   "description": "TypeScript definition files parser for fable-compiler",
   "main": "./dist/ts2fable.js",
   "bin": {
