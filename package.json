@@ -47,6 +47,7 @@
     "fable-splitter": "0.1.20",
     "fable-utils": "1.0.6",
     "izitoast": "^1.1.5",
-    "mocha": "^4.0.1"
+    "mocha": "^4.0.1",
+    "mocha-appveyor-reporter": "^0.4.0"
   }
 }
