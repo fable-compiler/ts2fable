@@ -21,7 +21,7 @@ yarn
 
 Set-Location $psscriptroot\src
 dotnet restore
-dotnet fable npm-build
+dotnet fable yarn-build
 
 Set-Location $psscriptroot
 mocha .\dist\tests.js
@@ -30,7 +30,9 @@ yarn version --new-version $v --no-git-tag-version
 $js = "dist/ts2fable.js"
 @("#!/usr/bin/env node") + (get-content $js) | set-content $js
 
+if ($env:appveyor){
+    yarn remove mocha chai
+}
 # yarn pack is packing too many files
-yarn remove mocha chai
 npm pack
 tar tf ts2fable-$v.tgz
