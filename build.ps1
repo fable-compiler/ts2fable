@@ -23,7 +23,7 @@ Set-Location $psscriptroot\src
 dotnet restore
 dotnet fable yarn-build
 
-Set-Location $psscriptroot\src
+Set-Location $psscriptroot\test
 dotnet restore
 dotnet fable yarn-test
 
