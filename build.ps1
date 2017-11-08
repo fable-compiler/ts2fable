@@ -23,9 +23,8 @@ Set-Location $psscriptroot\src
 dotnet restore
 dotnet fable yarn-build
 
-mocha .\dist\tests.js
-
 Set-Location $psscriptroot
+mocha .\dist\tests.js
 yarn version --new-version $v --no-git-tag-version
 
 $js = "dist/ts2fable.js"
