@@ -21,7 +21,7 @@ yarn
 
 Set-Location $psscriptroot\src
 dotnet restore
-dotnet fable yarn-build
+dotnet fable npm-build
 
 Set-Location $psscriptroot
 mocha .\dist\tests.js
