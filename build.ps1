@@ -34,9 +34,6 @@ yarn version --new-version $v --no-git-tag-version
 $js = "dist/ts2fable.js"
 @("#!/usr/bin/env node") + (get-content $js) | set-content $js
 
-if ($env:appveyor){
-    yarn remove mocha chai
-}
 # yarn pack is packing too many files
 npm pack
 tar tf ts2fable-$v.tgz
