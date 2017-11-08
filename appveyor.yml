@@ -9,7 +9,8 @@ build_script:
       .\build.ps1
       if ($lastexitcode -ne 0){ exit $lastexitcode }
 
-test: off
+test:
+  - mocha .\test\bin\test.js
 
 artifacts:
   - path: '*.tgz'
