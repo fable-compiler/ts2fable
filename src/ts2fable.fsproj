@@ -1,6 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project=".\ts2fable.props" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Fable.Import.TypeScript.fs" />
+    <Compile Include="keywords.fs" />
+    <Compile Include="enum.fs" />
+    <Compile Include="core.fs" />
     <Compile Include="ts2fable.fs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Import.Node" Version="0.1.5" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

@@ -1,8 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\src\ts2fable.props" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\src\ts2fable.fsproj" />
     <Compile Include="Fable.Import.Mocha.fs" />
     <Compile Include="Fable.Import.Chai.fs" />
     <Compile Include="test.fs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Import.Node" Version="0.1.5" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

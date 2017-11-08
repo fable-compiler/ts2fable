@@ -15,7 +15,7 @@ mocha.describe.Invoke("my suite", fun _ ->
 
 mocha.describe.Invoke("keywords", fun _ ->
     mocha.it.Invoke("done", fun donee ->
-        assertt.equal(Keywords.escapeWord "done", "abc")
+        assertt.equal(Keywords.escapeWord "done", "``done``")
         donee.Invoke()
     )|> ignore
 ) |> ignore
