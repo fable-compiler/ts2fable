@@ -6,6 +6,7 @@ module rec ts2fable.App
 // 3. Print the syntax tree to a F# file.
 
 open Fable.Core
+open Fable.Core.JsInterop
 open Fable.Import
 open Fable.Import.Node
 open Fable.Import.TypeScript
@@ -1284,7 +1285,7 @@ let printFsFile (file: FsFile): ResizeArray<string> =
         |> List.iter (printModule lines "")
     lines
 
-let [<Import("*","typescript")>] ts: ts.IExports = jsNative
+let ts: ts.IExports = importAll "typescript"
 
 let writeFile tsPath (fsPath: string): unit =
     let code = Fs.readFileSync(tsPath).toString()

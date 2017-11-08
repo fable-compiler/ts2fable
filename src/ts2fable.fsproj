@@ -7,6 +7,9 @@
     <Compile Include="keywords.fs" />
     <Compile Include="enum.fs" />
     <Compile Include="ts2fable.fs" />
+    <Compile Include="Fable.Import.Mocha.fs" />
+    <Compile Include="Fable.Import.Chai.fs" />
+    <Compile Include="tests.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Fable.Import.Node" Version="0.1.5" />
