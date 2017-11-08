@@ -6,16 +6,7 @@ module rec ts2fable.App
 // 2. Fix the syntax tree.
 // 3. Print the syntax tree to a F# file.
 
-// open Fable.Core
-// open Fable.Core.JsInterop
-open Fable.Import
-// open Fable.Import.Node
-// open Fable.Import.TypeScript
-// open Fable.Import.TypeScript.ts
-// open System.Collections.Generic
-// open System
-
-let p = Node.Globals.``process``
+let p = Fable.Import.Node.Globals.``process``
 let argv = p.argv |> List.ofSeq
 // printfn "%A" argv
 
@@ -37,5 +28,3 @@ else
     | None, _ -> failwithf "Please provide the path to a TypeScript definition file"
     | _, None -> failwithf "Please provide the path to the F# file to be written "
     | Some tsf, Some fsf -> writeFile tsf fsf
-   
-// let forTesting = "abc"

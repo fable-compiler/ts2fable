@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "build": "fable-splitter -c splitter.config.js",
-    "start": "fable-splitter -c splitter.config.js -w"
+    "watch": "fable-splitter -c splitter.config.js -w",
+    "test": "fable-splitter -c splitter.test.config.js"
   },
   "repository": {
     "type": "git",

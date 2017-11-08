@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\src\ts2fable.props" />
+  <ItemGroup>
+    <Compile Include="Fable.Import.Mocha.fs" />
+    <Compile Include="Fable.Import.Chai.fs" />
+    <Compile Include="test.fs" />
+  </ItemGroup>
+</Project>

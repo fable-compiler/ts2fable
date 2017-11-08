@@ -3,7 +3,6 @@ module rec ts2fable.Core
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Import
 open Fable.Import.Node
 open Fable.Import.TypeScript
 open Fable.Import.TypeScript.ts

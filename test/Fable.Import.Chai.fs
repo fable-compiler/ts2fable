@@ -3,8 +3,8 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
-type [<AllowNullLiteral>] IExports =
-    abstract chai: Chai with get, set
+// type [<AllowNullLiteral>] IExports =
+//     abstract chai: Chai with get, set
 
 module Chai =
 
@@ -367,7 +367,7 @@ module Chai =
     type [<AllowNullLiteral>] AssertionErrorStatic =
         [<Emit "new $0($1...)">] abstract Create: message: string * ?_props: obj * ?ssf: Function -> AssertionError
 
-module chai =
+// module chai =
 
-type [<AllowNullLiteral>] Object =
-    abstract should: Chai with get, set
+// type [<AllowNullLiteral>] Object =
+//     abstract should: Chai with get, set

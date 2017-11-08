@@ -11,8 +11,11 @@ mocha.describe.Invoke("my suite", fun _ ->
         assertt.equal(1, 1)
         donee.Invoke()
     )|> ignore
-    
 ) |> ignore
 
-// let makeItCompile() =
-//     App.forTesting |> ignore
+mocha.describe.Invoke("keywords", fun _ ->
+    mocha.it.Invoke("done", fun donee ->
+        assertt.equal(Keywords.escapeWord "done", "abc")
+        donee.Invoke()
+    )|> ignore
+) |> ignore
