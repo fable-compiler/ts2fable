@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 $version = '0.3.0' # the version under development, update after a release
 $versionSuffix = '-local.1' # manually incremented for local builds
 
