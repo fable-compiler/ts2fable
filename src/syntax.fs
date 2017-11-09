@@ -104,7 +104,7 @@ type FsImport =
     {
         Namespace: string list
         Variable: string
-        Type: string
+        Type: FsType
     }
 
 [<RequireQualifiedAccess>]
@@ -141,3 +141,13 @@ type FsFile =
         Opens: string list
         Modules: FsModule list
     }
+
+let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
+let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
+let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
+
+let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
+let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
+let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
+let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
+let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None

@@ -7,7 +7,9 @@
     <Compile Include="keywords.fs" />
     <Compile Include="enum.fs" />
     <Compile Include="syntax.fs" />
-    <Compile Include="core.fs" />
+    <Compile Include="read.fs" />
+    <Compile Include="transform.fs" />
+    <Compile Include="write.fs" />
     <Compile Include="ts2fable.fs" />
   </ItemGroup>
   <ItemGroup>
