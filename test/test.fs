@@ -14,9 +14,7 @@ let describe (msg: string) (f: unit->unit): unit = jsNative
 let it (msg: string) (f: unit->unit): unit = jsNative
 
 let inline equal (expected: 'T) (actual: 'T): unit =
-    let assert' = importAll<obj> "assert"
-    assert'?deepStrictEqual(actual, expected) |> ignore
-
+    Testing.Assert.AreEqual(expected, actual)
 
 describe "my tests" <| fun _ ->
 
