@@ -1,5 +1,7 @@
 module rec ts2fable.App
 
+open Fable.Core
+open Fable.Import.JS
 open Fable.Core.JsInterop
 open Fable.Import.Node
 open Fable.Import.TypeScript
@@ -56,7 +58,10 @@ let readSourceFile (tsPath: string) (ns: string) (sf: SourceFile): FsFile =
 
 let ts: ts.IExports = importAll "typescript"
 
-let writeFile tsPath (fsPath: string): unit =
+type [<AllowNullLiteral>] PromiseConstructor =
+    [<Emit "new $0($1...)">] abstract Create: executor: ((U2<'T, PromiseLike<'T>> -> unit) -> (obj -> unit) -> unit) -> Promise<'T>
+
+let writeFileSync tsPath (fsPath: string): unit =
     let code = Fs.readFileSync(tsPath).toString()
     let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
 
@@ -69,6 +74,19 @@ let writeFile tsPath (fsPath: string): unit =
     for line in printFsFile fsFile do
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``()
+    // PromiseConstructor
+    file.on("finish", fun _ -> printfn "finished writing %s" fsPath) |> ignore
+
+[<Global>]
+let Promise: PromiseConstructor = jsNative
+
+let writeFilePromise tsPath (fsPath: string): Promise<unit> =
+    Promise.Create (fun resolve reject ->
+        reject "fail" //TODO
+    )
+    
+let writeFile tsPath (fsPath: string): Async<unit> =
+    writeFilePromise tsPath fsPath |> Async.AwaitPromise
 
 let p = Fable.Import.Node.Globals.``process``
 let argv = p.argv |> List.ofSeq
@@ -78,11 +96,17 @@ let argv = p.argv |> List.ofSeq
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
-    writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/Fable.Import.IziToast.fs"
-    writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/Fable.Import.TypeScript.fs"
-    writeFile "node_modules/@types/electron/index.d.ts" "src/bin/Fable.Import.Electron.fs"
-    writeFile "node_modules/@types/react/index.d.ts" "src/bin/Fable.Import.React.fs"
-    writeFile "node_modules/@types/node/index.d.ts" "src/bin/Fable.Import.Node.fs"
+    [
+        writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "test-compile/Fable.Import.IziToast.fs"
+        writeFile "node_modules/typescript/lib/typescript.d.ts" "test-compile/Fable.Import.TypeScript.fs"
+        writeFile "node_modules/electron/electron.d.ts" "test-compile/Fable.Import.Electron.fs"
+        writeFile "node_modules/@types/react/index.d.ts" "test-compile/Fable.Import.React.fs"
+        writeFile "node_modules/@types/node/index.d.ts" "test-compile/Fable.Import.Node.fs"
+        writeFile "node_modules/typescript/lib/lib.es2015.promise.d.ts" "test-compile/Fable.Import.Promise.fs"
+    ]
+    |> Async.Parallel
+    |> Async.RunSynchronously |> ignore
+    printfn "wrote all files"
 
 else
     let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")
@@ -91,4 +115,4 @@ else
     match tsfile, fsfile with
     | None, _ -> failwithf "Please provide the path to a TypeScript definition file"
     | _, None -> failwithf "Please provide the path to the F# file to be written "
-    | Some tsf, Some fsf -> writeFile tsf fsf
+    | Some tsf, Some fsf -> writeFile tsf fsf |> Async.RunSynchronously |> ignore
