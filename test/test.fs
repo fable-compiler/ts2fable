@@ -20,7 +20,7 @@ describe "my tests" <| fun _ ->
 
     it "addition" <| fun _ ->
         1 + 2
-        |> equal 4 // failing on purpose to test AppVeyor
+        |> equal 3
 
 
 describe "keyword tests" <| fun _ ->
