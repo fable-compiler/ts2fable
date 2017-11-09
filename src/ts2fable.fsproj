@@ -6,6 +6,7 @@
     <Compile Include="Fable.Import.TypeScript.fs" />
     <Compile Include="keywords.fs" />
     <Compile Include="enum.fs" />
+    <Compile Include="syntax.fs" />
     <Compile Include="core.fs" />
     <Compile Include="ts2fable.fs" />
   </ItemGroup>
