@@ -8,8 +8,8 @@
     <Compile Include="Fable.Import.Chai.fs" />
     <Compile Include="test.fs" />
   </ItemGroup>
-  <ItemGroup>
+  <!-- <ItemGroup>
     <PackageReference Include="Fable.Import.Node" Version="0.1.5" />
-  </ItemGroup>
+  </ItemGroup> -->
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
