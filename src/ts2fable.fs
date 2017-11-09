@@ -88,10 +88,16 @@ let p = Fable.Import.Node.Globals.``process``
 let argv = p.argv |> List.ofSeq
 // printfn "%A" argv
 
+let eventEmitter = Events.EventEmitter.Create()
+
 // if run via `dotnet fable npm-build` or `dotnet fable npm-start`
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
+    // let writes = 
+
+    
+
     promise {
         do! writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "test-compile/Fable.Import.IziToast.fs"
         do! writeFile "node_modules/typescript/lib/typescript.d.ts" "test-compile/Fable.Import.TypeScript.fs"
@@ -99,15 +105,37 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
         do! writeFile "node_modules/@types/react/index.d.ts" "test-compile/Fable.Import.React.fs"
         do! writeFile "node_modules/@types/node/index.d.ts" "test-compile/Fable.Import.Node.fs"
         do! writeFile "node_modules/typescript/lib/lib.es2015.promise.d.ts" "test-compile/Fable.Import.Promise.fs"
+        eventEmitter.emit "done" |> ignore
     }
     |> Fable.PowerPack.Promise.start
-    printfn "wrote all files"
+
+    // let b = promise { printfn "wrote all files" }
+    // let c = promise { Fable.PowerPack.Promise.sleep 3000 }
+    
+    // Fable.PowerPack.Promise.Parallel [writes; b; c] |> ignore
+
+
+    // |> Fable.PowerPack.Promise.bind (fun _ ->
+    //     printfn "wrote all files"
+    // )
+    // |> Fable.PowerPack.Promise.start
+
+    
+    // |> Fable.PowerPack.Promise.start
+
+    // Fable.PowerPack.Promise.sleep 500 |> ignore
+
+    
+    
 
 else
-    let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")
-    let fsfile = argv |> List.tryFind (fun s -> s.EndsWith ".fs")
+    ()
+//     let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")
+//     let fsfile = argv |> List.tryFind (fun s -> s.EndsWith ".fs")
     
-    match tsfile, fsfile with
-    | None, _ -> failwithf "Please provide the path to a TypeScript definition file"
-    | _, None -> failwithf "Please provide the path to the F# file to be written "
-    | Some tsf, Some fsf -> writeFile tsf fsf |> Fable.PowerPack.Promise.start
+//     match tsfile, fsfile with
+//     | None, _ -> failwithf "Please provide the path to a TypeScript definition file"
+//     | _, None -> failwithf "Please provide the path to the F# file to be written "
+//     | Some tsf, Some fsf -> writeFile tsf fsf |> Fable.PowerPack.Promise.start
+
+eventEmitter.on("done", fun _ -> printfn "wrote all files") |> ignore
