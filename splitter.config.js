@@ -1,4 +1,3 @@
-/// @ts-check
 const path = require("path");
 const fableUtils = require("fable-utils");
 

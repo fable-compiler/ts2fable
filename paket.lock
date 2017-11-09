@@ -30,7 +30,7 @@ NUGET
     Fable.Import.Node (0.1.5)
       Fable.Core (>= 1.1.15) - restriction: >= netstandard1.6
       FSharp.Core (>= 4.2.3) - restriction: >= netstandard1.6
-    FSharp.Compiler.Service (16.0.2) - restriction: >= netcoreapp2.0
+    FSharp.Compiler.Service (17.0.1) - restriction: >= netcoreapp2.0
       FSharp.Core (>= 4.1.18) - restriction: && (< net45) (>= netstandard1.6)
       NETStandard.Library (>= 1.6.1) - restriction: && (< net45) (>= netstandard1.6)
       System.Collections.Immutable (>= 1.3) - restriction: && (< net45) (>= netstandard1.6)
