@@ -47,6 +47,7 @@ let readSourceFile (tsPath: string) (ns: string) (sf: SourceFile): FsFile =
     |> fixStatic
     |> createIExports
     |> fixOverloadingOnStringParameters // fixEscapeWords must be after
+    |> fixEnumReferences
     |> fixDuplicatesInUnion
     |> fixEscapeWords
     |> addTicForGenericFunctions // must be after fixEscapeWords

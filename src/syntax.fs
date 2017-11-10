@@ -32,15 +32,6 @@ type FsEnum =
         Name: string
         Cases: FsEnumCase list
     }
-    with
-        member x.Type
-            with get() =
-                if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
-                    FsEnumCaseType.Unknown
-                else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
-                    FsEnumCaseType.String
-                else
-                    FsEnumCaseType.Numeric
 
 type FsParam =
     {
@@ -173,3 +164,13 @@ type FsInterface with
     member x.HasStaticMembers with get() = x.Members |> List.exists isStatic
     member x.StaticMembers with get() = x.Members |> List.filter isStatic
     member x.NonStaticMembers with get() = x.Members |> List.filter (not << isStatic)
+
+type FsEnum with
+    member x.Type
+        with get() =
+            if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
+                FsEnumCaseType.Unknown
+            else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
+                FsEnumCaseType.String
+            else
+                FsEnumCaseType.Numeric

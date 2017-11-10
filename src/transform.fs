@@ -329,6 +329,31 @@ let fixDateTime(f: FsFile): FsFile =
         | _ -> tp
     )
 
+let fixEnumReferences (f: FsFile): FsFile =
+    // get a list of enum names
+    let list = List<string>()
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Enum en ->
+            list.Add en.Name |> ignore
+            tp
+        | _ -> tp
+    ) |> ignore
+
+    // use those as the references
+    let set = Set.ofSeq list
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Mapped s ->
+            if s.Contains "." then
+                let nm = s.Substring(0, s.IndexOf ".")
+                if set.Contains nm then
+                    FsType.Mapped nm
+                else tp
+            else tp
+        | _ -> tp
+    )
+
 let fixDuplicatesInUnion (f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
