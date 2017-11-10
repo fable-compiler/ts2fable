@@ -9,6 +9,8 @@
     <!-- <Compile Include="Fable.Import.React.fs" /> -->
     <!-- <Compile Include="Fable.Import.Node.fs" /> -->
     <Compile Include="Fable.Import.Promise.fs" />
+    <Compile Include="Fable.Import.Mocha.fs" />
+    <Compile Include="Fable.Import.Chai.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

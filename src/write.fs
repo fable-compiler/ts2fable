@@ -154,6 +154,10 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s = jsNative" indent ns ip.Variable (printType ip.Type) |> lines.Add
         | FsType.Module smd ->
             printModule lines indent smd
+        | FsType.Variable vb ->
+            if vb.HasDeclare then
+                sprintf "" |> lines.Add
+                sprintf "%slet [<Global>] %s: %s = jsNative" indent vb.Name (printType vb.Type) |> lines.Add
         | _ ->
             incr nIgnoredTypes
 

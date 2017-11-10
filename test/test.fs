@@ -7,15 +7,9 @@ open Fable.Import
 open ts2fable.Transform
 open ts2fable.Enum
 
-// let mocha: Mocha.IExports = importDefault "Mocha"
-// let assertt: Chai.Chai.Assert = import "assert" "Chai"
 
-[<Global>]
-let describe (msg: string) (f: unit->unit): unit = jsNative
-
-[<Global>]
-let it (msg: string) (f: unit->unit): unit = jsNative
-
+let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
+let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
     Testing.Assert.AreEqual(expected, actual)
 

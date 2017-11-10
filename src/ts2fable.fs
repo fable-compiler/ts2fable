@@ -83,6 +83,8 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     writeFile "node_modules/@types/react/index.d.ts" "test-compile/Fable.Import.React.fs"
     writeFile "node_modules/@types/node/index.d.ts" "test-compile/Fable.Import.Node.fs"
     writeFile "node_modules/typescript/lib/lib.es2015.promise.d.ts" "test-compile/Fable.Import.Promise.fs"
+    writeFile "node_modules/@types/mocha/index.d.ts" "test-compile/Fable.Import.Mocha.fs"
+    writeFile "node_modules/@types/chai/index.d.ts" "test-compile/Fable.Import.Chai.fs"
 
 else
     let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")
