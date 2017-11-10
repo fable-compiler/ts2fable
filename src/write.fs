@@ -52,9 +52,12 @@ let printFunction (f: FsFunction): string =
         f.Params |> List.map(fun p ->
             if p.ParamArray then
                 sprintf "[<ParamArray>] %s%s: %s" (if p.Optional then "?" else "") p.Name
-                    (match p.Type with
-                    | FsType.Array t -> printType t // inner type
-                    | _ -> failwithf "function with unsupported param array type: %s" f.Name.Value)
+                    (   match p.Type with
+                        | FsType.Array t -> printType t // inner type
+                        | _ -> 
+                            // failwithf "function with unsupported param array type: %s" f.Name.Value
+                            sprintf "TODO_ParamArray %A" p
+                    )
             else
                 sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name (printType p.Type)
         )

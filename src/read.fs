@@ -168,7 +168,10 @@ let rec readTypeNode(t: TypeNode): FsType =
         let isOption (t:TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
         {
             Option = typs |> List.exists isOption
-            Types = typs |> List.filter (isOption >> not) |> List.map readTypeNode
+            Types =
+                let ts = typs |> List.filter (isOption >> not) |> List.map readTypeNode
+                if ts.Length = 0 then [FsType.Mapped "obj"]
+                else ts
         }
         |> FsType.Union
     | SyntaxKind.AnyKeyword -> FsType.Mapped "obj"
@@ -211,6 +214,10 @@ let rec readTypeNode(t: TypeNode): FsType =
         // printfn "TODO mapped types %s" (mt.getText())
         FsType.Mapped "obj"
     | SyntaxKind.NeverKeyword -> FsType.Mapped "unit"
+    | SyntaxKind.UndefinedKeyword -> FsType.Mapped "obj"
+    | SyntaxKind.NullKeyword -> FsType.TODO // It should be an option
+    | SyntaxKind.ObjectKeyword -> FsType.Mapped "obj"
+    | SyntaxKind.TypeOperator -> FsType.TODO // jQuery
     | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
 
 let readParameterDeclaration(pd: ParameterDeclaration): FsParam =

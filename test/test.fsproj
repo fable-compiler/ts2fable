@@ -4,8 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\ts2fable.fsproj" />
-    <Compile Include="Fable.Import.Mocha.fs" />
-    <Compile Include="Fable.Import.Chai.fs" />
     <Compile Include="test.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
