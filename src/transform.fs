@@ -276,21 +276,20 @@ let fixNodeArray(md: FsModule): FsModule =
 
     { md with Types = md.Types |> List.map (fixType fix) }
 
-let fixEscapeWords(f: FsFile): FsFile =
-
-    let escapeWord (s: string) =
-        if String.IsNullOrEmpty s then ""
+let escapeWord (s: string) =
+    if String.IsNullOrEmpty s then ""
+    else
+        let s = s.Replace("'","") // remove single quotes
+        if Keywords.reserved.Contains s 
+            || Keywords.keywords.Contains s
+            || s.Contains "-" 
+            // || Char.IsNumber s.[0] then // TODO Fable 1.3
+            || Enum.isDigit (s.Substring(0,1)) then
+            sprintf "``%s``" s
         else
-            let s = s.Replace("'","") // remove single quotes
-            if Keywords.reserved.Contains s 
-                || Keywords.keywords.Contains s
-                || s.Contains "-" 
-                // || Char.IsNumber s.[0] then // TODO Fable 1.3
-                || Enum.isDigit (s.Substring(0,1)) then
-                sprintf "``%s``" s
-            else
-                s
+            s
 
+let fixEscapeWords(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
         | FsType.Mapped s ->
@@ -352,8 +351,6 @@ let addTicForGenericTypes(f: FsFile): FsFile =
         | FsType.Alias al -> fixTic al.TypeParameters tp
         | _ -> tp
     )
-
-
 
 /// add a namespace to import
 /// and convert `declare` variables to imports
