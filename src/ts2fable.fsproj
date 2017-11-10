@@ -12,8 +12,5 @@
     <Compile Include="write.fs" />
     <Compile Include="ts2fable.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Fable.Import.Node" Version="0.1.5" />
-  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

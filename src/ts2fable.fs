@@ -1,5 +1,7 @@
-module rec ts2fable.App
+module ts2fable.App
 
+open Fable.Core
+open Fable.Import.JS
 open Fable.Core.JsInterop
 open Fable.Import.Node
 open Fable.Import.TypeScript
@@ -78,11 +80,12 @@ let argv = p.argv |> List.ofSeq
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
-    writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "src/bin/Fable.Import.IziToast.fs"
-    writeFile "node_modules/typescript/lib/typescript.d.ts" "src/bin/Fable.Import.TypeScript.fs"
-    writeFile "node_modules/@types/electron/index.d.ts" "src/bin/Fable.Import.Electron.fs"
-    writeFile "node_modules/@types/react/index.d.ts" "src/bin/Fable.Import.React.fs"
-    writeFile "node_modules/@types/node/index.d.ts" "src/bin/Fable.Import.Node.fs"
+    writeFile "node_modules/izitoast/dist/izitoast/izitoast.d.ts" "test-compile/Fable.Import.IziToast.fs"
+    writeFile "node_modules/typescript/lib/typescript.d.ts" "test-compile/Fable.Import.TypeScript.fs"
+    writeFile "node_modules/electron/electron.d.ts" "test-compile/Fable.Import.Electron.fs"
+    writeFile "node_modules/@types/react/index.d.ts" "test-compile/Fable.Import.React.fs"
+    writeFile "node_modules/@types/node/index.d.ts" "test-compile/Fable.Import.Node.fs"
+    writeFile "node_modules/typescript/lib/lib.es2015.promise.d.ts" "test-compile/Fable.Import.Promise.fs"
 
 else
     let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")

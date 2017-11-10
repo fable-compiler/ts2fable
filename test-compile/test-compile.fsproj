@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Fable.Import.IziToast.fs" />
+    <Compile Include="Fable.Import.TypeScript.fs" />
+    <!-- <Compile Include="Fable.Import.Electron.fs" /> -->
+    <!-- <Compile Include="Fable.Import.React.fs" /> -->
+    <!-- <Compile Include="Fable.Import.Node.fs" /> -->
+    <Compile Include="Fable.Import.Promise.fs" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>

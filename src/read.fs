@@ -214,6 +214,7 @@ let rec readTypeNode(t: TypeNode): FsType =
         // TODO map mapped types https://github.com/fable-compiler/ts2fable/issues/44
         // printfn "TODO mapped types %s" (mt.getText())
         FsType.Mapped "obj"
+    | SyntaxKind.NeverKeyword -> FsType.Mapped "unit"
     | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
 
 let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
