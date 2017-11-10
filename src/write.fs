@@ -113,10 +113,14 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
             for mbr in inf.Members do
                 match mbr with
                 | FsType.Function f ->
-                    sprintf "%s    %s" indent (printFunction f) |> lines.Add
+                    let indent = sprintf "%s    " indent
+                    printComments lines indent f.Comments
+                    sprintf "%s%s" indent (printFunction f) |> lines.Add
                     incr nLines
                 | FsType.Property p ->
-                    sprintf "%s    %s" indent (printProperty p) |> lines.Add
+                    let indent = sprintf "%s    " indent
+                    printComments lines indent p.Comments
+                    sprintf "%s%s" indent (printProperty p) |> lines.Add
                     incr nLines
                 | _ ->
                     sprintf "%s    %s" indent (printType mbr) |> lines.Add

@@ -57,19 +57,19 @@ let readTypeParameters(tps: List<TypeParameterDeclaration> option): FsType list 
             tp.name.getText() |> FsType.Mapped
         )
 
-let readInherits(hcs: List<HeritageClause> option): FsType list =
+let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsType list =
     match hcs with
     | None -> []
     | Some hcs ->
         hcs |> List.ofSeq |> List.collect (fun hc ->
             hc.types |> List.ofSeq |> List.map (fun eta ->
                 {
-                    Type = readTypeNode eta
+                    Type = readTypeNode checker eta
                     TypeParameters =
                         match eta.typeArguments with
                         | None -> []
                         | Some tps ->
-                            tps |> List.ofSeq |> List.map readTypeNode
+                            tps |> List.ofSeq |> List.map (readTypeNode checker)
                 }
                 |> FsType.Generic
             )
@@ -93,7 +93,7 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
         Comments = readComments checker id.name
         IsStatic = false
         Name = id.name.getText()
-        Inherits = readInherits id.heritageClauses
+        Inherits = readInherits checker id.heritageClauses
         Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters id.typeParameters
     }
@@ -106,7 +106,7 @@ let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
             match cd.name with
             | None -> "TODO_NoClassName"
             | Some id -> id.getText()
-        Inherits = readInherits cd.heritageClauses
+        Inherits = readInherits checker cd.heritageClauses
         Members = cd.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters cd.typeParameters
     }
@@ -116,12 +116,12 @@ let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
     | None -> false
     | Some mds -> mds |> Seq.exists (fun md -> md.kind = kind)
 
-let readVariable(vb: VariableStatement): FsVariable =
+let readVariable (checker: TypeChecker) (vb: VariableStatement): FsVariable =
     let vd = vb.declarationList.declarations.[0] // TODO more than 1
     {
         HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers
         Name = vd.name |> getBindingName
-        Type = vd.``type`` |> Option.map readTypeNode |> Option.defaultValue (FsType.Mapped "obj")
+        Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (FsType.Mapped "obj")
     }
 
 let readEnum(ed: EnumDeclaration): FsEnum =
@@ -130,7 +130,7 @@ let readEnum(ed: EnumDeclaration): FsEnum =
         Cases = ed.members |> List.ofSeq |> List.map readEnumCase
     }
 
-let readTypeReference(tr: TypeReferenceNode): FsType =
+let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
     match tr.typeArguments with
     | None ->
         tr.getText() |> FsType.Mapped
@@ -145,19 +145,20 @@ let readTypeReference(tr: TypeReferenceNode): FsType =
                     failwithf "readTypeReference type name is null: %s" (tr.getText())
                 typeName |> FsType.Mapped
             TypeParameters =
-                tas |> List.ofSeq |> List.map readTypeNode
+                tas |> List.ofSeq |> List.map (readTypeNode checker)
         }
         |> FsType.Generic
-let readFunctionType(ft: FunctionTypeNode): FsFunction =
+let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
     {
+        Comments = ft.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword ft.modifiers
         Name = ft.name |> Option.map getPropertyName
         TypeParameters = readTypeParameters ft.typeParameters
-        Params =  ft.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        Params =  ft.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType =
             match ft.``type`` with
-            | Some t -> readTypeNode t
+            | Some t -> readTypeNode checker t
             | None -> FsType.Mapped "unit"
     }
 
@@ -165,16 +166,16 @@ let removeQuotes (s:string): string =
     if isNull s then ""
     else s.Replace("\"","").Replace("'","")
 
-let rec readTypeNode(t: TypeNode): FsType =
+let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     match t.kind with
     | SyntaxKind.StringKeyword -> FsType.Mapped "string"
     | SyntaxKind.FunctionType ->
-        readFunctionType (t :?> FunctionTypeNode) |> FsType.Function
+        readFunctionType checker (t :?> FunctionTypeNode) |> FsType.Function
     | SyntaxKind.TypeReference ->
-        readTypeReference (t :?> TypeReferenceNode)
+        readTypeReference checker (t :?> TypeReferenceNode)
     | SyntaxKind.ArrayType ->
         let at = t :?> ArrayTypeNode
-        FsType.Array (readTypeNode at.elementType)
+        FsType.Array (readTypeNode checker at.elementType)
     | SyntaxKind.NumberKeyword -> FsType.Mapped "float"
     | SyntaxKind.BooleanKeyword -> FsType.Mapped "bool"
     | SyntaxKind.UnionType ->
@@ -184,7 +185,7 @@ let rec readTypeNode(t: TypeNode): FsType =
         {
             Option = typs |> List.exists isOption
             Types =
-                let ts = typs |> List.filter (isOption >> not) |> List.map readTypeNode
+                let ts = typs |> List.filter (isOption >> not) |> List.map (readTypeNode checker)
                 if ts.Length = 0 then [FsType.Mapped "obj"]
                 else ts
         }
@@ -194,7 +195,7 @@ let rec readTypeNode(t: TypeNode): FsType =
     | SyntaxKind.TupleType ->
         let tp = t :?> TupleTypeNode
         {
-            Types = tp.elementTypes |> List.ofSeq |> List.map readTypeNode
+            Types = tp.elementTypes |> List.ofSeq |> List.map (readTypeNode checker)
         }
         |> FsType.Tuple
     | SyntaxKind.SymbolKeyword -> FsType.Mapped "Symbol"
@@ -235,44 +236,47 @@ let rec readTypeNode(t: TypeNode): FsType =
     | SyntaxKind.TypeOperator -> FsType.TODO // jQuery
     | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
 
-let readParameterDeclaration(pd: ParameterDeclaration): FsParam =
+let readParameterDeclaration (checker: TypeChecker) (pd: ParameterDeclaration): FsParam =
     {
         Name = pd.name |> getBindingName
         Optional = pd.questionToken.IsSome
         ParamArray = pd.dotDotDotToken.IsSome
         Type = 
             match pd.``type`` with
-            | Some t -> readTypeNode t
+            | Some t -> readTypeNode checker t
             | None -> FsType.Mapped "obj"
     }
 
-let readMethodSignature(ms: MethodSignature): FsFunction =
+let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction =
     {
+        Comments = readPropertyNameComments checker ms.name
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters ms.typeParameters
-        Params = ms.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        Params = ms.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType =
             match ms.``type`` with
-            | Some t -> readTypeNode t
+            | Some t -> readTypeNode checker t
             | None -> FsType.Mapped "unit"
     }
 
-let readMethodDeclaration(ms: MethodDeclaration): FsFunction =
+let readMethodDeclaration checker (ms: MethodDeclaration): FsFunction =
     {
+        Comments = readPropertyNameComments checker ms.name
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters ms.typeParameters
-        Params = ms.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        Params = ms.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType =
             match ms.``type`` with
-            | Some t -> readTypeNode t
+            | Some t -> readTypeNode checker t
             | None -> FsType.Mapped "unit"
     }
-let readPropertySignature(ps: PropertySignature): FsProperty =
+let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProperty =
     {
+        Comments = readPropertyNameComments checker ps.name
         Emit = None
         Index = None
         Name = ps.name |> getPropertyName
@@ -280,11 +284,19 @@ let readPropertySignature(ps: PropertySignature): FsProperty =
         Type = 
             match ps.``type`` with
             | None -> FsType.None 
-            | Some tp -> readTypeNode tp
+            | Some tp -> readTypeNode checker tp
     }
 
-let readPropertyDeclaration(pd: PropertyDeclaration): FsProperty =
+let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): string list =
+    match pn with
+    | U4.Case1 id -> readComments checker id
+    | U4.Case2 sl -> readComments checker sl
+    | U4.Case3 nl -> readComments checker nl
+    | U4.Case4 cpn -> readComments checker cpn
+
+let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): FsProperty =
     {
+        Comments = readPropertyNameComments checker pd.name
         Emit = None
         Index = None
         Name = pd.name |> getPropertyName
@@ -292,25 +304,27 @@ let readPropertyDeclaration(pd: PropertyDeclaration): FsProperty =
         Type = 
             match pd.``type`` with
             | None -> FsType.None 
-            | Some tp -> readTypeNode tp
+            | Some tp -> readTypeNode checker tp
     }
 
-let readFunctionDeclaration(fd: FunctionDeclaration): FsFunction =
+let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
     {
+        Comments = fd.name |> Option.map (readComments checker) |> Option.defaultValue []
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
         Name = fd.name |> Option.map (fun id -> id.getText())
         TypeParameters = readTypeParameters fd.typeParameters
-        Params = fd.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        Params = fd.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType =
             match fd.``type`` with
-            | Some t -> readTypeNode t
+            | Some t -> readTypeNode checker t
             | None -> FsType.Mapped "unit"
     }
 
-let readIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
-    let pm = readParameterDeclaration ps.parameters.[0]
+let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): FsProperty =
+    let pm = readParameterDeclaration checker ps.parameters.[0]
     {
+        Comments = ps.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Emit = Some "$0[$1]{{=$2}}"
         Index = Some pm
         Name = "Item"
@@ -318,39 +332,42 @@ let readIndexSignature(ps: IndexSignatureDeclaration): FsProperty =
         Type = 
             match ps.``type`` with
             | None -> FsType.None 
-            | Some tp -> readTypeNode tp
+            | Some tp -> readTypeNode checker tp
     }
 
-let readCallSignature(cs: CallSignatureDeclaration): FsFunction =
+let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsFunction =
     {
+        Comments = cs.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Emit = Some "$0($1...)"
         IsStatic = false // TODO ?
         Name = Some "Invoke"
         TypeParameters = []
-        Params = cs.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        Params = cs.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType =
             match cs.``type`` with
-            | Some t -> readTypeNode t
+            | Some t -> readTypeNode checker t
             | None -> FsType.Mapped "unit"
     }
 
-let readConstructSignatureDeclaration(cs: ConstructSignatureDeclaration): FsFunction =
+let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSignatureDeclaration): FsFunction =
     {
+        Comments = cs.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Emit = Some "new $0($1...)"
         IsStatic = true
         Name = Some "Create"
         TypeParameters = cs.typeParameters |> readTypeParameters
-        Params = cs.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        Params = cs.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType = FsType.This
     }
 
-let readConstructorDeclaration(cs: ConstructorDeclaration): FsFunction =
+let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaration): FsFunction =
     {
+        Comments = cs.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Emit = Some "new $0($1...)"
         IsStatic = true
         Name = Some "Create"
         TypeParameters = cs.typeParameters |> readTypeParameters
-        Params = cs.parameters |> List.ofSeq |> List.map readParameterDeclaration
+        Params = cs.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType = FsType.This
     }
 
@@ -363,25 +380,25 @@ let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =
 
     match te.kind with
     | SyntaxKind.IndexSignature ->
-        readIndexSignature (te :?> IndexSignatureDeclaration) |> FsType.Property
+        readIndexSignature checker (te :?> IndexSignatureDeclaration) |> FsType.Property
     | SyntaxKind.MethodSignature ->
-        readMethodSignature (te :?> MethodSignature) |> FsType.Function
+        readMethodSignature checker (te :?> MethodSignature) |> FsType.Function
     | SyntaxKind.PropertySignature ->
-        readPropertySignature (te :?> PropertySignature) |> FsType.Property
+        readPropertySignature checker (te :?> PropertySignature) |> FsType.Property
     | SyntaxKind.CallSignature ->
-        readCallSignature(te :?> CallSignatureDeclaration) |> FsType.Function
+        readCallSignature checker (te :?> CallSignatureDeclaration) |> FsType.Function
     | SyntaxKind.ConstructSignature ->
-        readConstructSignatureDeclaration(te :?> ConstructSignatureDeclaration) |> FsType.Function
+        readConstructSignatureDeclaration checker (te :?> ConstructSignatureDeclaration) |> FsType.Function
     | SyntaxKind.Constructor ->
-        readConstructorDeclaration(te :?> ConstructorDeclaration) |> FsType.Function
+        readConstructorDeclaration checker (te :?> ConstructorDeclaration) |> FsType.Function
     | SyntaxKind.PropertyDeclaration ->
-        readPropertyDeclaration (te :?> PropertyDeclaration) |> FsType.Property
+        readPropertyDeclaration checker (te :?> PropertyDeclaration) |> FsType.Property
     | SyntaxKind.MethodDeclaration ->
-        readMethodDeclaration (te :?> MethodDeclaration) |> FsType.Function
+        readMethodDeclaration checker (te :?> MethodDeclaration) |> FsType.Function
     | _ -> printfn "unsupported NamedDeclaration kind: %A" te.kind; FsType.TODO
 
-let readAliasDeclaration(d: TypeAliasDeclaration): FsType =
-    let tp = d.``type`` |> readTypeNode
+let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsType =
+    let tp = d.``type`` |> (readTypeNode checker)
     let name = d.name.getText()
     let asAlias() =
         {
@@ -438,13 +455,13 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType =
     | SyntaxKind.EnumDeclaration ->
         readEnum (sd :?> EnumDeclaration) |> FsType.Enum
     | SyntaxKind.TypeAliasDeclaration ->
-        readAliasDeclaration (sd :?> TypeAliasDeclaration)
+        readAliasDeclaration checker (sd :?> TypeAliasDeclaration)
     | SyntaxKind.ClassDeclaration ->
         readClass checker (sd :?> ClassDeclaration) |> FsType.Interface
     | SyntaxKind.VariableStatement ->
-        readVariable (sd :?> VariableStatement) |> FsType.Variable
+        readVariable checker (sd :?> VariableStatement) |> FsType.Variable
     | SyntaxKind.FunctionDeclaration ->
-        readFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
+        readFunctionDeclaration checker (sd :?> FunctionDeclaration) |> FsType.Function
     | SyntaxKind.ModuleDeclaration ->
         readModuleDeclaration checker (sd :?> ModuleDeclaration) |> FsType.Module
     | SyntaxKind.ExportAssignment ->

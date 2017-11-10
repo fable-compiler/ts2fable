@@ -44,6 +44,7 @@ type FsParam =
 
 type FsFunction =
     {
+        Comments: string list
         Emit: string option
         IsStatic: bool
         Name: string option // declarations have them, signatures do not
@@ -54,6 +55,7 @@ type FsFunction =
 
 type FsProperty =
     {
+        Comments: string list
         Emit: string option
         Index: FsParam option
         Name: string
