@@ -151,3 +151,25 @@ let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ 
 let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
 let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
 let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
+
+type FsModule with
+    member x.Modules with get() = x.Types |> List.filter isModule
+    member x.NonModules with get() = x.Types |> List.filter (not << isModule)
+
+let isStringLiteralParam (p: FsParam): bool = isStringLiteral p.Type
+
+type FsFunction with
+    member x.HasStringLiteralParams with get() = x.Params |> List.exists isStringLiteralParam
+    member x.StringLiteralParams with get() = x.Params |> List.filter isStringLiteralParam
+    member x.NonStringLiteralParams with get() = x.Params |> List.filter (not << isStringLiteralParam)
+
+let isStatic (tp: FsType) =
+    match tp with
+    | FsType.Function fn -> fn.IsStatic
+    | FsType.Interface it -> it.IsStatic
+    | _ -> false
+
+type FsInterface with
+    member x.HasStaticMembers with get() = x.Members |> List.exists isStatic
+    member x.StaticMembers with get() = x.Members |> List.filter isStatic
+    member x.NonStaticMembers with get() = x.Members |> List.filter (not << isStatic)

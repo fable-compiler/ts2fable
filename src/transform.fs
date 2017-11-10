@@ -8,110 +8,7 @@ open Fable.Import.TypeScript.ts
 open System.Collections.Generic
 open System
 
-let mergeTypes(tps: FsType list): FsType list =
-    let index = Dictionary<string,int>()
-    let list = List<FsType>()
-    for b in tps do
-        match b with
-        | FsType.Interface bi ->
-            if index.ContainsKey bi.Name then
-                let i = index.[bi.Name]
-                let a = list.[i]
-                match a with
-                | FsType.Interface ai ->
-                    list.[i] <-
-                        { ai with
-                            Inherits = List.append ai.Inherits bi.Inherits
-                            Members = List.append ai.Members bi.Members
-                        }
-                        |> FsType.Interface
-                | _ ->
-                    list.Add b
-                    index.Add(bi.Name, list.Count-1)
-
-            else
-                list.Add b
-                index.Add(bi.Name, list.Count-1)
-        | _ -> 
-            list.Add b
-    list |> List.ofSeq
-
-type FsModule with
-    member x.Modules with get() = x.Types |> List.filter isModule
-    member x.NonModules with get() = x.Types |> List.filter (not << isModule)
-
-
-
-let mergeModules(tps: FsType list): FsType list =
-    let index = Dictionary<string,int>()
-    let list = List<FsType>()
-
-    for tp in tps do
-        match tp with
-        | FsType.Module md ->
-            let md2 =
-                { md with
-                    Types = md.Types |> mergeModules // submodules
-                }
-            
-            if index.ContainsKey md.Name then
-                let i = index.[md.Name]
-                let a = (list.[i] |> asModule).Value
-                list.[i] <-
-                    { a with
-                        Types = a.Types @ md2.Types |> mergeTypes
-                    }
-                    |> FsType.Module
-            else
-                md2 |> FsType.Module |> list.Add |> ignore
-                index.Add(md2.Name, list.Count-1)
-        | _ -> list.Add tp |> ignore
-    
-    list |> List.ofSeq
-
-let createIExports (f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
-        match tp with
-        | FsType.Module md ->
-
-            let tps = md.Types |> List.collect(fun t ->
-                match t with
-                | FsType.Variable _ -> [t]
-                | FsType.Function _ -> [t]
-                | FsType.Interface it ->
-                    if it.IsStatic then
-                        [
-                            // add a property for accessing the static class
-                            {
-                                Emit = None
-                                Index = None
-                                Name = it.Name.Replace("Static","")
-                                Option = false
-                                Type = it.Name |> FsType.Mapped
-                            }
-                            |> FsType.Property
-                        ]
-                    else []
-                | _ -> []
-            )
-            if tps.Length = 0 then
-                tp
-            else
-                let cl: FsInterface =
-                    {
-                        IsStatic = false
-                        Name = "IExports"
-                        Inherits = []
-                        TypeParameters = []
-                        Members = tps
-                    }
-                { md with
-                    Types = [ FsType.Interface cl ] @ md.Types
-                }
-                |> FsType.Module
-        | _ -> tp
-    )
-
+/// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
 
     let fixModule (a: FsModule): FsModule =
@@ -207,6 +104,125 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
 
     |> fix // current type
 
+/// recursively fix all the FsType childen for the given FsFile
+let fixFile (fix: FsType -> FsType) (f: FsFile): FsFile =
+    { f with
+        Modules = 
+            f.Modules 
+            |> List.map FsType.Module 
+            |> List.map (fixType fix) 
+            |> List.choose asModule
+    }
+
+
+let mergeTypes(tps: FsType list): FsType list =
+    let index = Dictionary<string,int>()
+    let list = List<FsType>()
+    for b in tps do
+        match b with
+        | FsType.Interface bi ->
+            if index.ContainsKey bi.Name then
+                let i = index.[bi.Name]
+                let a = list.[i]
+                match a with
+                | FsType.Interface ai ->
+                    list.[i] <-
+                        { ai with
+                            Inherits = List.append ai.Inherits bi.Inherits
+                            Members = List.append ai.Members bi.Members
+                        }
+                        |> FsType.Interface
+                | _ ->
+                    list.Add b
+                    index.Add(bi.Name, list.Count-1)
+
+            else
+                list.Add b
+                index.Add(bi.Name, list.Count-1)
+        | _ -> 
+            list.Add b
+    list |> List.ofSeq
+
+let mergeModules(tps: FsType list): FsType list =
+    let index = Dictionary<string,int>()
+    let list = List<FsType>()
+
+    for tp in tps do
+        match tp with
+        | FsType.Module md ->
+            let md2 =
+                { md with
+                    Types = md.Types |> mergeModules // submodules
+                }
+            
+            if index.ContainsKey md.Name then
+                let i = index.[md.Name]
+                let a = (list.[i] |> asModule).Value
+                list.[i] <-
+                    { a with
+                        Types = a.Types @ md2.Types |> mergeTypes
+                    }
+                    |> FsType.Module
+            else
+                md2 |> FsType.Module |> list.Add |> ignore
+                index.Add(md2.Name, list.Count-1)
+        | _ -> list.Add tp |> ignore
+    
+    list |> List.ofSeq
+
+let mergeModulesInFile (f: FsFile): FsFile =
+    { f with
+        Modules = 
+            f.Modules
+            |> List.ofSeq
+            |> List.map FsType.Module
+            |> mergeModules
+            |> List.choose asModule
+    }
+
+let createIExports (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+
+            let tps = md.Types |> List.collect(fun t ->
+                match t with
+                | FsType.Variable _ -> [t]
+                | FsType.Function _ -> [t]
+                | FsType.Interface it ->
+                    if it.IsStatic then
+                        [
+                            // add a property for accessing the static class
+                            {
+                                Emit = None
+                                Index = None
+                                Name = it.Name.Replace("Static","")
+                                Option = false
+                                Type = it.Name |> FsType.Mapped
+                            }
+                            |> FsType.Property
+                        ]
+                    else []
+                | _ -> []
+            )
+            if tps.Length = 0 then
+                tp
+            else
+                let cl: FsInterface =
+                    {
+                        IsStatic = false
+                        Name = "IExports"
+                        Inherits = []
+                        TypeParameters = []
+                        Members = tps
+                    }
+                { md with
+                    Types = [ FsType.Interface cl ] @ md.Types
+                }
+                |> FsType.Module
+        | _ -> tp
+    )
+
 let fixTic (typeParameters: FsType list) (tp: FsType) =
     if typeParameters.Length = 0 then
         tp
@@ -236,13 +252,6 @@ let addTicForGenericFunctions(f: FsFile): FsFile =
         | _ -> tp
     )
 
-let isStringLiteralParam (p: FsParam): bool = isStringLiteral p.Type
-
-type FsFunction with
-    member x.HasStringLiteralParams with get() = x.Params |> List.exists isStringLiteralParam
-    member x.StringLiteralParams with get() = x.Params |> List.filter isStringLiteralParam
-    member x.NonStringLiteralParams with get() = x.Params |> List.filter (not << isStringLiteralParam)
-
 // https://github.com/Microsoft/TypeScript/blob/master/doc/spec.md#18-overloading-on-string-parameters
 let fixOverloadingOnStringParameters(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
@@ -261,20 +270,18 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixNodeArray(md: FsModule): FsModule =
-
-    let fix(tp: FsType): FsType =
-        match asGeneric tp with
-        | None -> tp
-        | Some gn ->
+let fixNodeArray(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Generic gn ->
             match gn.Type with
             | FsType.Mapped s ->
                 if s.Equals "NodeArray" && gn.TypeParameters.Length = 1 then
                     gn.TypeParameters.[0] |> FsType.Array
                 else tp
             | _ -> tp
-
-    { md with Types = md.Types |> List.map (fixType fix) }
+        | _ -> tp
+    )
 
 let escapeWord (s: string) =
     if String.IsNullOrEmpty s then ""
@@ -311,18 +318,16 @@ let fixEscapeWords(f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixDateTime(md: FsModule): FsModule =
-
+let fixDateTime(f: FsFile): FsFile =
     let replaceName name =
         if String.Equals("Date", name) then "DateTime" else name
 
-    let fix(tp: FsType): FsType =
+    f |> fixFile (fun tp ->
         match tp with
         | FsType.Mapped s ->
             replaceName s |> FsType.Mapped
         | _ -> tp
-
-    { md with Types = md.Types |> List.map (fixType fix) }
+    )
 
 let fixDuplicatesInUnion (f: FsFile): FsFile =
     f |> fixFile (fun tp ->
@@ -378,9 +383,8 @@ let rec fixImport (ns: string list) (md: FsModule): FsModule =
     }
 
 /// replaces `this` with a reference to the interface type
-let fixThis(md: FsModule): FsModule =
-
-    let fix(tp: FsType): FsType =
+let fixThis(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
         match tp with
         | FsType.Interface it ->
             { it with
@@ -404,19 +408,7 @@ let fixThis(md: FsModule): FsModule =
             }
             |> FsType.Interface
         | _ -> tp
-
-    { md with Types = md.Types |> List.map (fixType fix) }
-
-let isStatic (tp: FsType) =
-    match tp with
-    | FsType.Function fn -> fn.IsStatic
-    | FsType.Interface it -> it.IsStatic
-    | _ -> false
-
-type FsInterface with
-    member x.HasStaticMembers with get() = x.Members |> List.exists isStatic
-    member x.StaticMembers with get() = x.Members |> List.filter isStatic
-    member x.NonStaticMembers with get() = x.Members |> List.filter (not << isStatic)
+    )
 
 let fixStatic(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
@@ -449,15 +441,6 @@ let fixStatic(f: FsFile): FsFile =
             |> FsType.Module
         | _ -> tp
     )
-
-let fixFile (fix: FsType -> FsType) (f: FsFile): FsFile =
-    { f with
-        Modules = 
-            f.Modules 
-            |> List.map FsType.Module 
-            |> List.map (fixType fix) 
-            |> List.choose asModule
-    }
 
 let fixOpens(f: FsFile): FsFile =
 
