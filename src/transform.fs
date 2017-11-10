@@ -187,7 +187,9 @@ let createIExports (f: FsFile): FsFile =
 
             let tps = md.Types |> List.collect(fun t ->
                 match t with
-                | FsType.Variable _ -> [t]
+                | FsType.Variable vb ->
+                    if vb.HasDeclare then []
+                    else [t]
                 | FsType.Function _ -> [t]
                 | FsType.Interface it ->
                     if it.IsStatic then
