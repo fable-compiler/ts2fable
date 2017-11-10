@@ -118,11 +118,7 @@ let readEnum(ed: EnumDeclaration): FsEnum =
 let readTypeReference(tr: TypeReferenceNode): FsType =
     match tr.typeArguments with
     | None ->
-        let txt = tr.getText()
-        if txt.Contains "." then
-            txt.Substring(0, txt.IndexOf ".") |> FsType.Mapped
-        else
-            txt |> FsType.Mapped
+        tr.getText() |> FsType.Mapped
     | Some tas ->
         {
             Type =

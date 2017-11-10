@@ -36,25 +36,22 @@ let readSourceFile (tsPath: string) (ns: string) (sf: SourceFile): FsFile =
     {
         Name = ns
         Opens = opens
-        Modules =
-            modules
-            |> List.ofSeq
-            |> List.map FsType.Module
-            |> mergeModules
-            |> List.choose asModule
-            // |> List.map (fixImport [ns])
-            |> List.map fixThis
-            |> List.map fixNodeArray
-            |> List.map fixDateTime
+        Modules = modules |> List.ofSeq
     }
+    |> mergeModulesInFile
+    // |> fixImport [ns]
+    |> fixThis
+    |> fixNodeArray
+    |> fixDateTime
     |> fixOpens
     |> fixStatic
     |> createIExports
-    |> fixEscapeWords
-    |> addTicForGenericFunctions
-    |> addTicForGenericTypes
-    |> fixOverloadingOnStringParameters
+    |> fixOverloadingOnStringParameters // fixEscapeWords must be after
+    |> fixEnumReferences
     |> fixDuplicatesInUnion
+    |> fixEscapeWords
+    |> addTicForGenericFunctions // must be after fixEscapeWords
+    |> addTicForGenericTypes
 
 let ts: ts.IExports = importAll "typescript"
 

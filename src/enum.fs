@@ -8,9 +8,13 @@ let (|Capital|_|) (letter: string)=
     | true -> Some letter
     | false -> None
 
+let private digits = [ '0' .. '9' ] |> Seq.map string
+
+// TODO Char.IsDigit will be in Fable 1.3
+let isDigit digit = Seq.contains digit digits
+
 let (|Digit|_|) (digit: string) = 
-    let capitals = [ '0' .. '9' ] |> Seq.map string
-    match Seq.contains digit capitals with
+    match isDigit digit with
     | true -> Some digit
     | false -> None
 
@@ -31,17 +35,7 @@ let createEnumNameParts (name: string) =
     |> List.ofSeq
     |> splitParts "" []  
     |> List.rev
-
-// TODO make into unit tests
-// createEnumNameParts "simpleCase" // ["simple"; "Case"]
-// createEnumNameParts "simple-kebab-case" // ["simple"; "kebab"; "case"]
-// createEnumNameParts "Other-Cases" // ["Other"; "Cases"]
-// createEnumNameParts "helloThereItsMe" // ["hello"; "There"; "Its"; "Me"]
-// createEnumNameParts "OtherSimpleCase" // ["Other";"Simple"; "Case"]
-// createEnumNameParts "2d-shadow" // ["N2d"; "shadow"]
-// createEnumNameParts "shadow-2d" // ["shadow"; "2d"]
-// createEnumNameParts "shadow-2d-more" // ["shadow"; "2d"; "more"]
-
+    
 let capitalize (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
     // else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1) // Fable 1.2.3 bug Char.ToUpper not supported
