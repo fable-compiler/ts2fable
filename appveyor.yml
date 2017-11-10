@@ -23,5 +23,5 @@ cache:
 
 deploy_script:
   - ps: |
-    appveyor-deploy.ps1
-    if ($lastexitcode -ne 0){ exit $lastexitcode }
+      appveyor-deploy.ps1
+      if ($lastexitcode -ne 0){ exit $lastexitcode }
