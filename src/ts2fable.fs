@@ -6,7 +6,6 @@ open Fable.Core.JsInterop
 open Fable.Import.Node
 open Fable.Import.TypeScript
 open Fable.Import.TypeScript.ts
-open Fable.PowerPack
 
 open ts2fable.Read
 open ts2fable.Transform
