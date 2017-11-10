@@ -89,8 +89,9 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         if md.Name <> "" then
             "" |> lines.Add
             sprintf "%smodule %s =" indent md.Name |> lines.Add
-            sprintf "%s    " indent 
+            sprintf "%s    " indent
         else indent
+    let nIgnoredTypes = ref 0
     for tp in md.Types do
         match tp with
         | FsType.Interface inf ->
@@ -153,7 +154,12 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s = jsNative" indent ns ip.Variable (printType ip.Type) |> lines.Add
         | FsType.Module smd ->
             printModule lines indent smd
-        | _ -> ()
+        | _ ->
+            incr nIgnoredTypes
+
+        // add a `()` if the module is empty
+        if md.Types.Length = !nIgnoredTypes then
+            sprintf "%s()" indent |> lines.Add
 
 let printFsFile (file: FsFile): ResizeArray<string> =
     let lines = ResizeArray<string>()
