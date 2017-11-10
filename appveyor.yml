@@ -9,6 +9,7 @@ build_script:
       .\build.ps1
       if ($lastexitcode -ne 0){ exit $lastexitcode }
   - mocha --reporter mocha-appveyor-reporter .\test\bin\test.js
+  - ps: .\build-test-compile.ps1
 
 test: off
 
