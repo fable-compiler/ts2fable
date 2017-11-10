@@ -196,6 +196,7 @@ let createIExports (f: FsFile): FsFile =
                         [
                             // add a property for accessing the static class
                             {
+                                Comments = []
                                 Emit = None
                                 Index = None
                                 Name = it.Name.Replace("Static","")
@@ -212,6 +213,7 @@ let createIExports (f: FsFile): FsFile =
             else
                 let cl: FsInterface =
                     {
+                        Comments = []
                         IsStatic = false
                         Name = "IExports"
                         Inherits = []

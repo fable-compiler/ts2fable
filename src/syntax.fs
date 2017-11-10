@@ -7,6 +7,7 @@ module rec ts2fable.Syntax
 
 type FsInterface =
     {
+        Comments: string list
         IsStatic: bool // contains only static functions
         Name: string
         TypeParameters: FsType list
@@ -43,6 +44,7 @@ type FsParam =
 
 type FsFunction =
     {
+        Comments: string list
         Emit: string option
         IsStatic: bool
         Name: string option // declarations have them, signatures do not
@@ -53,6 +55,7 @@ type FsFunction =
 
 type FsProperty =
     {
+        Comments: string list
         Emit: string option
         Index: FsParam option
         Name: string
