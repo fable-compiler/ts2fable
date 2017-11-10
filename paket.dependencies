@@ -3,6 +3,4 @@ storage:none
 
 clitool dotnet-fable
 nuget Fable.Core
-#nuget Fable.Import.Browser
 nuget Fable.Import.Node
-nuget Fable.PowerPack
