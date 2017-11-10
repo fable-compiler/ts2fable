@@ -212,6 +212,7 @@ let createIExports (f: FsFile): FsFile =
             else
                 let cl: FsInterface =
                     {
+                        Comments = []
                         IsStatic = false
                         Name = "IExports"
                         Inherits = []

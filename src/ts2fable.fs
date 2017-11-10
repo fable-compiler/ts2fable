@@ -6,6 +6,7 @@ open Fable.Core.JsInterop
 open Fable.Import.Node
 open Fable.Import.TypeScript
 open Fable.Import.TypeScript.ts
+open System.Collections.Generic
 
 open ts2fable.Read
 open ts2fable.Transform
@@ -16,13 +17,13 @@ open ts2fable.Write
 // 2. Fix the syntax tree.
 // 3. Print the syntax tree to a F# file.
 
-let readSourceFile (tsPath: string) (ns: string) (sf: SourceFile): FsFile =
-    let modules = ResizeArray()
+let readSourceFile (checker: TypeChecker) (ns: string) (sf: SourceFile): FsFile =
+    let modules = List()
 
     let gbl: FsModule =
         {
             Name = ""
-            Types = sf.statements |> List.ofSeq |> List.map readStatement
+            Types = sf.statements |> List.ofSeq |> List.map (readStatement checker)
         }
     modules.Add gbl
 
@@ -56,14 +57,22 @@ let readSourceFile (tsPath: string) (ns: string) (sf: SourceFile): FsFile =
 let ts: ts.IExports = importAll "typescript"
 
 let writeFile tsPath (fsPath: string): unit =
-    let code = Fs.readFileSync(tsPath).toString()
-    let tsFile = ts.createSourceFile(tsPath, code, ScriptTarget.ES2015, true)
+
+    let options = jsOptions<ts.CompilerOptions>(fun o ->
+        o.target <- Some ScriptTarget.ES2015
+        o.``module`` <- Some ModuleKind.CommonJS
+    )
+    let setParentNodes = true
+    let host = ts.createCompilerHost(options, setParentNodes)
+    let program = ts.createProgram(List [tsPath], options, host)
+    let tsFile = program.getSourceFile tsPath
+    let checker = program.getTypeChecker()
 
     // use the F# file name as the module namespace
     let path = Fable.Import.Node.Exports.Path
     let ns = path.basename(fsPath, path.extname(fsPath)) // TODO ensure valid name
 
-    let fsFile = readSourceFile tsPath ns tsFile
+    let fsFile = readSourceFile checker ns tsFile
     let file = Fs.createWriteStream fsPath
     for line in printFsFile fsFile do
         file.write(sprintf "%s%c" line '\n') |> ignore
@@ -71,7 +80,6 @@ let writeFile tsPath (fsPath: string): unit =
 
 let p = Fable.Import.Node.Globals.``process``
 let argv = p.argv |> List.ofSeq
-// printfn "%A" argv
 
 // if run via `dotnet fable npm-build` or `dotnet fable npm-start`
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
@@ -86,6 +94,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     writeFile "node_modules/@types/mocha/index.d.ts" "test-compile/Fable.Import.Mocha.fs"
     writeFile "node_modules/@types/chai/index.d.ts" "test-compile/Fable.Import.Chai.fs"
     writeFile "node_modules/@types/jquery/index.d.ts" "test-compile/Fable.Import.JQuery.fs"
+    printfn "done writing test-compile files"
 
 else
     let tsfile = argv |> List.tryFind (fun s -> s.EndsWith ".ts")

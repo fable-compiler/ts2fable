@@ -7,6 +7,7 @@ module rec ts2fable.Syntax
 
 type FsInterface =
     {
+        Comments: string list
         IsStatic: bool // contains only static functions
         Name: string
         TypeParameters: FsType list

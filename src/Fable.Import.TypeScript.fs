@@ -617,9 +617,13 @@ module ts =
         abstract getDefaultLibFilePath: options: CompilerOptions -> string
         abstract transform: source: U2<'T, ResizeArray<'T>> * transformers: ResizeArray<TransformerFactory<'T>> * ?compilerOptions: CompilerOptions -> TransformationResult<'T>
 
+    /// Type of objects whose values are all of the same type.
+    /// The `in` and `for-in` operators can *not* be safely used,
+    /// since `Object.prototype` may be modified by outside code.
     type [<AllowNullLiteral>] MapLike<'T> =
         [<Emit "$0[$1]{{=$2}}">] abstract Item: index: string -> 'T with get, set
 
+    /// ES6 Map interface, only read methods included. 
     type [<AllowNullLiteral>] ReadonlyMap<'T> =
         abstract get: key: string -> 'T option
         abstract has: key: string -> bool
@@ -629,15 +633,18 @@ module ts =
         abstract values: unit -> Iterator<'T>
         abstract entries: unit -> Iterator<string * 'T>
 
+    /// ES6 Map interface. 
     type [<AllowNullLiteral>] Map<'T> =
         inherit ReadonlyMap<'T>
         abstract set: key: string * value: 'T -> Map<'T>
         abstract delete: key: string -> bool
         abstract clear: unit -> unit
 
+    /// ES6 Iterator type. 
     type [<AllowNullLiteral>] Iterator<'T> =
         abstract next: unit -> obj
 
+    /// Array that is only intended to be pushed to, never read. 
     type [<AllowNullLiteral>] Push<'T> =
         abstract push: [<ParamArray>] values: 'T -> unit
 
@@ -1281,6 +1288,12 @@ module ts =
     type ArrayBindingElement =
         U2<BindingElement, OmittedExpression>
 
+    /// Several node kinds share function-like features such as a signature,
+    /// a name, and a body. These nodes should extend FunctionLikeDeclarationBase.
+    /// Examples:
+    /// - FunctionDeclaration
+    /// - MethodDeclaration
+    /// - AccessorDeclaration
     type [<AllowNullLiteral>] FunctionLikeDeclarationBase =
         inherit SignatureDeclaration
         abstract _functionLikeDeclarationBrand: obj with get, set
@@ -1322,6 +1335,7 @@ module ts =
         abstract parent: U2<ClassDeclaration, ClassExpression> option with get, set
         abstract body: FunctionBody option with get, set
 
+    /// For when we encounter a semicolon in a class declaration. ES6 allows these as class elements. 
     type [<AllowNullLiteral>] SemicolonClassElement =
         inherit ClassElement
         abstract kind: SyntaxKind with get, set
@@ -1774,6 +1788,10 @@ module ts =
         abstract kind: SyntaxKind with get, set
         abstract expression: Expression with get, set
 
+    /// This interface is a base interface for ObjectLiteralExpression and JSXAttributes to extend from. JSXAttributes is similar to
+    /// ObjectLiteralExpression in that it contains array of properties; however, JSXAttributes' properties can only be
+    /// JSXAttribute or JSXSpreadAttribute. ObjectLiteralExpression, on the other hand, can only have properties of type
+    /// ObjectLiteralElement (e.g. PropertyAssignment, ShorthandPropertyAssignment etc.)
     type [<AllowNullLiteral>] ObjectLiteralExpressionBase<'T> =
         inherit PrimaryExpression
         inherit Declaration
@@ -1800,6 +1818,7 @@ module ts =
         inherit PropertyAccessExpression
         abstract expression: SuperExpression with get, set
 
+    /// Brand for a PropertyAccessExpression which, like a QualifiedName, consists of a sequence of identifiers separated by dots. 
     type [<AllowNullLiteral>] PropertyAccessEntityNameExpression =
         inherit PropertyAccessExpression
         abstract _propertyAccessExpressionLikeQualifiedNameBrand: obj option with get, set
@@ -1960,6 +1979,7 @@ module ts =
         inherit Statement
         abstract kind: SyntaxKind with get, set
 
+    /// A list of comma-seperated expressions. This node is only created by transformations.
     type [<AllowNullLiteral>] CommaListExpression =
         inherit Expression
         abstract kind: SyntaxKind with get, set
@@ -2230,6 +2250,9 @@ module ts =
     type ModuleReference =
         U2<EntityName, ExternalModuleReference>
 
+    /// One of:
+    /// - import x = require("mod");
+    /// - import x = M.x;
     type [<AllowNullLiteral>] ImportEqualsDeclaration =
         inherit DeclarationStatement
         abstract kind: SyntaxKind with get, set
@@ -2876,6 +2899,7 @@ module ts =
     type __String =
         U2<obj, InternalSymbolName>
 
+    /// ReadonlyMap where keys are `__String`s. 
     type [<AllowNullLiteral>] ReadonlyUnderscoreEscapedMap<'T> =
         abstract get: key: __String -> 'T option
         abstract has: key: __String -> bool
@@ -2885,6 +2909,7 @@ module ts =
         abstract values: unit -> Iterator<'T>
         abstract entries: unit -> Iterator<__String * 'T>
 
+    /// Map where keys are `__String`s. 
     type [<AllowNullLiteral>] UnderscoreEscapedMap<'T> =
         inherit ReadonlyUnderscoreEscapedMap<'T>
         abstract set: key: __String * value: 'T -> UnderscoreEscapedMap<'T>
@@ -2985,6 +3010,7 @@ module ts =
         inherit Type
         abstract objectFlags: ObjectFlags with get, set
 
+    /// Class and interface types (ObjectFlags.Class and ObjectFlags.Interface). 
     type [<AllowNullLiteral>] InterfaceType =
         inherit ObjectType
         abstract typeParameters: ResizeArray<TypeParameter> with get, set
@@ -3003,6 +3029,14 @@ module ts =
         abstract declaredStringIndexInfo: IndexInfo with get, set
         abstract declaredNumberIndexInfo: IndexInfo with get, set
 
+    /// Type references (ObjectFlags.Reference). When a class or interface has type parameters or
+    /// a "this" type, references to the class or interface are made using type references. The
+    /// typeArguments property specifies the types to substitute for the type parameters of the
+    /// class or interface and optionally includes an extra element that specifies the type to
+    /// substitute for "this" in the resulting instantiation. When no extra argument is present,
+    /// the type reference itself is substituted for "this". The typeArguments property is undefined
+    /// if the class or interface has no type parameters and the reference isn't specifying an
+    /// explicit "this" argument.
     type [<AllowNullLiteral>] TypeReference =
         inherit ObjectType
         abstract target: GenericType with get, set
@@ -3106,6 +3140,10 @@ module ts =
         abstract code: float with get, set
         abstract message: string with get, set
 
+    /// A linked list of formatted diagnostic messages to be used as part of a multiline message.
+    /// It is built from the bottom up, leaving the head to be the "main" diagnostic.
+    /// While it seems that DiagnosticMessageChain is structurally similar to DiagnosticMessage,
+    /// the difference is that messages are all preformatted in DMC.
     type [<AllowNullLiteral>] DiagnosticMessageChain =
         abstract messageText: string with get, set
         abstract category: DiagnosticCategory with get, set
@@ -3266,6 +3304,7 @@ module ts =
         | Standard = 0
         | JSX = 1
 
+    /// Either a parsed command line or a parsed tsconfig.json 
     type [<AllowNullLiteral>] ParsedCommandLine =
         abstract options: CompilerOptions with get, set
         abstract typeAcquisition: TypeAcquisition option with get, set
@@ -3292,15 +3331,25 @@ module ts =
         abstract getCurrentDirectory: unit -> string
         abstract getDirectories: path: string -> ResizeArray<string>
 
+    /// Represents the result of module resolution.
+    /// Module resolution will pick up tsx/jsx/js files even if '--jsx' and '--allowJs' are turned off.
+    /// The Program will then filter results based on these flags.
+    /// 
+    /// Prefer to return a `ResolvedModuleFull` so that the file type does not have to be inferred.
     type [<AllowNullLiteral>] ResolvedModule =
         abstract resolvedFileName: string with get, set
         abstract isExternalLibraryImport: bool option with get, set
 
+    /// ResolvedModule with an explicitly provided `extension` property.
+    /// Prefer this over `ResolvedModule`.
+    /// If changing this, remember to change `moduleResolutionIsEqualTo`.
     type [<AllowNullLiteral>] ResolvedModuleFull =
         inherit ResolvedModule
         abstract extension: Extension with get, set
         abstract packageId: PackageId option with get, set
 
+    /// Unique identifier with a package name and version.
+    /// If changing this, remember to change `packageIdIsEqual`.
     type [<AllowNullLiteral>] PackageId =
         abstract name: string with get, set
         abstract subModuleName: string with get, set
@@ -3541,10 +3590,14 @@ module ts =
         abstract scanRange: start: float * length: float * callback: (unit -> 'T) -> 'T
         abstract tryScan: callback: (unit -> 'T) -> 'T
 
+    /// Cached module resolutions per containing directory.
+    /// This assumes that any module id will have the same resolution for sibling files located in the same folder.
     type [<AllowNullLiteral>] ModuleResolutionCache =
         inherit NonRelativeModuleNameResolutionCache
         abstract getOrCreateCacheForDirectory: directoryName: string -> Map<ResolvedModuleWithFailedLookupLocations>
 
+    /// Stored map from non-relative module name to a table: directory -> result of module lookup in this directory
+    /// We support only non-relative module names because resolution of relative module names is usually more deterministic and thus less expensive.
     type [<AllowNullLiteral>] NonRelativeModuleNameResolutionCache =
         abstract getOrCreateCacheForModuleName: nonRelativeModuleName: string -> PerModuleNameCache
 
@@ -3560,6 +3613,9 @@ module ts =
     type [<AllowNullLiteral>] SourceFileLike =
         abstract getLineAndCharacterOfPosition: pos: float -> LineAndCharacter
 
+    /// Represents an immutable snapshot of a script at a specified time.Once acquired, the
+    /// snapshot is observably immutable. i.e. the same calls with the same parameters will return
+    /// the same values.
     type [<AllowNullLiteral>] IScriptSnapshot =
         abstract getText: start: float * ``end``: float -> string
         abstract getLength: unit -> float
@@ -3659,6 +3715,10 @@ module ts =
         abstract textSpan: TextSpan with get, set
         abstract classificationType: ClassificationTypeNames with get, set
 
+    /// Navigation bar interface designed for visual studio's dual-column layout.
+    /// This does not form a proper tree.
+    /// The navbar is returned as a list of top-level items, each of which has a list of child items.
+    /// Child items always have an empty array for their `childItems`.
     type [<AllowNullLiteral>] NavigationBarItem =
         abstract text: string with get, set
         abstract kind: ScriptElementKind with get, set
@@ -3669,6 +3729,8 @@ module ts =
         abstract bolded: bool with get, set
         abstract grayed: bool with get, set
 
+    /// Node in a tree of nested declarations in a file.
+    /// The top node is always a script or module node.
     type [<AllowNullLiteral>] NavigationTree =
         abstract text: string with get, set
         abstract kind: ScriptElementKind with get, set
@@ -3697,6 +3759,7 @@ module ts =
         abstract description: string with get, set
         abstract changes: ResizeArray<FileTextChanges> with get, set
 
+    /// A set of one or more available refactoring actions, grouped under a parent refactoring.
     type [<AllowNullLiteral>] ApplicableRefactorInfo =
         abstract name: string with get, set
         abstract description: string with get, set
@@ -3886,6 +3949,11 @@ module ts =
         abstract displayParts: ResizeArray<SymbolDisplayPart> with get, set
         abstract isOptional: bool with get, set
 
+    /// Represents a single signature to show in signature help.
+    /// The id is used for subsequent calls into the language service to ask questions about the
+    /// signature help item in the context of any documents that have been updated.  i.e. after
+    /// an edit has happened, while signature help is still active, the host can ask important
+    /// questions like 'what parameter is the user currently contained within?'.
     type [<AllowNullLiteral>] SignatureHelpItem =
         abstract isVariadic: bool with get, set
         abstract prefixDisplayParts: ResizeArray<SymbolDisplayPart> with get, set
@@ -3895,6 +3963,7 @@ module ts =
         abstract documentation: ResizeArray<SymbolDisplayPart> with get, set
         abstract tags: ResizeArray<JSDocTagInfo> with get, set
 
+    /// Represents a set of signature help items, and the preferred item that should be selected.
     type [<AllowNullLiteral>] SignatureHelpItems =
         abstract items: ResizeArray<SignatureHelpItem> with get, set
         abstract applicableSpan: TextSpan with get, set
@@ -4071,6 +4140,19 @@ module ts =
         | [<CompiledName "jsxText">] JsxText = 23
         | [<CompiledName "jsxAttributeStringLiteralValue">] JsxAttributeStringLiteralValue = 24
 
+    /// The document registry represents a store of SourceFile objects that can be shared between
+    /// multiple LanguageService instances. A LanguageService instance holds on the SourceFile (AST)
+    /// of files in the context.
+    /// SourceFile objects account for most of the memory usage by the language service. Sharing
+    /// the same DocumentRegistry instance between different instances of LanguageService allow
+    /// for more efficient memory utilization since all projects will share at least the library
+    /// file (lib.d.ts).
+    /// 
+    /// A more advanced use of the document registry is to serialize sourceFile objects to disk
+    /// and re-hydrate them when needed.
+    /// 
+    /// To create a default DocumentRegistry, use createDocumentRegistry to create one, and pass it
+    /// to all subsequent createLanguageService calls.
     type [<AllowNullLiteral>] DocumentRegistry =
         abstract acquireDocument: fileName: string * compilationSettings: CompilerOptions * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
         abstract acquireDocumentWithKey: fileName: string * path: Path * compilationSettings: CompilerOptions * key: DocumentRegistryBucketKey * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile

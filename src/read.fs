@@ -49,7 +49,7 @@ let readEnumCase(em: EnumMember): FsEnumCase =
         Value = value
     }
 
-let readTypeParameters(tps: ResizeArray<TypeParameterDeclaration> option): FsType list =
+let readTypeParameters(tps: List<TypeParameterDeclaration> option): FsType list =
     match tps with
     | None -> []
     | Some tps ->
@@ -57,7 +57,7 @@ let readTypeParameters(tps: ResizeArray<TypeParameterDeclaration> option): FsTyp
             tp.name.getText() |> FsType.Mapped
         )
 
-let readInherits(hcs: ResizeArray<HeritageClause> option): FsType list =
+let readInherits(hcs: List<HeritageClause> option): FsType list =
     match hcs with
     | None -> []
     | Some hcs ->
@@ -75,24 +75,39 @@ let readInherits(hcs: ResizeArray<HeritageClause> option): FsType list =
             )
         )
 
-let readInterface(id: InterfaceDeclaration): FsInterface =
+let readComments (checker: TypeChecker) (nd: Node): string list =
+    let symbol = checker.getSymbolAtLocation nd
+    match symbol with
+    | Some sb -> 
+        sb.getDocumentationComment() |> List.ofSeq |> List.collect (fun dp ->
+            match dp.kind with
+            // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
+            | "text" ->
+                dp.text.Split [|'\n'|] |> List.ofArray
+            | _ -> []
+        )
+    | None -> []
+
+let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface =
     {
+        Comments = readComments checker id.name
         IsStatic = false
         Name = id.name.getText()
         Inherits = readInherits id.heritageClauses
-        Members = id.members |> List.ofSeq |> List.map readNamedDeclaration
+        Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters id.typeParameters
     }
 
-let readClass(cd: ClassDeclaration): FsInterface =
+let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
     {
+        Comments = cd.name |> Option.map (readComments checker) |> Option.defaultValue []
         IsStatic = false
         Name =
             match cd.name with
             | None -> "TODO_NoClassName"
             | Some id -> id.getText()
         Inherits = readInherits cd.heritageClauses
-        Members = cd.members |> List.ofSeq |> List.map readNamedDeclaration
+        Members = cd.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters cd.typeParameters
     }
 
@@ -339,7 +354,13 @@ let readConstructorDeclaration(cs: ConstructorDeclaration): FsFunction =
         ReturnType = FsType.This
     }
 
-let readNamedDeclaration(te: NamedDeclaration): FsType =
+let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =
+
+    let symbol = checker.getSymbolAtLocation te
+    match symbol with
+    | Some sb -> printfn "nameddeclartion sb %A" sb
+    | None -> ()//printfn "sb none"
+
     match te.kind with
     | SyntaxKind.IndexSignature ->
         readIndexSignature (te :?> IndexSignatureDeclaration) |> FsType.Property
@@ -410,22 +431,22 @@ let readExportAssignment(ea: ExportAssignment): FsType =
     // |> FsType.Import
     FsType.None
 
-let readStatement(sd: Statement): FsType =
+let readStatement (checker: TypeChecker) (sd: Statement): FsType =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
-        readInterface (sd :?> InterfaceDeclaration) |> FsType.Interface
+        readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface
     | SyntaxKind.EnumDeclaration ->
         readEnum (sd :?> EnumDeclaration) |> FsType.Enum
     | SyntaxKind.TypeAliasDeclaration ->
         readAliasDeclaration (sd :?> TypeAliasDeclaration)
     | SyntaxKind.ClassDeclaration ->
-        readClass (sd :?> ClassDeclaration) |> FsType.Interface
+        readClass checker (sd :?> ClassDeclaration) |> FsType.Interface
     | SyntaxKind.VariableStatement ->
         readVariable (sd :?> VariableStatement) |> FsType.Variable
     | SyntaxKind.FunctionDeclaration ->
         readFunctionDeclaration (sd :?> FunctionDeclaration) |> FsType.Function
     | SyntaxKind.ModuleDeclaration ->
-        readModuleDeclaration (sd :?> ModuleDeclaration) |> FsType.Module
+        readModuleDeclaration checker (sd :?> ModuleDeclaration) |> FsType.Module
     | SyntaxKind.ExportAssignment ->
         readExportAssignment(sd :?> ExportAssignment)
     | SyntaxKind.ImportDeclaration ->
@@ -445,17 +466,17 @@ let readModuleName(mn: ModuleName): string =
     | U2.Case1 id -> id.getText().Replace("\"","")
     | U2.Case2 sl -> sl.getText()
 
-let rec readModuleDeclaration(md: ModuleDeclaration): FsModule =
-    let types = ResizeArray()
+let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
+    let types = List()
     md.ForEachChild (fun nd ->
         match nd.kind with
         | SyntaxKind.ModuleBlock ->
             let mb = nd :?> ModuleBlock
-            mb.statements |> List.ofSeq |> List.map readStatement |> List.iter types.Add
+            mb.statements |> List.ofSeq |> List.map (readStatement checker) |> List.iter types.Add
         | SyntaxKind.DeclareKeyword -> ()
         | SyntaxKind.Identifier -> ()
         | SyntaxKind.ModuleDeclaration ->
-            readModuleDeclaration (nd :?> ModuleDeclaration) |> FsType.Module |> types.Add
+            readModuleDeclaration checker (nd :?> ModuleDeclaration) |> FsType.Module |> types.Add
         | SyntaxKind.StringLiteral -> ()
         | SyntaxKind.ExportKeyword -> ()
         | _ -> printfn "unknown kind in ModuleDeclaration: %A" nd.kind
