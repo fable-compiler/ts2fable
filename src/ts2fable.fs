@@ -50,11 +50,11 @@ let readSourceFile (tsPath: string) (ns: string) (sf: SourceFile): FsFile =
     |> fixOpens
     |> fixStatic
     |> createIExports
-    |> fixEscapeWords
     |> addTicForGenericFunctions
     |> addTicForGenericTypes
-    |> fixOverloadingOnStringParameters
+    |> fixOverloadingOnStringParameters // fixEscapeWords must be after
     |> fixDuplicatesInUnion
+    |> fixEscapeWords
 
 let ts: ts.IExports = importAll "typescript"
 

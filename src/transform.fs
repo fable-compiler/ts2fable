@@ -277,24 +277,38 @@ let fixNodeArray(md: FsModule): FsModule =
     { md with Types = md.Types |> List.map (fixType fix) }
 
 let fixEscapeWords(f: FsFile): FsFile =
+
+    let escapeWord (s: string) =
+        if String.IsNullOrEmpty s then ""
+        else
+            let s = s.Replace("'","") // remove single quotes
+            if Keywords.reserved.Contains s 
+                || Keywords.keywords.Contains s
+                || s.Contains "-" 
+                // || Char.IsNumber s.[0] then // TODO Fable 1.3
+                || Enum.isDigit (s.Substring(0,1)) then
+                sprintf "``%s``" s
+            else
+                s
+
     f |> fixFile (fun tp ->
         match tp with
         | FsType.Mapped s ->
-            Keywords.escapeWord s |> FsType.Mapped
+            escapeWord s |> FsType.Mapped
         | FsType.Param pm ->
-            { pm with Name = Keywords.escapeWord pm.Name } |> FsType.Param
+            { pm with Name = escapeWord pm.Name } |> FsType.Param
         | FsType.Function fn ->
-            { fn with Name = fn.Name |> Option.map Keywords.escapeWord } |> FsType.Function
+            { fn with Name = fn.Name |> Option.map escapeWord } |> FsType.Function
         | FsType.Property pr ->
-            { pr with Name = Keywords.escapeWord pr.Name } |> FsType.Property
+            { pr with Name = escapeWord pr.Name } |> FsType.Property
         | FsType.Interface it ->
-            { it with Name = Keywords.escapeWord it.Name } |> FsType.Interface
+            { it with Name = escapeWord it.Name } |> FsType.Interface
         | FsType.Module md ->
-            { md with Name = Keywords.escapeWord md.Name } |> FsType.Module
+            { md with Name = escapeWord md.Name } |> FsType.Module
         | FsType.Variable vb ->
-            { vb with Name = Keywords.escapeWord vb.Name } |> FsType.Variable
+            { vb with Name = escapeWord vb.Name } |> FsType.Variable
         | FsType.Alias al ->
-            { al with Name = Keywords.escapeWord al.Name } |> FsType.Alias
+            { al with Name = escapeWord al.Name } |> FsType.Alias
         | _ -> tp
     )
 

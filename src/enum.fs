@@ -8,9 +8,13 @@ let (|Capital|_|) (letter: string)=
     | true -> Some letter
     | false -> None
 
+let private digits = [ '0' .. '9' ] |> Seq.map string
+
+// TODO Char.IsDigit will be in Fable 1.3
+let isDigit digit = Seq.contains digit digits
+
 let (|Digit|_|) (digit: string) = 
-    let capitals = [ '0' .. '9' ] |> Seq.map string
-    match Seq.contains digit capitals with
+    match isDigit digit with
     | true -> Some digit
     | false -> None
 

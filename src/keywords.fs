@@ -108,9 +108,3 @@ let keywords =
         "yield"
     ]
     |> Set.ofList
-
-let escapeWord s =
-    if reserved.Contains s || keywords.Contains s then
-        sprintf "``%s``" s
-    else
-        s
