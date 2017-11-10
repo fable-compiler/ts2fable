@@ -7,7 +7,7 @@
     <Compile Include="Fable.Import.TypeScript.fs" />
     <!-- <Compile Include="Fable.Import.Electron.fs" /> -->
     <Compile Include="Fable.Import.React.fs" />
-    <Compile Include="Fable.Import.Node.fs" />
+    <!-- <Compile Include="Fable.Import.Node.fs" /> -->
     <Compile Include="Fable.Import.Promise.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
