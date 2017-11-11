@@ -3,8 +3,6 @@ image: Visual Studio 2017
 install:
   - ps: Install-Product node 8 x64
   - yarn global add mocha
-  - ps: '"//registry.npmjs.org/:_authToken=$env:npmauthtoken`n" | out-file "$env:userprofile\.npmrc" -Encoding ASCII'
-  - npm whoami
 
 build_script:
   - ps: |
