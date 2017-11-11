@@ -20,3 +20,7 @@ artifacts:
 
 cache:
   - "%LOCALAPPDATA%\\Yarn"
+
+deploy_script:
+  - ps: |
+      .\appveyor-deploy.ps1
