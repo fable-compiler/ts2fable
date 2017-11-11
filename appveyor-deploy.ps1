@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 
-# it only runs on successful builds that are not pull requests
+# continuous deployment
+# any successful builds on the master branch
 
 if($env:appveyor_repo_name -eq "fable-compiler/ts2fable" -and $env:appveyor_repo_branch -eq "master"){
     "//registry.npmjs.org/:_authToken=$env:npmauthtoken`n" | out-file "$env:userprofile\.npmrc" -Encoding ASCII
