@@ -34,10 +34,6 @@ describe "escapeWord tests" <| fun _ ->
         escapeWord "2d_canvas"
         |> equal "``2d_canvas``"
 
-    it "jquery/dist/jquery.slim" <| fun _ ->
-        escapeWord "jquery/dist/jquery.slim"
-        |> equal "``jquery/dist/jquery.slim``"
-
 
 describe "createEnumNameParts tests" <| fun _ ->
 
@@ -72,3 +68,14 @@ describe "createEnumNameParts tests" <| fun _ ->
     it "shadow-2d-more" <| fun _ ->
         createEnumNameParts "shadow-2d-more" 
         |> equal ["shadow"; "2d"; "more"]
+
+
+describe "createModuleNameParts tests" <| fun _ ->
+
+    it "jquery/dist/jquery.slim" <| fun _ ->
+        createModuleNameParts "jquery/dist/jquery.slim"
+        |> equal ["jquery"; "dist"; "jquery"; "slim"]
+
+    it "JQuery" <| fun _ ->
+        createModuleNameParts "JQuery"
+        |> equal ["JQuery"]

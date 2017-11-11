@@ -128,13 +128,11 @@ let mergeTypes(tps: FsType list): FsType list =
                 | FsType.Interface ai ->
                     list.[i] <-
                         { ai with
-                            Inherits = List.append ai.Inherits bi.Inherits
+                            Inherits = List.append ai.Inherits bi.Inherits |> List.distinct
                             Members = List.append ai.Members bi.Members
                         }
                         |> FsType.Interface
-                | _ ->
-                    list.Add b
-                    index.Add(bi.Name, list.Count-1)
+                | _ -> ()
 
             else
                 list.Add b
@@ -152,7 +150,7 @@ let mergeModules(tps: FsType list): FsType list =
         | FsType.Module md ->
             let md2 =
                 { md with
-                    Types = md.Types |> mergeModules // submodules
+                    Types = md.Types |> mergeTypes |> mergeModules // submodules
                 }
             
             if index.ContainsKey md.Name then
@@ -300,6 +298,13 @@ let escapeWord (s: string) =
         else
             s
 
+// TODO
+let fixModuleName (s: string) =
+    let s = s.Replace("'","") // remove single quotes
+    let parts = s |> Enum.createModuleNameParts
+    // [parts.Head] @ (parts.Tail |> List.map Enum.capitalize) |> String.concat ""
+    parts |> String.concat "_"
+
 let fixEscapeWords(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
@@ -314,7 +319,8 @@ let fixEscapeWords(f: FsFile): FsFile =
         | FsType.Interface it ->
             { it with Name = escapeWord it.Name } |> FsType.Interface
         | FsType.Module md ->
-            { md with Name = escapeWord md.Name } |> FsType.Module
+            // can't just escape module names
+            { md with Name = fixModuleName md.Name } |> FsType.Module
         | FsType.Variable vb ->
             { vb with Name = escapeWord vb.Name } |> FsType.Variable
         | FsType.Alias al ->
@@ -494,3 +500,31 @@ let fixOpens(f: FsFile): FsFile =
             if hasBrowser then f.Opens @ ["Fable.Import.Browser"]
             else f.Opens
     }
+
+let hasTodo (tp: FsType) =
+    let mutable has = false
+    tp |> fixType (fun t ->
+        match t with
+        | FsType.TODO ->
+            has <- true
+            t
+        | _ -> t
+    ) |> ignore
+    has
+
+let removeTodoMembers(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            { it with
+                // Members = it.Members |> List.filter (not << hasTodo)
+                Members = it.Members |> List.filter (fun mb ->
+                    if hasTodo mb then
+                        printfn "removing member with TODO: %s.%s" (getName tp) (getName mb)
+                        false
+                    else true
+                )
+            }
+            |> FsType.Interface
+        | _ -> tp
+    )

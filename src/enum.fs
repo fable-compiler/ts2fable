@@ -26,7 +26,7 @@ let createEnumNameParts (name: string) =
         | Digit n :: rest when 
             // Append N to beginning only if enum starts with digit
             List.isEmpty parts
-         && part = "" -> splitParts ("N" + n) parts rest 
+            && part = "" -> splitParts ("N" + n) parts rest 
         | Capital letter :: rest when part = "" -> splitParts letter parts rest
         | Capital letter :: rest -> splitParts letter (part :: parts) rest
         | "-" :: rest -> splitParts "" (part :: parts) rest
@@ -35,7 +35,7 @@ let createEnumNameParts (name: string) =
     |> List.ofSeq
     |> splitParts "" []  
     |> List.rev
-    
+
 let capitalize (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
     // else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1) // Fable 1.2.3 bug Char.ToUpper not supported
@@ -44,3 +44,18 @@ let capitalize (input: string): string =
 let createEnumName s =
     if String.IsNullOrWhiteSpace s then "Empty"
     else s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+
+let createModuleNameParts (name: string) = 
+
+    let tokens = Seq.map string name
+    let rec splitParts part parts  = 
+        function
+        | [] -> part :: parts
+        | "-" :: rest -> splitParts "" (part :: parts) rest
+        | "/" :: rest -> splitParts "" (part :: parts) rest
+        | "." :: rest -> splitParts "" (part :: parts) rest
+        | token :: rest ->  splitParts (part + token) parts rest
+    tokens 
+    |> List.ofSeq
+    |> splitParts "" []  
+    |> List.rev

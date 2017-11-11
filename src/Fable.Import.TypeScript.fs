@@ -72,9 +72,7 @@ module ts =
         /// Gets a value indicating whether a node originated in the parse tree.
         abstract isParseTreeNode: node: Node -> bool
         /// Gets the original parse tree node for a node.
-        /// Gets the original parse tree node for a node.
         abstract getParseTreeNode: node: Node -> Node
-        /// Gets the original parse tree node for a node.
         /// Gets the original parse tree node for a node.
         abstract getParseTreeNode: node: Node * ?nodeTest: (Node -> bool) -> 'T
         /// Remove extra underscore from escaped identifier text content.
@@ -636,15 +634,11 @@ module ts =
         abstract moveEmitHelpers: source: Node * target: Node * predicate: (EmitHelper -> bool) -> unit
         abstract setOriginalNode: node: 'T * original: Node option -> 'T
         /// Visits a Node using the supplied visitor, possibly returning a new Node in its place.
-        /// Visits a Node using the supplied visitor, possibly returning a new Node in its place.
         abstract visitNode: node: 'T * visitor: Visitor * ?test: (Node -> bool) * ?lift: (ResizeArray<Node> -> 'T) -> 'T
-        /// Visits a Node using the supplied visitor, possibly returning a new Node in its place.
         /// Visits a Node using the supplied visitor, possibly returning a new Node in its place.
         abstract visitNode: node: 'T option * visitor: Visitor * ?test: (Node -> bool) * ?lift: (ResizeArray<Node> -> 'T) -> 'T option
         /// Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.
-        /// Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.
         abstract visitNodes: nodes: ResizeArray<'T> * visitor: Visitor * ?test: (Node -> bool) * ?start: float * ?count: float -> ResizeArray<'T>
-        /// Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.
         /// Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.
         abstract visitNodes: nodes: ResizeArray<'T> option * visitor: Visitor * ?test: (Node -> bool) * ?start: float * ?count: float -> ResizeArray<'T> option
         /// Starts a new lexical environment and visits a statement list, ending the lexical environment
@@ -655,29 +649,18 @@ module ts =
         abstract visitParameterList: nodes: ResizeArray<ParameterDeclaration> * visitor: Visitor * context: TransformationContext * ?nodesVisitor: obj -> ResizeArray<ParameterDeclaration>
         /// Resumes a suspended lexical environment and visits a function body, ending the lexical
         /// environment and merging hoisted declarations upon completion.
-        /// Resumes a suspended lexical environment and visits a function body, ending the lexical
-        /// environment and merging hoisted declarations upon completion.
         /// Resumes a suspended lexical environment and visits a concise body, ending the lexical
-        /// environment and merging hoisted declarations upon completion.
         abstract visitFunctionBody: node: FunctionBody * visitor: Visitor * context: TransformationContext -> FunctionBody
         /// Resumes a suspended lexical environment and visits a function body, ending the lexical
         /// environment and merging hoisted declarations upon completion.
-        /// Resumes a suspended lexical environment and visits a function body, ending the lexical
-        /// environment and merging hoisted declarations upon completion.
         /// Resumes a suspended lexical environment and visits a concise body, ending the lexical
-        /// environment and merging hoisted declarations upon completion.
         abstract visitFunctionBody: node: FunctionBody option * visitor: Visitor * context: TransformationContext -> FunctionBody option
         /// Resumes a suspended lexical environment and visits a function body, ending the lexical
         /// environment and merging hoisted declarations upon completion.
-        /// Resumes a suspended lexical environment and visits a function body, ending the lexical
-        /// environment and merging hoisted declarations upon completion.
         /// Resumes a suspended lexical environment and visits a concise body, ending the lexical
-        /// environment and merging hoisted declarations upon completion.
         abstract visitFunctionBody: node: ConciseBody * visitor: Visitor * context: TransformationContext -> ConciseBody
         /// Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.
-        /// Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.
         abstract visitEachChild: node: 'T * visitor: Visitor * context: TransformationContext -> 'T
-        /// Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.
         /// Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.
         abstract visitEachChild: node: 'T option * visitor: Visitor * context: TransformationContext * ?nodesVisitor: obj * ?tokenVisitor: Visitor -> 'T option
         abstract createPrinter: ?printerOptions: PrinterOptions * ?handlers: PrintHandlers -> Printer
