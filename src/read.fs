@@ -77,15 +77,26 @@ let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsTy
 
 let readComments (checker: TypeChecker) (nd: Node): string list =
     let symbol = checker.getSymbolAtLocation nd
-    match symbol with
-    | Some sb -> 
-        sb.getDocumentationComment() |> List.ofSeq |> List.collect (fun dp ->
+    let readParts (parts: SymbolDisplayPart list) =
+        parts |> List.collect (fun dp ->
             match dp.kind with
             // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
-            | "text" ->
-                dp.text.Split [|'\n'|] |> List.ofArray
+            | "text" -> dp.text.Split [|'\n'|] |> List.ofArray
             | _ -> []
         )
+
+    match symbol with
+    | Some sb -> 
+        let comments = sb.getDocumentationComment() |> List.ofSeq
+
+        match comments.Length with
+        | 0 -> []
+        | 1 -> comments |> readParts
+        | _ ->
+            // TODO gettings comments for all member overloads
+            // https://github.com/fable-compiler/ts2fable/issues/68
+            comments |> readParts |> List.distinct
+
     | None -> []
 
 let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface =
