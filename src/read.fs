@@ -161,7 +161,8 @@ let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
         |> FsType.Generic
 let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
     {
-        Comments = ft.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
+        // TODO https://github.com/fable-compiler/ts2fable/issues/68
+        Comments = []//ft.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword ft.modifiers
         Name = ft.name |> Option.map getPropertyName
@@ -224,7 +225,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.TypeQuery ->
         // let tq = t :?> TypeQueryNode
         FsType.Mapped "obj"
-    | SyntaxKind.LiteralType ->
+    | SyntaxKind.LiteralType -> 
         let lt = t :?> LiteralTypeNode
         match lt.literal.kind with
         | SyntaxKind.StringLiteral ->
@@ -248,19 +249,29 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
 
 let readParameterDeclaration (checker: TypeChecker) (pd: ParameterDeclaration): FsParam =
+    let stringLiteral =
+        pd.getChildren() |> List.ofSeq |> List.tryPick (fun ch ->
+            ch.getChildren() |> List.ofSeq |> List.tryFind (fun gch -> gch.kind = SyntaxKind.StringLiteral)
+        )
+    let tp =     
+        match stringLiteral with
+        | Some sl -> FsType.StringLiteral (sl.getText() |> removeQuotes)
+        | None ->
+            match pd.``type`` with
+            | Some t -> readTypeNode checker t
+            | None -> FsType.Mapped "obj"
+
     {
         Name = pd.name |> getBindingName
         Optional = pd.questionToken.IsSome
         ParamArray = pd.dotDotDotToken.IsSome
-        Type = 
-            match pd.``type`` with
-            | Some t -> readTypeNode checker t
-            | None -> FsType.Mapped "obj"
+        Type = tp
     }
 
 let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction =
     {
-        Comments = readPropertyNameComments checker ms.name
+        // TODO https://github.com/fable-compiler/ts2fable/issues/68
+        Comments = []//readPropertyNameComments checker ms.name
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
@@ -274,7 +285,8 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
 
 let readMethodDeclaration checker (ms: MethodDeclaration): FsFunction =
     {
-        Comments = readPropertyNameComments checker ms.name
+        // TODO https://github.com/fable-compiler/ts2fable/issues/68
+        Comments = []//readPropertyNameComments checker ms.name
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
@@ -319,7 +331,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
     }
 
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
-    {
+    {     
         Comments = fd.name |> Option.map (readComments checker) |> Option.defaultValue []
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
