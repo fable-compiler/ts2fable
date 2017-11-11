@@ -128,13 +128,11 @@ let mergeTypes(tps: FsType list): FsType list =
                 | FsType.Interface ai ->
                     list.[i] <-
                         { ai with
-                            Inherits = List.append ai.Inherits bi.Inherits
+                            Inherits = List.append ai.Inherits bi.Inherits |> List.distinct
                             Members = List.append ai.Members bi.Members
                         }
                         |> FsType.Interface
-                | _ ->
-                    list.Add b
-                    index.Add(bi.Name, list.Count-1)
+                | _ -> ()
 
             else
                 list.Add b
@@ -152,7 +150,7 @@ let mergeModules(tps: FsType list): FsType list =
         | FsType.Module md ->
             let md2 =
                 { md with
-                    Types = md.Types |> mergeModules // submodules
+                    Types = md.Types |> mergeTypes |> mergeModules // submodules
                 }
             
             if index.ContainsKey md.Name then
@@ -303,7 +301,7 @@ let escapeWord (s: string) =
 // TODO
 let fixModuleName (s: string) =
     let s = s.Replace("'","") // remove single quotes
-    let parts = s |> Enum.createNameParts
+    let parts = s |> Enum.createModuleNameParts
     // [parts.Head] @ (parts.Tail |> List.map Enum.capitalize) |> String.concat ""
     parts |> String.concat "_"
 

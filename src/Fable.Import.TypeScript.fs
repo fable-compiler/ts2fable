@@ -3823,7 +3823,7 @@ module ts =
         /// Releases all resources held by this script snapshot 
         abstract dispose: unit -> unit
 
-    module Script_Snapshot =
+    module ScriptSnapshot =
 
         type [<AllowNullLiteral>] IExports =
             abstract fromString: text: string -> IScriptSnapshot

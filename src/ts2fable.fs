@@ -94,7 +94,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     writeFile "node_modules/typescript/lib/lib.es2015.promise.d.ts" "test-compile/Fable.Import.Promise.fs"
     writeFile "node_modules/@types/mocha/index.d.ts" "test-compile/Fable.Import.Mocha.fs"
     writeFile "node_modules/@types/chai/index.d.ts" "test-compile/Fable.Import.Chai.fs"
-    writeFile "node_modules/@types/jquery/index.d.ts" "test-compile/Fable.Import.JQuery.fs"
+    // writeFile "node_modules/@types/jquery/index.d.ts" "test-compile/Fable.Import.JQuery.fs"
     printfn "done writing test-compile files"
 
 else

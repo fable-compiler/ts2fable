@@ -18,7 +18,7 @@ let (|Digit|_|) (digit: string) =
     | true -> Some digit
     | false -> None
 
-let createNameParts (name: string) = 
+let createEnumNameParts (name: string) = 
     let tokens = Seq.map string name
     let rec splitParts part parts  = 
         function
@@ -29,7 +29,28 @@ let createNameParts (name: string) =
             && part = "" -> splitParts ("N" + n) parts rest 
         | Capital letter :: rest when part = "" -> splitParts letter parts rest
         | Capital letter :: rest -> splitParts letter (part :: parts) rest
-        // TODO may be don't combine createEnumNameParts for module names
+        | "-" :: rest -> splitParts "" (part :: parts) rest
+        | token :: rest ->  splitParts (part + token) parts rest
+    tokens 
+    |> List.ofSeq
+    |> splitParts "" []  
+    |> List.rev
+
+let capitalize (input: string): string =
+    if String.IsNullOrWhiteSpace input then ""
+    // else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1) // Fable 1.2.3 bug Char.ToUpper not supported
+    else sprintf "%s%s" (input.Substring(0,1).ToUpper()) (input.Substring 1)
+
+let createEnumName s =
+    if String.IsNullOrWhiteSpace s then "Empty"
+    else s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+
+let createModuleNameParts (name: string) = 
+
+    let tokens = Seq.map string name
+    let rec splitParts part parts  = 
+        function
+        | [] -> part :: parts
         | "-" :: rest -> splitParts "" (part :: parts) rest
         | "/" :: rest -> splitParts "" (part :: parts) rest
         | "." :: rest -> splitParts "" (part :: parts) rest
@@ -38,12 +59,3 @@ let createNameParts (name: string) =
     |> List.ofSeq
     |> splitParts "" []  
     |> List.rev
-    
-let capitalize (input: string): string =
-    if String.IsNullOrWhiteSpace input then ""
-    // else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1) // Fable 1.2.3 bug Char.ToUpper not supported
-    else sprintf "%s%s" (input.Substring(0,1).ToUpper()) (input.Substring 1)
-
-let createEnumName s =
-    if String.IsNullOrWhiteSpace s then "Empty"
-    else s |> createNameParts |> List.map capitalize |> String.concat ""

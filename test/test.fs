@@ -35,40 +35,47 @@ describe "escapeWord tests" <| fun _ ->
         |> equal "``2d_canvas``"
 
 
-describe "createNameParts tests" <| fun _ ->
+describe "createEnumNameParts tests" <| fun _ ->
 
     it "simpleCase" <| fun _ ->
-        createNameParts "simpleCase"
+        createEnumNameParts "simpleCase"
         |> equal ["simple"; "Case"]
 
     it "simple-kebab-case" <| fun _ ->
-        createNameParts "simple-kebab-case" 
+        createEnumNameParts "simple-kebab-case" 
         |> equal ["simple"; "kebab"; "case"]
 
     it "Other-Cases" <| fun _ ->
-        createNameParts "Other-Cases" 
+        createEnumNameParts "Other-Cases" 
         |> equal ["Other"; "Cases"]
 
     it "helloThereItsMe" <| fun _ ->
-        createNameParts "helloThereItsMe" 
+        createEnumNameParts "helloThereItsMe" 
         |> equal ["hello"; "There"; "Its"; "Me"]
 
     it "OtherSimpleCase" <| fun _ ->
-        createNameParts "OtherSimpleCase" 
+        createEnumNameParts "OtherSimpleCase" 
         |> equal ["Other";"Simple"; "Case"]
 
     it "2d-shadow" <| fun _ ->
-        createNameParts "2d-shadow" 
+        createEnumNameParts "2d-shadow" 
         |> equal ["N2d"; "shadow"]
 
     it "shadow-2d" <| fun _ ->
-        createNameParts "shadow-2d" 
+        createEnumNameParts "shadow-2d" 
         |> equal ["shadow"; "2d"]
 
     it "shadow-2d-more" <| fun _ ->
-        createNameParts "shadow-2d-more" 
+        createEnumNameParts "shadow-2d-more" 
         |> equal ["shadow"; "2d"; "more"]
 
+
+describe "createModuleNameParts tests" <| fun _ ->
+
     it "jquery/dist/jquery.slim" <| fun _ ->
-        createNameParts "jquery/dist/jquery.slim"
+        createModuleNameParts "jquery/dist/jquery.slim"
         |> equal ["jquery"; "dist"; "jquery"; "slim"]
+
+    it "JQuery" <| fun _ ->
+        createModuleNameParts "JQuery"
+        |> equal ["JQuery"]

@@ -240,7 +240,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         // TODO map mapped types https://github.com/fable-compiler/ts2fable/issues/44
         // printfn "TODO mapped types %s" (mt.getText())
         FsType.Mapped "obj"
-    | SyntaxKind.NeverKeyword -> FsType.Mapped "unit"
+    | SyntaxKind.NeverKeyword -> FsType.TODO
     | SyntaxKind.UndefinedKeyword -> FsType.Mapped "obj"
     | SyntaxKind.NullKeyword -> FsType.TODO // It should be an option
     | SyntaxKind.ObjectKeyword -> FsType.Mapped "obj"
