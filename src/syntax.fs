@@ -177,3 +177,16 @@ type FsEnum with
                 FsEnumCaseType.String
             else
                 FsEnumCaseType.Numeric
+
+let getName (tp: FsType) =
+    match tp with
+    | FsType.Interface it -> it.Name
+    | FsType.Enum en -> en.Name
+    | FsType.Param pm -> pm.Name
+    | FsType.Function fn -> fn.Name |> Option.defaultValue ""
+    | FsType.Property pr -> pr.Name
+    | FsType.Alias al -> al.Name
+    | FsType.Variable vb -> vb.Name
+    | FsType.Module md -> md.Name
+    | FsType.File fl -> fl.Name
+    | _ -> ""

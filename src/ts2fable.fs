@@ -53,6 +53,7 @@ let readSourceFile (checker: TypeChecker) (ns: string) (sf: SourceFile): FsFile 
     |> fixEscapeWords
     |> addTicForGenericFunctions // must be after fixEscapeWords
     |> addTicForGenericTypes
+    |> removeTodoMembers
 
 let ts: ts.IExports = importAll "typescript"
 

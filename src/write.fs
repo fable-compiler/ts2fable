@@ -57,7 +57,8 @@ let printFunction (f: FsFunction): string =
                         | FsType.Array t -> printType t // inner type
                         | _ -> 
                             // failwithf "function with unsupported param array type: %s" f.Name.Value
-                            sprintf "TODO_ParamArray %A" p
+                            printfn "ParamArray function is not an array type: %s" (getName(FsType.Function f))
+                            printType p.Type
                     )
             else
                 sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name (printType p.Type)

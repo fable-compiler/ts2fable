@@ -372,12 +372,6 @@ let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaratio
     }
 
 let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =
-
-    let symbol = checker.getSymbolAtLocation te
-    match symbol with
-    | Some sb -> printfn "nameddeclartion sb %A" sb
-    | None -> ()//printfn "sb none"
-
     match te.kind with
     | SyntaxKind.IndexSignature ->
         readIndexSignature checker (te :?> IndexSignatureDeclaration) |> FsType.Property
