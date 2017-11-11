@@ -21,7 +21,7 @@ let printType (tp: FsType): string =
         sprintf "%s" (printType g.Type) |> line.Add
         if g.TypeParameters.Length > 0 then
             "<" |> line.Add
-            g.TypeParameters |> List.map printType |> String.concat " * " |> line.Add
+            g.TypeParameters |> List.map printType |> String.concat ", " |> line.Add
             ">" |> line.Add
         line |> String.concat ""
     | FsType.Function ft ->
