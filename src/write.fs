@@ -1,5 +1,6 @@
 module rec ts2fable.Write
 open System.Collections.Generic
+open ts2fable.Naming
 
 let printType (tp: FsType): string =
     match tp with
@@ -135,12 +136,9 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
                 sprintf "%stype [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
                 for cs in en.Cases do
                     let nm = cs.Name
-                    let unm = Enum.createEnumName nm
+                    let unm = createEnumName nm
                     let line = List()
-                    if nm.Equals unm then
-                        sprintf "    | %s" nm |> line.Add
-                    else
-                        sprintf "    | [<CompiledName \"%s\">] %s" nm unm |> line.Add
+                    sprintf "    | %s" unm |> line.Add
                     if cs.Value.IsSome then
                         sprintf " = %s" cs.Value.Value |> line.Add
                     sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
@@ -148,12 +146,13 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
                 sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
                 for cs in en.Cases do
                     let nm = cs.Name
-                    let unm = Enum.createEnumName nm
+                    let v = cs.Value |> Option.defaultValue ""
+                    let unm = createEnumName nm
                     let line = List()
-                    if nm.Equals unm then
-                        sprintf "    | %s" nm |> line.Add
+                    if nameEqualsDefaultFableValue unm v then
+                        sprintf "    | %s" unm |> line.Add
                     else
-                        sprintf "    | [<CompiledName \"%s\">] %s" nm unm |> line.Add
+                        sprintf "    | [<CompiledName \"%s\">] %s" v unm |> line.Add
                     sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
             | FsEnumCaseType.Unknown ->
                 sprintf "%stype %s =" indent en.Name |> lines.Add

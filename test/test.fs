@@ -5,7 +5,7 @@ open Fable.Core.JsInterop
 open Fable.Import
 
 open ts2fable.Transform
-open ts2fable.Enum
+open ts2fable.Naming
 
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
@@ -79,3 +79,10 @@ describe "createModuleNameParts tests" <| fun _ ->
     it "JQuery" <| fun _ ->
         createModuleNameParts "JQuery"
         |> equal ["JQuery"]
+
+
+describe "nameEqualsDefaultFableValue tests" <| fun _ ->
+
+    it "none" <| fun _ ->
+        nameEqualsDefaultFableValue "None" "none"
+        |> equal true

@@ -7,6 +7,7 @@ open Fable.Import.TypeScript
 open Fable.Import.TypeScript.ts
 open System.Collections.Generic
 open System
+open ts2fable.Naming
 
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
@@ -293,7 +294,7 @@ let escapeWord (s: string) =
             || Keywords.keywords.Contains s
             || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
             // || Char.IsNumber s.[0] then // TODO Fable 1.3
-            || Enum.isDigit (s.Substring(0,1)) then
+            || isDigit (s.Substring(0,1)) then
             sprintf "``%s``" s
         else
             s
@@ -301,7 +302,7 @@ let escapeWord (s: string) =
 // TODO
 let fixModuleName (s: string) =
     let s = s.Replace("'","") // remove single quotes
-    let parts = s |> Enum.createModuleNameParts
+    let parts = s |> createModuleNameParts
     // [parts.Head] @ (parts.Tail |> List.map Enum.capitalize) |> String.concat ""
     parts |> String.concat "_"
 
