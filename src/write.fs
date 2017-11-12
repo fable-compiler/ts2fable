@@ -146,7 +146,7 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
                 sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
                 for cs in en.Cases do
                     let nm = cs.Name
-                    let v = cs.Value |> Option.defaultValue ""
+                    let v = cs.Value |> Option.defaultValue nm
                     let unm = createEnumName nm
                     let line = List()
                     if nameEqualsDefaultFableValue unm v then

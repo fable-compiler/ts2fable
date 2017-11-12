@@ -7,6 +7,7 @@ open Fable.Import.TypeScript
 open Fable.Import.TypeScript.ts
 open System.Collections.Generic
 open System
+open ts2fable.Naming
 
 type Node with
     member x.ForEachChild (cbNode: Node -> unit) =
@@ -14,7 +15,7 @@ type Node with
 
 let getPropertyName(pn: PropertyName): string =
     match pn with
-    | U4.Case1 id -> id.getText().Replace("\"","")
+    | U4.Case1 id -> id.getText() |> removeQuotes
     | U4.Case2 sl -> sl.getText()
     | U4.Case3 nl -> nl.getText()
     | U4.Case4 cpn -> cpn.getText()
@@ -173,10 +174,6 @@ let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
             | Some t -> readTypeNode checker t
             | None -> FsType.Mapped "unit"
     }
-
-let removeQuotes (s:string): string =
-    if isNull s then ""
-    else s.Replace("\"","").Replace("'","")
 
 let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     match t.kind with

@@ -286,26 +286,6 @@ let fixNodeArray(f: FsFile): FsFile =
         | _ -> tp
     )
 
-let escapeWord (s: string) =
-    if String.IsNullOrEmpty s then ""
-    else
-        let s = s.Replace("'","") // remove single quotes
-        if Keywords.reserved.Contains s 
-            || Keywords.keywords.Contains s
-            || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
-            // || Char.IsNumber s.[0] then // TODO Fable 1.3
-            || isDigit (s.Substring(0,1)) then
-            sprintf "``%s``" s
-        else
-            s
-
-// TODO
-let fixModuleName (s: string) =
-    let s = s.Replace("'","") // remove single quotes
-    let parts = s |> createModuleNameParts
-    // [parts.Head] @ (parts.Tail |> List.map Enum.capitalize) |> String.concat ""
-    parts |> String.concat "_"
-
 let fixEscapeWords(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
