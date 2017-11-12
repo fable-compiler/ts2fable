@@ -67,3 +67,29 @@ let createModuleNameParts (name: string) =
     |> List.ofSeq
     |> splitParts "" []  
     |> List.rev
+
+let escapeWord (s: string) =
+    if String.IsNullOrEmpty s then ""
+    else
+        let s = s.Replace("'","") // remove single quotes
+        if Keywords.reserved.Contains s 
+            || Keywords.keywords.Contains s
+            || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
+            // || Char.IsNumber s.[0] then // TODO Fable 1.3
+            || isDigit (s.Substring(0,1))
+            || s.Substring(0,1).Equals "."
+        then
+            sprintf "``%s``" s
+        else
+            s
+
+// TODO
+let fixModuleName (s: string) =
+    let s = s.Replace("'","") // remove single quotes
+    let parts = s |> createModuleNameParts
+    // [parts.Head] @ (parts.Tail |> List.map Enum.capitalize) |> String.concat ""
+    parts |> String.concat "_"
+
+let removeQuotes (s:string): string =
+    if isNull s then ""
+    else s.Replace("\"","").Replace("'","")

@@ -34,6 +34,15 @@ describe "escapeWord tests" <| fun _ ->
         escapeWord "2d_canvas"
         |> equal "``2d_canvas``"
 
+    it ".json" <| fun _ ->
+        escapeWord ".json"
+        |> equal "``.json``"
+
+    // do not escape
+    it "NodeJS.ReadWriteStream" <| fun _ ->
+        escapeWord "NodeJS.ReadWriteStream"
+        |> equal "NodeJS.ReadWriteStream"
+        
 
 describe "createEnumNameParts tests" <| fun _ ->
 
