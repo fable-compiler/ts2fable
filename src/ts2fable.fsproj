@@ -5,7 +5,7 @@
   <ItemGroup>
     <Compile Include="Fable.Import.TypeScript.fs" />
     <Compile Include="keywords.fs" />
-    <Compile Include="enum.fs" />
+    <Compile Include="naming.fs" />
     <Compile Include="syntax.fs" />
     <Compile Include="read.fs" />
     <Compile Include="transform.fs" />

@@ -2706,7 +2706,6 @@ module ts =
     type [<AllowNullLiteral>] ParseConfigHost =
         abstract useCaseSensitiveFileNames: bool with get, set
         abstract readDirectory: rootDir: string * extensions: ReadonlyArray<string> * excludes: ReadonlyArray<string> * includes: ReadonlyArray<string> * depth: float -> ResizeArray<string>
-        /// Gets a value indicating whether the specified path exists and is a file.
         abstract fileExists: path: string -> bool
         abstract readFile: path: string -> string option
 
@@ -2722,25 +2721,14 @@ module ts =
 
     type [<AllowNullLiteral>] Program =
         inherit ScriptReferenceHost
-        /// Get a list of root file names that were passed to a 'createProgram'
         abstract getRootFileNames: unit -> ResizeArray<string>
-        /// Get a list of files in the program
         abstract getSourceFiles: unit -> ResizeArray<SourceFile>
-        /// Emits the JavaScript and declaration files.  If targetSourceFile is not specified, then
-        /// the JavaScript and declaration files will be produced for all the files in this program.
-        /// If targetSourceFile is specified, then only the JavaScript and declaration for that
-        /// specific file will be generated.
-        /// 
-        /// If writeFile is not specified then the writeFile callback from the compiler host will be
-        /// used for writing the JavaScript and declaration files.  Otherwise, the writeFile parameter
-        /// will be invoked when writing the JavaScript and declaration files.
         abstract emit: ?targetSourceFile: SourceFile * ?writeFile: WriteFileCallback * ?cancellationToken: CancellationToken * ?emitOnlyDtsFiles: bool * ?customTransformers: CustomTransformers -> EmitResult
         abstract getOptionsDiagnostics: ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         abstract getGlobalDiagnostics: ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         abstract getSyntacticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         abstract getSemanticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         abstract getDeclarationDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
-        /// Gets a type checker that can be used to semantically analyze source fils in the program.
         abstract getTypeChecker: unit -> TypeChecker
 
     type [<AllowNullLiteral>] CustomTransformers =
@@ -2800,11 +2788,8 @@ module ts =
         abstract getReturnTypeOfSignature: signature: Signature -> Type
         abstract getNullableType: ``type``: Type * flags: TypeFlags -> Type
         abstract getNonNullableType: ``type``: Type -> Type
-        /// Note that the resulting nodes cannot be checked. 
         abstract typeToTypeNode: ``type``: Type * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> TypeNode
-        /// Note that the resulting nodes cannot be checked. 
         abstract signatureToSignatureDeclaration: signature: Signature * kind: SyntaxKind * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> SignatureDeclaration
-        /// Note that the resulting nodes cannot be checked. 
         abstract indexInfoToIndexSignatureDeclaration: indexInfo: IndexInfo * kind: IndexKind * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> IndexSignatureDeclaration
         abstract getSymbolsInScope: location: Node * meaning: SymbolFlags -> ResizeArray<Symbol>
         abstract getSymbolAtLocation: node: Node -> Symbol option
@@ -2822,7 +2807,6 @@ module ts =
         abstract getAugmentedPropertiesOfType: ``type``: Type -> ResizeArray<Symbol>
         abstract getRootSymbols: symbol: Symbol -> ResizeArray<Symbol>
         abstract getContextualType: node: Expression -> Type option
-        /// returns unknownSignature in the case of an error. Don't know when it returns undefined.
         abstract getResolvedSignature: node: CallLikeExpression * ?candidatesOutArray: ResizeArray<Signature> * ?argumentCount: float -> Signature option
         abstract getSignatureFromDeclaration: declaration: SignatureDeclaration -> Signature option
         abstract isImplementationOfOverload: node: FunctionLike -> bool option
@@ -2831,7 +2815,6 @@ module ts =
         abstract isUnknownSymbol: symbol: Symbol -> bool
         abstract getConstantValue: node: U3<EnumMember, PropertyAccessExpression, ElementAccessExpression> -> U2<string, float> option
         abstract isValidPropertyAccess: node: U2<PropertyAccessExpression, QualifiedName> * propertyName: string -> bool
-        /// Follow all aliases to get the original symbol. 
         abstract getAliasedSymbol: symbol: Symbol -> Symbol
         abstract getExportsOfModule: moduleSymbol: Symbol -> ResizeArray<Symbol>
         abstract getAllAttributesTypeFromJsxOpeningLikeElement: elementNode: JsxOpeningLikeElement -> Type option
@@ -3013,21 +2996,21 @@ module ts =
         abstract getJsDocTags: unit -> ResizeArray<JSDocTagInfo>
 
     type [<StringEnum>] [<RequireQualifiedAccess>] InternalSymbolName =
-        | Call
-        | Constructor
-        | New
-        | Index
-        | ExportStar
-        | Global
-        | Missing
-        | Type
-        | Object
-        | JSXAttributes
-        | Class
-        | Function
-        | Computed
-        | Resolving
-        | ExportEquals
+        | [<CompiledName "__call">] Call
+        | [<CompiledName "__constructor">] Constructor
+        | [<CompiledName "__new">] New
+        | [<CompiledName "__index">] Index
+        | [<CompiledName "__export">] ExportStar
+        | [<CompiledName "__global">] Global
+        | [<CompiledName "__missing">] Missing
+        | [<CompiledName "__type">] Type
+        | [<CompiledName "__object">] Object
+        | [<CompiledName "__jsxAttributes">] JSXAttributes
+        | [<CompiledName "__class">] Class
+        | [<CompiledName "__function">] Function
+        | [<CompiledName "__computed">] Computed
+        | [<CompiledName "__resolving__">] Resolving
+        | [<CompiledName "export=">] ExportEquals
         | Default
 
     type __String =
@@ -3462,7 +3445,6 @@ module ts =
         abstract readFile: fileName: string -> string option
         abstract trace: s: string -> unit
         abstract directoryExists: directoryName: string -> bool
-        /// Resolve a symbolic link.
         abstract realpath: path: string -> string
         abstract getCurrentDirectory: unit -> string
         abstract getDirectories: path: string -> ResizeArray<string>
@@ -3505,11 +3487,11 @@ module ts =
         abstract version: string with get, set
 
     type [<StringEnum>] [<RequireQualifiedAccess>] Extension =
-        | Ts
-        | Tsx
-        | Dts
-        | Js
-        | Jsx
+        | [<CompiledName ".ts">] Ts
+        | [<CompiledName ".tsx">] Tsx
+        | [<CompiledName ".d.ts">] Dts
+        | [<CompiledName ".js">] Js
+        | [<CompiledName ".jsx">] Jsx
 
     type [<AllowNullLiteral>] ResolvedModuleWithFailedLookupLocations =
         abstract resolvedModule: ResolvedModuleFull option with get, set
@@ -3537,7 +3519,6 @@ module ts =
         abstract useCaseSensitiveFileNames: unit -> bool
         abstract getNewLine: unit -> string
         abstract resolveModuleNames: moduleNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedModule>
-        /// This method is a companion for 'resolveModuleNames' and is used to resolve 'types' references to actual type declaration files
         abstract resolveTypeReferenceDirectives: typeReferenceDirectiveNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedTypeReferenceDirective>
         abstract getEnvironmentVariable: name: string -> string
 
@@ -3595,27 +3576,16 @@ module ts =
         | Unspecified = 4
 
     type [<AllowNullLiteral>] TransformationContext =
-        /// Gets the compiler options supplied to the transformer. 
         abstract getCompilerOptions: unit -> CompilerOptions
-        /// Starts a new lexical environment. 
         abstract startLexicalEnvironment: unit -> unit
-        /// Suspends the current lexical environment, usually after visiting a parameter list. 
         abstract suspendLexicalEnvironment: unit -> unit
-        /// Resumes a suspended lexical environment, usually before visiting a function body. 
         abstract resumeLexicalEnvironment: unit -> unit
-        /// Ends a lexical environment, returning any declarations. 
         abstract endLexicalEnvironment: unit -> ResizeArray<Statement>
-        /// Hoists a function declaration to the containing scope. 
         abstract hoistFunctionDeclaration: node: FunctionDeclaration -> unit
-        /// Hoists a variable declaration to the containing scope. 
         abstract hoistVariableDeclaration: node: Identifier -> unit
-        /// Records a request for a non-scoped emit helper in the current context. 
         abstract requestEmitHelper: helper: EmitHelper -> unit
-        /// Gets and resets the requested non-scoped emit helpers. 
         abstract readEmitHelpers: unit -> ResizeArray<EmitHelper> option
-        /// Enables expression substitutions in the pretty printer for the provided SyntaxKind. 
         abstract enableSubstitution: kind: SyntaxKind -> unit
-        /// Determines whether expression substitutions are enabled for the provided node. 
         abstract isSubstitutionEnabled: node: Node -> bool
         /// Hook used by transformers to substitute expressions just before they
         /// are emitted by the pretty printer.
@@ -3623,11 +3593,7 @@ module ts =
         /// NOTE: Transformation hooks should only be modified during `Transformer` initialization,
         /// before returning the `NodeTransformer` callback.
         abstract onSubstituteNode: (EmitHint -> Node -> Node) with get, set
-        /// Enables before/after emit notifications in the pretty printer for the provided
-        /// SyntaxKind.
         abstract enableEmitNotification: kind: SyntaxKind -> unit
-        /// Determines whether before/after emit notifications should be raised in the pretty
-        /// printer when it emits a node.
         abstract isEmitNotificationEnabled: node: Node -> bool
         /// Hook used to allow transformers to capture state before or after
         /// the printer emits a node.
@@ -3641,11 +3607,8 @@ module ts =
         abstract transformed: ResizeArray<'T> with get, set
         /// Gets diagnostics for the transformation. 
         abstract diagnostics: ResizeArray<Diagnostic> option with get, set
-        /// Gets a substitute for a node, if one is available; otherwise, returns the original node.
         abstract substituteNode: hint: EmitHint * node: Node -> Node
-        /// Emits a node with possible notification.
         abstract emitNodeWithNotification: hint: EmitHint * node: Node * emitCallback: (EmitHint -> Node -> unit) -> unit
-        /// Clean up EmitNode entries on any parse-tree nodes.
         abstract dispose: unit -> unit
 
     type TransformerFactory<'T> =
@@ -3661,24 +3624,13 @@ module ts =
         U2<'T, ResizeArray<'T>> option
 
     type [<AllowNullLiteral>] Printer =
-        /// Print a node and its subtree as-is, without any emit transformations.
         abstract printNode: hint: EmitHint * node: Node * sourceFile: SourceFile -> string
-        /// Prints a source file as-is, without any emit transformations.
         abstract printFile: sourceFile: SourceFile -> string
-        /// Prints a bundle of source files as-is, without any emit transformations.
         abstract printBundle: bundle: Bundle -> string
 
     type [<AllowNullLiteral>] PrintHandlers =
-        /// A hook used by the Printer when generating unique names to avoid collisions with
-        /// globally defined names that exist outside of the current source file.
         abstract hasGlobalName: name: string -> bool
-        /// A hook used by the Printer to provide notifications prior to emitting a node. A
-        /// compatible implementation **must** invoke `emitCallback` with the provided `hint` and
-        /// `node` values.
         abstract onEmitNode: hint: EmitHint * node: Node * emitCallback: (EmitHint -> Node -> unit) -> unit
-        /// A hook used by the Printer to perform just-in-time substitution of a node. This is
-        /// primarily used by node transformations that need to substitute one node for another,
-        /// such as replacing `myExportedVar` with `exports.myExportedVar`.
         abstract substituteNode: hint: EmitHint * node: Node -> Node
 
     type [<AllowNullLiteral>] PrinterOptions =
@@ -3732,8 +3684,6 @@ module ts =
         abstract getDirectories: path: string -> ResizeArray<string>
         abstract readDirectory: path: string * ?extensions: ReadonlyArray<string> * ?exclude: ReadonlyArray<string> * ?``include``: ReadonlyArray<string> * ?depth: float -> ResizeArray<string>
         abstract getModifiedTime: path: string -> DateTime
-        /// This should be cryptographically secure.
-        /// A good implementation is node.js' `crypto.createHash`. (https://nodejs.org/api/crypto.html#crypto_crypto_createhash_algorithm)
         abstract createHash: data: string -> string
         abstract getMemoryUsage: unit -> float
         abstract exit: ?exitCode: float -> unit
@@ -3810,17 +3760,9 @@ module ts =
     /// snapshot is observably immutable. i.e. the same calls with the same parameters will return
     /// the same values.
     type [<AllowNullLiteral>] IScriptSnapshot =
-        /// Gets a portion of the script snapshot specified by [start, end). 
         abstract getText: start: float * ``end``: float -> string
-        /// Gets the length of this script snapshot. 
         abstract getLength: unit -> float
-        /// Gets the TextChangeRange that describe how the text changed between this text and
-        /// an older version.  This information is used by the incremental parser to determine
-        /// what sections of the script need to be re-parsed.  'undefined' can be returned if the
-        /// change range cannot be determined.  However, in that case, incremental parsing will
-        /// not happen and the entire document will be re - parsed.
         abstract getChangeRange: oldSnapshot: IScriptSnapshot -> TextChangeRange option
-        /// Releases all resources held by this script snapshot 
         abstract dispose: unit -> unit
 
     module ScriptSnapshot =
@@ -3862,7 +3804,6 @@ module ts =
         abstract resolveTypeReferenceDirectives: typeDirectiveNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedTypeReferenceDirective>
         abstract directoryExists: directoryName: string -> bool
         abstract getDirectories: directoryName: string -> ResizeArray<string>
-        /// Gets a set of custom transformers to use during emit.
         abstract getCustomTransformers: unit -> CustomTransformers option
 
     type [<AllowNullLiteral>] LanguageService =
@@ -4017,10 +3958,10 @@ module ts =
         abstract highlightSpans: ResizeArray<HighlightSpan> with get, set
 
     type [<StringEnum>] [<RequireQualifiedAccess>] HighlightSpanKind =
-        | [<CompiledName "none">] None
-        | [<CompiledName "definition">] Definition
-        | [<CompiledName "reference">] Reference
-        | [<CompiledName "writtenReference">] WrittenReference
+        | None
+        | Definition
+        | Reference
+        | WrittenReference
 
     type [<AllowNullLiteral>] HighlightSpan =
         abstract fileName: string option with get, set
@@ -4113,28 +4054,28 @@ module ts =
         abstract references: ResizeArray<ReferenceEntry> with get, set
 
     type [<RequireQualifiedAccess>] SymbolDisplayPartKind =
-        | [<CompiledName "aliasName">] AliasName = 0
-        | [<CompiledName "className">] ClassName = 1
-        | [<CompiledName "enumName">] EnumName = 2
-        | [<CompiledName "fieldName">] FieldName = 3
-        | [<CompiledName "interfaceName">] InterfaceName = 4
-        | [<CompiledName "keyword">] Keyword = 5
-        | [<CompiledName "lineBreak">] LineBreak = 6
-        | [<CompiledName "numericLiteral">] NumericLiteral = 7
-        | [<CompiledName "stringLiteral">] StringLiteral = 8
-        | [<CompiledName "localName">] LocalName = 9
-        | [<CompiledName "methodName">] MethodName = 10
-        | [<CompiledName "moduleName">] ModuleName = 11
-        | [<CompiledName "operator">] Operator = 12
-        | [<CompiledName "parameterName">] ParameterName = 13
-        | [<CompiledName "propertyName">] PropertyName = 14
-        | [<CompiledName "punctuation">] Punctuation = 15
-        | [<CompiledName "space">] Space = 16
-        | [<CompiledName "text">] Text = 17
-        | [<CompiledName "typeParameterName">] TypeParameterName = 18
-        | [<CompiledName "enumMemberName">] EnumMemberName = 19
-        | [<CompiledName "functionName">] FunctionName = 20
-        | [<CompiledName "regularExpressionLiteral">] RegularExpressionLiteral = 21
+        | AliasName = 0
+        | ClassName = 1
+        | EnumName = 2
+        | FieldName = 3
+        | InterfaceName = 4
+        | Keyword = 5
+        | LineBreak = 6
+        | NumericLiteral = 7
+        | StringLiteral = 8
+        | LocalName = 9
+        | MethodName = 10
+        | ModuleName = 11
+        | Operator = 12
+        | ParameterName = 13
+        | PropertyName = 14
+        | Punctuation = 15
+        | Space = 16
+        | Text = 17
+        | TypeParameterName = 18
+        | EnumMemberName = 19
+        | FunctionName = 20
+        | RegularExpressionLiteral = 21
 
     type [<AllowNullLiteral>] SymbolDisplayPart =
         abstract text: string with get, set
@@ -4268,111 +4209,104 @@ module ts =
         abstract classification: TokenClass with get, set
 
     type [<AllowNullLiteral>] Classifier =
-        /// Gives lexical classifications of tokens on a line without any syntactic context.
-        /// For instance, a token consisting of the text 'string' can be either an identifier
-        /// named 'string' or the keyword 'string', however, because this classifier is not aware,
-        /// it relies on certain heuristics to give acceptable results. For classifications where
-        /// speed trumps accuracy, this function is preferable; however, for true accuracy, the
-        /// syntactic classifier is ideal. In fact, in certain editing scenarios, combining the
-        /// lexical, syntactic, and semantic classifiers may issue the best user experience.
         abstract getClassificationsForLine: text: string * lexState: EndOfLineState * syntacticClassifierAbsent: bool -> ClassificationResult
         abstract getEncodedLexicalClassifications: text: string * endOfLineState: EndOfLineState * syntacticClassifierAbsent: bool -> Classifications
 
     type [<StringEnum>] [<RequireQualifiedAccess>] ScriptElementKind =
-        | [<CompiledName "unknown">] Unknown
-        | [<CompiledName "warning">] Warning
-        | [<CompiledName "keyword">] Keyword
-        | [<CompiledName "scriptElement">] ScriptElement
-        | [<CompiledName "moduleElement">] ModuleElement
-        | [<CompiledName "classElement">] ClassElement
-        | [<CompiledName "localClassElement">] LocalClassElement
-        | [<CompiledName "interfaceElement">] InterfaceElement
-        | [<CompiledName "typeElement">] TypeElement
-        | [<CompiledName "enumElement">] EnumElement
-        | [<CompiledName "enumMemberElement">] EnumMemberElement
-        | [<CompiledName "variableElement">] VariableElement
-        | [<CompiledName "localVariableElement">] LocalVariableElement
-        | [<CompiledName "functionElement">] FunctionElement
-        | [<CompiledName "localFunctionElement">] LocalFunctionElement
-        | [<CompiledName "memberFunctionElement">] MemberFunctionElement
-        | [<CompiledName "memberGetAccessorElement">] MemberGetAccessorElement
-        | [<CompiledName "memberSetAccessorElement">] MemberSetAccessorElement
-        | [<CompiledName "memberVariableElement">] MemberVariableElement
-        | [<CompiledName "constructorImplementationElement">] ConstructorImplementationElement
-        | [<CompiledName "callSignatureElement">] CallSignatureElement
-        | [<CompiledName "indexSignatureElement">] IndexSignatureElement
-        | [<CompiledName "constructSignatureElement">] ConstructSignatureElement
-        | [<CompiledName "parameterElement">] ParameterElement
-        | [<CompiledName "typeParameterElement">] TypeParameterElement
-        | [<CompiledName "primitiveType">] PrimitiveType
-        | [<CompiledName "label">] Label
-        | [<CompiledName "alias">] Alias
-        | [<CompiledName "constElement">] ConstElement
-        | [<CompiledName "letElement">] LetElement
-        | [<CompiledName "directory">] Directory
-        | [<CompiledName "externalModuleName">] ExternalModuleName
-        | [<CompiledName "jsxAttribute">] JsxAttribute
+        | [<CompiledName "">] Unknown
+        | Warning
+        | Keyword
+        | [<CompiledName "script">] ScriptElement
+        | [<CompiledName "module">] ModuleElement
+        | [<CompiledName "class">] ClassElement
+        | [<CompiledName "local class">] LocalClassElement
+        | [<CompiledName "interface">] InterfaceElement
+        | [<CompiledName "type">] TypeElement
+        | [<CompiledName "enum">] EnumElement
+        | [<CompiledName "enum member">] EnumMemberElement
+        | [<CompiledName "var">] VariableElement
+        | [<CompiledName "local var">] LocalVariableElement
+        | [<CompiledName "function">] FunctionElement
+        | [<CompiledName "local function">] LocalFunctionElement
+        | [<CompiledName "method">] MemberFunctionElement
+        | [<CompiledName "getter">] MemberGetAccessorElement
+        | [<CompiledName "setter">] MemberSetAccessorElement
+        | [<CompiledName "property">] MemberVariableElement
+        | [<CompiledName "constructor">] ConstructorImplementationElement
+        | [<CompiledName "call">] CallSignatureElement
+        | [<CompiledName "index">] IndexSignatureElement
+        | [<CompiledName "construct">] ConstructSignatureElement
+        | [<CompiledName "parameter">] ParameterElement
+        | [<CompiledName "type parameter">] TypeParameterElement
+        | [<CompiledName "primitive type">] PrimitiveType
+        | Label
+        | Alias
+        | [<CompiledName "const">] ConstElement
+        | [<CompiledName "let">] LetElement
+        | Directory
+        | [<CompiledName "external module name">] ExternalModuleName
+        | [<CompiledName "JSX attribute">] JsxAttribute
 
     type [<StringEnum>] [<RequireQualifiedAccess>] ScriptElementKindModifier =
-        | [<CompiledName "none">] None
-        | [<CompiledName "publicMemberModifier">] PublicMemberModifier
-        | [<CompiledName "privateMemberModifier">] PrivateMemberModifier
-        | [<CompiledName "protectedMemberModifier">] ProtectedMemberModifier
-        | [<CompiledName "exportedModifier">] ExportedModifier
-        | [<CompiledName "ambientModifier">] AmbientModifier
-        | [<CompiledName "staticModifier">] StaticModifier
-        | [<CompiledName "abstractModifier">] AbstractModifier
+        | [<CompiledName "">] None
+        | [<CompiledName "public">] PublicMemberModifier
+        | [<CompiledName "private">] PrivateMemberModifier
+        | [<CompiledName "protected">] ProtectedMemberModifier
+        | [<CompiledName "export">] ExportedModifier
+        | [<CompiledName "declare">] AmbientModifier
+        | [<CompiledName "static">] StaticModifier
+        | [<CompiledName "abstract">] AbstractModifier
 
     type [<StringEnum>] [<RequireQualifiedAccess>] ClassificationTypeNames =
-        | [<CompiledName "comment">] Comment
-        | [<CompiledName "identifier">] Identifier
-        | [<CompiledName "keyword">] Keyword
-        | [<CompiledName "numericLiteral">] NumericLiteral
-        | [<CompiledName "operator">] Operator
-        | [<CompiledName "stringLiteral">] StringLiteral
-        | [<CompiledName "whiteSpace">] WhiteSpace
-        | [<CompiledName "text">] Text
-        | [<CompiledName "punctuation">] Punctuation
-        | [<CompiledName "className">] ClassName
-        | [<CompiledName "enumName">] EnumName
-        | [<CompiledName "interfaceName">] InterfaceName
-        | [<CompiledName "moduleName">] ModuleName
-        | [<CompiledName "typeParameterName">] TypeParameterName
-        | [<CompiledName "typeAliasName">] TypeAliasName
-        | [<CompiledName "parameterName">] ParameterName
-        | [<CompiledName "docCommentTagName">] DocCommentTagName
-        | [<CompiledName "jsxOpenTagName">] JsxOpenTagName
-        | [<CompiledName "jsxCloseTagName">] JsxCloseTagName
-        | [<CompiledName "jsxSelfClosingTagName">] JsxSelfClosingTagName
-        | [<CompiledName "jsxAttribute">] JsxAttribute
-        | [<CompiledName "jsxText">] JsxText
-        | [<CompiledName "jsxAttributeStringLiteralValue">] JsxAttributeStringLiteralValue
+        | Comment
+        | Identifier
+        | Keyword
+        | [<CompiledName "number">] NumericLiteral
+        | Operator
+        | [<CompiledName "string">] StringLiteral
+        | [<CompiledName "whitespace">] WhiteSpace
+        | Text
+        | Punctuation
+        | [<CompiledName "class name">] ClassName
+        | [<CompiledName "enum name">] EnumName
+        | [<CompiledName "interface name">] InterfaceName
+        | [<CompiledName "module name">] ModuleName
+        | [<CompiledName "type parameter name">] TypeParameterName
+        | [<CompiledName "type alias name">] TypeAliasName
+        | [<CompiledName "parameter name">] ParameterName
+        | [<CompiledName "doc comment tag name">] DocCommentTagName
+        | [<CompiledName "jsx open tag name">] JsxOpenTagName
+        | [<CompiledName "jsx close tag name">] JsxCloseTagName
+        | [<CompiledName "jsx self closing tag name">] JsxSelfClosingTagName
+        | [<CompiledName "jsx attribute">] JsxAttribute
+        | [<CompiledName "jsx text">] JsxText
+        | [<CompiledName "jsx attribute string literal value">] JsxAttributeStringLiteralValue
 
     type [<RequireQualifiedAccess>] ClassificationType =
-        | [<CompiledName "comment">] Comment = 1
-        | [<CompiledName "identifier">] Identifier = 2
-        | [<CompiledName "keyword">] Keyword = 3
-        | [<CompiledName "numericLiteral">] NumericLiteral = 4
-        | [<CompiledName "operator">] Operator = 5
-        | [<CompiledName "stringLiteral">] StringLiteral = 6
-        | [<CompiledName "regularExpressionLiteral">] RegularExpressionLiteral = 7
-        | [<CompiledName "whiteSpace">] WhiteSpace = 8
-        | [<CompiledName "text">] Text = 9
-        | [<CompiledName "punctuation">] Punctuation = 10
-        | [<CompiledName "className">] ClassName = 11
-        | [<CompiledName "enumName">] EnumName = 12
-        | [<CompiledName "interfaceName">] InterfaceName = 13
-        | [<CompiledName "moduleName">] ModuleName = 14
-        | [<CompiledName "typeParameterName">] TypeParameterName = 15
-        | [<CompiledName "typeAliasName">] TypeAliasName = 16
-        | [<CompiledName "parameterName">] ParameterName = 17
-        | [<CompiledName "docCommentTagName">] DocCommentTagName = 18
-        | [<CompiledName "jsxOpenTagName">] JsxOpenTagName = 19
-        | [<CompiledName "jsxCloseTagName">] JsxCloseTagName = 20
-        | [<CompiledName "jsxSelfClosingTagName">] JsxSelfClosingTagName = 21
-        | [<CompiledName "jsxAttribute">] JsxAttribute = 22
-        | [<CompiledName "jsxText">] JsxText = 23
-        | [<CompiledName "jsxAttributeStringLiteralValue">] JsxAttributeStringLiteralValue = 24
+        | Comment = 1
+        | Identifier = 2
+        | Keyword = 3
+        | NumericLiteral = 4
+        | Operator = 5
+        | StringLiteral = 6
+        | RegularExpressionLiteral = 7
+        | WhiteSpace = 8
+        | Text = 9
+        | Punctuation = 10
+        | ClassName = 11
+        | EnumName = 12
+        | InterfaceName = 13
+        | ModuleName = 14
+        | TypeParameterName = 15
+        | TypeAliasName = 16
+        | ParameterName = 17
+        | DocCommentTagName = 18
+        | JsxOpenTagName = 19
+        | JsxCloseTagName = 20
+        | JsxSelfClosingTagName = 21
+        | JsxAttribute = 22
+        | JsxText = 23
+        | JsxAttributeStringLiteralValue = 24
 
     /// The document registry represents a store of SourceFile objects that can be shared between
     /// multiple LanguageService instances. A LanguageService instance holds on the SourceFile (AST)
@@ -4388,21 +4322,11 @@ module ts =
     /// To create a default DocumentRegistry, use createDocumentRegistry to create one, and pass it
     /// to all subsequent createLanguageService calls.
     type [<AllowNullLiteral>] DocumentRegistry =
-        /// Request a stored SourceFile with a given fileName and compilationSettings.
-        /// The first call to acquire will call createLanguageServiceSourceFile to generate
-        /// the SourceFile if was not found in the registry.
         abstract acquireDocument: fileName: string * compilationSettings: CompilerOptions * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
         abstract acquireDocumentWithKey: fileName: string * path: Path * compilationSettings: CompilerOptions * key: DocumentRegistryBucketKey * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
-        /// Request an updated version of an already existing SourceFile with a given fileName
-        /// and compilationSettings. The update will in-turn call updateLanguageServiceSourceFile
-        /// to get an updated SourceFile.
         abstract updateDocument: fileName: string * compilationSettings: CompilerOptions * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
         abstract updateDocumentWithKey: fileName: string * path: Path * compilationSettings: CompilerOptions * key: DocumentRegistryBucketKey * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
         abstract getKeyForCompilationSettings: settings: CompilerOptions -> DocumentRegistryBucketKey
-        /// Informs the DocumentRegistry that a file is not needed any longer.
-        /// 
-        /// Note: It is not allowed to call release on a SourceFile that was not acquired from
-        /// this registry originally.
         abstract releaseDocument: fileName: string * compilationSettings: CompilerOptions -> unit
         abstract releaseDocumentWithKey: path: Path * key: DocumentRegistryBucketKey -> unit
         abstract reportStats: unit -> string

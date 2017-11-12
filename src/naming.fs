@@ -1,4 +1,4 @@
-module ts2fable.Enum
+module ts2fable.Naming
 
 open System
 
@@ -44,6 +44,14 @@ let capitalize (input: string): string =
 let createEnumName s =
     if String.IsNullOrWhiteSpace s then "Empty"
     else s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+
+// by default Fable lowercases the first letter of the name for the value
+let nameEqualsDefaultFableValue (name: string) (value: string): bool =
+    let defaultFableValue =
+        sprintf "%s%s" 
+            (name.Substring(0,1).ToLower())
+            (name.Substring(1))
+    defaultFableValue.Equals value
 
 let createModuleNameParts (name: string) = 
 
