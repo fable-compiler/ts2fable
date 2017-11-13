@@ -12,6 +12,7 @@
     <Compile Include="Fable.Import.Mocha.fs" />
     <Compile Include="Fable.Import.Chai.fs" />
     <!-- <Compile Include="Fable.Import.JQuery.fs" /> -->
+    <Compile Include="Fable.Import.Chalk.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

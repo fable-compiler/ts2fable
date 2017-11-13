@@ -44,6 +44,7 @@
     "babel-plugin-shebang": "^0.0.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "chai": "^4.1.2",
+    "chalk": "^2.3.0",
     "cross-env": "^4.0.0",
     "electron": "^1.7.9",
     "fable-splitter": "0.1.20",
