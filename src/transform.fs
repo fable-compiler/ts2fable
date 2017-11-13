@@ -403,24 +403,19 @@ let fixThis(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
         | FsType.Interface it ->
+
+            let replaceThis tp = 
+                match tp with
+                | FsType.This ->
+                    {
+                        Type = FsType.Mapped it.Name
+                        TypeParameters = it.TypeParameters
+                    }
+                    |> FsType.Generic
+                | _ -> tp
+
             { it with
-                Members = it.Members |> List.map (fun mbr -> 
-                    match mbr with
-                    | FsType.Function f ->
-                        { f with
-                            ReturnType =
-                                match f.ReturnType with
-                                | FsType.This ->
-                                    {
-                                        Type = FsType.Mapped it.Name
-                                        TypeParameters = it.TypeParameters
-                                    }
-                                    |> FsType.Generic
-                                | _ -> f.ReturnType
-                        }
-                        |> FsType.Function
-                    | _ -> mbr
-                )
+                Members = it.Members |> List.map (fixType replaceThis)
             }
             |> FsType.Interface
         | _ -> tp
