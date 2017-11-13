@@ -76,33 +76,31 @@ let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsTy
             )
         )
 
-let readComments (checker: TypeChecker) (nd: Node): string list =
-    let symbol = checker.getSymbolAtLocation nd
-    let readParts (parts: SymbolDisplayPart list) =
-        parts |> List.collect (fun dp ->
+let readComments (comments: List<SymbolDisplayPart>): string list =
+    if comments.Count = 0 then []
+    else
+        comments |> List.ofSeq |> List.collect (fun dp ->
             match dp.kind with
             // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
             | "text" -> dp.text.Split [|'\n'|] |> List.ofArray
             | _ -> []
         )
 
-    match symbol with
-    | Some sb -> 
-        let comments = sb.getDocumentationComment() |> List.ofSeq
-
-        match comments.Length with
-        | 0 -> []
-        | 1 -> comments |> readParts
-        | _ ->
-            // TODO gettings comments for all member overloads
-            // https://github.com/fable-compiler/ts2fable/issues/68
-            comments |> readParts |> List.distinct
-
+let readCommentsForSignatureDeclaration (checker: TypeChecker) (declaration: SignatureDeclaration): string list =
+    match checker.getSignatureFromDeclaration declaration with
     | None -> []
+    | Some signature ->
+        signature.getDocumentationComment() |> readComments
+
+let readCommentsAtLocation (checker: TypeChecker) (nd: Node): string list =
+    match checker.getSymbolAtLocation nd with
+    | None -> []
+    | Some symbol ->
+        symbol.getDocumentationComment() |> readComments
 
 let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface =
     {
-        Comments = readComments checker id.name
+        Comments = readCommentsAtLocation checker id.name
         IsStatic = false
         Name = id.name.getText()
         Inherits = readInherits checker id.heritageClauses
@@ -112,7 +110,7 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
 
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
     {
-        Comments = cd.name |> Option.map (readComments checker) |> Option.defaultValue []
+        Comments = cd.name |> Option.map (readCommentsAtLocation checker) |> Option.defaultValue []
         IsStatic = false
         Name =
             match cd.name with
@@ -267,8 +265,7 @@ let readParameterDeclaration (checker: TypeChecker) (pd: ParameterDeclaration): 
 
 let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction =
     {
-        // TODO https://github.com/fable-compiler/ts2fable/issues/68
-        Comments = []//readPropertyNameComments checker ms.name
+        Comments = readCommentsForSignatureDeclaration checker ms
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
@@ -280,17 +277,16 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
             | None -> FsType.Mapped "unit"
     }
 
-let readMethodDeclaration checker (ms: MethodDeclaration): FsFunction =
+let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
     {
-        // TODO https://github.com/fable-compiler/ts2fable/issues/68
-        Comments = []//readPropertyNameComments checker ms.name
+        Comments = readCommentsForSignatureDeclaration checker md
         Emit = None
-        IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
-        Name = ms.name |> getPropertyName |> Some
-        TypeParameters = readTypeParameters ms.typeParameters
-        Params = ms.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
+        IsStatic = hasModifier SyntaxKind.StaticKeyword md.modifiers
+        Name = md.name |> getPropertyName |> Some
+        TypeParameters = readTypeParameters md.typeParameters
+        Params = md.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType =
-            match ms.``type`` with
+            match md.``type`` with
             | Some t -> readTypeNode checker t
             | None -> FsType.Mapped "unit"
     }
@@ -309,10 +305,10 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
 
 let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): string list =
     match pn with
-    | U4.Case1 id -> readComments checker id
-    | U4.Case2 sl -> readComments checker sl
-    | U4.Case3 nl -> readComments checker nl
-    | U4.Case4 cpn -> readComments checker cpn
+    | U4.Case1 id -> readCommentsAtLocation checker id
+    | U4.Case2 sl -> readCommentsAtLocation checker sl
+    | U4.Case3 nl -> readCommentsAtLocation checker nl
+    | U4.Case4 cpn -> readCommentsAtLocation checker cpn
 
 let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): FsProperty =
     {
@@ -329,7 +325,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
 
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
     {     
-        Comments = fd.name |> Option.map (readComments checker) |> Option.defaultValue []
+        Comments = readCommentsForSignatureDeclaration checker fd
         Emit = None
         IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
         Name = fd.name |> Option.map (fun id -> id.getText())
@@ -344,7 +340,7 @@ let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): Fs
 let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): FsProperty =
     let pm = readParameterDeclaration checker ps.parameters.[0]
     {
-        Comments = ps.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
+        Comments = readCommentsForSignatureDeclaration checker ps
         Emit = Some "$0[$1]{{=$2}}"
         Index = Some pm
         Name = "Item"
@@ -357,7 +353,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
 
 let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsFunction =
     {
-        Comments = cs.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
+        Comments = readCommentsForSignatureDeclaration checker cs
         Emit = Some "$0($1...)"
         IsStatic = false // TODO ?
         Name = Some "Invoke"
@@ -371,7 +367,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
 
 let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSignatureDeclaration): FsFunction =
     {
-        Comments = cs.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
+        Comments = readCommentsForSignatureDeclaration checker cs
         Emit = Some "new $0($1...)"
         IsStatic = true
         Name = Some "Create"
@@ -382,7 +378,7 @@ let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSigna
 
 let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaration): FsFunction =
     {
-        Comments = cs.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
+        Comments = readCommentsForSignatureDeclaration checker cs
         Emit = Some "new $0($1...)"
         IsStatic = true
         Name = Some "Create"
