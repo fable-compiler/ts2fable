@@ -8,11 +8,12 @@
     <!-- <Compile Include="Fable.Import.Electron.fs" /> -->
     <!-- <Compile Include="Fable.Import.React.fs" /> -->
     <!-- <Compile Include="Fable.Import.Node.fs" /> -->
-    <Compile Include="Fable.Import.Promise.fs" />
     <Compile Include="Fable.Import.Mocha.fs" />
     <Compile Include="Fable.Import.Chai.fs" />
-    <!-- <Compile Include="Fable.Import.JQuery.fs" /> -->
     <Compile Include="Fable.Import.Chalk.fs" />
+
+    <!-- <Compile Include="Fable.Import.JQuery.fs" /> -->
+    <!-- <Compile Include="Fable.Import.Promise.fs" /> -->
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
