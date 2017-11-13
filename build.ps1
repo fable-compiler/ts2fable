@@ -33,7 +33,8 @@ Set-Location $psscriptroot
 yarn version --new-version $v --no-git-tag-version
 
 $js = "dist/ts2fable.js"
-@("#!/usr/bin/env node") + (get-content $js) | set-content $js
+yarn global add babel-cli
+babel --plugins shebang $js -o $js
 
 # yarn pack is packing too many files
 npm pack
