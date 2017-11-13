@@ -41,8 +41,15 @@ let readEnumCase(em: EnumMember): FsEnumCase =
             | SyntaxKind.StringLiteral ->
                 let sl = ep :?> StringLiteral
                 FsEnumCaseType.String, Some sl.text
-            | SyntaxKind.PrefixUnaryExpression -> // TODO TypeScript Ternary
-                FsEnumCaseType.Unknown, None
+            | SyntaxKind.PrefixUnaryExpression ->
+                let pue = ep :?> PrefixUnaryExpression
+                // a negative number such as -1 is the usual case
+                let txt = pue.getText()
+                let parsed, _ = Int32.TryParse txt
+                if parsed then
+                    FsEnumCaseType.Numeric, Some txt
+                else
+                    FsEnumCaseType.Unknown, None
             | _ -> failwithf "EnumCase type not supported %A %A" ep.kind name
     {
         Name = name
