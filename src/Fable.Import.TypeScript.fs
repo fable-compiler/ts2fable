@@ -3251,8 +3251,10 @@ module ts =
         | NoDefault = 2
         | AnyDefault = 4
 
-    type Ternary =
-        obj
+    type [<RequireQualifiedAccess>] Ternary =
+        | False = 0
+        | Maybe = 1
+        | True = -1
 
     type TypeComparer =
         (Type -> Type -> bool -> Ternary)

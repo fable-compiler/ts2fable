@@ -54,6 +54,7 @@ let readSourceFile (checker: TypeChecker) (ns: string) (sf: SourceFile): FsFile 
     |> addTicForGenericFunctions // must be after fixEscapeWords
     |> addTicForGenericTypes
     |> removeTodoMembers
+    |> removeTypeParamsFromStatic
 
 let ts: ts.IExports = importAll "typescript"
 
@@ -94,6 +95,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     writeFile "node_modules/@types/mocha/index.d.ts" "test-compile/Fable.Import.Mocha.fs"
     writeFile "node_modules/@types/chai/index.d.ts" "test-compile/Fable.Import.Chai.fs"
     writeFile "node_modules/chalk/types/index.d.ts" "test-compile/Fable.Import.Chalk.fs"
+    writeFile "node_modules/@types/google-protobuf/index.d.ts" "test-compile/Fable.Import.Protobuf.fs"
 
     // files that have TODOs
     // writeFile "node_modules/@types/jquery/index.d.ts" "test-compile/Fable.Import.JQuery.fs"

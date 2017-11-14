@@ -243,15 +243,8 @@ let fixTic (typeParameters: FsType list) (tp: FsType) =
 let addTicForGenericFunctions(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
-        | FsType.Interface it ->
-            { it with
-                Members = it.Members |> List.map (fun mbr ->
-                    match asFunction mbr with
-                    | None -> mbr
-                    | Some fn -> fixTic fn.TypeParameters mbr
-                )
-            }
-            |> FsType.Interface
+        | FsType.Function fn ->
+            fixTic fn.TypeParameters tp
         | _ -> tp
     )
 
@@ -439,6 +432,7 @@ let fixStatic(f: FsFile): FsFile =
                                 { it with
                                     IsStatic = true
                                     Name = sprintf "%sStatic" it.Name
+                                    // TypeParameters = [] // remove them after the tic is added
                                     Inherits = []
                                     Members = it.StaticMembers
                                 }
@@ -500,6 +494,18 @@ let removeTodoMembers(f: FsFile): FsFile =
                         false
                     else true
                 )
+            }
+            |> FsType.Interface
+        | _ -> tp
+    )
+
+let removeTypeParamsFromStatic(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            { it with
+                TypeParameters =
+                    if it.IsStatic then [] else it.TypeParameters
             }
             |> FsType.Interface
         | _ -> tp
