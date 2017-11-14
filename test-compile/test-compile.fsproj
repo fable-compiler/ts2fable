@@ -11,7 +11,7 @@
     <Compile Include="Fable.Import.Mocha.fs" />
     <Compile Include="Fable.Import.Chai.fs" />
     <Compile Include="Fable.Import.Chalk.fs" />
-    <Compile Include="Fable.Import.Protobuf.fs" />
+    <!-- <Compile Include="Fable.Import.Protobuf.fs" /> -->
 
     <!-- <Compile Include="Fable.Import.JQuery.fs" /> -->
     <!-- <Compile Include="Fable.Import.Promise.fs" /> -->
