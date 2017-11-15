@@ -71,7 +71,7 @@ let printFunction (f: FsFunction): string =
     sprintf " -> %s" (printType f.ReturnType) |> line.Add
     line |> String.concat ""
 let printProperty (pr: FsProperty): string =
-    sprintf "%sabstract %s: %s%s%s with get, set"
+    sprintf "%sabstract %s: %s%s%s%s"
         (if pr.Emit.IsSome then sprintf "[<Emit \"%s\">] " pr.Emit.Value else "")
         pr.Name
         (   match pr.Index with
@@ -80,6 +80,7 @@ let printProperty (pr: FsProperty): string =
         )
         (printType pr.Type)
         (if pr.Option then " option" else "")
+        (if pr.IsReadonly then "" else " with get, set")
 
 let printTypeParameters (tps: FsType list): string =
     if tps.Length = 0 then ""

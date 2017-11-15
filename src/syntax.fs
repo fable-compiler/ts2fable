@@ -61,6 +61,7 @@ type FsProperty =
         Name: string
         Option: bool
         Type: FsType
+        IsReadonly: bool
     }
 
 type FsGenericType =
