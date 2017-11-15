@@ -201,6 +201,7 @@ let createIExports (f: FsFile): FsFile =
                                 Name = it.Name.Replace("Static","")
                                 Option = false
                                 Type = it.Name |> FsType.Mapped
+                                IsReadonly = true
                             }
                             |> FsType.Property
                         ]

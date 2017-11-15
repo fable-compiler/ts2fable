@@ -308,6 +308,7 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
             match ps.``type`` with
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
+        IsReadonly = hasModifier SyntaxKind.ReadonlyKeyword ps.modifiers
     }
 
 let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): string list =
@@ -328,6 +329,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
             match pd.``type`` with
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
+        IsReadonly = hasModifier SyntaxKind.ReadonlyKeyword pd.modifiers
     }
 
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
@@ -356,6 +358,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
             match ps.``type`` with
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
+        IsReadonly = hasModifier SyntaxKind.ReadonlyKeyword ps.modifiers
     }
 
 let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsFunction =

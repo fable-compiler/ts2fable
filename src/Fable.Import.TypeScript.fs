@@ -717,7 +717,7 @@ module ts =
         abstract get: key: string -> 'T option
         abstract has: key: string -> bool
         abstract forEach: action: ('T -> string -> unit) -> unit
-        abstract size: float with get, set
+        abstract size: float
         abstract keys: unit -> Iterator<string>
         abstract values: unit -> Iterator<'T>
         abstract entries: unit -> Iterator<string * 'T>
@@ -1198,7 +1198,7 @@ module ts =
         abstract escapedText: __String with get, set
         abstract originalKeywordKind: SyntaxKind option with get, set
         abstract isInJSDocNamespace: bool option with get, set
-        abstract text: string with get, set
+        abstract text: string
 
     type [<AllowNullLiteral>] TransientIdentifier =
         inherit Identifier
@@ -2997,7 +2997,7 @@ module ts =
         abstract members: SymbolTable option with get, set
         abstract exports: SymbolTable option with get, set
         abstract globalExports: SymbolTable option with get, set
-        abstract name: string with get, set
+        abstract name: string
         abstract getFlags: unit -> SymbolFlags
         abstract getEscapedName: unit -> __String
         abstract getName: unit -> string
@@ -3031,7 +3031,7 @@ module ts =
         abstract get: key: __String -> 'T option
         abstract has: key: __String -> bool
         abstract forEach: action: ('T -> __String -> unit) -> unit
-        abstract size: float with get, set
+        abstract size: float
         abstract keys: unit -> Iterator<__String>
         abstract values: unit -> Iterator<'T>
         abstract entries: unit -> Iterator<__String * 'T>
@@ -3577,10 +3577,10 @@ module ts =
         | NoAsciiEscaping = 16777216
 
     type [<AllowNullLiteral>] EmitHelper =
-        abstract name: string with get, set
-        abstract scoped: bool with get, set
-        abstract text: string with get, set
-        abstract priority: float option with get, set
+        abstract name: string
+        abstract scoped: bool
+        abstract text: string
+        abstract priority: float option
 
     type [<RequireQualifiedAccess>] EmitHint =
         | SourceFile = 0
