@@ -1531,10 +1531,6 @@ pinkie@^2.0.0:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
 
-pixi-particles@^2.1.8:
-  version "2.1.8"
-  resolved "https://registry.yarnpkg.com/pixi-particles/-/pixi-particles-2.1.8.tgz#31ba60660abba13b5da4891c9954245046182474"
-
 prepack@^0.2.5:
   version "0.2.10"
   resolved "https://registry.yarnpkg.com/prepack/-/prepack-0.2.10.tgz#f43537be98857e1e0bd56dc68f72216ea2eeda25"
