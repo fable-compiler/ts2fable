@@ -38,7 +38,7 @@ yarn
 cd src
 dotnet restore
 dotnet fable yarn-build
-node ..\dist\ts2fable.js ..\node_modules\typescript\lib\typescript.d.ts bin\Fable.Import.TypeScript.fs
+node ../dist/ts2fable.js ../node_modules/typescript/lib/typescript.d.ts bin/Fable.Import.TypeScript.fs
 ```
 
 You can also have it watch the files with:
