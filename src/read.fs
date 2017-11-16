@@ -116,6 +116,24 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
     }
 
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
+    let members = cd.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
+    let typeParams = readTypeParameters cd.typeParameters
+    let members =
+        if members |> List.exists isConstructor then members
+        else 
+            [
+                {
+                    Comments = []
+                    Kind = FsFunctionKind.Constructor
+                    IsStatic = true
+                    Name = Some "Create"
+                    TypeParameters = typeParams
+                    Params = []
+                    ReturnType = FsType.This
+                }
+                |> FsType.Function
+            ]
+            @ members
     {
         Comments = cd.name |> Option.map (readCommentsAtLocation checker) |> Option.defaultValue []
         IsStatic = false
@@ -124,8 +142,8 @@ let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
             | None -> "TODO_NoClassName"
             | Some id -> id.getText()
         Inherits = readInherits checker cd.heritageClauses
-        Members = cd.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
-        TypeParameters = readTypeParameters cd.typeParameters
+        Members = members
+        TypeParameters = typeParams
     }
 
 let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
@@ -169,7 +187,7 @@ let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
     {
         // TODO https://github.com/fable-compiler/ts2fable/issues/68
         Comments = []//ft.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
-        Emit = None
+        Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword ft.modifiers
         Name = ft.name |> Option.map getPropertyName
         TypeParameters = readTypeParameters ft.typeParameters
@@ -273,7 +291,7 @@ let readParameterDeclaration (checker: TypeChecker) (pd: ParameterDeclaration): 
 let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction =
     {
         Comments = readCommentsForSignatureDeclaration checker ms
-        Emit = None
+        Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters ms.typeParameters
@@ -287,7 +305,7 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
 let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
     {
         Comments = readCommentsForSignatureDeclaration checker md
-        Emit = None
+        Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword md.modifiers
         Name = md.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters md.typeParameters
@@ -300,7 +318,7 @@ let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
 let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProperty =
     {
         Comments = readPropertyNameComments checker ps.name
-        Emit = None
+        Kind = FsPropertyKind.Regular
         Index = None
         Name = ps.name |> getPropertyName
         Option = ps.questionToken.IsSome
@@ -321,7 +339,7 @@ let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): string l
 let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): FsProperty =
     {
         Comments = readPropertyNameComments checker pd.name
-        Emit = None
+        Kind = FsPropertyKind.Regular
         Index = None
         Name = pd.name |> getPropertyName
         Option = pd.questionToken.IsSome
@@ -335,7 +353,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
     {     
         Comments = readCommentsForSignatureDeclaration checker fd
-        Emit = None
+        Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
         Name = fd.name |> Option.map (fun id -> id.getText())
         TypeParameters = readTypeParameters fd.typeParameters
@@ -350,7 +368,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
     let pm = readParameterDeclaration checker ps.parameters.[0]
     {
         Comments = readCommentsForSignatureDeclaration checker ps
-        Emit = Some "$0[$1]{{=$2}}"
+        Kind = FsPropertyKind.Index
         Index = Some pm
         Name = "Item"
         Option = ps.questionToken.IsSome
@@ -364,7 +382,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
 let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsFunction =
     {
         Comments = readCommentsForSignatureDeclaration checker cs
-        Emit = Some "$0($1...)"
+        Kind = FsFunctionKind.Call
         IsStatic = false // TODO ?
         Name = Some "Invoke"
         TypeParameters = []
@@ -378,7 +396,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
 let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSignatureDeclaration): FsFunction =
     {
         Comments = readCommentsForSignatureDeclaration checker cs
-        Emit = Some "new $0($1...)"
+        Kind = FsFunctionKind.Constructor
         IsStatic = true
         Name = Some "Create"
         TypeParameters = cs.typeParameters |> readTypeParameters
@@ -389,7 +407,7 @@ let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSigna
 let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaration): FsFunction =
     {
         Comments = readCommentsForSignatureDeclaration checker cs
-        Emit = Some "new $0($1...)"
+        Kind = FsFunctionKind.Constructor
         IsStatic = true
         Name = Some "Create"
         TypeParameters = cs.typeParameters |> readTypeParameters

@@ -48,7 +48,16 @@ let printType (tp: FsType): string =
 
 let printFunction (f: FsFunction): string =
     let line = List()
-    if f.Emit.IsSome then sprintf "[<Emit \"%s\">] " f.Emit.Value |> line.Add
+
+    match f.Kind with
+    | FsFunctionKind.Regular -> ()
+    | FsFunctionKind.Constructor ->
+        "[<Emit \"new $0($1...)\">] " |> line.Add
+    | FsFunctionKind.Call ->
+        "[<Emit \"$0($1...)\">] " |> line.Add
+    | FsFunctionKind.StringParam emit ->
+        sprintf  "[<Emit \"%s\">] " emit |> line.Add
+
     sprintf "abstract %s" f.Name.Value |> line.Add
     let prms = 
         f.Params |> List.map(fun p ->
@@ -72,7 +81,10 @@ let printFunction (f: FsFunction): string =
     line |> String.concat ""
 let printProperty (pr: FsProperty): string =
     sprintf "%sabstract %s: %s%s%s%s"
-        (if pr.Emit.IsSome then sprintf "[<Emit \"%s\">] " pr.Emit.Value else "")
+        (   match pr.Kind with
+            | FsPropertyKind.Regular -> ""
+            | FsPropertyKind.Index -> "[<Emit \"$0[$1]{{=$2}}\">] "
+        )
         pr.Name
         (   match pr.Index with
             | None -> ""

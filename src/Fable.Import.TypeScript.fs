@@ -10,6 +10,7 @@ type [<AllowNullLiteral>] IExports =
 module ts =
 
     type [<AllowNullLiteral>] IExports =
+        abstract OperationCanceledException: OperationCanceledExceptionStatic
         abstract versionMajorMinor: obj with get, set
         abstract version: string with get, set
         abstract getNodeMajorVersion: unit -> float
@@ -685,6 +686,7 @@ module ts =
         abstract parseJsonSourceFileConfigFileContent: sourceFile: JsonSourceFile * host: ParseConfigHost * basePath: string * ?existingOptions: CompilerOptions * ?configFileName: string * ?resolutionStack: ResizeArray<Path> * ?extraFileExtensions: ReadonlyArray<JsFileExtensionInfo> -> ParsedCommandLine
         abstract convertCompilerOptionsFromJson: jsonOptions: obj * basePath: string * ?configFileName: string -> obj
         abstract convertTypeAcquisitionFromJson: jsonOptions: obj * basePath: string * ?configFileName: string -> obj
+        abstract TextChange: TextChangeStatic
         abstract createClassifier: unit -> Classifier
         abstract createDocumentRegistry: ?useCaseSensitiveFileNames: bool * ?currentDirectory: string -> DocumentRegistry
         abstract preProcessFile: sourceText: string * ?readImportFiles: bool * ?detectJavaScriptImports: bool -> PreProcessedFileInfo
@@ -2709,6 +2711,9 @@ module ts =
     type [<AllowNullLiteral>] OperationCanceledException =
         interface end
 
+    type [<AllowNullLiteral>] OperationCanceledExceptionStatic =
+        [<Emit "new $0($1...)">] abstract Create: unit -> OperationCanceledException
+
     type [<AllowNullLiteral>] CancellationToken =
         abstract isCancellationRequested: unit -> bool
         abstract throwIfCancellationRequested: unit -> unit
@@ -3952,6 +3957,9 @@ module ts =
     type [<AllowNullLiteral>] TextChange =
         abstract span: TextSpan with get, set
         abstract newText: string with get, set
+
+    type [<AllowNullLiteral>] TextChangeStatic =
+        [<Emit "new $0($1...)">] abstract Create: unit -> TextChange
 
     type [<AllowNullLiteral>] FileTextChanges =
         abstract fileName: string with get, set

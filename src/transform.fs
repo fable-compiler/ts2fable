@@ -196,7 +196,7 @@ let createIExports (f: FsFile): FsFile =
                             // add a property for accessing the static class
                             {
                                 Comments = []
-                                Emit = None
+                                Kind = FsPropertyKind.Regular
                                 Index = None
                                 Name = it.Name.Replace("Static","")
                                 Option = false
@@ -258,7 +258,7 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                 let p0 = fn.Params.[0]
                 let p0sl = (asStringLiteral p0.Type).Value
                 { fn with
-                    Emit = sprintf "$0.%s('%s',$1...)" fn.Name.Value p0sl |> Some
+                    Kind = sprintf "$0.%s('%s',$1...)" fn.Name.Value p0sl |> FsFunctionKind.StringParam
                     Name = sprintf "%s_%s" fn.Name.Value p0sl |> Some
                     Params = fn.Params.[1..]
                 }
