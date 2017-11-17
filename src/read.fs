@@ -528,6 +528,8 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType =
     | SyntaxKind.ExportDeclaration ->
         // printfn "TODO export statements"
         FsType.TODO
+    | SyntaxKind.ImportEqualsDeclaration ->
+        FsType.TODO
     | _ -> printfn "unsupported Statement kind: %A" sd.kind; FsType.TODO
 
 let readModuleName(mn: ModuleName): string =
