@@ -114,6 +114,15 @@ type FsImport =
         Type: FsType
     }
 
+type FsMapped =
+    {
+        Name: string
+        FullName: string
+    }
+
+let simpleType name: FsType =
+    { Name = name; FullName = name } |> FsType.Mapped
+
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
@@ -123,7 +132,7 @@ type FsType =
     | Array of FsType
     | TODO
     | None // when it is not set
-    | Mapped of string
+    | Mapped of FsMapped
     | Function of FsFunction
     | Union of FsUnion
     | Alias of FsAlias

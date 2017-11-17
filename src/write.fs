@@ -4,7 +4,7 @@ open ts2fable.Naming
 
 let printType (tp: FsType): string =
     match tp with
-    | FsType.Mapped s -> s
+    | FsType.Mapped mp -> mp.Name
     | FsType.TODO -> "TODO"
     | FsType.Array at ->
         sprintf "ResizeArray<%s>" (printType at)
@@ -29,7 +29,7 @@ let printType (tp: FsType): string =
         let line = List()
         let typs =
             if ft.Params.Length = 0 then
-                [ FsType.Mapped "unit"; ft.ReturnType ]
+                [ simpleType "unit"; ft.ReturnType ]
             else
                 (ft.Params |> List.map (fun p -> p.Type)) @ [ ft.ReturnType ]
         "(" |> line.Add
