@@ -196,11 +196,11 @@ let createIExports (f: FsFile): FsFile =
                             // add a property for accessing the static class
                             {
                                 Comments = []
-                                Emit = None
+                                Kind = FsPropertyKind.Regular
                                 Index = None
                                 Name = it.Name.Replace("Static","")
                                 Option = false
-                                Type = it.Name |> FsType.Mapped
+                                Type = it.Name |> simpleType
                                 IsReadonly = true
                             }
                             |> FsType.Property
@@ -215,7 +215,9 @@ let createIExports (f: FsFile): FsFile =
                     {
                         Comments = []
                         IsStatic = false
+                        IsClass = false
                         Name = "IExports"
+                        FullName = "IExports"
                         Inherits = []
                         TypeParameters = []
                         Members = tps
@@ -234,9 +236,9 @@ let fixTic (typeParameters: FsType list) (tp: FsType) =
         let set = typeParameters |> Set.ofList
         let fix (t: FsType): FsType =
             match t with
-            | FsType.Mapped s ->
+            | FsType.Mapped mp ->
                 if set.Contains t then
-                    sprintf "'%s" s |> FsType.Mapped
+                    { mp with Name = sprintf "'%s" mp.Name } |> FsType.Mapped
                 else t
             | _ -> t
         fixType fix tp
@@ -258,7 +260,7 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                 let p0 = fn.Params.[0]
                 let p0sl = (asStringLiteral p0.Type).Value
                 { fn with
-                    Emit = sprintf "$0.%s('%s',$1...)" fn.Name.Value p0sl |> Some
+                    Kind = sprintf "$0.%s('%s',$1...)" fn.Name.Value p0sl |> FsFunctionKind.StringParam
                     Name = sprintf "%s_%s" fn.Name.Value p0sl |> Some
                     Params = fn.Params.[1..]
                 }
@@ -272,8 +274,8 @@ let fixNodeArray(f: FsFile): FsFile =
         match tp with
         | FsType.Generic gn ->
             match gn.Type with
-            | FsType.Mapped s ->
-                if s.Equals "NodeArray" && gn.TypeParameters.Length = 1 then
+            | FsType.Mapped mp ->
+                if mp.Name.Equals "NodeArray" && gn.TypeParameters.Length = 1 then
                     gn.TypeParameters.[0] |> FsType.Array
                 else tp
             | _ -> tp
@@ -283,8 +285,8 @@ let fixNodeArray(f: FsFile): FsFile =
 let fixEscapeWords(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
-        | FsType.Mapped s ->
-            escapeWord s |> FsType.Mapped
+        | FsType.Mapped mp ->
+            { mp with Name = escapeWord mp.Name } |> FsType.Mapped
         | FsType.Param pm ->
             { pm with Name = escapeWord pm.Name } |> FsType.Param
         | FsType.Function fn ->
@@ -309,8 +311,8 @@ let fixDateTime(f: FsFile): FsFile =
 
     f |> fixFile (fun tp ->
         match tp with
-        | FsType.Mapped s ->
-            replaceName s |> FsType.Mapped
+        | FsType.Mapped mp ->
+            { mp with Name = replaceName mp.Name } |> FsType.Mapped
         | _ -> tp
     )
 
@@ -329,11 +331,12 @@ let fixEnumReferences (f: FsFile): FsFile =
     let set = Set.ofSeq list
     f |> fixFile (fun tp ->
         match tp with
-        | FsType.Mapped s ->
-            if s.Contains "." then
-                let nm = s.Substring(0, s.IndexOf ".")
+        | FsType.Mapped mp ->
+            if mp.Name.Contains "." then
+                let nm = mp.Name.Substring(0, mp.Name.IndexOf ".")
                 if set.Contains nm then
-                    FsType.Mapped nm
+                    // { mp with Name = nm } |> FsType.Mapped
+                    simpleType nm
                 else tp
             else tp
         | _ -> tp
@@ -353,7 +356,7 @@ let fixDuplicatesInUnion (f: FsFile): FsFile =
                 )
             if tps.Length > 6 then
                 // add U7 and U8 union types https://github.com/fable-compiler/Fable/issues/1211
-                FsType.Mapped "obj"
+                simpleType "obj"
             else 
                 { un with Types = tps } |> FsType.Union
         | _ -> tp
@@ -402,7 +405,7 @@ let fixThis(f: FsFile): FsFile =
                 match tp with
                 | FsType.This ->
                     {
-                        Type = FsType.Mapped it.Name
+                        Type = simpleType it.Name
                         TypeParameters = it.TypeParameters
                     }
                     |> FsType.Generic
@@ -458,8 +461,8 @@ let fixOpens(f: FsFile): FsFile =
 
     let fix(tp: FsType): FsType =
         match tp with
-        | FsType.Mapped s ->
-            if isBrowser s then
+        | FsType.Mapped mp ->
+            if isBrowser mp.Name then
                 hasBrowser <- true
             tp
         | _ -> tp
@@ -509,5 +512,62 @@ let removeTypeParamsFromStatic(f: FsFile): FsFile =
                     if it.IsStatic then [] else it.TypeParameters
             }
             |> FsType.Interface
+        | _ -> tp
+    )
+
+let addConstructors  (f: FsFile): FsFile =
+    // we are importing classes as interfaces
+    // we need of list of classes with constructors
+    let list = List<_>()
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            if it.IsClass && it.HasConstructor then
+                list.Add it |> ignore
+                tp
+            else tp
+        | _ -> tp
+    ) |> ignore
+
+    let map = list |> Seq.map(fun it -> it.FullName, it) |> dict
+
+    // use those as the references
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            if it.IsClass then
+                if it.HasConstructor then
+                    tp
+                else
+                    // see if base type has constructors
+                    let parent =
+                        it.Inherits |> List.tryPick (fun inh ->
+                            let fn = getFullName inh
+                            if map.ContainsKey fn then
+                                Some map.[fn]
+                                else None
+                        )
+
+                    match parent with
+                    | Some pt -> 
+                        // copy the constructors from the parent
+                        { it with Members = pt.Constructors @ it.Members } |> FsType.Interface
+
+                    | None ->
+                        let defaultCtr =
+                            {
+                                Comments = []
+                                Kind = FsFunctionKind.Constructor
+                                IsStatic = true
+                                Name = Some "Create"
+                                TypeParameters = it.TypeParameters
+                                Params = []
+                                ReturnType = FsType.This
+                            }
+                            |> FsType.Function
+
+                        { it with Members = [defaultCtr] @ it.Members } |> FsType.Interface
+
+            else tp
         | _ -> tp
     )

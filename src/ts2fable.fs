@@ -46,6 +46,7 @@ let readSourceFile (checker: TypeChecker) (ns: string) (sfs: SourceFile list): F
     }
     |> mergeModulesInFile
     // |> fixImport [ns]
+    |> addConstructors
     |> fixThis
     |> fixNodeArray
     |> fixDateTime

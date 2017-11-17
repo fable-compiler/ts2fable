@@ -9,7 +9,9 @@ type FsInterface =
     {
         Comments: string list
         IsStatic: bool // contains only static functions
+        IsClass: bool
         Name: string
+        FullName: string
         TypeParameters: FsType list
         Inherits: FsType list
         Members: FsType list
@@ -42,10 +44,17 @@ type FsParam =
         Type: FsType
     }
 
+[<RequireQualifiedAccess>]
+type FsFunctionKind =
+    | Regular
+    | Constructor
+    | Call
+    | StringParam of string
+
 type FsFunction =
     {
         Comments: string list
-        Emit: string option
+        Kind: FsFunctionKind
         IsStatic: bool
         Name: string option // declarations have them, signatures do not
         TypeParameters: FsType list
@@ -53,10 +62,15 @@ type FsFunction =
         ReturnType: FsType
     }
 
+[<RequireQualifiedAccess>]
+type FsPropertyKind =
+    | Regular
+    | Index
+
 type FsProperty =
     {
         Comments: string list
-        Emit: string option
+        Kind: FsPropertyKind
         Index: FsParam option
         Name: string
         Option: bool
@@ -102,6 +116,15 @@ type FsImport =
         Type: FsType
     }
 
+type FsMapped =
+    {
+        Name: string
+        FullName: string
+    }
+
+let simpleType name: FsType =
+    { Name = name; FullName = name } |> FsType.Mapped
+
 [<RequireQualifiedAccess>]
 type FsType =
     | Interface of FsInterface
@@ -111,7 +134,7 @@ type FsType =
     | Array of FsType
     | TODO
     | None // when it is not set
-    | Mapped of string
+    | Mapped of FsMapped
     | Function of FsFunction
     | Union of FsUnion
     | Alias of FsAlias
@@ -148,15 +171,15 @@ let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringL
 let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
 
 type FsModule with
-    member x.Modules with get() = x.Types |> List.filter isModule
-    member x.NonModules with get() = x.Types |> List.filter (not << isModule)
+    member x.Modules = x.Types |> List.filter isModule
+    member x.NonModules = x.Types |> List.filter (not << isModule)
 
 let isStringLiteralParam (p: FsParam): bool = isStringLiteral p.Type
 
 type FsFunction with
-    member x.HasStringLiteralParams with get() = x.Params |> List.exists isStringLiteralParam
-    member x.StringLiteralParams with get() = x.Params |> List.filter isStringLiteralParam
-    member x.NonStringLiteralParams with get() = x.Params |> List.filter (not << isStringLiteralParam)
+    member x.HasStringLiteralParams = x.Params |> List.exists isStringLiteralParam
+    member x.StringLiteralParams = x.Params |> List.filter isStringLiteralParam
+    member x.NonStringLiteralParams = x.Params |> List.filter (not << isStringLiteralParam)
 
 let isStatic (tp: FsType) =
     match tp with
@@ -164,22 +187,28 @@ let isStatic (tp: FsType) =
     | FsType.Interface it -> it.IsStatic
     | _ -> false
 
+let isConstructor (tp: FsType) =
+    match tp with
+    | FsType.Function fn -> fn.Kind = FsFunctionKind.Constructor
+    | _ -> false
+
 type FsInterface with
-    member x.HasStaticMembers with get() = x.Members |> List.exists isStatic
-    member x.StaticMembers with get() = x.Members |> List.filter isStatic
-    member x.NonStaticMembers with get() = x.Members |> List.filter (not << isStatic)
+    member x.HasStaticMembers = x.Members |> List.exists isStatic
+    member x.StaticMembers = x.Members |> List.filter isStatic
+    member x.NonStaticMembers = x.Members |> List.filter (not << isStatic)
+    member x.HasConstructor = x.Members |> List.exists isConstructor
+    member x.Constructors = x.Members |> List.filter isConstructor
 
 type FsEnum with
-    member x.Type
-        with get() =
-            if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
-                FsEnumCaseType.Unknown
-            else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
-                FsEnumCaseType.String
-            else
-                FsEnumCaseType.Numeric
+    member x.Type =
+        if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
+            FsEnumCaseType.Unknown
+        else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
+            FsEnumCaseType.String
+        else
+            FsEnumCaseType.Numeric
 
-let getName (tp: FsType) =
+let rec getName (tp: FsType) =
     match tp with
     | FsType.Interface it -> it.Name
     | FsType.Enum en -> en.Name
@@ -190,4 +219,12 @@ let getName (tp: FsType) =
     | FsType.Variable vb -> vb.Name
     | FsType.Module md -> md.Name
     | FsType.File fl -> fl.Name
+    | FsType.Generic gn -> getName gn.Type
+    | _ -> ""
+
+let rec getFullName (tp: FsType) =
+    match tp with
+    | FsType.Interface it -> it.FullName
+    | FsType.Mapped en -> en.FullName
+    | FsType.Generic gn -> getFullName gn.Type
     | _ -> ""

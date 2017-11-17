@@ -4,7 +4,7 @@ open ts2fable.Naming
 
 let printType (tp: FsType): string =
     match tp with
-    | FsType.Mapped s -> s
+    | FsType.Mapped mp -> mp.Name
     | FsType.TODO -> "TODO"
     | FsType.Array at ->
         sprintf "ResizeArray<%s>" (printType at)
@@ -29,7 +29,7 @@ let printType (tp: FsType): string =
         let line = List()
         let typs =
             if ft.Params.Length = 0 then
-                [ FsType.Mapped "unit"; ft.ReturnType ]
+                [ simpleType "unit"; ft.ReturnType ]
             else
                 (ft.Params |> List.map (fun p -> p.Type)) @ [ ft.ReturnType ]
         "(" |> line.Add
@@ -48,7 +48,16 @@ let printType (tp: FsType): string =
 
 let printFunction (f: FsFunction): string =
     let line = List()
-    if f.Emit.IsSome then sprintf "[<Emit \"%s\">] " f.Emit.Value |> line.Add
+
+    match f.Kind with
+    | FsFunctionKind.Regular -> ()
+    | FsFunctionKind.Constructor ->
+        "[<Emit \"new $0($1...)\">] " |> line.Add
+    | FsFunctionKind.Call ->
+        "[<Emit \"$0($1...)\">] " |> line.Add
+    | FsFunctionKind.StringParam emit ->
+        sprintf  "[<Emit \"%s\">] " emit |> line.Add
+
     sprintf "abstract %s" f.Name.Value |> line.Add
     let prms = 
         f.Params |> List.map(fun p ->
@@ -72,7 +81,10 @@ let printFunction (f: FsFunction): string =
     line |> String.concat ""
 let printProperty (pr: FsProperty): string =
     sprintf "%sabstract %s: %s%s%s%s"
-        (if pr.Emit.IsSome then sprintf "[<Emit \"%s\">] " pr.Emit.Value else "")
+        (   match pr.Kind with
+            | FsPropertyKind.Regular -> ""
+            | FsPropertyKind.Index -> "[<Emit \"$0[$1]{{=$2}}\">] "
+        )
         pr.Name
         (   match pr.Index with
             | None -> ""
