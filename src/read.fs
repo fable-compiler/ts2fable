@@ -75,15 +75,16 @@ let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsTy
     | Some hcs ->
         hcs |> List.ofSeq |> List.collect (fun hc ->
             hc.types |> List.ofSeq |> List.map (fun eta ->
-                {
-                    Type = readTypeNode checker eta
-                    TypeParameters =
-                        match eta.typeArguments with
-                        | None -> []
-                        | Some tps ->
-                            tps |> List.ofSeq |> List.map (readTypeNode checker)
-                }
-                |> FsType.Generic
+                let tp = readTypeNode checker eta
+                let prms = 
+                    match eta.typeArguments with
+                    | None -> []
+                    | Some tps ->
+                        tps |> List.ofSeq |> List.map (readTypeNode checker)
+                if prms.Length = 0 then
+                    tp
+                else
+                    { Type = tp; TypeParameters = prms } |> FsType.Generic
             )
         )
 
@@ -113,7 +114,9 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
     {
         Comments = readCommentsAtLocation checker id.name
         IsStatic = false
+        IsClass = false
         Name = id.name.getText()
+        FullName = getFullNodeName checker id
         Inherits = readInherits checker id.heritageClauses
         Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters checker id.typeParameters
@@ -128,13 +131,16 @@ let getFullNodeName (checker: TypeChecker) (nd: Node) =
     getFullTypeName checker (checker.getTypeAtLocation nd)
 
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
+    let fullName = getFullNodeName checker cd
     {
         Comments = cd.name |> Option.map (readCommentsAtLocation checker) |> Option.defaultValue []
         IsStatic = false
+        IsClass = true
         Name =
             match cd.name with
-            | None -> "TODO_NoClassName"
+            | None -> fullName
             | Some id -> id.getText()
+        FullName = fullName
         Inherits = readInherits checker cd.heritageClauses
         Members = cd.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters checker cd.typeParameters

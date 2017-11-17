@@ -9,7 +9,9 @@ type FsInterface =
     {
         Comments: string list
         IsStatic: bool // contains only static functions
+        IsClass: bool
         Name: string
+        FullName: string
         TypeParameters: FsType list
         Inherits: FsType list
         Members: FsType list
@@ -194,6 +196,7 @@ type FsInterface with
     member x.HasStaticMembers = x.Members |> List.exists isStatic
     member x.StaticMembers = x.Members |> List.filter isStatic
     member x.NonStaticMembers = x.Members |> List.filter (not << isStatic)
+    member x.HasConstructor = x.Members |> List.exists isConstructor
     member x.Constructors = x.Members |> List.filter isConstructor
 
 type FsEnum with
@@ -205,7 +208,7 @@ type FsEnum with
         else
             FsEnumCaseType.Numeric
 
-let getName (tp: FsType) =
+let rec getName (tp: FsType) =
     match tp with
     | FsType.Interface it -> it.Name
     | FsType.Enum en -> en.Name
@@ -216,4 +219,12 @@ let getName (tp: FsType) =
     | FsType.Variable vb -> vb.Name
     | FsType.Module md -> md.Name
     | FsType.File fl -> fl.Name
+    | FsType.Generic gn -> getName gn.Type
+    | _ -> ""
+
+let rec getFullName (tp: FsType) =
+    match tp with
+    | FsType.Interface it -> it.FullName
+    | FsType.Mapped en -> en.FullName
+    | FsType.Generic gn -> getFullName gn.Type
     | _ -> ""

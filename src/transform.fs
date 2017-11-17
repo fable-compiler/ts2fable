@@ -215,7 +215,9 @@ let createIExports (f: FsFile): FsFile =
                     {
                         Comments = []
                         IsStatic = false
+                        IsClass = false
                         Name = "IExports"
+                        FullName = "IExports"
                         Inherits = []
                         TypeParameters = []
                         Members = tps
@@ -510,5 +512,62 @@ let removeTypeParamsFromStatic(f: FsFile): FsFile =
                     if it.IsStatic then [] else it.TypeParameters
             }
             |> FsType.Interface
+        | _ -> tp
+    )
+
+let addConstructors  (f: FsFile): FsFile =
+    // we are importing classes as interfaces
+    // we need of list of classes with constructors
+    let list = List<_>()
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            if it.IsClass && it.HasConstructor then
+                list.Add it |> ignore
+                tp
+            else tp
+        | _ -> tp
+    ) |> ignore
+
+    let map = list |> Seq.map(fun it -> it.FullName, it) |> dict
+
+    // use those as the references
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            if it.IsClass then
+                if it.HasConstructor then
+                    tp
+                else
+                    // see if base type has constructors
+                    let parent =
+                        it.Inherits |> List.tryPick (fun inh ->
+                            let fn = getFullName inh
+                            if map.ContainsKey fn then
+                                Some map.[fn]
+                                else None
+                        )
+
+                    match parent with
+                    | Some pt -> 
+                        // copy the constructors from the parent
+                        { it with Members = pt.Constructors @ it.Members } |> FsType.Interface
+
+                    | None ->
+                        let defaultCtr =
+                            {
+                                Comments = []
+                                Kind = FsFunctionKind.Constructor
+                                IsStatic = true
+                                Name = Some "Create"
+                                TypeParameters = it.TypeParameters
+                                Params = []
+                                ReturnType = FsType.This
+                            }
+                            |> FsType.Function
+
+                        { it with Members = [defaultCtr] @ it.Members } |> FsType.Interface
+
+            else tp
         | _ -> tp
     )
