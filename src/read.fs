@@ -244,8 +244,8 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.TypePredicate -> simpleType "bool"
     | SyntaxKind.TypeLiteral ->
         let tl = t :?> TypeLiteralNode
-        // printfn "TypeLiteral %A" tl
-        // printfn "  %s" (tl.getText())
+        // TODO https://github.com/fable-compiler/ts2fable/issues/93
+        // printfn "TODO TypeLiteral just set to `obj`: %s" (tl.getText())
         simpleType "obj"
     | SyntaxKind.IntersectionType -> simpleType "obj"
     | SyntaxKind.IndexedAccessType ->
@@ -269,7 +269,10 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
             FullName =  getFullTypeName checker tp
         }
         |> FsType.Mapped
-    | SyntaxKind.ParenthesizedType -> simpleType "obj"
+    | SyntaxKind.ParenthesizedType ->
+        let pt = t :?> ParenthesizedTypeNode
+        // just get the type in parenthesis
+        readTypeNode checker pt.``type``
     | SyntaxKind.MappedType ->
         let mt = t :?> MappedTypeNode
         // TODO map mapped types https://github.com/fable-compiler/ts2fable/issues/44
