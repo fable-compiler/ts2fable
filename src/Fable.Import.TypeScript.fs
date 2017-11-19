@@ -86,7 +86,7 @@ module ts =
         abstract getNameOfJSDocTypedef: declaration: JSDocTypedefTag -> Identifier option
         abstract getNameOfDeclaration: declaration: U2<Declaration, Expression> -> DeclarationName option
         /// Gets the JSDoc parameter tags for the node if present.
-        abstract getJSDocParameterTags: param: ParameterDeclaration -> ReadonlyArray<JSDocParameterTag> option
+        abstract getJSDocParameterTags: param: ParameterDeclaration -> ResizeArray<JSDocParameterTag> option
         /// Return true if the node has JSDoc parameter tags.
         abstract hasJSDocParameterTags: node: U2<FunctionLikeDeclaration, SignatureDeclaration> -> bool
         /// Gets the JSDoc augments tag for the node if present 
@@ -104,9 +104,9 @@ module ts =
         /// Gets the return type node for the node if provided via JSDoc's return tag.
         abstract getJSDocReturnType: node: Node -> TypeNode option
         /// Get all JSDoc tags related to a node, including those on parent nodes. 
-        abstract getJSDocTags: node: Node -> ReadonlyArray<JSDocTag> option
+        abstract getJSDocTags: node: Node -> ResizeArray<JSDocTag> option
         /// Gets all JSDoc tags of a specified kind, or undefined if not present. 
-        abstract getAllJSDocTagsOfKind: node: Node * kind: SyntaxKind -> ReadonlyArray<JSDocTag> option
+        abstract getAllJSDocTagsOfKind: node: Node * kind: SyntaxKind -> ResizeArray<JSDocTag> option
         abstract isNumericLiteral: node: Node -> bool
         abstract isStringLiteral: node: Node -> bool
         abstract isJsxText: node: Node -> bool
@@ -2757,7 +2757,7 @@ module ts =
         abstract languageVersion: ScriptTarget with get, set
         abstract getLineAndCharacterOfPosition: pos: float -> LineAndCharacter
         abstract getLineEndOfPosition: pos: float -> float
-        abstract getLineStarts: unit -> ReadonlyArray<float>
+        abstract getLineStarts: unit -> ResizeArray<float>
         abstract getPositionOfLineAndCharacter: line: float * character: float -> float
         abstract update: newText: string * textChangeRange: TextChangeRange -> SourceFile
 
@@ -2800,9 +2800,9 @@ module ts =
     type [<AllowNullLiteral>] Program =
         inherit ScriptReferenceHost
         /// Get a list of root file names that were passed to a 'createProgram'
-        abstract getRootFileNames: unit -> ReadonlyArray<string>
+        abstract getRootFileNames: unit -> ResizeArray<string>
         /// Get a list of files in the program
-        abstract getSourceFiles: unit -> ReadonlyArray<SourceFile>
+        abstract getSourceFiles: unit -> ResizeArray<SourceFile>
         /// Emits the JavaScript and declaration files.  If targetSourceFile is not specified, then
         /// the JavaScript and declaration files will be produced for all the files in this program.
         /// If targetSourceFile is specified, then only the JavaScript and declaration for that
@@ -2812,11 +2812,11 @@ module ts =
         /// used for writing the JavaScript and declaration files.  Otherwise, the writeFile parameter
         /// will be invoked when writing the JavaScript and declaration files.
         abstract emit: ?targetSourceFile: SourceFile * ?writeFile: WriteFileCallback * ?cancellationToken: CancellationToken * ?emitOnlyDtsFiles: bool * ?customTransformers: CustomTransformers -> EmitResult
-        abstract getOptionsDiagnostics: ?cancellationToken: CancellationToken -> ReadonlyArray<Diagnostic>
-        abstract getGlobalDiagnostics: ?cancellationToken: CancellationToken -> ReadonlyArray<Diagnostic>
-        abstract getSyntacticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ReadonlyArray<Diagnostic>
-        abstract getSemanticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ReadonlyArray<Diagnostic>
-        abstract getDeclarationDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ReadonlyArray<Diagnostic>
+        abstract getOptionsDiagnostics: ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
+        abstract getGlobalDiagnostics: ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
+        abstract getSyntacticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
+        abstract getSemanticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
+        abstract getDeclarationDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         /// Gets a type checker that can be used to semantically analyze source files in the program.
         abstract getTypeChecker: unit -> TypeChecker
         abstract isSourceFileFromExternalLibrary: file: SourceFile -> bool
