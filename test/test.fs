@@ -42,7 +42,10 @@ describe "escapeWord tests" <| fun _ ->
     it "NodeJS.ReadWriteStream" <| fun _ ->
         escapeWord "NodeJS.ReadWriteStream"
         |> equal "NodeJS.ReadWriteStream"
-        
+
+    it "_" <| fun _ ->
+        escapeWord "_"
+        |> equal "``_``"
 
 describe "createEnumNameParts tests" <| fun _ ->
 

@@ -7,16 +7,19 @@ let (|Capital|_|) (letter: string)=
     match Seq.contains letter capitals with
     | true -> Some letter
     | false -> None
+    // Char.IsUpper https://github.com/fable-compiler/Fable/issues/1236
+    // if letter.Length = 1 && Char.IsUpper letter.[0] then Some letter else None
 
 let private digits = [ '0' .. '9' ] |> Seq.map string
 
-// TODO Char.IsDigit will be in Fable 1.3
 let isDigit digit = Seq.contains digit digits
 
 let (|Digit|_|) (digit: string) = 
     match isDigit digit with
     | true -> Some digit
     | false -> None
+    // Char.IsNumber https://github.com/fable-compiler/Fable/issues/1237
+    // if digit.Length = 1 && Char.IsNumber digit.[0] then Some digit else None
 
 let createEnumNameParts (name: string) = 
     let tokens = Seq.map string name
@@ -38,8 +41,7 @@ let createEnumNameParts (name: string) =
 
 let capitalize (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
-    // else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1) // Fable 1.2.3 bug Char.ToUpper not supported
-    else sprintf "%s%s" (input.Substring(0,1).ToUpper()) (input.Substring 1)
+    else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1)
 
 let createEnumName s =
     if String.IsNullOrWhiteSpace s then "Empty"
@@ -75,9 +77,9 @@ let escapeWord (s: string) =
         if Keywords.reserved.Contains s 
             || Keywords.keywords.Contains s
             || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
-            // || Char.IsNumber s.[0] then // TODO Fable 1.3
+            // || Char.IsNumber s.[0] then // TODO https://github.com/fable-compiler/Fable/issues/1237
             || isDigit (s.Substring(0,1))
-            || s.Substring(0,1).Equals "."
+            || s.Substring(0,1).IndexOfAny [|'.';'_'|] <> -1
         then
             sprintf "``%s``" s
         else
