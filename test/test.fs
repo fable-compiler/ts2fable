@@ -38,14 +38,18 @@ describe "escapeWord tests" <| fun _ ->
         escapeWord ".json"
         |> equal "``.json``"
 
-    // do not escape
     it "NodeJS.ReadWriteStream" <| fun _ ->
         escapeWord "NodeJS.ReadWriteStream"
-        |> equal "NodeJS.ReadWriteStream"
+        |> equal "NodeJS.ReadWriteStream" // do not escape
 
     it "_" <| fun _ ->
         escapeWord "_"
         |> equal "``_``"
+
+    it "_jsDocTypeBrand" <| fun _ ->
+        escapeWord "_jsDocTypeBrand"
+        |> equal "_jsDocTypeBrand" // do not escape
+    
 
 describe "createEnumNameParts tests" <| fun _ ->
 

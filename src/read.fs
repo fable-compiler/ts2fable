@@ -128,7 +128,10 @@ let getFullTypeName (checker: TypeChecker) (tp: ts.Type) =
     | Some smb -> checker.getFullyQualifiedName smb
 
 let getFullNodeName (checker: TypeChecker) (nd: Node) =
-    getFullTypeName checker (checker.getTypeAtLocation nd)
+    // getFullTypeName checker (checker.getTypeAtLocation nd)
+    match checker.getSymbolAtLocation nd with
+    | None -> ""
+    | Some smb -> checker.getFullyQualifiedName smb
 
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
     let fullName = getFullNodeName checker cd
@@ -497,14 +500,22 @@ let readExpressionText(ep: Expression): string =
         ep.getText()
 
 let readExportAssignment(ea: ExportAssignment): FsType =
-    // let var = readExpressionText ea.expression
-    // {
-    //     Namespace = []
-    //     Variable = var
-    //     Type = sprintf "%s.IExports" var
-    // }
-    // |> FsType.Import
-    FsType.None
+    // printfn "kind %A" (ea.expression.kind)
+    match ea.expression.kind with
+    | SyntaxKind.Identifier ->
+        // let id = ea.expression :?> Identifier
+        // let exp = readExpressionText ea.expression
+        
+        // printfn "export %A" exp
+        // {
+        //     Namespace = []
+        //     Variable = var
+        //     Type = sprintf "%s.IExports" var
+        // }
+        // |> FsType.Import
+
+        FsType.None
+    | _ -> FsType.None
 
 let readStatement (checker: TypeChecker) (sd: Statement): FsType =
     match sd.kind with
