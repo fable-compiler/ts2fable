@@ -1449,10 +1449,10 @@ module ts =
         abstract body: U2<Block, Expression> option with get, set
 
     type FunctionLikeDeclaration =
-        obj
+        U7<FunctionDeclaration, MethodDeclaration, ConstructorDeclaration, GetAccessorDeclaration, SetAccessorDeclaration, FunctionExpression, ArrowFunction>
 
     type FunctionLike =
-        obj
+        U7<FunctionLikeDeclaration, FunctionTypeNode, ConstructorTypeNode, IndexSignatureDeclaration, MethodSignature, ConstructSignatureDeclaration, CallSignatureDeclaration>
 
     type [<AllowNullLiteral>] FunctionDeclaration =
         inherit FunctionLikeDeclarationBase
@@ -2687,7 +2687,7 @@ module ts =
         abstract lock: FlowLock with get, set
 
     type FlowNode =
-        obj
+        U8<AfterFinallyFlow, PreFinallyFlow, FlowStart, FlowLabel, FlowAssignment, FlowCondition, FlowSwitchClause, FlowArrayMutation>
 
     type [<AllowNullLiteral>] FlowNodeBase =
         abstract flags: FlowFlags with get, set
@@ -3397,7 +3397,7 @@ module ts =
         abstract name: string with get, set
 
     type CompilerOptionsValue =
-        obj
+        U7<string, float, bool, ResizeArray<U2<string, float>>, ResizeArray<string>, MapLike<ResizeArray<string>>, ResizeArray<PluginImport>> option
 
     type [<AllowNullLiteral>] CompilerOptions =
         abstract allowJs: bool option with get, set

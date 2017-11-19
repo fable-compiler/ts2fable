@@ -373,8 +373,8 @@ let fixDuplicatesInUnion (f: FsFile): FsFile =
                         set.Add tp |> ignore
                         Some tp
                 )
-            if tps.Length > 6 then
-                // add U7 and U8 union types https://github.com/fable-compiler/Fable/issues/1211
+            if tps.Length > 8 then
+                // printfn "union has %d types, > 8, so setting as obj %A" tps.Length un
                 simpleType "obj"
             else 
                 { un with Types = tps } |> FsType.Union
