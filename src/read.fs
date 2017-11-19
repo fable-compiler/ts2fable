@@ -500,13 +500,13 @@ let readExpressionText(ep: Expression): string =
         ep.getText()
 
 let readExportAssignment(ea: ExportAssignment): FsType =
-    printfn "kind %A" (ea.expression.kind)
+    // printfn "kind %A" (ea.expression.kind)
     match ea.expression.kind with
     | SyntaxKind.Identifier ->
-        let id = ea.expression :?> Identifier
-        let exp = readExpressionText ea.expression
+        // let id = ea.expression :?> Identifier
+        // let exp = readExpressionText ea.expression
         
-        printfn "export %A" exp
+        // printfn "export %A" exp
         // {
         //     Namespace = []
         //     Variable = var
