@@ -294,10 +294,10 @@ let fixReadonlyArray(f: FsFile): FsFile =
             | _ -> tp
         | _ -> tp
 
-    // only replace in params
+    // only replace in functions
     f |> fixFile (fun tp ->
         match tp with
-        | FsType.Param _ -> fixType fix tp
+        | FsType.Function _ -> fixType fix tp
         | _ -> tp
     )
 
