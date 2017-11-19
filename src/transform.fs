@@ -282,6 +282,25 @@ let fixNodeArray(f: FsFile): FsFile =
         | _ -> tp
     )
 
+let fixReadonlyArray(f: FsFile): FsFile =
+    let fix (tp: FsType): FsType =
+        match tp with
+        | FsType.Generic gn ->
+            match gn.Type with
+            | FsType.Mapped mp ->
+                if mp.Name.Equals "ReadonlyArray" && gn.TypeParameters.Length = 1 then
+                    gn.TypeParameters.[0] |> FsType.Array
+                else tp
+            | _ -> tp
+        | _ -> tp
+
+    // only replace in params
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Param _ -> fixType fix tp
+        | _ -> tp
+    )
+
 let fixEscapeWords(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
