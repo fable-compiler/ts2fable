@@ -49,6 +49,7 @@ let readSourceFile (checker: TypeChecker) (ns: string) (sfs: SourceFile list): F
     |> addConstructors
     |> fixThis
     |> fixNodeArray
+    |> fixReadonlyArray
     |> fixDateTime
     |> fixOpens
     |> fixStatic
