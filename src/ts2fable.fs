@@ -8,6 +8,7 @@ open Fable.Import.TypeScript
 open Fable.Import.TypeScript.ts
 open System.Collections.Generic
 
+open ts2fable.Naming
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
@@ -81,6 +82,14 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     let program = ts.createProgram(List tsPaths, options, host)
     let tsFiles = tsPaths |> List.map program.getSourceFile
     let checker = program.getTypeChecker()
+
+
+    // TODO map of the files to module names
+    for sf in program.getSourceFiles() do
+        let mn = getJsModuleName sf.fileName
+        printfn "%s %s" mn sf.fileName
+        
+
 
     // use the F# file name as the module namespace
     let ns = path.basename(fsPath, path.extname(fsPath)) // TODO ensure valid name
