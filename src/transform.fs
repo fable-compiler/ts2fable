@@ -571,8 +571,6 @@ let addConstructors  (f: FsFile): FsFile =
         | _ -> tp
     )
 
-/// add a namespace to import
-/// and convert `declare` variables to imports
 let rec addImports (f: FsFile): FsFile =
 
     let globalModule = f.Modules |> List.find (fun md -> md.Name = "")
@@ -602,7 +600,7 @@ let rec addImports (f: FsFile): FsFile =
 
     { f with
         Modules = f.Modules |> List.map (fun md ->
-            if md.Name = "" then
+            if md.Name = "" then // global
                 { md with
                     Types = md.Types |> List.map (fun tp ->
                         match tp with
@@ -613,6 +611,13 @@ let rec addImports (f: FsFile): FsFile =
                                     HasDeclare = true // so it is not in IExports
                                     Name = ep
                                     Type = sprintf "%s.IExports" ep |> simpleType
+                                }
+                                |> FsType.Variable
+                            else tp
+                        | FsType.Variable vb ->
+                            if vb.HasDeclare then
+                                { vb with
+                                    Import = { Selector = "*"; Path = f.ModuleName } |> Some
                                 }
                                 |> FsType.Variable
                             else tp
