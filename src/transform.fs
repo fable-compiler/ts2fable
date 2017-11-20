@@ -583,11 +583,11 @@ let rec addImports (f: FsFile): FsFile =
         |> Set.ofList
 
     // get a list of variables in global
-    // let variables =
-    //     globalModule.Types
-    //     |> List.choose asVariable
-    //     |> List.map (fun vb -> vb.Name)
-    //     |> Set.ofList
+    let variables =
+        globalModule.Types
+        |> List.choose asVariable
+        |> List.map (fun vb -> vb.Name)
+        |> Set.ofList
 
     // let exports =
     //     globalModule.Types
@@ -605,7 +605,7 @@ let rec addImports (f: FsFile): FsFile =
                     Types = md.Types |> List.map (fun tp ->
                         match tp with
                         | FsType.Export ep ->
-                            if modules.Contains ep then
+                            if modules.Contains ep && variables.Contains ep = false then
                                 {
                                     Import = { Selector = "*"; Path = f.ModuleName } |> Some
                                     HasDeclare = true // so it is not in IExports
