@@ -174,16 +174,18 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
             sprintf "" |> lines.Add
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
-        | FsType.Import ip ->
-            sprintf "" |> lines.Add
-            let ns = ip.Namespace |> String.concat "."
-            sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s = jsNative" indent ns ip.Variable (printType ip.Type) |> lines.Add
         | FsType.Module smd ->
             printModule lines indent smd
         | FsType.Variable vb ->
             if vb.HasDeclare then
                 sprintf "" |> lines.Add
-                sprintf "%slet [<Global>] %s: %s = jsNative" indent vb.Name (printType vb.Type) |> lines.Add
+                sprintf "%slet %s%s: %s = jsNative" indent 
+                    (   match vb.Import with
+                        | None -> ""
+                        | Some im -> sprintf "[<Import(\"%s\",\"%s\")>] " im.Selector im.Path
+                    )
+                    vb.Name (printType vb.Type)
+                |> lines.Add
         | _ ->
             incr nIgnoredTypes
 

@@ -157,6 +157,7 @@ let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
 let readVariable (checker: TypeChecker) (vb: VariableStatement): FsVariable =
     let vd = vb.declarationList.declarations.[0] // TODO more than 1
     {
+        Import = None
         HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers
         Name = vd.name |> getBindingName
         Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
@@ -262,7 +263,6 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         let readLiteralKind (kind: SyntaxKind) text: FsType =
             match kind with
             | SyntaxKind.StringLiteral ->
-                printfn "  stringliteral"
                 FsType.StringLiteral (text |> removeQuotes)
             | _ -> simpleType "obj"
         match lt.literal with
@@ -505,18 +505,10 @@ let readExportAssignment(ea: ExportAssignment): FsType =
     // printfn "kind %A" (ea.expression.kind)
     match ea.expression.kind with
     | SyntaxKind.Identifier ->
-        // let id = ea.expression :?> Identifier
-        // let exp = readExpressionText ea.expression
-        
+        let id = ea.expression :?> Identifier
+        let exp = readExpressionText ea.expression
         // printfn "export %A" exp
-        // {
-        //     Namespace = []
-        //     Variable = var
-        //     Type = sprintf "%s.IExports" var
-        // }
-        // |> FsType.Import
-
-        FsType.None
+        FsType.Export exp
     | _ -> FsType.None
 
 let readStatement (checker: TypeChecker) (sd: Statement): FsType =

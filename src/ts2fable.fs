@@ -22,7 +22,7 @@ open Fable.Import.Node.Path
 let transform (file: FsFile): FsFile =
     file
     |> mergeModulesInFile
-    // |> fixImport [ns]
+    |> addImports
     |> addConstructors
     |> fixThis
     |> fixNodeArray
@@ -38,8 +38,6 @@ let transform (file: FsFile): FsFile =
     |> addTicForGenericTypes
     |> removeTodoMembers
     |> removeTypeParamsFromStatic
-
-let ts: ts.IExports = importAll "typescript"
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
     let path = Fable.Import.Node.Exports.Path
