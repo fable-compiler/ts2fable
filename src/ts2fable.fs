@@ -101,18 +101,18 @@ let argv = p.argv |> List.ofSeq
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
     writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/Fable.Import.IziToast.fs"
-    // writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/Fable.Import.TypeScript.fs"
-    // writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Fable.Import.Electron.fs"
-    // writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/Fable.Import.React.fs"
-    // writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Fable.Import.Node.fs"
-    // writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Fable.Import.Mocha.fs"
-    // writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Fable.Import.Chai.fs"
-    // writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Fable.Import.Chalk.fs"
-    // writeFile
-    //     [   "node_modules/@types/google-protobuf/index.d.ts"
-    //         "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
-    //     ]
-    //     "test-compile/Fable.Import.Protobuf.fs"
+    writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/Fable.Import.TypeScript.fs"
+    writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Fable.Import.Electron.fs"
+    writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/Fable.Import.React.fs"
+    writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Fable.Import.Node.fs"
+    writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Fable.Import.Mocha.fs"
+    writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Fable.Import.Chai.fs"
+    writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Fable.Import.Chalk.fs"
+    writeFile
+        [   "node_modules/@types/google-protobuf/index.d.ts"
+            "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
+        ]
+        "test-compile/Fable.Import.Protobuf.fs"
 
     // files that have TODOs
     // writeFile ["node_modules/@types/jquery/index.d.ts"] "test-compile/Fable.Import.JQuery.fs"
