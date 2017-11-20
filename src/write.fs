@@ -191,15 +191,16 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
         if md.Types.Length = !nIgnoredTypes then
             sprintf "%s()" indent |> lines.Add
 
-let printFsFile (file: FsFile): List<string> =
+let printFsFile (file: FsFileOut): List<string> =
     let lines = List<string>()
 
-    sprintf "module rec %s" file.Name |> lines.Add
+    sprintf "module rec %s" file.Namespace |> lines.Add
 
     for opn in file.Opens do
         sprintf "open %s" opn |> lines.Add
 
-    file.Modules
-        |> List.filter (fun md -> md.Types.Length > 0)
-        |> List.iter (printModule lines "")
+    for f in file.Files do
+        f.Modules
+            |> List.filter (fun md -> md.Types.Length > 0)
+            |> List.iter (printModule lines "")
     lines

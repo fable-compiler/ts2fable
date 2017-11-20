@@ -142,6 +142,7 @@ type FsType =
     | Tuple of FsTuple
     | Module of FsModule
     | File of FsFile
+    | FileOut of FsFileOut
     | Variable of FsVariable
     | StringLiteral of string
     | Import of FsImport
@@ -155,9 +156,16 @@ type FsModule =
 
 type FsFile =
     {
-        Name: string
-        Opens: string list
+        FileName: string
+        ModuleName: string
         Modules: FsModule list
+    }
+
+type FsFileOut =
+    {
+        Namespace: string
+        Opens: string list
+        Files: FsFile list
     }
 
 let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
@@ -218,7 +226,7 @@ let rec getName (tp: FsType) =
     | FsType.Alias al -> al.Name
     | FsType.Variable vb -> vb.Name
     | FsType.Module md -> md.Name
-    | FsType.File fl -> fl.Name
+    | FsType.File fl -> fl.ModuleName
     | FsType.Generic gn -> getName gn.Type
     | _ -> ""
 
@@ -227,4 +235,5 @@ let rec getFullName (tp: FsType) =
     | FsType.Interface it -> it.FullName
     | FsType.Mapped en -> en.FullName
     | FsType.Generic gn -> getFullName gn.Type
+    | FsType.File fl -> fl.FileName
     | _ -> ""

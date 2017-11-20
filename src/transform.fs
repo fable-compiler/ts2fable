@@ -17,6 +17,11 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Types = a.Types |> List.map (fixType fix)
         }
 
+    let fixFile (f: FsFile): FsFile =
+        { f with
+            Modules = f.Modules |> List.map fixModule
+        }
+
     let fixParam (a: FsParam): FsParam =
         let b =
             { a with
@@ -79,12 +84,16 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
         }
         |> FsType.Tuple
     | FsType.Module md ->
-        fixModule md |> FsType.Module
+        fixModule md
+        |> FsType.Module
      | FsType.File f ->
-        { f with
-            Modules = f.Modules |> List.map fixModule
-        }
+        fixFile f
         |> FsType.File
+    | FsType.FileOut fo ->
+        { fo with
+            Files = fo.Files |> List.map fixFile
+        }
+        |> FsType.FileOut
     | FsType.Variable vb ->
         { vb with
             Type = fixType fix vb.Type
@@ -470,7 +479,7 @@ let fixStatic(f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixOpens(f: FsFile): FsFile =
+let fixOpens(fo: FsFileOut): FsFileOut =
 
     let isBrowser (name: string): bool =
         if isNull name then false
@@ -486,12 +495,12 @@ let fixOpens(f: FsFile): FsFile =
             tp
         | _ -> tp
 
-    f |> FsType.File |> fixType fix |> ignore
+    fo |> FsType.FileOut |> fixType fix |> ignore
 
-    { f with
+    { fo with
         Opens =
-            if hasBrowser then f.Opens @ ["Fable.Import.Browser"]
-            else f.Opens
+            if hasBrowser then fo.Opens @ ["Fable.Import.Browser"]
+            else fo.Opens
     }
 
 let hasTodo (tp: FsType) =

@@ -573,3 +573,21 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
         Name = readModuleName md.name
         Types = types |> List.ofSeq
     }
+
+let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile): FsFile =
+    let modules = List()
+
+    let gbl: FsModule =
+        {
+            Name = ""
+            Types =
+                sfs
+                |> List.map (fun sf -> sf.statements |> List.ofSeq)
+                |> List.concat
+                |> List.map (readStatement checker)
+        }
+    modules.Add gbl
+
+    { file with
+        Modules = modules |> List.ofSeq
+    }
