@@ -174,16 +174,18 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
             sprintf "" |> lines.Add
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
-        | FsType.Import ip ->
-            sprintf "" |> lines.Add
-            let ns = ip.Namespace |> String.concat "."
-            sprintf "%slet [<Import(\"*\",\"%s\")>] %s: %s = jsNative" indent ns ip.Variable (printType ip.Type) |> lines.Add
         | FsType.Module smd ->
             printModule lines indent smd
         | FsType.Variable vb ->
             if vb.HasDeclare then
                 sprintf "" |> lines.Add
-                sprintf "%slet [<Global>] %s: %s = jsNative" indent vb.Name (printType vb.Type) |> lines.Add
+                sprintf "%slet %s%s: %s = jsNative" indent 
+                    (   match vb.Import with
+                        | None -> ""
+                        | Some im -> sprintf "[<Import(\"%s\",\"%s\")>] " im.Selector im.Path
+                    )
+                    vb.Name (printType vb.Type)
+                |> lines.Add
         | _ ->
             incr nIgnoredTypes
 
@@ -191,15 +193,16 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
         if md.Types.Length = !nIgnoredTypes then
             sprintf "%s()" indent |> lines.Add
 
-let printFsFile (file: FsFile): List<string> =
+let printFsFile (file: FsFileOut): List<string> =
     let lines = List<string>()
 
-    sprintf "module rec %s" file.Name |> lines.Add
+    sprintf "module rec %s" file.Namespace |> lines.Add
 
     for opn in file.Opens do
         sprintf "open %s" opn |> lines.Add
 
-    file.Modules
-        |> List.filter (fun md -> md.Types.Length > 0)
-        |> List.iter (printModule lines "")
+    for f in file.Files do
+        f.Modules
+            |> List.filter (fun md -> md.Types.Length > 0)
+            |> List.iter (printModule lines "")
     lines

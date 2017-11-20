@@ -17,6 +17,11 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Types = a.Types |> List.map (fixType fix)
         }
 
+    let fixFile (f: FsFile): FsFile =
+        { f with
+            Modules = f.Modules |> List.map fixModule
+        }
+
     let fixParam (a: FsParam): FsParam =
         let b =
             { a with
@@ -79,23 +84,23 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
         }
         |> FsType.Tuple
     | FsType.Module md ->
-        fixModule md |> FsType.Module
+        fixModule md
+        |> FsType.Module
      | FsType.File f ->
-        { f with
-            Modules = f.Modules |> List.map fixModule
-        }
+        fixFile f
         |> FsType.File
+    | FsType.FileOut fo ->
+        { fo with
+            Files = fo.Files |> List.map fixFile
+        }
+        |> FsType.FileOut
     | FsType.Variable vb ->
         { vb with
             Type = fixType fix vb.Type
         }
         |> FsType.Variable
-    | FsType.Import im ->
-        { im with
-            Type = fixType fix im.Type
-        }
-        |> FsType.Import
 
+    | FsType.Export _ -> tp
     | FsType.Enum _ -> tp
     | FsType.Mapped _ -> tp
     | FsType.None _ -> tp
@@ -389,31 +394,6 @@ let addTicForGenericTypes(f: FsFile): FsFile =
         | _ -> tp
     )
 
-/// add a namespace to import
-/// and convert `declare` variables to imports
-let rec fixImport (ns: string list) (md: FsModule): FsModule =
-    let newNs = if String.IsNullOrEmpty md.Name then ns else ns @ [md.Name]
-    { md with
-        Types = md.Types |> List.map (fun tp ->
-            match tp with
-            | FsType.Module submd ->
-                fixImport newNs submd |> FsType.Module
-            | FsType.Import ep ->
-                { ep with Namespace = newNs } |> FsType.Import
-            | FsType.Variable vb ->
-                if vb.HasDeclare then
-                    {
-                        Namespace = newNs
-                        Variable = vb.Name
-                        Type = vb.Type
-                    }
-                    |> FsType.Import
-                else
-                    vb  |> FsType.Variable
-            | _ -> tp
-        )
-    }
-
 /// replaces `this` with a reference to the interface type
 let fixThis(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
@@ -470,7 +450,7 @@ let fixStatic(f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixOpens(f: FsFile): FsFile =
+let fixOpens(fo: FsFileOut): FsFileOut =
 
     let isBrowser (name: string): bool =
         if isNull name then false
@@ -486,12 +466,12 @@ let fixOpens(f: FsFile): FsFile =
             tp
         | _ -> tp
 
-    f |> FsType.File |> fixType fix |> ignore
+    fo |> FsType.FileOut |> fixType fix |> ignore
 
-    { f with
+    { fo with
         Opens =
-            if hasBrowser then f.Opens @ ["Fable.Import.Browser"]
-            else f.Opens
+            if hasBrowser then fo.Opens @ ["Fable.Import.Browser"]
+            else fo.Opens
     }
 
 let hasTodo (tp: FsType) =
@@ -590,3 +570,60 @@ let addConstructors  (f: FsFile): FsFile =
             else tp
         | _ -> tp
     )
+
+let rec addImports (f: FsFile): FsFile =
+
+    let globalModule = f.Modules |> List.find (fun md -> md.Name = "")
+
+    // get a list of modules
+    let modules =
+        globalModule.Types
+        |> List.choose asModule
+        |> List.map (fun md -> md.Name)
+        |> Set.ofList
+
+    // get a list of variables in global
+    // let variables =
+    //     globalModule.Types
+    //     |> List.choose asVariable
+    //     |> List.map (fun vb -> vb.Name)
+    //     |> Set.ofList
+
+    // let exports =
+    //     globalModule.Types
+    //     |> List.choose asExport
+    //     |> Set.ofList
+
+    // printfn "modules %A" modules
+    // printfn "variables %A" variables
+    // printfn "exports %A" exports
+
+    { f with
+        Modules = f.Modules |> List.map (fun md ->
+            if md.Name = "" then // global
+                { md with
+                    Types = md.Types |> List.map (fun tp ->
+                        match tp with
+                        | FsType.Export ep ->
+                            if modules.Contains ep then
+                                {
+                                    Import = { Selector = "*"; Path = f.ModuleName } |> Some
+                                    HasDeclare = true // so it is not in IExports
+                                    Name = ep
+                                    Type = sprintf "%s.IExports" ep |> simpleType
+                                }
+                                |> FsType.Variable
+                            else tp
+                        | FsType.Variable vb ->
+                            if vb.HasDeclare then
+                                { vb with
+                                    Import = { Selector = "*"; Path = f.ModuleName } |> Some
+                                }
+                                |> FsType.Variable
+                            else tp
+                        | _ -> tp
+                    )
+                }
+            else md
+        )
+    }

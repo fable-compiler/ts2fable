@@ -102,17 +102,17 @@ type FsTuple =
         Types: FsType list
     }
 
-type FsVariable =
-    {
-        HasDeclare: bool
-        Name: string
-        Type: FsType
-    }
-
 type FsImport =
     {
-        Namespace: string list
-        Variable: string
+        Selector: string
+        Path: string
+    }
+
+type FsVariable =
+    {
+        Import: FsImport option
+        HasDeclare: bool
+        Name: string
         Type: FsType
     }
 
@@ -142,9 +142,10 @@ type FsType =
     | Tuple of FsTuple
     | Module of FsModule
     | File of FsFile
+    | FileOut of FsFileOut
     | Variable of FsVariable
     | StringLiteral of string
-    | Import of FsImport
+    | Export of string
     | This
 
 type FsModule =
@@ -155,24 +156,35 @@ type FsModule =
 
 type FsFile =
     {
-        Name: string
-        Opens: string list
+        FileName: string
+        ModuleName: string
         Modules: FsModule list
+    }
+
+type FsFileOut =
+    {
+        Namespace: string
+        Opens: string list
+        Files: FsFile list
     }
 
 let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
 let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
 let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
+let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
 
 let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
 let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
 let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
 let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
 let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
+let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
+let asExport (tp: FsType) = match tp with | FsType.Export v -> Some v | _ -> None
 
-type FsModule with
-    member x.Modules = x.Types |> List.filter isModule
-    member x.NonModules = x.Types |> List.filter (not << isModule)
+// type FsModule with
+    // member x.Modules = x.Types |> List.filter isModule
+    // member x.NonModules = x.Types |> List.filter (not << isModule)
+    // member x.Variables = x.Types |> List.choose asVariable
 
 let isStringLiteralParam (p: FsParam): bool = isStringLiteral p.Type
 
@@ -218,7 +230,7 @@ let rec getName (tp: FsType) =
     | FsType.Alias al -> al.Name
     | FsType.Variable vb -> vb.Name
     | FsType.Module md -> md.Name
-    | FsType.File fl -> fl.Name
+    | FsType.File fl -> fl.ModuleName
     | FsType.Generic gn -> getName gn.Type
     | _ -> ""
 
@@ -227,4 +239,5 @@ let rec getFullName (tp: FsType) =
     | FsType.Interface it -> it.FullName
     | FsType.Mapped en -> en.FullName
     | FsType.Generic gn -> getFullName gn.Type
+    | FsType.File fl -> fl.FileName
     | _ -> ""

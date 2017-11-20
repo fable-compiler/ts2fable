@@ -8,6 +8,7 @@ open Fable.Import.TypeScript
 open Fable.Import.TypeScript.ts
 open System.Collections.Generic
 
+open ts2fable.Naming
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
@@ -18,40 +19,15 @@ open Fable.Import.Node.Path
 // 2. Fix the syntax tree.
 // 3. Print the syntax tree to a F# file.
 
-let readSourceFile (checker: TypeChecker) (ns: string) (sfs: SourceFile list): FsFile =
-    let modules = List()
-
-    let gbl: FsModule =
-        {
-            Name = ""
-            Types =
-                sfs
-                |> List.map (fun sf -> sf.statements |> List.ofSeq)
-                |> List.concat
-                |> List.map (readStatement checker)
-        }
-    modules.Add gbl
-
-    let opens = 
-        [
-            "System"
-            // "System.Text.RegularExpressions"
-            "Fable.Core"
-            "Fable.Import.JS"
-        ]
-    {
-        Name = ns
-        Opens = opens
-        Modules = modules |> List.ofSeq
-    }
+let transform (file: FsFile): FsFile =
+    file
     |> mergeModulesInFile
-    // |> fixImport [ns]
+    |> addImports
     |> addConstructors
     |> fixThis
     |> fixNodeArray
     |> fixReadonlyArray
     |> fixDateTime
-    |> fixOpens
     |> fixStatic
     |> createIExports
     |> fixOverloadingOnStringParameters // fixEscapeWords must be after
@@ -62,8 +38,6 @@ let readSourceFile (checker: TypeChecker) (ns: string) (sfs: SourceFile list): F
     |> addTicForGenericTypes
     |> removeTodoMembers
     |> removeTypeParamsFromStatic
-
-let ts: ts.IExports = importAll "typescript"
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
     let path = Fable.Import.Node.Exports.Path
@@ -82,11 +56,38 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     let tsFiles = tsPaths |> List.map program.getSourceFile
     let checker = program.getTypeChecker()
 
-    // use the F# file name as the module namespace
-    let ns = path.basename(fsPath, path.extname(fsPath)) // TODO ensure valid name
-    let fsFile = readSourceFile checker ns tsFiles
+    let moduleNameMap =
+        program.getSourceFiles()
+        |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
+        |> dict
+
+    let fsFiles = tsFiles |> List.map (fun tsFile ->
+        {
+            FileName = tsFile.fileName
+            ModuleName = moduleNameMap.[tsFile.fileName]
+            Modules = []
+        }
+        |> readSourceFile checker tsFiles
+        |> transform
+    )
+
+    let fsFileOut: FsFileOut =
+        {
+            // use the F# file name as the module namespace
+            // TODO ensure valid name
+            Namespace = path.basename(fsPath, path.extname(fsPath))
+            Opens =
+                [
+                    "System"
+                    "Fable.Core"
+                    "Fable.Import.JS"
+                ]
+            Files = fsFiles
+        }
+        |> fixOpens
+
     let file = Fs.createWriteStream fsPath
-    for line in printFsFile fsFile do
+    for line in printFsFile fsFileOut do
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``()
 

@@ -96,3 +96,22 @@ let fixModuleName (s: string) =
 let removeQuotes (s:string): string =
     if isNull s then ""
     else s.Replace("\"","").Replace("'","")
+
+// gets the JavaScript module name
+// intended for use by SourceFile.fileName which has slashes normalized
+// TODO implement https://github.com/ajafff/tsutils/issues/14#issuecomment-345544684
+let getJsModuleName (fileName: string): string =
+    let inm = fileName.LastIndexOf "node_modules"
+    
+    let path =
+        if inm = -1 then fileName
+        else fileName.Substring(inm+13)
+
+    // TODO scoped & submodules
+    let last =
+        path.Split '/'
+        |> List.ofArray
+        |> List.filter (fun s -> s <> "index.d.ts")
+        |> List.last
+
+    last.Replace(".ts","").Replace(".d","")

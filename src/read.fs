@@ -157,6 +157,7 @@ let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
 let readVariable (checker: TypeChecker) (vb: VariableStatement): FsVariable =
     let vd = vb.declarationList.declarations.[0] // TODO more than 1
     {
+        Import = None
         HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers
         Name = vd.name |> getBindingName
         Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
@@ -259,14 +260,15 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         simpleType "obj"
     | SyntaxKind.LiteralType -> 
         let lt = t :?> LiteralTypeNode
-        match lt.literal with
-        | U3.Case1 bl -> simpleType "obj" // TODO is this just true or false
-        | U3.Case2 le ->
-            match le.kind with
+        let readLiteralKind (kind: SyntaxKind) text: FsType =
+            match kind with
             | SyntaxKind.StringLiteral ->
-                FsType.StringLiteral (le.getText() |> removeQuotes)
+                FsType.StringLiteral (text |> removeQuotes)
             | _ -> simpleType "obj"
-        | U3.Case3 pue -> simpleType "obj"
+        match lt.literal with
+        | U3.Case1 bl -> readLiteralKind bl.kind (bl.getText())
+        | U3.Case2 le -> readLiteralKind le.kind (le.getText())
+        | U3.Case3 pue -> readLiteralKind pue.kind (pue.getText())
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
         let tp = checker.getTypeFromTypeNode eta
@@ -503,18 +505,10 @@ let readExportAssignment(ea: ExportAssignment): FsType =
     // printfn "kind %A" (ea.expression.kind)
     match ea.expression.kind with
     | SyntaxKind.Identifier ->
-        // let id = ea.expression :?> Identifier
-        // let exp = readExpressionText ea.expression
-        
+        let id = ea.expression :?> Identifier
+        let exp = readExpressionText ea.expression
         // printfn "export %A" exp
-        // {
-        //     Namespace = []
-        //     Variable = var
-        //     Type = sprintf "%s.IExports" var
-        // }
-        // |> FsType.Import
-
-        FsType.None
+        FsType.Export exp
     | _ -> FsType.None
 
 let readStatement (checker: TypeChecker) (sd: Statement): FsType =
@@ -572,4 +566,22 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
     {
         Name = readModuleName md.name
         Types = types |> List.ofSeq
+    }
+
+let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile): FsFile =
+    let modules = List()
+
+    let gbl: FsModule =
+        {
+            Name = ""
+            Types =
+                sfs
+                |> List.map (fun sf -> sf.statements |> List.ofSeq)
+                |> List.concat
+                |> List.map (readStatement checker)
+        }
+    modules.Add gbl
+
+    { file with
+        Modules = modules |> List.ofSeq
     }

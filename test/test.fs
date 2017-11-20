@@ -102,3 +102,22 @@ describe "nameEqualsDefaultFableValue tests" <| fun _ ->
     it "none" <| fun _ ->
         nameEqualsDefaultFableValue "None" "none"
         |> equal true
+
+
+describe "getJsModuleName tests" <| fun _ ->
+
+    it "chai full path" <| fun _ ->
+        getJsModuleName "C:/Users/camer/fs/ts2fable/node_modules/@types/chai/index.d.ts"
+        |> equal "chai"
+
+    it "node relative path" <| fun _ ->
+        getJsModuleName "node_modules/@types/node/index.d.ts"
+        |> equal "node"
+
+    it "typescript" <| fun _ ->
+        getJsModuleName "node_modules/typescript/lib/typescript.d.ts"
+        |> equal "typescript"
+        
+    it "izitoast" <| fun _ ->
+        getJsModuleName "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
+        |> equal "izitoast"
