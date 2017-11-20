@@ -259,14 +259,16 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         simpleType "obj"
     | SyntaxKind.LiteralType -> 
         let lt = t :?> LiteralTypeNode
-        match lt.literal with
-        | U3.Case1 bl -> simpleType "obj" // TODO is this just true or false
-        | U3.Case2 le ->
-            match le.kind with
+        let readLiteralKind (kind: SyntaxKind) text: FsType =
+            match kind with
             | SyntaxKind.StringLiteral ->
-                FsType.StringLiteral (le.getText() |> removeQuotes)
+                printfn "  stringliteral"
+                FsType.StringLiteral (text |> removeQuotes)
             | _ -> simpleType "obj"
-        | U3.Case3 pue -> simpleType "obj"
+        match lt.literal with
+        | U3.Case1 bl -> readLiteralKind bl.kind (bl.getText())
+        | U3.Case2 le -> readLiteralKind le.kind (le.getText())
+        | U3.Case3 pue -> readLiteralKind pue.kind (pue.getText())
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
         let tp = checker.getTypeFromTypeNode eta
