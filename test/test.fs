@@ -49,7 +49,11 @@ describe "escapeWord tests" <| fun _ ->
     it "_jsDocTypeBrand" <| fun _ ->
         escapeWord "_jsDocTypeBrand"
         |> equal "_jsDocTypeBrand" // do not escape
-    
+
+    it "[Symbol.iterator]" <| fun _ ->
+        escapeWord "[Symbol.iterator]"
+        |> equal "``[Symbol.iterator]``"
+
 
 describe "createEnumNameParts tests" <| fun _ ->
 

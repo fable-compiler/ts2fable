@@ -79,7 +79,7 @@ let escapeWord (s: string) =
             || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
             // || Char.IsNumber s.[0] then // TODO https://github.com/fable-compiler/Fable/issues/1237
             || isDigit (s.Substring(0,1))
-            || s.Substring(0,1).IndexOfAny [|'.'|] <> -1 // starts with
+            || s.Substring(0,1).IndexOfAny [|'.';'['|] <> -1 // starts with
             || s.Equals "_"
         then
             sprintf "``%s``" s

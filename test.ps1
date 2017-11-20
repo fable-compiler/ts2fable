@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 
 # build tests
 Set-Location $psscriptroot\test
+dotnet restore
 dotnet fable yarn-test
 
 # run tests
