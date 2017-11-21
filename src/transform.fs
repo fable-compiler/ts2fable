@@ -107,6 +107,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.TODO _ -> tp
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
+    | FsType.Import _ -> tp
 
     |> fix // current type
 
