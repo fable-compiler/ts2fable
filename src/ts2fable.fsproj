@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Node.fs" />
+    <Compile Include="NodeExt.fs" />
     <Compile Include="TypeScript.fs" />
     <Compile Include="keywords.fs" />
     <Compile Include="naming.fs" />

@@ -57,17 +57,17 @@ type [<AllowNullLiteral>] SymbolConstructor =
     /// for-of statement.
     abstract iterator: Symbol
 
-// let [<Import("*","node")>] Symbol: SymbolConstructor = jsNative
+let [<Global>] Symbol: SymbolConstructor = jsNative
 
-// let [<Import("*","node")>] ``process``: NodeJS.Process = jsNative
+let [<Global>] ``process``: NodeJS.Process = jsNative
 
-// let [<Import("*","node")>] ``global``: NodeJS.Global = jsNative
+let [<Global>] ``global``: NodeJS.Global = jsNative
 
-// let [<Import("*","node")>] console: Console = jsNative
+let [<Global>] console: Console = jsNative
 
-// let [<Import("*","node")>] __filename: string = jsNative
+let [<Global>] __filename: string = jsNative
 
-// let [<Import("*","node")>] __dirname: string = jsNative
+let [<Global>] __dirname: string = jsNative
 
 module setTimeout =
 
@@ -97,7 +97,7 @@ type [<AllowNullLiteral>] NodeExtensions =
     abstract ``.node``: (NodeModule -> string -> obj) with get, set
     [<Emit "$0[$1]{{=$2}}">] abstract Item: ext: string -> (NodeModule -> string -> obj) with get, set
 
-// let [<Import("*","node")>] require: NodeRequire = jsNative
+let [<Global>] require: NodeRequire = jsNative
 
 type [<AllowNullLiteral>] NodeModule =
     abstract exports: obj with get, set
@@ -108,11 +108,11 @@ type [<AllowNullLiteral>] NodeModule =
     abstract parent: NodeModule option with get, set
     abstract children: ResizeArray<NodeModule> with get, set
 
-// let [<Import("*","node")>] ``module``: NodeModule = jsNative
+let [<Global>] ``module``: NodeModule = jsNative
 
-// let [<Import("*","node")>] exports: obj = jsNative
+let [<Global>] exports: obj = jsNative
 
-// let [<Import("*","node")>] SlowBuffer: obj = jsNative
+let [<Global>] SlowBuffer: obj = jsNative
 
 type [<StringEnum>] [<RequireQualifiedAccess>] BufferEncoding =
     | Ascii
@@ -130,7 +130,7 @@ type [<StringEnum>] [<RequireQualifiedAccess>] BufferEncoding =
 type [<AllowNullLiteral>] Buffer =
     inherit NodeBuffer
 
-// let [<Import("*","node")>] Buffer: obj = jsNative
+let [<Global>] Buffer: obj = jsNative
 
 module NodeJS =
 
@@ -2647,17 +2647,6 @@ module fs =
     type PathLike =
         U3<string, Buffer, URL>
 
-    module PathLike =
-        let ofString v = PathLike.Case1 v
-        let ofBuffer v = PathLike.Case2 v
-        let ofURL v = PathLike.Case3 v
-        let isString (v: PathLike) = match v with | PathLike.Case1 _ -> true | _ -> false
-        let isBuffer (v: PathLike) = match v with | PathLike.Case2 _ -> true | _ -> false
-        let isURL (v: PathLike) = match v with | PathLike.Case3 _ -> true | _ -> false
-        let asString (v: PathLike) = match v with | PathLike.Case1 o -> Some o | _ -> None
-        let asBuffer(v: PathLike) = match v with | PathLike.Case2 o -> Some o | _ -> None
-        let asURL (v: PathLike) = match v with | PathLike.Case3 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] Stats =
         abstract isFile: unit -> bool
         abstract isDirectory: unit -> bool
@@ -4226,12 +4215,6 @@ module constants =
         abstract ENGINE_METHOD_RSA: float with get, set
         abstract ALPN_ENABLED: float with get, set
 
-module module_ =
-    ()
-
-module process_ =
-    ()
-
 module v8 =
 
     type [<AllowNullLiteral>] IExports =
@@ -4281,9 +4264,6 @@ module timers =
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: unit -> Promise<unit>
             abstract __promisify__: value: 'T -> Promise<'T>
-
-// module console =
-//     ()
 
 module _debugger =
 

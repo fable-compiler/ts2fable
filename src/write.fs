@@ -108,13 +108,13 @@ let printComments (lines: List<string>) (indent: string) (comments: string list)
         sprintf "%s/// %s" indent comment |> lines.Add
 
 let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit =
+    let lineCountStart = lines.Count
     let indent =
         if md.Name <> "" then
             "" |> lines.Add
             sprintf "%smodule %s =" indent md.Name |> lines.Add
             sprintf "%s    " indent
         else indent
-    let nIgnoredTypes = ref 0
 
     // print module aliases first
     for tp in md.Types do
@@ -206,16 +206,22 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
                 sprintf "%slet %s%s: %s = jsNative" indent 
                     (   match vb.Import with
                         | None -> ""
-                        | Some im -> sprintf "[<Import(\"%s\",\"%s\")>] " im.Selector im.Path
+                        | Some im ->
+                            // special case Node
+                            if im.Path = "node" then
+                                "[<Global>] "
+                            else
+                                sprintf "[<Import(\"%s\",\"%s\")>] " im.Selector im.Path
                     )
                     vb.Name (printType vb.Type)
                 |> lines.Add
-        | _ ->
-            incr nIgnoredTypes
-
-        // add a `()` if the module is empty
-        if md.Types.Length = !nIgnoredTypes then
-            sprintf "%s()" indent |> lines.Add
+        | _ -> ()
+    let addedLines = lines.Count - lineCountStart
+    // remove empty modules
+    if addedLines = 2 then
+        // lines.RemoveRange (lines.Count-3,2) // https://github.com/fable-compiler/Fable/issues/1242
+        for _ in 0..1 do
+            lines.RemoveAt (lines.Count-1)
 
 let printFsFile (file: FsFileOut): List<string> =
     let lines = List<string>()
