@@ -511,37 +511,69 @@ let readExportAssignment(ea: ExportAssignment): FsType =
         FsType.Export exp
     | _ -> FsType.None
 
-let readStatement (checker: TypeChecker) (sd: Statement): FsType =
+let readImportDeclaration(im: ImportDeclaration): FsType list =
+    let moduleSpecifier = im.moduleSpecifier.getText() |> removeQuotes
+    match im.importClause with
+    | None -> []
+    | Some cl ->
+        match cl.namedBindings with
+        | None -> []
+        | Some namedBindings ->
+            match namedBindings with
+            | U2.Case1 namespaceImport ->
+                if isNull namespaceImport.name = false then
+                    [
+                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
+                        |> FsImport.Module |> FsType.Import
+                    ]
+                else
+                    namespaceImport.getChildren() |> List.ofSeq |> List.collect (fun ch ->
+                        match ch.kind with
+                        | SyntaxKind.SyntaxList  ->
+                            let sl = ch :?> SyntaxList
+                            sl.getChildren() |> List.ofSeq |> List.choose (fun slch ->
+                                match slch.kind with
+                                | SyntaxKind.ImportSpecifier ->
+                                    let imp = slch :?> ImportSpecifier
+                                    { Type = imp.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
+                                    |> FsImport.Type |> FsType.Import |> Some
+                                | _ -> None
+                            )
+                        | _ -> []
+                    )
+            | U2.Case2 namedImports -> []
+
+let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
-        readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface
+        [readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface]
     | SyntaxKind.EnumDeclaration ->
-        readEnum (sd :?> EnumDeclaration) |> FsType.Enum
+        [readEnum (sd :?> EnumDeclaration) |> FsType.Enum]
     | SyntaxKind.TypeAliasDeclaration ->
-        readAliasDeclaration checker (sd :?> TypeAliasDeclaration)
+        [readAliasDeclaration checker (sd :?> TypeAliasDeclaration)]
     | SyntaxKind.ClassDeclaration ->
-        readClass checker (sd :?> ClassDeclaration) |> FsType.Interface
+        [readClass checker (sd :?> ClassDeclaration) |> FsType.Interface]
     | SyntaxKind.VariableStatement ->
-        readVariable checker (sd :?> VariableStatement) |> FsType.Variable
+        [readVariable checker (sd :?> VariableStatement) |> FsType.Variable]
     | SyntaxKind.FunctionDeclaration ->
-        readFunctionDeclaration checker (sd :?> FunctionDeclaration) |> FsType.Function
+        [readFunctionDeclaration checker (sd :?> FunctionDeclaration) |> FsType.Function]
     | SyntaxKind.ModuleDeclaration ->
-        readModuleDeclaration checker (sd :?> ModuleDeclaration) |> FsType.Module
+        [readModuleDeclaration checker (sd :?> ModuleDeclaration) |> FsType.Module]
     | SyntaxKind.ExportAssignment ->
-        readExportAssignment(sd :?> ExportAssignment)
+        [readExportAssignment(sd :?> ExportAssignment)]
     | SyntaxKind.ImportDeclaration ->
-        // https://github.com/fable-compiler/ts2fable/issues/21
-        // printfn "TODO import statements"
-        FsType.TODO
+        readImportDeclaration(sd :?> ImportDeclaration)
     | SyntaxKind.NamespaceExportDeclaration ->
         // let ns = sd :?> NamespaceExportDeclaration
-        FsType.TODO
+        []
     | SyntaxKind.ExportDeclaration ->
         // printfn "TODO export statements"
-        FsType.TODO
+        []
     | SyntaxKind.ImportEqualsDeclaration ->
-        FsType.TODO
-    | _ -> printfn "unsupported Statement kind: %A" sd.kind; FsType.TODO
+        let ime = sd :?> ImportEqualsDeclaration
+        // printfn "import equals decl %s" (ime.getText())
+        []
+    | _ -> printfn "unsupported Statement kind: %A" sd.kind; []
 
 let readModuleName(mn: ModuleName): string =
     match mn with
@@ -554,7 +586,7 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
         match nd.kind with
         | SyntaxKind.ModuleBlock ->
             let mb = nd :?> ModuleBlock
-            mb.statements |> List.ofSeq |> List.map (readStatement checker) |> List.iter types.Add
+            mb.statements |> List.ofSeq |> List.collect (readStatement checker) |> List.iter types.Add
         | SyntaxKind.DeclareKeyword -> ()
         | SyntaxKind.Identifier -> ()
         | SyntaxKind.ModuleDeclaration ->
@@ -578,7 +610,7 @@ let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile):
                 sfs
                 |> List.map (fun sf -> sf.statements |> List.ofSeq)
                 |> List.concat
-                |> List.map (readStatement checker)
+                |> List.collect (readStatement checker)
         }
     modules.Add gbl
 

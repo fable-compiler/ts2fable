@@ -107,6 +107,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.TODO _ -> tp
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
+    | FsType.Import _ -> tp
 
     |> fix // current type
 
@@ -627,3 +628,42 @@ let rec addImports (f: FsFile): FsFile =
             else md
         )
     }
+
+let removeInternalModules(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+            { md with
+                Types = md.Types |> List.collect (fun tp ->
+                    match tp with
+                    | FsType.Module smd when smd.Name = "internal" ->
+                        smd.Types
+                    | _ -> [tp]
+                )
+            }
+            |> FsType.Module
+        | _ -> tp
+    )
+
+let removeDuplicateFunctions(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface it ->
+            let set = HashSet<_>()
+            { it with
+                Members = it.Members |> List.collect (fun mb ->
+                    match mb with
+                    | FsType.Function fn ->
+                        // compare without comments or a return type
+                        let fn2 = { fn with Comments = []; ReturnType = FsType.None }
+                        if set.Add fn2 then
+                            [mb]
+                        else
+                            // printfn "mb is duplicate %A" mb
+                            []
+                    | _ -> [mb]
+                )
+            }
+            |> FsType.Interface
+        | _ -> tp
+    )

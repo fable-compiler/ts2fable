@@ -79,19 +79,23 @@ let escapeWord (s: string) =
             || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
             // || Char.IsNumber s.[0] then // TODO https://github.com/fable-compiler/Fable/issues/1237
             || isDigit (s.Substring(0,1))
-            || s.Substring(0,1).IndexOfAny [|'.'|] <> -1 // starts with
+            || s.Substring(0,1).IndexOfAny [|'.';'['|] <> -1 // starts with
             || s.Equals "_"
         then
             sprintf "``%s``" s
         else
             s
 
-// TODO
 let fixModuleName (s: string) =
     let s = s.Replace("'","") // remove single quotes
-    let parts = s |> createModuleNameParts
-    // [parts.Head] @ (parts.Tail |> List.map Enum.capitalize) |> String.concat ""
-    parts |> String.concat "_"
+    let s =
+        let parts = s |> createModuleNameParts
+        parts |> String.concat "_"
+    let s =
+        if Keywords.reserved.Contains s || Keywords.keywords.Contains s then
+            sprintf "%s_" s
+        else s
+    s
 
 let removeQuotes (s:string): string =
     if isNull s then ""

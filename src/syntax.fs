@@ -102,7 +102,26 @@ type FsTuple =
         Types: FsType list
     }
 
+type TypeImport =
+    {
+        Type: string
+        SpecifiedModule: string
+        ResolvedModule: string option
+    }
+
+type ModuleImport =
+    {
+        Module: string
+        SpecifiedModule: string
+        ResolvedModule: string option
+    }
+
+[<RequireQualifiedAccess>]
 type FsImport =
+    | Type of TypeImport
+    | Module of ModuleImport
+
+type FsExport =
     {
         Selector: string
         Path: string
@@ -110,7 +129,7 @@ type FsImport =
 
 type FsVariable =
     {
-        Import: FsImport option
+        Import: FsExport option
         HasDeclare: bool
         Name: string
         Type: FsType
@@ -147,6 +166,7 @@ type FsType =
     | StringLiteral of string
     | Export of string
     | This
+    | Import of FsImport
 
 type FsModule =
     {
