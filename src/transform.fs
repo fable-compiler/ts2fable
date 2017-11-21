@@ -654,7 +654,8 @@ let removeDuplicateFunctions(f: FsFile): FsFile =
                 Members = it.Members |> List.collect (fun mb ->
                     match mb with
                     | FsType.Function fn ->
-                        let fn2 = { fn with Comments = [] }
+                        // compare without comments or a return type
+                        let fn2 = { fn with Comments = []; ReturnType = FsType.None }
                         if set.Add fn2 then
                             [mb]
                         else

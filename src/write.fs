@@ -115,17 +115,32 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
             sprintf "%s    " indent
         else indent
     let nIgnoredTypes = ref 0
+
+    // print module aliases first
     for tp in md.Types do
         match tp with
         | FsType.Import imp ->
-            // printfn "import %A" imp
             match imp with
             | FsImport.Module impmd ->
                 if impmd.Module <> impmd.SpecifiedModule then
                     // TODO used ResolvedModule rather than SpecifiedModule
                     sprintf "%smodule %s = %s" indent impmd.Module impmd.SpecifiedModule |> lines.Add
+            | _ -> ()
+        | _ -> ()
+
+    // print type aliases
+    for tp in md.Types do
+        match tp with
+        | FsType.Import imp ->
+            match imp with
             | FsImport.Type imptp ->
                 sprintf "%stype %s = %s.%s" indent imptp.Type imptp.SpecifiedModule imptp.Type |> lines.Add
+            | _ -> ()
+        | _ -> ()
+
+    // print all other types
+    for tp in md.Types do
+        match tp with
         | FsType.Interface inf ->
             sprintf "" |> lines.Add
             printComments lines indent inf.Comments
