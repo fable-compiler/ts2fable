@@ -3,18 +3,18 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Fable.Import.IziToast.fs" />
-    <Compile Include="Fable.Import.TypeScript.fs" />
-    <!-- <Compile Include="Fable.Import.Electron.fs" /> -->
-    <!-- <Compile Include="Fable.Import.React.fs" /> -->
-    <Compile Include="Fable.Import.Node.fs" />
-    <Compile Include="Fable.Import.Mocha.fs" />
-    <Compile Include="Fable.Import.Chai.fs" />
-    <Compile Include="Fable.Import.Chalk.fs" />
-    <!-- <Compile Include="Fable.Import.Protobuf.fs" /> -->
+    <Compile Include="IziToast.fs" />
+    <Compile Include="TypeScript.fs" />
+    <!-- <Compile Include="Electron.fs" /> -->
+    <!-- <Compile Include="React.fs" /> -->
+    <Compile Include="Node.fs" />
+    <Compile Include="Mocha.fs" />
+    <Compile Include="Chai.fs" />
+    <Compile Include="Chalk.fs" />
+    <!-- <Compile Include="Protobuf.fs" /> -->
 
-    <!-- <Compile Include="Fable.Import.JQuery.fs" /> -->
-    <!-- <Compile Include="Fable.Import.Promise.fs" /> -->
+    <!-- <Compile Include="JQuery.fs" /> -->
+    <!-- <Compile Include="Promise.fs" /> -->
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

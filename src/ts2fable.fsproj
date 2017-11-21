@@ -3,7 +3,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Fable.Import.TypeScript.fs" />
+    <Compile Include="Node.fs" />
+    <Compile Include="TypeScript.fs" />
     <Compile Include="keywords.fs" />
     <Compile Include="naming.fs" />
     <Compile Include="syntax.fs" />

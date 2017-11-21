@@ -3,16 +3,14 @@ module ts2fable.App
 open Fable.Core
 open Fable.Import.JS
 open Fable.Core.JsInterop
-open Fable.Import.Node
-open Fable.Import.TypeScript
-open Fable.Import.TypeScript.ts
+open TypeScript
+open TypeScript.ts
 open System.Collections.Generic
 
 open ts2fable.Naming
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
-open Fable.Import.Node.Path
 
 // This app has 3 main functions.
 // 1. Read a TypeScript file into a syntax tree.
@@ -42,7 +40,9 @@ let transform (file: FsFile): FsFile =
     |> removeDuplicateFunctions
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
-    let path = Fable.Import.Node.Exports.Path
+    // let path = Fable.Import.Node.Exports.Path
+    let path: Node.path.IExports = importAll "path"
+    let fs: Node.fs.IExports = importAll "fs"
 
     // TODO ensure the files exist
     // for tsPath in tsPaths do
@@ -88,35 +88,36 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
         }
         |> fixOpens
 
-    let file = Fs.createWriteStream fsPath
+    let file = fs.createWriteStream (Node.fs.PathLike.ofString fsPath)
     for line in printFsFile fsFileOut do
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``()
 
-let p = Fable.Import.Node.Globals.``process``
+// let p = Fable.Import.Node.Globals.``process``
+let [<Global "process">] p: Node.NodeJS.Process = jsNative
 let argv = p.argv |> List.ofSeq
 
 // if run via `dotnet fable npm-build` or `dotnet fable npm-start`
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
-    writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/Fable.Import.IziToast.fs"
-    writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/Fable.Import.TypeScript.fs"
-    writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Fable.Import.Electron.fs"
-    writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/Fable.Import.React.fs"
-    writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Fable.Import.Node.fs"
-    writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Fable.Import.Mocha.fs"
-    writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Fable.Import.Chai.fs"
-    writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Fable.Import.Chalk.fs"
+    writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
+    writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/TypeScript.fs"
+    writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Electron.fs"
+    writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/React.fs"
+    writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Node.fs"
+    writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
+    writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Chai.fs"
+    writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Chalk.fs"
     writeFile
         [   "node_modules/@types/google-protobuf/index.d.ts"
             "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
         ]
-        "test-compile/Fable.Import.Protobuf.fs"
+        "test-compile/Protobuf.fs"
 
     // files that have TODOs
-    // writeFile ["node_modules/@types/jquery/index.d.ts"] "test-compile/Fable.Import.JQuery.fs"
-    // writeFile ["node_modules/typescript/lib/lib.es2015.promise.d.ts"] "test-compile/Fable.Import.Promise.fs"
+    // writeFile ["node_modules/@types/jquery/index.d.ts"] "test-compile/JQuery.fs"
+    // writeFile ["node_modules/typescript/lib/lib.es2015.promise.d.ts"] "test-compile/Promise.fs"
 
     printfn "done writing test-compile files"
 

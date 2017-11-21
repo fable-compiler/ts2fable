@@ -2,9 +2,9 @@ module rec ts2fable.Read
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Import.Node
-open Fable.Import.TypeScript
-open Fable.Import.TypeScript.ts
+open Node
+open TypeScript
+open TypeScript.ts
 open System.Collections.Generic
 open System
 open ts2fable.Naming
