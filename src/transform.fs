@@ -262,13 +262,29 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
         | FsType.Function fn ->
-            if fn.Params.Length > 0 && isStringLiteralParam fn.Params.[0] then
-                let p0 = fn.Params.[0]
-                let p0sl = (asStringLiteral p0.Type).Value
+            if fn.HasStringLiteralParams then
+                let kind = List()
+                let name = List()
+                let prms = List()
+                sprintf "$0.%s(" fn.Name.Value |> kind.Add
+                sprintf "%s" fn.Name.Value |> name.Add
+                let slCount = ref 0
+                fn.Params |> List.iteri (fun i prm ->
+                    match asStringLiteral prm.Type with
+                    | None ->
+                        sprintf "$%d" (i + 1 - !slCount) |> kind.Add
+                    | Some sl ->
+                        incr slCount
+                        sprintf "'%s'" sl |> kind.Add
+                        sprintf "_%s" sl |> name.Add
+                    if i < fn.Params.Length - 1 then
+                        "," |> kind.Add
+                )
+                ")" |> kind.Add
                 { fn with
-                    Kind = sprintf "$0.%s('%s',$1...)" fn.Name.Value p0sl |> FsFunctionKind.StringParam
-                    Name = sprintf "%s_%s" fn.Name.Value p0sl |> Some
-                    Params = fn.Params.[1..]
+                    Kind = String.concat "" kind |> FsFunctionKind.StringParam
+                    Name = String.concat "" name |> Some
+                    Params = List.ofSeq prms
                 }
                 |> FsType.Function
             else tp
