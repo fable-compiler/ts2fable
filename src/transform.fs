@@ -273,6 +273,7 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                     match asStringLiteral prm.Type with
                     | None ->
                         sprintf "$%d" (i + 1 - !slCount) |> kind.Add
+                        prms.Add prm
                     | Some sl ->
                         incr slCount
                         sprintf "'%s'" sl |> kind.Add
