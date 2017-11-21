@@ -21,6 +21,7 @@ open Fable.Import.Node.Path
 
 let transform (file: FsFile): FsFile =
     file
+    |> removeInternalModules
     |> mergeModulesInFile
     |> addImports
     |> addConstructors
@@ -38,6 +39,7 @@ let transform (file: FsFile): FsFile =
     |> addTicForGenericTypes
     |> removeTodoMembers
     |> removeTypeParamsFromStatic
+    |> removeDuplicateFunctions
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
     let path = Fable.Import.Node.Exports.Path
