@@ -6,6 +6,7 @@ open Fable.Core.JsInterop
 open TypeScript
 open TypeScript.ts
 open System.Collections.Generic
+open Node
 
 open ts2fable.Naming
 open ts2fable.Read
@@ -88,14 +89,12 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
         }
         |> fixOpens
 
-    let file = fs.createWriteStream (Node.fs.PathLike.ofString fsPath)
+    let file = fs.createWriteStream (PathLike.ofString fsPath)
     for line in printFsFile fsFileOut do
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``()
 
-// let p = Fable.Import.Node.Globals.``process``
-let [<Global "process">] p: Node.NodeJS.Process = jsNative
-let argv = p.argv |> List.ofSeq
+let argv = ``process``.argv |> List.ofSeq
 
 // if run via `dotnet fable npm-build` or `dotnet fable npm-start`
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
