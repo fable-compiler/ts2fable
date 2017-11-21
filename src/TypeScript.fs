@@ -3,7 +3,6 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
-// let [<Import("*","ts")>] ts: ts.IExports = jsNative
 let [<Import("*","typescript")>] ts: ts.IExports = jsNative
 
 type [<AllowNullLiteral>] IExports =

@@ -505,8 +505,7 @@ let readExportAssignment(ea: ExportAssignment): FsType =
     match ea.expression.kind with
     | SyntaxKind.Identifier ->
         let path = readExpressionText ea.expression
-        // { IsGlobal = true; Selector = "*"; Path = path } |> FsType.Export
-        FsType.Export path
+        FsType.ExportAssignment path
     | _ -> FsType.None
 
 let readImportDeclaration(im: ImportDeclaration): FsType list =

@@ -100,7 +100,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
         }
         |> FsType.Variable
 
-    | FsType.Export _ -> tp
+    | FsType.ExportAssignment _ -> tp
     | FsType.Enum _ -> tp
     | FsType.Mapped _ -> tp
     | FsType.None _ -> tp
@@ -233,8 +233,9 @@ let createIExports (f: FsFile): FsFile =
 
                         (
                             if md.HasDeclare then
+                                let path = if f.ModuleName = "node" then md.Name else f.ModuleName
                                 {
-                                    Export = { IsGlobal = false; Selector = "*"; Path = md.Name } |> Some
+                                    Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                                     HasDeclare = true
                                     Name = md.Name
                                     Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
@@ -606,7 +607,7 @@ let addConstructors  (f: FsFile): FsFile =
         | _ -> tp
     )
 
-let rec addImports (f: FsFile): FsFile =
+let rec addExportAssigments (f: FsFile): FsFile =
 
     let globalModule = f.Modules |> List.find (fun md -> md.Name = "")
 
@@ -639,16 +640,17 @@ let rec addImports (f: FsFile): FsFile =
                 { md with
                     Types = md.Types |> List.map (fun tp ->
                         match tp with
-                        | FsType.Export ep ->
-                            if modules.Contains ep && variables.Contains ep = false then
-                                {
-                                    Export = { IsGlobal = false; Selector = "*"; Path = f.ModuleName } |> Some
-                                    HasDeclare = true // so it is not in IExports
-                                    Name = ep
-                                    Type = sprintf "%s.IExports" ep |> simpleType
-                                }
-                                |> FsType.Variable
-                            else tp
+                        // TODO
+                        // | FsType.Export ep ->
+                        //     if modules.Contains ep && variables.Contains ep = false then
+                        //         {
+                        //             Export = { IsGlobal = false; Selector = "*"; Path = f.ModuleName } |> Some
+                        //             HasDeclare = true // so it is not in IExports
+                        //             Name = ep
+                        //             Type = sprintf "%s.IExports" ep |> simpleType
+                        //         }
+                        //         |> FsType.Variable
+                        //     else tp
                         | FsType.Variable vb ->
                             if vb.HasDeclare then
                                 { vb with
