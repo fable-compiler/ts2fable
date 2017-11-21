@@ -202,16 +202,15 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
             printModule lines indent smd
         | FsType.Variable vb ->
             if vb.HasDeclare then
-                sprintf "" |> lines.Add
+                // sprintf "" |> lines.Add
                 sprintf "%slet %s%s: %s = jsNative" indent 
-                    (   match vb.Import with
+                    (   match vb.Export with
                         | None -> ""
-                        | Some im ->
-                            // special case Node
-                            if im.Path = "node" then
+                        | Some ep ->
+                            if ep.IsGlobal then
                                 "[<Global>] "
                             else
-                                sprintf "[<Import(\"%s\",\"%s\")>] " im.Selector im.Path
+                                sprintf "[<Import(\"%s\",\"%s\")>] " ep.Selector ep.Path
                     )
                     vb.Name (printType vb.Type)
                 |> lines.Add
@@ -231,6 +230,7 @@ let printFsFile (file: FsFileOut): List<string> =
     for opn in file.Opens do
         sprintf "open %s" opn |> lines.Add
 
+    sprintf "" |> lines.Add
     for f in file.Files do
         f.Modules
             |> List.filter (fun md -> md.Types.Length > 0)

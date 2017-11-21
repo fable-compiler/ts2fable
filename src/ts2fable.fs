@@ -22,7 +22,7 @@ let transform (file: FsFile): FsFile =
     file
     |> removeInternalModules
     |> mergeModulesInFile
-    |> addImports
+    |> addExportAssigments
     |> addConstructors
     |> fixThis
     |> fixNodeArray
@@ -30,6 +30,7 @@ let transform (file: FsFile): FsFile =
     |> fixDateTime
     |> fixStatic
     |> createIExports
+    |> moveDeclaredVariables
     |> fixOverloadingOnStringParameters // fixEscapeWords must be after
     |> fixEnumReferences
     |> fixDuplicatesInUnion
@@ -41,9 +42,6 @@ let transform (file: FsFile): FsFile =
     |> removeDuplicateFunctions
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
-    // let path = Fable.Import.Node.Exports.Path
-    let path: Node.path.IExports = importAll "path"
-    let fs: Node.fs.IExports = importAll "fs"
 
     // TODO ensure the files exist
     // for tsPath in tsPaths do
