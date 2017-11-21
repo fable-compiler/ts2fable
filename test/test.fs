@@ -125,3 +125,22 @@ describe "getJsModuleName tests" <| fun _ ->
     it "izitoast" <| fun _ ->
         getJsModuleName "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
         |> equal "izitoast"
+
+
+describe "fixModuleName tests" <| fun _ ->
+
+    it "open" <| fun _ ->
+        fixModuleName "open"
+        |> equal "open_"
+
+    it "module" <| fun _ ->
+        fixModuleName "module"
+        |> equal "module_"
+
+    it "process" <| fun _ ->
+        fixModuleName "process"
+        |> equal "process_"
+
+    it "assert" <| fun _ ->
+        fixModuleName "assert"
+        |> equal "assert_"

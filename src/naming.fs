@@ -86,12 +86,16 @@ let escapeWord (s: string) =
         else
             s
 
-// TODO
 let fixModuleName (s: string) =
     let s = s.Replace("'","") // remove single quotes
-    let parts = s |> createModuleNameParts
-    // [parts.Head] @ (parts.Tail |> List.map Enum.capitalize) |> String.concat ""
-    parts |> String.concat "_"
+    let s =
+        let parts = s |> createModuleNameParts
+        parts |> String.concat "_"
+    let s =
+        if Keywords.reserved.Contains s || Keywords.keywords.Contains s then
+            sprintf "%s_" s
+        else s
+    s
 
 let removeQuotes (s:string): string =
     if isNull s then ""
