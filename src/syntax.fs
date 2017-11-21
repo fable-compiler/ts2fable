@@ -123,13 +123,14 @@ type FsImport =
 
 type FsExport =
     {
+        IsGlobal: bool
         Selector: string
         Path: string
     }
 
 type FsVariable =
     {
-        Import: FsExport option
+        Export: FsExport option
         HasDeclare: bool
         Name: string
         Type: FsType
@@ -164,12 +165,14 @@ type FsType =
     | FileOut of FsFileOut
     | Variable of FsVariable
     | StringLiteral of string
+    // | Export of FsExport
     | Export of string
     | This
     | Import of FsImport
 
 type FsModule =
     {
+        HasDeclare: bool
         Name: string
         Types: FsType list
     }
@@ -261,3 +264,6 @@ let rec getFullName (tp: FsType) =
     | FsType.Generic gn -> getFullName gn.Type
     | FsType.File fl -> fl.FileName
     | _ -> ""
+
+type FsVariable with
+    member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal

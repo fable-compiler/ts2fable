@@ -3,6 +3,9 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
+// let [<Import("*","ts")>] ts: ts.IExports = jsNative
+let [<Import("*","typescript")>] ts: ts.IExports = jsNative
+
 type [<AllowNullLiteral>] IExports =
     abstract setTimeout: handler: (ResizeArray<obj> -> unit) * timeout: float -> obj
     abstract clearTimeout: handle: obj -> unit
@@ -4559,5 +4562,3 @@ module ts =
     type [<AllowNullLiteral>] DisplayPartsSymbolWriter =
         inherit SymbolWriter
         abstract displayParts: unit -> ResizeArray<SymbolDisplayPart>
-
-let [<Import("*","typescript")>] ts: ts.IExports = jsNative

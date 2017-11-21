@@ -217,19 +217,36 @@ let createIExports (f: FsFile): FsFile =
             if tps.Length = 0 then
                 tp
             else
-                let cl: FsInterface =
-                    {
-                        Comments = []
-                        IsStatic = false
-                        IsClass = false
-                        Name = "IExports"
-                        FullName = "IExports"
-                        Inherits = []
-                        TypeParameters = []
-                        Members = tps
-                    }
+                let newTypes =
+                    [
+                        {
+                            Comments = []
+                            IsStatic = false
+                            IsClass = false
+                            Name = "IExports"
+                            FullName = "IExports"
+                            Inherits = []
+                            TypeParameters = []
+                            Members = tps
+                        }
+                        |> FsType.Interface |> Some
+
+                        (
+                            if md.HasDeclare then
+                                {
+                                    Export = { IsGlobal = false; Selector = "*"; Path = md.Name } |> Some
+                                    HasDeclare = true
+                                    Name = md.Name
+                                    Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
+                                }
+                                |> FsType.Variable |> Some
+                            else
+                                None
+                        )
+                    ]
+                    |> List.choose id
                 { md with
-                    Types = [ FsType.Interface cl ] @ md.Types
+                    Types = newTypes @ md.Types
                 }
                 |> FsType.Module
         | _ -> tp
@@ -625,7 +642,7 @@ let rec addImports (f: FsFile): FsFile =
                         | FsType.Export ep ->
                             if modules.Contains ep && variables.Contains ep = false then
                                 {
-                                    Import = { Selector = "*"; Path = f.ModuleName } |> Some
+                                    Export = { IsGlobal = false; Selector = "*"; Path = f.ModuleName } |> Some
                                     HasDeclare = true // so it is not in IExports
                                     Name = ep
                                     Type = sprintf "%s.IExports" ep |> simpleType
@@ -635,7 +652,7 @@ let rec addImports (f: FsFile): FsFile =
                         | FsType.Variable vb ->
                             if vb.HasDeclare then
                                 { vb with
-                                    Import = { Selector = "*"; Path = f.ModuleName } |> Some
+                                    Export = { IsGlobal = f.ModuleName = "node"; Selector = "*"; Path = f.ModuleName } |> Some
                                 }
                                 |> FsType.Variable
                             else tp
@@ -682,5 +699,53 @@ let removeDuplicateFunctions(f: FsFile): FsFile =
                 )
             }
             |> FsType.Interface
+        | _ -> tp
+    )
+
+let rec moveDeclaredVariables (f: FsFile): FsFile =
+    let globalDeclares = List<_>()
+    let otherDeclares = List<_>()
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+            for tp in md.Types do
+                match tp with
+                | FsType.Variable vb ->
+                    if vb.HasDeclare then
+                        if vb.IsGlobal then
+                            globalDeclares.Add tp |> ignore
+                        else
+                            otherDeclares.Add tp |> ignore
+                | _ -> ()
+            tp
+        | _ -> tp
+    ) |> ignore
+
+    let filterDeclares (tps: FsType list) =
+        tps |> List.collect (fun tp ->
+            match tp with
+            | FsType.Variable vb ->
+                if vb.HasDeclare then []
+                else [tp]
+            | _ -> [tp]
+        )
+
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+            if md.Name = "" then // global
+                { md with
+                    Types =
+                        (globalDeclares |> List.ofSeq)
+                        @ (otherDeclares |> List.ofSeq)
+                        @ (md.Types |> filterDeclares)
+                }
+                |> FsType.Module
+            else
+                // filter out the declares that were just moved
+                { md with
+                    Types = md.Types |> filterDeclares
+                }
+                |> FsType.Module
         | _ -> tp
     )

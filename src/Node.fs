@@ -3,6 +3,54 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
+let [<Global>] Symbol: SymbolConstructor = jsNative
+let [<Global>] ``process``: NodeJS.Process = jsNative
+let [<Global>] ``global``: NodeJS.Global = jsNative
+let [<Global>] console: Console = jsNative
+let [<Global>] __filename: string = jsNative
+let [<Global>] __dirname: string = jsNative
+let [<Global>] require: NodeRequire = jsNative
+let [<Global>] ``module``: NodeModule = jsNative
+let [<Global>] exports: obj = jsNative
+let [<Global>] SlowBuffer: obj = jsNative
+let [<Global>] Buffer: obj = jsNative
+let [<Import("*","setTimeout")>] setTimeout: setTimeout.IExports = jsNative
+let [<Import("*","setImmediate")>] setImmediate: setImmediate.IExports = jsNative
+let [<Import("*","NodeJS")>] NodeJS: NodeJS.IExports = jsNative
+let [<Import("*","buffer")>] buffer: buffer.IExports = jsNative
+let [<Import("*","querystring")>] querystring: querystring.IExports = jsNative
+let [<Import("*","events")>] events: events.IExports = jsNative
+let [<Import("*","http")>] http: http.IExports = jsNative
+let [<Import("*","cluster")>] cluster: cluster.IExports = jsNative
+let [<Import("*","zlib")>] zlib: zlib.IExports = jsNative
+let [<Import("*","os")>] os: os.IExports = jsNative
+let [<Import("*","https")>] https: https.IExports = jsNative
+let [<Import("*","punycode")>] punycode: punycode.IExports = jsNative
+let [<Import("*","repl")>] repl: repl.IExports = jsNative
+let [<Import("*","readline")>] readline: readline.IExports = jsNative
+let [<Import("*","vm")>] vm: vm.IExports = jsNative
+let [<Import("*","child_process")>] child_process: child_process.IExports = jsNative
+let [<Import("*","url")>] url: url.IExports = jsNative
+let [<Import("*","dns")>] dns: dns.IExports = jsNative
+let [<Import("*","net")>] net: net.IExports = jsNative
+let [<Import("*","dgram")>] dgram: dgram.IExports = jsNative
+let [<Import("*","fs")>] fs: fs.IExports = jsNative
+let [<Import("*","path")>] path: path.IExports = jsNative
+let [<Import("*","string_decoder")>] string_decoder: string_decoder.IExports = jsNative
+let [<Import("*","tls")>] tls: tls.IExports = jsNative
+let [<Import("*","crypto")>] crypto: crypto.IExports = jsNative
+let [<Import("*","stream")>] stream: stream.IExports = jsNative
+let [<Import("*","util")>] util: util.IExports = jsNative
+let [<Import("*","assert")>] ``assert``: assert_.IExports = jsNative
+let [<Import("*","tty")>] tty: tty.IExports = jsNative
+let [<Import("*","domain")>] domain: domain.IExports = jsNative
+let [<Import("*","constants")>] constants: constants.IExports = jsNative
+let [<Import("*","v8")>] v8: v8.IExports = jsNative
+let [<Import("*","timers")>] timers: timers.IExports = jsNative
+let [<Import("*","_debugger")>] _debugger: _debugger.IExports = jsNative
+let [<Import("*","async_hooks")>] async_hooks: async_hooks.IExports = jsNative
+let [<Import("*","http2")>] http2: http2.IExports = jsNative
+
 type [<AllowNullLiteral>] IExports =
     abstract setTimeout: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: obj -> NodeJS.Timer
     abstract clearTimeout: timeoutId: NodeJS.Timer -> unit
@@ -57,18 +105,6 @@ type [<AllowNullLiteral>] SymbolConstructor =
     /// for-of statement.
     abstract iterator: Symbol
 
-let [<Global>] Symbol: SymbolConstructor = jsNative
-
-let [<Global>] ``process``: NodeJS.Process = jsNative
-
-let [<Global>] ``global``: NodeJS.Global = jsNative
-
-let [<Global>] console: Console = jsNative
-
-let [<Global>] __filename: string = jsNative
-
-let [<Global>] __dirname: string = jsNative
-
 module setTimeout =
 
     type [<AllowNullLiteral>] IExports =
@@ -97,8 +133,6 @@ type [<AllowNullLiteral>] NodeExtensions =
     abstract ``.node``: (NodeModule -> string -> obj) with get, set
     [<Emit "$0[$1]{{=$2}}">] abstract Item: ext: string -> (NodeModule -> string -> obj) with get, set
 
-let [<Global>] require: NodeRequire = jsNative
-
 type [<AllowNullLiteral>] NodeModule =
     abstract exports: obj with get, set
     abstract require: NodeRequireFunction with get, set
@@ -107,12 +141,6 @@ type [<AllowNullLiteral>] NodeModule =
     abstract loaded: bool with get, set
     abstract parent: NodeModule option with get, set
     abstract children: ResizeArray<NodeModule> with get, set
-
-let [<Global>] ``module``: NodeModule = jsNative
-
-let [<Global>] exports: obj = jsNative
-
-let [<Global>] SlowBuffer: obj = jsNative
 
 type [<StringEnum>] [<RequireQualifiedAccess>] BufferEncoding =
     | Ascii
@@ -129,8 +157,6 @@ type [<StringEnum>] [<RequireQualifiedAccess>] BufferEncoding =
 /// Valid string encodings: 'ascii'|'utf8'|'utf16le'|'ucs2'(alias of 'utf16le')|'base64'|'binary'(deprecated)|'hex'
 type [<AllowNullLiteral>] Buffer =
     inherit NodeBuffer
-
-let [<Global>] Buffer: obj = jsNative
 
 module NodeJS =
 

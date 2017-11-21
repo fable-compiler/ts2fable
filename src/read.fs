@@ -157,7 +157,7 @@ let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
 let readVariable (checker: TypeChecker) (vb: VariableStatement): FsVariable =
     let vd = vb.declarationList.declarations.[0] // TODO more than 1
     {
-        Import = None
+        Export = None
         HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers
         Name = vd.name |> getBindingName
         Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
@@ -502,13 +502,11 @@ let readExpressionText(ep: Expression): string =
         ep.getText()
 
 let readExportAssignment(ea: ExportAssignment): FsType =
-    // printfn "kind %A" (ea.expression.kind)
     match ea.expression.kind with
     | SyntaxKind.Identifier ->
-        let id = ea.expression :?> Identifier
-        let exp = readExpressionText ea.expression
-        // printfn "export %A" exp
-        FsType.Export exp
+        let path = readExpressionText ea.expression
+        // { IsGlobal = true; Selector = "*"; Path = path } |> FsType.Export
+        FsType.Export path
     | _ -> FsType.None
 
 let readImportDeclaration(im: ImportDeclaration): FsType list =
@@ -596,6 +594,7 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
         | _ -> printfn "unknown kind in ModuleDeclaration: %A" nd.kind
     )
     {
+        HasDeclare = hasModifier SyntaxKind.DeclareKeyword md.modifiers
         Name = readModuleName md.name
         Types = types |> List.ofSeq
     }
@@ -605,6 +604,7 @@ let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile):
 
     let gbl: FsModule =
         {
+            HasDeclare = false
             Name = ""
             Types =
                 sfs
