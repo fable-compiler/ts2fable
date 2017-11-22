@@ -124,7 +124,8 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     printfn "done writing test-compile files"
 
 else
-    let packageJson = fs.readFileSync(PathLike.ofString "package.json" |> U2.Case1, "utf8" |> U2.Case2) |> ofJson<PackageJson>
+    let packageJsonPath = path.join(List([__dirname; "../package.json"]))
+    let packageJson = fs.readFileSync(PathLike.ofString packageJsonPath |> U2.Case1, "utf8" |> U2.Case2) |> ofJson<PackageJson>
     printfn "ts2fable %s" packageJson.version
 
     let tsfiles = argv |> List.filter (fun s -> s.EndsWith ".ts")
