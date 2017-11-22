@@ -119,6 +119,10 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     printfn "done writing test-compile files"
 
 else
+    match ``process``.env.["npm_package_version"] with
+    | None -> ()
+    | Some version ->  printfn "ts2fable %s" version
+
     let tsfiles = argv |> List.filter (fun s -> s.EndsWith ".ts")
     let fsfile = argv |> List.tryFind (fun s -> s.EndsWith ".fs")
     

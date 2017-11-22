@@ -2,6 +2,8 @@
 module ts2fable.NodeExt
    open Node.fs
 
+    // union helpers: of, is, & as
+    // https://github.com/fable-compiler/ts2fable/issues/105
     [<RequireQualifiedAccess>]
     module PathLike =
         let ofString v = PathLike.Case1 v
