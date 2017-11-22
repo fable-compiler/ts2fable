@@ -3070,7 +3070,7 @@ module path =
         abstract normalize: p: string -> string
         /// Join all arguments together and normalize the resulting path.
         /// Arguments must be strings. In v0.8, non-string arguments were silently ignored. In v0.10 and up, an exception is thrown.
-        abstract join: [<ParamArray>] paths: string -> string
+        abstract join: [<ParamArray>] paths: ResizeArray<string> -> string
         /// The right-most parameter is considered {to}.  Other parameters are considered an array of {from}.
         /// 
         /// Starting from leftmost {from} paramter, resolves {to} to an absolute path.
