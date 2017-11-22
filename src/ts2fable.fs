@@ -94,6 +94,11 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
 
 let argv = ``process``.argv |> List.ofSeq
 
+type PackageJson =
+    {
+        version: string
+    }
+
 // if run via `dotnet fable npm-build` or `dotnet fable npm-start`
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
@@ -119,9 +124,8 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     printfn "done writing test-compile files"
 
 else
-    match ``process``.env.["npm_package_version"] with
-    | None -> ()
-    | Some version ->  printfn "ts2fable %s" version
+    let packageJson = fs.readFileSync(PathLike.ofString "package.json" |> U2.Case1, "utf8" |> U2.Case2) |> ofJson<PackageJson>
+    printfn "ts2fable %s" packageJson.version
 
     let tsfiles = argv |> List.filter (fun s -> s.EndsWith ".ts")
     let fsfile = argv |> List.tryFind (fun s -> s.EndsWith ".fs")
