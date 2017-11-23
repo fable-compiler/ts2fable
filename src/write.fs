@@ -225,6 +225,7 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
 let printFsFile (file: FsFileOut): List<string> =
     let lines = List<string>()
 
+    sprintf "// ts2fable %s" Version.version |> lines.Add
     sprintf "module rec %s" file.Namespace |> lines.Add
 
     for opn in file.Opens do
