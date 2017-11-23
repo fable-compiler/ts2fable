@@ -1,3 +1,4 @@
+// ts2fable 0.0.0
 module rec TypeScript
 open System
 open Fable.Core
@@ -772,7 +773,7 @@ module ts =
 
     /// Array that is only intended to be pushed to, never read. 
     type [<AllowNullLiteral>] Push<'T> =
-        abstract push: [<ParamArray>] values: 'T -> unit
+        abstract push: [<ParamArray>] values: ResizeArray<'T> -> unit
 
     type Path =
         obj
@@ -3835,7 +3836,7 @@ module ts =
         abstract createHash: data: string -> string
         abstract getMemoryUsage: unit -> float
         abstract realpath: path: string -> string
-        abstract setTimeout: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: obj -> obj
+        abstract setTimeout: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj> -> obj
         abstract clearTimeout: timeoutId: obj -> unit
 
     type [<AllowNullLiteral>] FileWatcher =
