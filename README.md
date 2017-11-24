@@ -14,11 +14,11 @@ With npm it is:
 npm install -g ts2fable
 ```
 
-Run the `ts2fable` command on a TypeScript declaration file and also specify the F# output file. The F# namespace in taken from the output filename. In this example, it is `Fable.Import.React`.
+Run the `ts2fable` command on a TypeScript file and also specify the F# output file. The F# namespace in taken from the output filename. In this example, it is `Yargs`.
 
 ```
-yarn add @types/react --dev
-ts2fable node_modules/@types/react/index.d.ts Fable.Import.React.fs
+yarn add @types/yargs --dev
+ts2fable node_modules/@types/yargs/index.d.ts src/Yargs.fs
 ```
 
 You can find more information about how to interact with JavaScript
@@ -26,6 +26,12 @@ from F# [here](https://github.com/fable-compiler/Fable/blob/master/docs/source/d
 Please note the parser is not perfect and some tweaking by hand may be needed. Please submit bugs as [issues on GitHub](https://github.com/fable-compiler/ts2fable/issues).
 
 ## Contributing
+Succesfull [builds](https://ci.appveyor.com/project/fable-compiler/ts2fable/history) on the master branch are uploaded and tagged as `next`. You can help us test these builds by installing them with:
+```
+yarn global add ts2fable@next
+```
+
+You may also clone the source code, build, and run it directly from source:
 ```
 git clone https://github.com/fable-compiler/ts2fable
 ```
@@ -38,7 +44,7 @@ yarn
 cd src
 dotnet restore
 dotnet fable yarn-build
-node ../dist/ts2fable.js ../node_modules/typescript/lib/typescript.d.ts bin/Fable.Import.TypeScript.fs
+node ../dist/ts2fable.js ../node_modules/typescript/lib/typescript.d.ts ../test-compile/TypeScript.fs
 ```
 
 You can also have it watch the files with:
@@ -50,19 +56,6 @@ dotnet fable yarn-watch
 
 Some JavaScript/TypeScript features have no direct translation to F#. Here is
 a list of common workarounds adopted by the parser to solve these problems:
-
-* **Module methods**: Module functions in F# have several limitations (no overload,
-optional or rest parameters). To overcome this, the parser wraps module methods
-in a dummy static typed named `Globals`. For example:
-
-```fsharp
-module ReactDom =
-    type [<Import("react-dom")>] Globals =
-        static member render(element: DOMElement<'P>, container: Element, ?callback: Func<Element, obj>): Element = jsNative
-```
-
-> Note the `Import` attribute is on the `Globals` value, not the module.
-
 
 * **Erased unions**: TypeScript union types work differently from F# and its only
 purpose is to specify the types allowed for a function argument. In F# they are
