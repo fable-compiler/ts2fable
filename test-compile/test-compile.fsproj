@@ -3,11 +3,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="IziToast.fs" />
     <Compile Include="TypeScript.fs" />
+    <Compile Include="Node.fs" />
+    <Compile Include="Yargs.fs" />
+
+    <Compile Include="IziToast.fs" />
     <!-- <Compile Include="Electron.fs" /> -->
     <!-- <Compile Include="React.fs" /> -->
-    <Compile Include="Node.fs" />
     <Compile Include="Mocha.fs" />
     <Compile Include="Chai.fs" />
     <Compile Include="Chalk.fs" />
