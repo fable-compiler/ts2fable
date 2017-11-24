@@ -12,7 +12,7 @@ let [<Global>] __filename: string = jsNative
 let [<Global>] __dirname: string = jsNative
 let [<Global>] require: NodeRequire = jsNative
 let [<Global>] ``module``: NodeModule = jsNative
-let [<Global>] exports: obj = jsNative
+let [<Global>] exports: obj option = jsNative
 let [<Global>] SlowBuffer: obj = jsNative
 let [<Global>] Buffer: obj = jsNative
 let [<Import("*","setTimeout")>] setTimeout: setTimeout.IExports = jsNative
@@ -53,25 +53,25 @@ let [<Import("*","async_hooks")>] async_hooks: async_hooks.IExports = jsNative
 let [<Import("*","http2")>] http2: http2.IExports = jsNative
 
 type [<AllowNullLiteral>] IExports =
-    abstract setTimeout: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj> -> NodeJS.Timer
+    abstract setTimeout: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer
     abstract clearTimeout: timeoutId: NodeJS.Timer -> unit
-    abstract setInterval: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj> -> NodeJS.Timer
+    abstract setInterval: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer
     abstract clearInterval: intervalId: NodeJS.Timer -> unit
-    abstract setImmediate: callback: (ResizeArray<obj> -> unit) * [<ParamArray>] args: ResizeArray<obj> -> obj
-    abstract clearImmediate: immediateId: obj -> unit
+    abstract setImmediate: callback: (ResizeArray<obj option> -> unit) * [<ParamArray>] args: ResizeArray<obj option> -> obj option
+    abstract clearImmediate: immediateId: obj option -> unit
 
 /// inspector module types 
 type [<AllowNullLiteral>] Console =
     abstract Console: NodeJS.ConsoleConstructor with get, set
-    abstract ``assert``: value: obj * ?message: string * [<ParamArray>] optionalParams: ResizeArray<obj> -> unit
-    abstract dir: obj: obj * ?options: NodeJS.InspectOptions -> unit
-    abstract error: ?message: obj * [<ParamArray>] optionalParams: ResizeArray<obj> -> unit
-    abstract info: ?message: obj * [<ParamArray>] optionalParams: ResizeArray<obj> -> unit
-    abstract log: ?message: obj * [<ParamArray>] optionalParams: ResizeArray<obj> -> unit
+    abstract ``assert``: value: obj option * ?message: string * [<ParamArray>] optionalParams: ResizeArray<obj option> -> unit
+    abstract dir: obj: obj option * ?options: NodeJS.InspectOptions -> unit
+    abstract error: ?message: obj option * [<ParamArray>] optionalParams: ResizeArray<obj option> -> unit
+    abstract info: ?message: obj option * [<ParamArray>] optionalParams: ResizeArray<obj option> -> unit
+    abstract log: ?message: obj option * [<ParamArray>] optionalParams: ResizeArray<obj option> -> unit
     abstract time: label: string -> unit
     abstract timeEnd: label: string -> unit
-    abstract trace: ?message: obj * [<ParamArray>] optionalParams: ResizeArray<obj> -> unit
-    abstract warn: ?message: obj * [<ParamArray>] optionalParams: ResizeArray<obj> -> unit
+    abstract trace: ?message: obj option * [<ParamArray>] optionalParams: ResizeArray<obj option> -> unit
+    abstract warn: ?message: obj option * [<ParamArray>] optionalParams: ResizeArray<obj option> -> unit
 
 type [<AllowNullLiteral>] Error =
     abstract stack: string option with get, set
@@ -96,7 +96,7 @@ type [<AllowNullLiteral>] Iterable<'T> =
     interface end
 
 type [<AllowNullLiteral>] Iterator<'T> =
-    abstract next: ?value: obj -> IteratorResult<'T>
+    abstract next: ?value: obj option -> IteratorResult<'T>
 
 type [<AllowNullLiteral>] IteratorResult<'T> =
     interface end
@@ -119,23 +119,23 @@ module setImmediate =
         abstract __promisify__: value: 'T -> Promise<'T>
 
 type [<AllowNullLiteral>] NodeRequireFunction =
-    [<Emit "$0($1...)">] abstract Invoke: id: string -> obj
+    [<Emit "$0($1...)">] abstract Invoke: id: string -> obj option
 
 type [<AllowNullLiteral>] NodeRequire =
     inherit NodeRequireFunction
     abstract resolve: id: string -> string
-    abstract cache: obj with get, set
+    abstract cache: obj option with get, set
     abstract extensions: NodeExtensions with get, set
     abstract main: NodeModule option with get, set
 
 type [<AllowNullLiteral>] NodeExtensions =
-    abstract ``.js``: (NodeModule -> string -> obj) with get, set
-    abstract ``.json``: (NodeModule -> string -> obj) with get, set
-    abstract ``.node``: (NodeModule -> string -> obj) with get, set
-    [<Emit "$0[$1]{{=$2}}">] abstract Item: ext: string -> (NodeModule -> string -> obj) with get, set
+    abstract ``.js``: (NodeModule -> string -> obj option) with get, set
+    abstract ``.json``: (NodeModule -> string -> obj option) with get, set
+    abstract ``.node``: (NodeModule -> string -> obj option) with get, set
+    [<Emit "$0[$1]{{=$2}}">] abstract Item: ext: string -> (NodeModule -> string -> obj option) with get, set
 
 type [<AllowNullLiteral>] NodeModule =
-    abstract exports: obj with get, set
+    abstract exports: obj option with get, set
     abstract require: NodeRequireFunction with get, set
     abstract id: string with get, set
     abstract filename: string with get, set
@@ -190,18 +190,18 @@ module NodeJS =
         abstract stack: string option with get, set
 
     type [<AllowNullLiteral>] EventEmitter =
-        abstract addListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract on: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract once: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract removeListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
+        abstract addListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract on: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract once: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract removeListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
         abstract removeAllListeners: ?``event``: U2<string, Symbol> -> EventEmitter
         abstract setMaxListeners: n: float -> EventEmitter
         abstract getMaxListeners: unit -> float
         abstract listeners: ``event``: U2<string, Symbol> -> ResizeArray<Function>
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         abstract listenerCount: ``type``: U2<string, Symbol> -> float
-        abstract prependListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract prependOnceListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
+        abstract prependListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract prependOnceListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
         abstract eventNames: unit -> Array<U2<string, Symbol>>
 
     type [<AllowNullLiteral>] EventEmitterStatic =
@@ -243,13 +243,13 @@ module NodeJS =
         abstract run: fn: Function -> unit
         abstract add: emitter: Events -> unit
         abstract remove: emitter: Events -> unit
-        abstract bind: cb: (Error -> obj -> obj) -> obj
-        abstract intercept: cb: (obj -> obj) -> obj
+        abstract bind: cb: (Error -> obj option -> obj option) -> obj option
+        abstract intercept: cb: (obj option -> obj option) -> obj option
         abstract dispose: unit -> unit
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Domain
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Domain
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Domain
-        abstract removeListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Domain
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Domain
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Domain
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Domain
+        abstract removeListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Domain
         abstract removeAllListeners: ?``event``: string -> Domain
 
     type [<AllowNullLiteral>] MemoryUsage =
@@ -331,28 +331,28 @@ module NodeJS =
         (float -> unit)
 
     type RejectionHandledListener =
-        (Promise<obj> -> unit)
+        (Promise<obj option> -> unit)
 
     type UncaughtExceptionListener =
         (Error -> unit)
 
     type UnhandledRejectionListener =
-        (obj -> Promise<obj> -> unit)
+        (obj option -> Promise<obj option> -> unit)
 
     type WarningListener =
         (Error -> unit)
 
     type MessageListener =
-        (obj -> obj -> unit)
+        (obj option -> obj option -> unit)
 
     type SignalsListener =
         (unit -> unit)
 
     type NewListenerListener =
-        (U2<string, Symbol> -> (ResizeArray<obj> -> unit) -> unit)
+        (U2<string, Symbol> -> (ResizeArray<obj option> -> unit) -> unit)
 
     type RemoveListenerListener =
-        (U2<string, Symbol> -> (ResizeArray<obj> -> unit) -> unit)
+        (U2<string, Symbol> -> (ResizeArray<obj option> -> unit) -> unit)
 
     type [<AllowNullLiteral>] Socket =
         inherit ReadWriteStream
@@ -365,7 +365,7 @@ module NodeJS =
         inherit Socket
         abstract columns: float option with get, set
         abstract rows: float option with get, set
-        abstract _write: chunk: obj * encoding: string * callback: Function -> unit
+        abstract _write: chunk: obj option * encoding: string * callback: Function -> unit
         abstract _destroy: err: Error * callback: Function -> unit
         abstract _final: callback: Function -> unit
         abstract setDefaultEncoding: encoding: string -> WriteStream
@@ -379,7 +379,7 @@ module NodeJS =
         abstract setRawMode: mode: bool -> unit
         abstract _read: size: float -> unit
         abstract _destroy: err: Error * callback: Function -> unit
-        abstract push: chunk: obj * ?encoding: string -> bool
+        abstract push: chunk: obj option * ?encoding: string -> bool
         abstract destroy: ?error: Error -> unit
 
     type [<AllowNullLiteral>] Process =
@@ -419,12 +419,12 @@ module NodeJS =
         abstract mainModule: NodeModule option with get, set
         abstract memoryUsage: unit -> MemoryUsage
         abstract cpuUsage: ?previousValue: CpuUsage -> CpuUsage
-        abstract nextTick: callback: Function * [<ParamArray>] args: ResizeArray<obj> -> unit
+        abstract nextTick: callback: Function * [<ParamArray>] args: ResizeArray<obj option> -> unit
         abstract umask: ?mask: float -> float
         abstract uptime: unit -> float
         abstract hrtime: ?time: float * float -> float * float
         abstract domain: Domain with get, set
-        abstract send: message: obj * ?sendHandle: obj -> unit
+        abstract send: message: obj option * ?sendHandle: obj option -> unit
         abstract disconnect: unit -> unit
         abstract connected: bool with get, set
         /// EventEmitter
@@ -453,14 +453,14 @@ module NodeJS =
         [<Emit "$0.emit('beforeExit',$1)">] abstract emit_beforeExit: code: float -> bool
         [<Emit "$0.emit('disconnect')">] abstract emit_disconnect: unit -> bool
         [<Emit "$0.emit('exit',$1)">] abstract emit_exit: code: float -> bool
-        [<Emit "$0.emit('rejectionHandled',$1)">] abstract emit_rejectionHandled: promise: Promise<obj> -> bool
+        [<Emit "$0.emit('rejectionHandled',$1)">] abstract emit_rejectionHandled: promise: Promise<obj option> -> bool
         [<Emit "$0.emit('uncaughtException',$1)">] abstract emit_uncaughtException: error: Error -> bool
-        [<Emit "$0.emit('unhandledRejection',$1,$2)">] abstract emit_unhandledRejection: reason: obj * promise: Promise<obj> -> bool
+        [<Emit "$0.emit('unhandledRejection',$1,$2)">] abstract emit_unhandledRejection: reason: obj option * promise: Promise<obj option> -> bool
         [<Emit "$0.emit('warning',$1)">] abstract emit_warning: warning: Error -> bool
-        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj * sendHandle: obj -> Process
+        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj option * sendHandle: obj option -> Process
         abstract emit: ``event``: Signals -> bool
-        [<Emit "$0.emit('newListener',$1,$2)">] abstract emit_newListener: eventName: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> Process
-        [<Emit "$0.emit('removeListener',$1,$2)">] abstract emit_removeListener: eventName: string * listener: (ResizeArray<obj> -> unit) -> Process
+        [<Emit "$0.emit('newListener',$1,$2)">] abstract emit_newListener: eventName: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> Process
+        [<Emit "$0.emit('removeListener',$1,$2)">] abstract emit_removeListener: eventName: string * listener: (ResizeArray<obj option> -> unit) -> Process
         [<Emit "$0.on('beforeExit',$1)">] abstract on_beforeExit: listener: BeforeExitListener -> Process
         [<Emit "$0.on('disconnect',$1)">] abstract on_disconnect: listener: DisconnectListener -> Process
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: ExitListener -> Process
@@ -557,7 +557,7 @@ module NodeJS =
         abstract Uint8ClampedArray: Function with get, set
         abstract WeakMap: WeakMapConstructor with get, set
         abstract WeakSet: WeakSetConstructor with get, set
-        abstract clearImmediate: (obj -> unit) with get, set
+        abstract clearImmediate: (obj option -> unit) with get, set
         abstract clearInterval: (NodeJS.Timer -> unit) with get, set
         abstract clearTimeout: (NodeJS.Timer -> unit) with get, set
         abstract console: obj with get, set
@@ -574,13 +574,13 @@ module NodeJS =
         abstract parseInt: obj with get, set
         abstract ``process``: Process with get, set
         abstract root: Global with get, set
-        abstract setImmediate: ((ResizeArray<obj> -> unit) -> ResizeArray<obj> -> obj) with get, set
-        abstract setInterval: ((ResizeArray<obj> -> unit) -> float -> ResizeArray<obj> -> NodeJS.Timer) with get, set
-        abstract setTimeout: ((ResizeArray<obj> -> unit) -> float -> ResizeArray<obj> -> NodeJS.Timer) with get, set
+        abstract setImmediate: ((ResizeArray<obj option> -> unit) -> ResizeArray<obj option> -> obj option) with get, set
+        abstract setInterval: ((ResizeArray<obj option> -> unit) -> float -> ResizeArray<obj option> -> NodeJS.Timer) with get, set
+        abstract setTimeout: ((ResizeArray<obj option> -> unit) -> float -> ResizeArray<obj option> -> NodeJS.Timer) with get, set
         abstract undefined: obj with get, set
         abstract unescape: (string -> string) with get, set
         abstract gc: (unit -> unit) with get, set
-        abstract v8debug: obj option with get, set
+        abstract v8debug: obj option option with get, set
 
     type [<AllowNullLiteral>] Timer =
         abstract ref: unit -> unit
@@ -588,7 +588,7 @@ module NodeJS =
 
     type [<AllowNullLiteral>] Module =
         abstract Module: obj with get, set
-        abstract exports: obj with get, set
+        abstract exports: obj option with get, set
         abstract require: NodeRequireFunction with get, set
         abstract id: string with get, set
         abstract filename: string with get, set
@@ -653,7 +653,7 @@ type [<AllowNullLiteral>] NodeBuffer =
     abstract writeFloatBE: value: float * offset: float * ?noAssert: bool -> float
     abstract writeDoubleLE: value: float * offset: float * ?noAssert: bool -> float
     abstract writeDoubleBE: value: float * offset: float * ?noAssert: bool -> float
-    abstract fill: value: obj * ?offset: float * ?``end``: float -> NodeBuffer
+    abstract fill: value: obj option * ?offset: float * ?``end``: float -> NodeBuffer
     abstract indexOf: value: U3<string, float, Buffer> * ?byteOffset: float * ?encoding: string -> float
     abstract lastIndexOf: value: U3<string, float, Buffer> * ?byteOffset: float * ?encoding: string -> float
     abstract entries: unit -> IterableIterator<float * float>
@@ -699,17 +699,17 @@ module events =
     type [<AllowNullLiteral>] EventEmitter =
         inherit ``internal``
         abstract defaultMaxListeners: float with get, set
-        abstract addListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract on: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract once: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract prependListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract prependOnceListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
-        abstract removeListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj> -> unit) -> EventEmitter
+        abstract addListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract on: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract once: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract prependListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract prependOnceListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
+        abstract removeListener: ``event``: U2<string, Symbol> * listener: (ResizeArray<obj option> -> unit) -> EventEmitter
         abstract removeAllListeners: ?``event``: U2<string, Symbol> -> EventEmitter
         abstract setMaxListeners: n: float -> EventEmitter
         abstract getMaxListeners: unit -> float
         abstract listeners: ``event``: U2<string, Symbol> -> ResizeArray<Function>
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         abstract eventNames: unit -> Array<U2<string, Symbol>>
         abstract listenerCount: ``type``: U2<string, Symbol> -> float
 
@@ -732,7 +732,7 @@ module http =
         abstract METHODS: ResizeArray<string> with get, set
         abstract STATUS_CODES: obj with get, set
         abstract createServer: ?requestListener: (IncomingMessage -> ServerResponse -> unit) -> Server
-        abstract createClient: ?port: float * ?host: string -> obj
+        abstract createClient: ?port: float * ?host: string -> obj option
         abstract request: options: U3<RequestOptions, string, URL> * ?callback: (IncomingMessage -> unit) -> ClientRequest
         abstract get: options: U3<RequestOptions, string, URL> * ?callback: (IncomingMessage -> unit) -> ClientRequest
         abstract globalAgent: Agent with get, set
@@ -914,8 +914,8 @@ module http =
 
     type [<AllowNullLiteral>] Agent =
         abstract maxSockets: float with get, set
-        abstract sockets: obj with get, set
-        abstract requests: obj with get, set
+        abstract sockets: obj option with get, set
+        abstract requests: obj option with get, set
         /// Destroy any sockets that are currently in use by the agent.
         /// It is usually not necessary to do this. However, if you are using an agent with KeepAlive enabled,
         /// then it is best to explicitly shut down the agent when you know that it will no longer be used. Otherwise,
@@ -934,7 +934,7 @@ module cluster =
     type [<AllowNullLiteral>] IExports =
         abstract Worker: WorkerStatic
         abstract disconnect: ?callback: Function -> unit
-        abstract fork: ?env: obj -> Worker
+        abstract fork: ?env: obj option -> Worker
         abstract isMaster: bool with get, set
         abstract isWorker: bool with get, set
         abstract settings: ClusterSettings with get, set
@@ -949,60 +949,60 @@ module cluster =
         ///    5. message
         ///    6. online
         ///    7. setup
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.addListener('disconnect',$1)">] abstract addListener_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.addListener('fork',$1)">] abstract addListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.addListener('listening',$1)">] abstract addListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.addListener('online',$1)">] abstract addListener_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.addListener('setup',$1)">] abstract addListener_setup: listener: (obj -> unit) -> Cluster
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        [<Emit "$0.addListener('setup',$1)">] abstract addListener_setup: listener: (obj option -> unit) -> Cluster
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('disconnect',$1)">] abstract emit_disconnect: worker: Worker -> bool
         [<Emit "$0.emit('exit',$1,$2,$3)">] abstract emit_exit: worker: Worker * code: float * signal: string -> bool
         [<Emit "$0.emit('fork',$1)">] abstract emit_fork: worker: Worker -> bool
         [<Emit "$0.emit('listening',$1,$2)">] abstract emit_listening: worker: Worker * address: Address -> bool
-        [<Emit "$0.emit('message',$1,$2,$3)">] abstract emit_message: worker: Worker * message: obj * handle: U2<net.Socket, net.Server> -> bool
+        [<Emit "$0.emit('message',$1,$2,$3)">] abstract emit_message: worker: Worker * message: obj option * handle: U2<net.Socket, net.Server> -> bool
         [<Emit "$0.emit('online',$1)">] abstract emit_online: worker: Worker -> bool
-        [<Emit "$0.emit('setup',$1)">] abstract emit_setup: settings: obj -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        [<Emit "$0.emit('setup',$1)">] abstract emit_setup: settings: obj option -> bool
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.on('disconnect',$1)">] abstract on_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.on('fork',$1)">] abstract on_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.on('listening',$1)">] abstract on_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.on('online',$1)">] abstract on_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.on('setup',$1)">] abstract on_setup: listener: (obj -> unit) -> Cluster
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        [<Emit "$0.on('setup',$1)">] abstract on_setup: listener: (obj option -> unit) -> Cluster
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.once('disconnect',$1)">] abstract once_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.once('fork',$1)">] abstract once_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.once('listening',$1)">] abstract once_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.once('online',$1)">] abstract once_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.once('setup',$1)">] abstract once_setup: listener: (obj -> unit) -> Cluster
-        abstract removeListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        [<Emit "$0.once('setup',$1)">] abstract once_setup: listener: (obj option -> unit) -> Cluster
+        abstract removeListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         abstract removeAllListeners: ?``event``: string -> Cluster
         abstract setMaxListeners: n: float -> Cluster
         abstract getMaxListeners: unit -> float
         abstract listeners: ``event``: string -> ResizeArray<Function>
         abstract listenerCount: ``type``: string -> float
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.prependListener('disconnect',$1)">] abstract prependListener_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.prependListener('fork',$1)">] abstract prependListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependListener('listening',$1)">] abstract prependListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.prependListener('online',$1)">] abstract prependListener_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.prependListener('setup',$1)">] abstract prependListener_setup: listener: (obj -> unit) -> Cluster
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        [<Emit "$0.prependListener('setup',$1)">] abstract prependListener_setup: listener: (obj option -> unit) -> Cluster
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('disconnect',$1)">] abstract prependOnceListener_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('fork',$1)">] abstract prependOnceListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('listening',$1)">] abstract prependOnceListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('online',$1)">] abstract prependOnceListener_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.prependOnceListener('setup',$1)">] abstract prependOnceListener_setup: listener: (obj -> unit) -> Cluster
+        [<Emit "$0.prependOnceListener('setup',$1)">] abstract prependOnceListener_setup: listener: (obj option -> unit) -> Cluster
         abstract eventNames: unit -> ResizeArray<string>
 
     type [<AllowNullLiteral>] ClusterSettings =
@@ -1010,7 +1010,7 @@ module cluster =
         abstract exec: string option with get, set
         abstract args: ResizeArray<string> option with get, set
         abstract silent: bool option with get, set
-        abstract stdio: ResizeArray<obj> option with get, set
+        abstract stdio: ResizeArray<obj option> option with get, set
         abstract uid: float option with get, set
         abstract gid: float option with get, set
 
@@ -1018,7 +1018,7 @@ module cluster =
         abstract exec: string option with get, set
         abstract args: ResizeArray<string> option with get, set
         abstract silent: bool option with get, set
-        abstract stdio: ResizeArray<obj> option with get, set
+        abstract stdio: ResizeArray<obj option> option with get, set
 
     type [<AllowNullLiteral>] Address =
         abstract address: string with get, set
@@ -1030,7 +1030,7 @@ module cluster =
         abstract id: string with get, set
         abstract ``process``: child.ChildProcess with get, set
         abstract suicide: bool with get, set
-        abstract send: message: obj * ?sendHandle: obj * ?callback: (Error -> unit) -> bool
+        abstract send: message: obj option * ?sendHandle: obj option * ?callback: (Error -> unit) -> bool
         abstract kill: ?signal: string -> unit
         abstract destroy: ?signal: string -> unit
         abstract disconnect: unit -> unit
@@ -1044,47 +1044,47 @@ module cluster =
         ///    4. listening
         ///    5. message
         ///    6. online
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Worker
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.addListener('disconnect',$1)">] abstract addListener_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.addListener('listening',$1)">] abstract addListener_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
         [<Emit "$0.addListener('online',$1)">] abstract addListener_online: listener: (unit -> unit) -> Worker
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('disconnect')">] abstract emit_disconnect: unit -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: error: Error -> bool
         [<Emit "$0.emit('exit',$1,$2)">] abstract emit_exit: code: float * signal: string -> bool
         [<Emit "$0.emit('listening',$1)">] abstract emit_listening: address: Address -> bool
-        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj * handle: U2<net.Socket, net.Server> -> bool
+        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj option * handle: U2<net.Socket, net.Server> -> bool
         [<Emit "$0.emit('online')">] abstract emit_online: unit -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Worker
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.on('disconnect',$1)">] abstract on_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.on('listening',$1)">] abstract on_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
         [<Emit "$0.on('online',$1)">] abstract on_online: listener: (unit -> unit) -> Worker
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Worker
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.once('disconnect',$1)">] abstract once_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.once('listening',$1)">] abstract once_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
         [<Emit "$0.once('online',$1)">] abstract once_online: listener: (unit -> unit) -> Worker
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Worker
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.prependListener('disconnect',$1)">] abstract prependListener_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.prependListener('listening',$1)">] abstract prependListener_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
         [<Emit "$0.prependListener('online',$1)">] abstract prependListener_online: listener: (unit -> unit) -> Worker
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Worker
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.prependOnceListener('disconnect',$1)">] abstract prependOnceListener_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.prependOnceListener('listening',$1)">] abstract prependOnceListener_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
         [<Emit "$0.prependOnceListener('online',$1)">] abstract prependOnceListener_online: listener: (unit -> unit) -> Worker
 
     type [<AllowNullLiteral>] WorkerStatic =
@@ -1094,7 +1094,7 @@ module cluster =
         inherit events.EventEmitter
         abstract Worker: Worker with get, set
         abstract disconnect: ?callback: Function -> unit
-        abstract fork: ?env: obj -> Worker
+        abstract fork: ?env: obj option -> Worker
         abstract isMaster: bool with get, set
         abstract isWorker: bool with get, set
         abstract settings: ClusterSettings with get, set
@@ -1109,54 +1109,54 @@ module cluster =
         ///    5. message
         ///    6. online
         ///    7. setup
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.addListener('disconnect',$1)">] abstract addListener_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.addListener('fork',$1)">] abstract addListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.addListener('listening',$1)">] abstract addListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.addListener('online',$1)">] abstract addListener_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.addListener('setup',$1)">] abstract addListener_setup: listener: (obj -> unit) -> Cluster
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        [<Emit "$0.addListener('setup',$1)">] abstract addListener_setup: listener: (obj option -> unit) -> Cluster
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('disconnect',$1)">] abstract emit_disconnect: worker: Worker -> bool
         [<Emit "$0.emit('exit',$1,$2,$3)">] abstract emit_exit: worker: Worker * code: float * signal: string -> bool
         [<Emit "$0.emit('fork',$1)">] abstract emit_fork: worker: Worker -> bool
         [<Emit "$0.emit('listening',$1,$2)">] abstract emit_listening: worker: Worker * address: Address -> bool
-        [<Emit "$0.emit('message',$1,$2,$3)">] abstract emit_message: worker: Worker * message: obj * handle: U2<net.Socket, net.Server> -> bool
+        [<Emit "$0.emit('message',$1,$2,$3)">] abstract emit_message: worker: Worker * message: obj option * handle: U2<net.Socket, net.Server> -> bool
         [<Emit "$0.emit('online',$1)">] abstract emit_online: worker: Worker -> bool
-        [<Emit "$0.emit('setup',$1)">] abstract emit_setup: settings: obj -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        [<Emit "$0.emit('setup',$1)">] abstract emit_setup: settings: obj option -> bool
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.on('disconnect',$1)">] abstract on_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.on('fork',$1)">] abstract on_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.on('listening',$1)">] abstract on_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.on('online',$1)">] abstract on_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.on('setup',$1)">] abstract on_setup: listener: (obj -> unit) -> Cluster
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        [<Emit "$0.on('setup',$1)">] abstract on_setup: listener: (obj option -> unit) -> Cluster
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.once('disconnect',$1)">] abstract once_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.once('fork',$1)">] abstract once_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.once('listening',$1)">] abstract once_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.once('online',$1)">] abstract once_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.once('setup',$1)">] abstract once_setup: listener: (obj -> unit) -> Cluster
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        [<Emit "$0.once('setup',$1)">] abstract once_setup: listener: (obj option -> unit) -> Cluster
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.prependListener('disconnect',$1)">] abstract prependListener_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.prependListener('fork',$1)">] abstract prependListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependListener('listening',$1)">] abstract prependListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.prependListener('online',$1)">] abstract prependListener_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.prependListener('setup',$1)">] abstract prependListener_setup: listener: (obj -> unit) -> Cluster
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Cluster
+        [<Emit "$0.prependListener('setup',$1)">] abstract prependListener_setup: listener: (obj option -> unit) -> Cluster
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('disconnect',$1)">] abstract prependOnceListener_disconnect: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('fork',$1)">] abstract prependOnceListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('listening',$1)">] abstract prependOnceListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (Worker -> obj -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('online',$1)">] abstract prependOnceListener_online: listener: (Worker -> unit) -> Cluster
-        [<Emit "$0.prependOnceListener('setup',$1)">] abstract prependOnceListener_setup: listener: (obj -> unit) -> Cluster
+        [<Emit "$0.prependOnceListener('setup',$1)">] abstract prependOnceListener_setup: listener: (obj option -> unit) -> Cluster
 
 module zlib =
 
@@ -1228,7 +1228,7 @@ module zlib =
         abstract level: float option with get, set
         abstract memLevel: float option with get, set
         abstract strategy: float option with get, set
-        abstract dictionary: obj option with get, set
+        abstract dictionary: obj option option with get, set
 
     type [<AllowNullLiteral>] Gzip =
         inherit stream.Transform
@@ -1336,26 +1336,26 @@ module https =
         abstract globalAgent: Agent with get, set
 
     type [<AllowNullLiteral>] ServerOptions =
-        abstract pfx: obj option with get, set
-        abstract key: obj option with get, set
+        abstract pfx: obj option option with get, set
+        abstract key: obj option option with get, set
         abstract passphrase: string option with get, set
-        abstract cert: obj option with get, set
-        abstract ca: obj option with get, set
-        abstract crl: obj option with get, set
+        abstract cert: obj option option with get, set
+        abstract ca: obj option option with get, set
+        abstract crl: obj option option with get, set
         abstract ciphers: string option with get, set
         abstract honorCipherOrder: bool option with get, set
         abstract requestCert: bool option with get, set
         abstract rejectUnauthorized: bool option with get, set
-        abstract NPNProtocols: obj option with get, set
+        abstract NPNProtocols: obj option option with get, set
         abstract SNICallback: (string -> (Error option -> tls.SecureContext -> unit) -> unit) option with get, set
 
     type [<AllowNullLiteral>] RequestOptions =
         inherit http.RequestOptions
-        abstract pfx: obj option with get, set
-        abstract key: obj option with get, set
+        abstract pfx: obj option option with get, set
+        abstract key: obj option option with get, set
         abstract passphrase: string option with get, set
-        abstract cert: obj option with get, set
-        abstract ca: obj option with get, set
+        abstract cert: obj option option with get, set
+        abstract ca: obj option option with get, set
         abstract ciphers: string option with get, set
         abstract rejectUnauthorized: bool option with get, set
         abstract secureProtocol: string option with get, set
@@ -1363,11 +1363,11 @@ module https =
 
     type [<AllowNullLiteral>] AgentOptions =
         inherit http.AgentOptions
-        abstract pfx: obj option with get, set
-        abstract key: obj option with get, set
+        abstract pfx: obj option option with get, set
+        abstract key: obj option option with get, set
         abstract passphrase: string option with get, set
-        abstract cert: obj option with get, set
-        abstract ca: obj option with get, set
+        abstract cert: obj option option with get, set
+        abstract ca: obj option option with get, set
         abstract ciphers: string option with get, set
         abstract rejectUnauthorized: bool option with get, set
         abstract serverName: string option with get, set
@@ -1398,7 +1398,7 @@ module punycode =
         abstract toUnicode: domain: string -> string
         abstract toASCII: domain: string -> string
         abstract ucs2: ucs2 with get, set
-        abstract version: obj with get, set
+        abstract version: obj option with get, set
 
     type [<AllowNullLiteral>] ucs2 =
         abstract decode: string: string -> ResizeArray<float>
@@ -1421,12 +1421,12 @@ module repl =
         abstract ignoreUndefined: bool option with get, set
         abstract writer: Function option with get, set
         abstract completer: Function option with get, set
-        abstract replMode: obj option with get, set
-        abstract breakEvalOnSigint: obj option with get, set
+        abstract replMode: obj option option with get, set
+        abstract breakEvalOnSigint: obj option option with get, set
 
     type [<AllowNullLiteral>] REPLServer =
         inherit readline.ReadLine
-        abstract context: obj with get, set
+        abstract context: obj option with get, set
         abstract inputStream: NodeJS.ReadableStream with get, set
         abstract outputStream: NodeJS.WritableStream with get, set
         abstract defineCommand: keyword: string * cmd: U2<Function, obj> -> unit
@@ -1434,24 +1434,24 @@ module repl =
         /// events.EventEmitter
         /// 1. exit
         /// 2. reset
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> REPLServer
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> REPLServer
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (unit -> unit) -> REPLServer
-        [<Emit "$0.addListener('reset',$1)">] abstract addListener_reset: listener: (ResizeArray<obj> -> unit) -> REPLServer
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        [<Emit "$0.addListener('reset',$1)">] abstract addListener_reset: listener: (ResizeArray<obj option> -> unit) -> REPLServer
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('exit')">] abstract emit_exit: unit -> bool
-        [<Emit "$0.emit('reset',$1)">] abstract emit_reset: context: obj -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> REPLServer
+        [<Emit "$0.emit('reset',$1)">] abstract emit_reset: context: obj option -> bool
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> REPLServer
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (unit -> unit) -> REPLServer
-        [<Emit "$0.on('reset',$1)">] abstract on_reset: listener: (ResizeArray<obj> -> unit) -> REPLServer
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> REPLServer
+        [<Emit "$0.on('reset',$1)">] abstract on_reset: listener: (ResizeArray<obj option> -> unit) -> REPLServer
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> REPLServer
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (unit -> unit) -> REPLServer
-        [<Emit "$0.once('reset',$1)">] abstract once_reset: listener: (ResizeArray<obj> -> unit) -> REPLServer
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> REPLServer
+        [<Emit "$0.once('reset',$1)">] abstract once_reset: listener: (ResizeArray<obj option> -> unit) -> REPLServer
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> REPLServer
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (unit -> unit) -> REPLServer
-        [<Emit "$0.prependListener('reset',$1)">] abstract prependListener_reset: listener: (ResizeArray<obj> -> unit) -> REPLServer
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> REPLServer
+        [<Emit "$0.prependListener('reset',$1)">] abstract prependListener_reset: listener: (ResizeArray<obj option> -> unit) -> REPLServer
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> REPLServer
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (unit -> unit) -> REPLServer
-        [<Emit "$0.prependOnceListener('reset',$1)">] abstract prependOnceListener_reset: listener: (ResizeArray<obj> -> unit) -> REPLServer
+        [<Emit "$0.prependOnceListener('reset',$1)">] abstract prependOnceListener_reset: listener: (ResizeArray<obj option> -> unit) -> REPLServer
 
     type [<AllowNullLiteral>] Recoverable =
         inherit SyntaxError
@@ -1495,49 +1495,49 @@ module readline =
         /// 5. SIGCONT
         /// 6. SIGINT
         /// 7. SIGTSTP
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadLine
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadLine
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> ReadLine
-        [<Emit "$0.addListener('line',$1)">] abstract addListener_line: listener: (obj -> unit) -> ReadLine
+        [<Emit "$0.addListener('line',$1)">] abstract addListener_line: listener: (obj option -> unit) -> ReadLine
         [<Emit "$0.addListener('pause',$1)">] abstract addListener_pause: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.addListener('resume',$1)">] abstract addListener_resume: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.addListener('SIGCONT',$1)">] abstract addListener_SIGCONT: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.addListener('SIGINT',$1)">] abstract addListener_SIGINT: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.addListener('SIGTSTP',$1)">] abstract addListener_SIGTSTP: listener: (unit -> unit) -> ReadLine
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close')">] abstract emit_close: unit -> bool
-        [<Emit "$0.emit('line',$1)">] abstract emit_line: input: obj -> bool
+        [<Emit "$0.emit('line',$1)">] abstract emit_line: input: obj option -> bool
         [<Emit "$0.emit('pause')">] abstract emit_pause: unit -> bool
         [<Emit "$0.emit('resume')">] abstract emit_resume: unit -> bool
         [<Emit "$0.emit('SIGCONT')">] abstract emit_SIGCONT: unit -> bool
         [<Emit "$0.emit('SIGINT')">] abstract emit_SIGINT: unit -> bool
         [<Emit "$0.emit('SIGTSTP')">] abstract emit_SIGTSTP: unit -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadLine
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadLine
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> ReadLine
-        [<Emit "$0.on('line',$1)">] abstract on_line: listener: (obj -> unit) -> ReadLine
+        [<Emit "$0.on('line',$1)">] abstract on_line: listener: (obj option -> unit) -> ReadLine
         [<Emit "$0.on('pause',$1)">] abstract on_pause: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.on('resume',$1)">] abstract on_resume: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.on('SIGCONT',$1)">] abstract on_SIGCONT: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.on('SIGINT',$1)">] abstract on_SIGINT: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.on('SIGTSTP',$1)">] abstract on_SIGTSTP: listener: (unit -> unit) -> ReadLine
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadLine
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadLine
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> ReadLine
-        [<Emit "$0.once('line',$1)">] abstract once_line: listener: (obj -> unit) -> ReadLine
+        [<Emit "$0.once('line',$1)">] abstract once_line: listener: (obj option -> unit) -> ReadLine
         [<Emit "$0.once('pause',$1)">] abstract once_pause: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.once('resume',$1)">] abstract once_resume: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.once('SIGCONT',$1)">] abstract once_SIGCONT: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.once('SIGINT',$1)">] abstract once_SIGINT: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.once('SIGTSTP',$1)">] abstract once_SIGTSTP: listener: (unit -> unit) -> ReadLine
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadLine
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadLine
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> ReadLine
-        [<Emit "$0.prependListener('line',$1)">] abstract prependListener_line: listener: (obj -> unit) -> ReadLine
+        [<Emit "$0.prependListener('line',$1)">] abstract prependListener_line: listener: (obj option -> unit) -> ReadLine
         [<Emit "$0.prependListener('pause',$1)">] abstract prependListener_pause: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.prependListener('resume',$1)">] abstract prependListener_resume: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.prependListener('SIGCONT',$1)">] abstract prependListener_SIGCONT: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.prependListener('SIGINT',$1)">] abstract prependListener_SIGINT: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.prependListener('SIGTSTP',$1)">] abstract prependListener_SIGTSTP: listener: (unit -> unit) -> ReadLine
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadLine
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadLine
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> ReadLine
-        [<Emit "$0.prependOnceListener('line',$1)">] abstract prependOnceListener_line: listener: (obj -> unit) -> ReadLine
+        [<Emit "$0.prependOnceListener('line',$1)">] abstract prependOnceListener_line: listener: (obj option -> unit) -> ReadLine
         [<Emit "$0.prependOnceListener('pause',$1)">] abstract prependOnceListener_pause: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.prependOnceListener('resume',$1)">] abstract prependOnceListener_resume: listener: (unit -> unit) -> ReadLine
         [<Emit "$0.prependOnceListener('SIGCONT',$1)">] abstract prependOnceListener_SIGCONT: listener: (unit -> unit) -> ReadLine
@@ -1548,7 +1548,7 @@ module readline =
         (string -> CompleterResult)
 
     type AsyncCompleter =
-        (string -> (obj -> CompleterResult -> unit) -> obj)
+        (string -> (obj option -> CompleterResult -> unit) -> obj option)
 
     type CompleterResult =
         ResizeArray<string> * string
@@ -1566,10 +1566,10 @@ module vm =
         abstract Script: ScriptStatic
         abstract createContext: ?sandbox: Context -> Context
         abstract isContext: sandbox: Context -> bool
-        abstract runInContext: code: string * contextifiedSandbox: Context * ?options: RunningScriptOptions -> obj
-        abstract runInDebugContext: code: string -> obj
-        abstract runInNewContext: code: string * ?sandbox: Context * ?options: RunningScriptOptions -> obj
-        abstract runInThisContext: code: string * ?options: RunningScriptOptions -> obj
+        abstract runInContext: code: string * contextifiedSandbox: Context * ?options: RunningScriptOptions -> obj option
+        abstract runInDebugContext: code: string -> obj option
+        abstract runInNewContext: code: string * ?sandbox: Context * ?options: RunningScriptOptions -> obj option
+        abstract runInThisContext: code: string * ?options: RunningScriptOptions -> obj option
 
     type [<AllowNullLiteral>] Context =
         interface end
@@ -1591,9 +1591,9 @@ module vm =
         abstract timeout: float option with get, set
 
     type [<AllowNullLiteral>] Script =
-        abstract runInContext: contextifiedSandbox: Context * ?options: RunningScriptOptions -> obj
-        abstract runInNewContext: ?sandbox: Context * ?options: RunningScriptOptions -> obj
-        abstract runInThisContext: ?options: RunningScriptOptions -> obj
+        abstract runInContext: contextifiedSandbox: Context * ?options: RunningScriptOptions -> obj option
+        abstract runInNewContext: ?sandbox: Context * ?options: RunningScriptOptions -> obj option
+        abstract runInThisContext: ?options: RunningScriptOptions -> obj option
 
     type [<AllowNullLiteral>] ScriptStatic =
         [<Emit "new $0($1...)">] abstract Create: code: string * ?options: ScriptOptions -> Script
@@ -1653,9 +1653,9 @@ module child_process =
         abstract killed: bool with get, set
         abstract pid: float with get, set
         abstract kill: ?signal: string -> unit
-        abstract send: message: obj * ?callback: (Error -> unit) -> bool
-        abstract send: message: obj * ?sendHandle: U2<net.Socket, net.Server> * ?callback: (Error -> unit) -> bool
-        abstract send: message: obj * ?sendHandle: U2<net.Socket, net.Server> * ?options: MessageOptions * ?callback: (Error -> unit) -> bool
+        abstract send: message: obj option * ?callback: (Error -> unit) -> bool
+        abstract send: message: obj option * ?sendHandle: U2<net.Socket, net.Server> * ?callback: (Error -> unit) -> bool
+        abstract send: message: obj option * ?sendHandle: U2<net.Socket, net.Server> * ?options: MessageOptions * ?callback: (Error -> unit) -> bool
         abstract connected: bool with get, set
         abstract disconnect: unit -> unit
         abstract unref: unit -> unit
@@ -1666,50 +1666,50 @@ module child_process =
         /// 3. error
         /// 4. exit
         /// 5. message
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ChildProcess
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.addListener('disconnect',$1)">] abstract addListener_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close',$1,$2)">] abstract emit_close: code: float * signal: string -> bool
         [<Emit "$0.emit('disconnect')">] abstract emit_disconnect: unit -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
         [<Emit "$0.emit('exit',$1,$2)">] abstract emit_exit: code: float * signal: string -> bool
-        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj * sendHandle: U2<net.Socket, net.Server> -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ChildProcess
+        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj option * sendHandle: U2<net.Socket, net.Server> -> bool
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.on('disconnect',$1)">] abstract on_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ChildProcess
+        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.once('disconnect',$1)">] abstract once_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ChildProcess
+        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.prependListener('disconnect',$1)">] abstract prependListener_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ChildProcess
+        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.prependOnceListener('disconnect',$1)">] abstract prependOnceListener_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (obj -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
 
     type [<AllowNullLiteral>] MessageOptions =
         abstract keepOpen: bool option with get, set
 
     type [<AllowNullLiteral>] SpawnOptions =
         abstract cwd: string option with get, set
-        abstract env: obj option with get, set
-        abstract stdio: obj option with get, set
+        abstract env: obj option option with get, set
+        abstract stdio: obj option option with get, set
         abstract detached: bool option with get, set
         abstract uid: float option with get, set
         abstract gid: float option with get, set
@@ -1718,7 +1718,7 @@ module child_process =
 
     type [<AllowNullLiteral>] ExecOptions =
         abstract cwd: string option with get, set
-        abstract env: obj option with get, set
+        abstract env: obj option option with get, set
         abstract shell: string option with get, set
         abstract timeout: float option with get, set
         abstract maxBuffer: float option with get, set
@@ -1744,7 +1744,7 @@ module child_process =
 
     type [<AllowNullLiteral>] ExecFileOptions =
         abstract cwd: string option with get, set
-        abstract env: obj option with get, set
+        abstract env: obj option option with get, set
         abstract timeout: float option with get, set
         abstract maxBuffer: float option with get, set
         abstract killSignal: string option with get, set
@@ -1782,11 +1782,11 @@ module child_process =
 
     type [<AllowNullLiteral>] ForkOptions =
         abstract cwd: string option with get, set
-        abstract env: obj option with get, set
+        abstract env: obj option option with get, set
         abstract execPath: string option with get, set
         abstract execArgv: ResizeArray<string> option with get, set
         abstract silent: bool option with get, set
-        abstract stdio: ResizeArray<obj> option with get, set
+        abstract stdio: ResizeArray<obj option> option with get, set
         abstract uid: float option with get, set
         abstract gid: float option with get, set
         abstract windowsVerbatimArguments: bool option with get, set
@@ -1794,8 +1794,8 @@ module child_process =
     type [<AllowNullLiteral>] SpawnSyncOptions =
         abstract cwd: string option with get, set
         abstract input: U2<string, Buffer> option with get, set
-        abstract stdio: obj option with get, set
-        abstract env: obj option with get, set
+        abstract stdio: obj option option with get, set
+        abstract env: obj option option with get, set
         abstract uid: float option with get, set
         abstract gid: float option with get, set
         abstract timeout: float option with get, set
@@ -1825,8 +1825,8 @@ module child_process =
     type [<AllowNullLiteral>] ExecSyncOptions =
         abstract cwd: string option with get, set
         abstract input: U2<string, Buffer> option with get, set
-        abstract stdio: obj option with get, set
-        abstract env: obj option with get, set
+        abstract stdio: obj option option with get, set
+        abstract env: obj option option with get, set
         abstract shell: string option with get, set
         abstract uid: float option with get, set
         abstract gid: float option with get, set
@@ -1846,8 +1846,8 @@ module child_process =
     type [<AllowNullLiteral>] ExecFileSyncOptions =
         abstract cwd: string option with get, set
         abstract input: U2<string, Buffer> option with get, set
-        abstract stdio: obj option with get, set
-        abstract env: obj option with get, set
+        abstract stdio: obj option option with get, set
+        abstract env: obj option option with get, set
         abstract uid: float option with get, set
         abstract gid: float option with get, set
         abstract timeout: float option with get, set
@@ -1890,7 +1890,7 @@ module url =
     type [<AllowNullLiteral>] Url =
         inherit UrlObject
         abstract port: string option with get, set
-        abstract query: obj option with get, set
+        abstract query: obj option option with get, set
 
     type [<AllowNullLiteral>] URLFormatOptions =
         abstract auth: bool option with get, set
@@ -2134,14 +2134,14 @@ module net =
         abstract write: str: string * ?cb: Function -> bool
         abstract write: str: string * ?encoding: string * ?cb: Function -> bool
         abstract write: str: string * ?encoding: string * ?fd: string -> bool
-        abstract write: data: obj * ?encoding: string * ?callback: Function -> unit
+        abstract write: data: obj option * ?encoding: string * ?callback: Function -> unit
         abstract connect: options: SocketConnectOpts * ?connectionListener: Function -> Socket
         abstract connect: port: float * host: string * ?connectionListener: Function -> Socket
         abstract connect: port: float * ?connectionListener: Function -> Socket
         abstract connect: path: string * ?connectionListener: Function -> Socket
         abstract bufferSize: float with get, set
         abstract setEncoding: ?encoding: string -> Socket
-        abstract destroy: ?err: obj -> unit
+        abstract destroy: ?err: obj option -> unit
         abstract pause: unit -> Socket
         abstract resume: unit -> Socket
         abstract setTimeout: timeout: float * ?callback: Function -> unit
@@ -2163,7 +2163,7 @@ module net =
         abstract ``end``: buffer: Buffer * ?cb: Function -> unit
         abstract ``end``: str: string * ?cb: Function -> unit
         abstract ``end``: str: string * ?encoding: string * ?cb: Function -> unit
-        abstract ``end``: ?data: obj * ?encoding: string -> unit
+        abstract ``end``: ?data: obj option * ?encoding: string -> unit
         /// events.EventEmitter
         ///    1. close
         ///    2. connect
@@ -2173,7 +2173,7 @@ module net =
         ///    6. error
         ///    7. lookup
         ///    8. timeout
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (bool -> unit) -> Socket
         [<Emit "$0.addListener('connect',$1)">] abstract addListener_connect: listener: (unit -> unit) -> Socket
         [<Emit "$0.addListener('data',$1)">] abstract addListener_data: listener: (Buffer -> unit) -> Socket
@@ -2182,7 +2182,7 @@ module net =
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.addListener('lookup',$1)">] abstract addListener_lookup: listener: (Error -> string -> U2<string, float> -> string -> unit) -> Socket
         [<Emit "$0.addListener('timeout',$1)">] abstract addListener_timeout: listener: (unit -> unit) -> Socket
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close',$1)">] abstract emit_close: had_error: bool -> bool
         [<Emit "$0.emit('connect')">] abstract emit_connect: unit -> bool
         [<Emit "$0.emit('data',$1)">] abstract emit_data: data: Buffer -> bool
@@ -2191,7 +2191,7 @@ module net =
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
         [<Emit "$0.emit('lookup',$1,$2,$3,$4)">] abstract emit_lookup: err: Error * address: string * family: U2<string, float> * host: string -> bool
         [<Emit "$0.emit('timeout')">] abstract emit_timeout: unit -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (bool -> unit) -> Socket
         [<Emit "$0.on('connect',$1)">] abstract on_connect: listener: (unit -> unit) -> Socket
         [<Emit "$0.on('data',$1)">] abstract on_data: listener: (Buffer -> unit) -> Socket
@@ -2200,7 +2200,7 @@ module net =
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.on('lookup',$1)">] abstract on_lookup: listener: (Error -> string -> U2<string, float> -> string -> unit) -> Socket
         [<Emit "$0.on('timeout',$1)">] abstract on_timeout: listener: (unit -> unit) -> Socket
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (bool -> unit) -> Socket
         [<Emit "$0.once('connect',$1)">] abstract once_connect: listener: (unit -> unit) -> Socket
         [<Emit "$0.once('data',$1)">] abstract once_data: listener: (Buffer -> unit) -> Socket
@@ -2209,7 +2209,7 @@ module net =
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.once('lookup',$1)">] abstract once_lookup: listener: (Error -> string -> U2<string, float> -> string -> unit) -> Socket
         [<Emit "$0.once('timeout',$1)">] abstract once_timeout: listener: (unit -> unit) -> Socket
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (bool -> unit) -> Socket
         [<Emit "$0.prependListener('connect',$1)">] abstract prependListener_connect: listener: (unit -> unit) -> Socket
         [<Emit "$0.prependListener('data',$1)">] abstract prependListener_data: listener: (Buffer -> unit) -> Socket
@@ -2218,7 +2218,7 @@ module net =
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.prependListener('lookup',$1)">] abstract prependListener_lookup: listener: (Error -> string -> U2<string, float> -> string -> unit) -> Socket
         [<Emit "$0.prependListener('timeout',$1)">] abstract prependListener_timeout: listener: (unit -> unit) -> Socket
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (bool -> unit) -> Socket
         [<Emit "$0.prependOnceListener('connect',$1)">] abstract prependOnceListener_connect: listener: (unit -> unit) -> Socket
         [<Emit "$0.prependOnceListener('data',$1)">] abstract prependOnceListener_data: listener: (Buffer -> unit) -> Socket
@@ -2247,8 +2247,8 @@ module net =
         abstract listen: path: string * ?backlog: float * ?listeningListener: Function -> Server
         abstract listen: path: string * ?listeningListener: Function -> Server
         abstract listen: options: ListenOptions * ?listeningListener: Function -> Server
-        abstract listen: handle: obj * ?backlog: float * ?listeningListener: Function -> Server
-        abstract listen: handle: obj * ?listeningListener: Function -> Server
+        abstract listen: handle: obj option * ?backlog: float * ?listeningListener: Function -> Server
+        abstract listen: handle: obj option * ?listeningListener: Function -> Server
         abstract close: ?callback: Function -> Server
         abstract address: unit -> obj
         abstract getConnections: cb: (Error option -> float -> unit) -> unit
@@ -2262,32 +2262,32 @@ module net =
         ///    2. connection
         ///    3. error
         ///    4. listening
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> Server
         [<Emit "$0.addListener('connection',$1)">] abstract addListener_connection: listener: (Socket -> unit) -> Server
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Server
         [<Emit "$0.addListener('listening',$1)">] abstract addListener_listening: listener: (unit -> unit) -> Server
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close')">] abstract emit_close: unit -> bool
         [<Emit "$0.emit('connection',$1)">] abstract emit_connection: socket: Socket -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
         [<Emit "$0.emit('listening')">] abstract emit_listening: unit -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> Server
         [<Emit "$0.on('connection',$1)">] abstract on_connection: listener: (Socket -> unit) -> Server
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Server
         [<Emit "$0.on('listening',$1)">] abstract on_listening: listener: (unit -> unit) -> Server
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> Server
         [<Emit "$0.once('connection',$1)">] abstract once_connection: listener: (Socket -> unit) -> Server
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Server
         [<Emit "$0.once('listening',$1)">] abstract once_listening: listener: (unit -> unit) -> Server
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> Server
         [<Emit "$0.prependListener('connection',$1)">] abstract prependListener_connection: listener: (Socket -> unit) -> Server
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Server
         [<Emit "$0.prependListener('listening',$1)">] abstract prependListener_listening: listener: (unit -> unit) -> Server
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> Server
         [<Emit "$0.prependOnceListener('connection',$1)">] abstract prependOnceListener_connection: listener: (Socket -> unit) -> Server
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Server
@@ -2345,8 +2345,8 @@ module dgram =
 
     type [<AllowNullLiteral>] Socket =
         inherit events.EventEmitter
-        abstract send: msg: U3<Buffer, String, ResizeArray<obj>> * port: float * address: string * ?callback: (Error option -> float -> unit) -> unit
-        abstract send: msg: U3<Buffer, String, ResizeArray<obj>> * offset: float * length: float * port: float * address: string * ?callback: (Error option -> float -> unit) -> unit
+        abstract send: msg: U3<Buffer, String, ResizeArray<obj option>> * port: float * address: string * ?callback: (Error option -> float -> unit) -> unit
+        abstract send: msg: U3<Buffer, String, ResizeArray<obj option>> * offset: float * length: float * port: float * address: string * ?callback: (Error option -> float -> unit) -> unit
         abstract bind: ?port: float * ?address: string * ?callback: (unit -> unit) -> unit
         abstract bind: ?port: float * ?callback: (unit -> unit) -> unit
         abstract bind: ?callback: (unit -> unit) -> unit
@@ -2371,32 +2371,32 @@ module dgram =
         /// 2. error
         /// 3. listening
         /// 4. message
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> Socket
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.addListener('listening',$1)">] abstract addListener_listening: listener: (unit -> unit) -> Socket
         [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Buffer -> AddressInfo -> unit) -> Socket
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close')">] abstract emit_close: unit -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
         [<Emit "$0.emit('listening')">] abstract emit_listening: unit -> bool
         [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: msg: Buffer * rinfo: AddressInfo -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> Socket
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.on('listening',$1)">] abstract on_listening: listener: (unit -> unit) -> Socket
         [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Buffer -> AddressInfo -> unit) -> Socket
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> Socket
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.once('listening',$1)">] abstract once_listening: listener: (unit -> unit) -> Socket
         [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Buffer -> AddressInfo -> unit) -> Socket
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> Socket
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.prependListener('listening',$1)">] abstract prependListener_listening: listener: (unit -> unit) -> Socket
         [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Buffer -> AddressInfo -> unit) -> Socket
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Socket
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Socket
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> Socket
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Socket
         [<Emit "$0.prependOnceListener('listening',$1)">] abstract prependOnceListener_listening: listener: (unit -> unit) -> Socket
@@ -2582,15 +2582,15 @@ module fs =
         /// Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.
         abstract write: fd: float * buffer: 'TBuffer * callback: (NodeJS.ErrnoException -> float -> 'TBuffer -> unit) -> unit
         /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
-        abstract write: fd: float * string: obj * position: float option * encoding: string option * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
+        abstract write: fd: float * string: obj option * position: float option * encoding: string option * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
         /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
-        abstract write: fd: float * string: obj * position: float option * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
+        abstract write: fd: float * string: obj option * position: float option * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
         /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
-        abstract write: fd: float * string: obj * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
+        abstract write: fd: float * string: obj option * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
         /// Synchronously writes `buffer` to the file referenced by the supplied file descriptor, returning the number of bytes written.
         abstract writeSync: fd: float * buffer: U2<Buffer, Uint8Array> * ?offset: float option * ?length: float option * ?position: float option -> float
         /// Synchronously writes `string` to the file referenced by the supplied file descriptor, returning the number of bytes written.
-        abstract writeSync: fd: float * string: obj * ?position: float option * ?encoding: string option -> float
+        abstract writeSync: fd: float * string: obj option * ?position: float option * ?encoding: string option -> float
         /// Asynchronously reads data from the file referenced by the supplied file descriptor.
         abstract read: fd: float * buffer: 'TBuffer * offset: float * length: float * position: float option * ?callback: (NodeJS.ErrnoException -> float -> 'TBuffer -> unit) -> unit
         /// Synchronously reads data from the file referenced by the supplied file descriptor, returning the number of bytes read.
@@ -2610,17 +2610,17 @@ module fs =
         /// Synchronously reads the entire contents of a file.
         abstract readFileSync: path: U2<PathLike, float> * ?options: U2<obj, string> option -> U2<string, Buffer>
         /// Asynchronously writes data to a file, replacing the file if it already exists.
-        abstract writeFile: path: U2<PathLike, float> * data: obj * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> unit) -> unit
+        abstract writeFile: path: U2<PathLike, float> * data: obj option * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> unit) -> unit
         /// Asynchronously writes data to a file, replacing the file if it already exists.
-        abstract writeFile: path: U2<PathLike, float> * data: obj * callback: (NodeJS.ErrnoException -> unit) -> unit
+        abstract writeFile: path: U2<PathLike, float> * data: obj option * callback: (NodeJS.ErrnoException -> unit) -> unit
         /// Synchronously writes data to a file, replacing the file if it already exists.
-        abstract writeFileSync: path: U2<PathLike, float> * data: obj * ?options: U2<obj, string> option -> unit
+        abstract writeFileSync: path: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> unit
         /// Asynchronously append data to a file, creating the file if it does not exist.
-        abstract appendFile: file: U2<PathLike, float> * data: obj * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> unit) -> unit
+        abstract appendFile: file: U2<PathLike, float> * data: obj option * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> unit) -> unit
         /// Asynchronously append data to a file, creating the file if it does not exist.
-        abstract appendFile: file: U2<PathLike, float> * data: obj * callback: (NodeJS.ErrnoException -> unit) -> unit
+        abstract appendFile: file: U2<PathLike, float> * data: obj option * callback: (NodeJS.ErrnoException -> unit) -> unit
         /// Synchronously append data to a file, creating the file if it does not exist.
-        abstract appendFileSync: file: U2<PathLike, float> * data: obj * ?options: U2<obj, string> option -> unit
+        abstract appendFileSync: file: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> unit
         /// Watch for changes on `filename`. The callback `listener` will be called each time the file is accessed.
         abstract watchFile: filename: PathLike * options: obj option * listener: (Stats -> Stats -> unit) -> unit
         /// Watch for changes on `filename`. The callback `listener` will be called each time the file is accessed.
@@ -2634,7 +2634,7 @@ module fs =
         /// Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.
         abstract watch: filename: PathLike * options: U2<obj, string> option * ?listener: (string -> U2<string, Buffer> -> unit) -> FSWatcher
         /// Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.
-        abstract watch: filename: PathLike * ?listener: (string -> string -> obj) -> FSWatcher
+        abstract watch: filename: PathLike * ?listener: (string -> string -> obj option) -> FSWatcher
         /// Asynchronously tests whether or not the given path exists by checking with the file system.
         abstract exists: path: PathLike * callback: (bool -> unit) -> unit
         /// Synchronously tests whether or not the given path exists by checking with the file system.
@@ -2710,19 +2710,19 @@ module fs =
         /// events.EventEmitter
         ///    1. change
         ///    2. error
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> FSWatcher
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> FSWatcher
         [<Emit "$0.addListener('change',$1)">] abstract addListener_change: listener: (string -> U2<string, Buffer> -> unit) -> FSWatcher
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> FSWatcher
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> FSWatcher
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> FSWatcher
         [<Emit "$0.on('change',$1)">] abstract on_change: listener: (string -> U2<string, Buffer> -> unit) -> FSWatcher
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> FSWatcher
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> FSWatcher
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> FSWatcher
         [<Emit "$0.once('change',$1)">] abstract once_change: listener: (string -> U2<string, Buffer> -> unit) -> FSWatcher
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> FSWatcher
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> FSWatcher
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> FSWatcher
         [<Emit "$0.prependListener('change',$1)">] abstract prependListener_change: listener: (string -> U2<string, Buffer> -> unit) -> FSWatcher
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> FSWatcher
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> FSWatcher
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> FSWatcher
         [<Emit "$0.prependOnceListener('change',$1)">] abstract prependOnceListener_change: listener: (string -> U2<string, Buffer> -> unit) -> FSWatcher
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> FSWatcher
 
@@ -2735,19 +2735,19 @@ module fs =
         /// events.EventEmitter
         ///    1. open
         ///    2. close
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadStream
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadStream
         [<Emit "$0.addListener('open',$1)">] abstract addListener_open: listener: (float -> unit) -> ReadStream
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> ReadStream
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadStream
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadStream
         [<Emit "$0.on('open',$1)">] abstract on_open: listener: (float -> unit) -> ReadStream
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> ReadStream
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadStream
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadStream
         [<Emit "$0.once('open',$1)">] abstract once_open: listener: (float -> unit) -> ReadStream
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> ReadStream
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadStream
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadStream
         [<Emit "$0.prependListener('open',$1)">] abstract prependListener_open: listener: (float -> unit) -> ReadStream
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> ReadStream
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ReadStream
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ReadStream
         [<Emit "$0.prependOnceListener('open',$1)">] abstract prependOnceListener_open: listener: (float -> unit) -> ReadStream
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> ReadStream
 
@@ -2762,19 +2762,19 @@ module fs =
         /// events.EventEmitter
         ///    1. open
         ///    2. close
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> WriteStream
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> WriteStream
         [<Emit "$0.addListener('open',$1)">] abstract addListener_open: listener: (float -> unit) -> WriteStream
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> WriteStream
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> WriteStream
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> WriteStream
         [<Emit "$0.on('open',$1)">] abstract on_open: listener: (float -> unit) -> WriteStream
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> WriteStream
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> WriteStream
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> WriteStream
         [<Emit "$0.once('open',$1)">] abstract once_open: listener: (float -> unit) -> WriteStream
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> WriteStream
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> WriteStream
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> WriteStream
         [<Emit "$0.prependListener('open',$1)">] abstract prependListener_open: listener: (float -> unit) -> WriteStream
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> WriteStream
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> WriteStream
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> WriteStream
         [<Emit "$0.prependOnceListener('open',$1)">] abstract prependOnceListener_open: listener: (float -> unit) -> WriteStream
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> WriteStream
 
@@ -2962,7 +2962,7 @@ module fs =
             /// Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.
             abstract __promisify__: fd: float * ?buffer: 'TBuffer * ?offset: float * ?length: float * ?position: float option -> Promise<obj>
             /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
-            abstract __promisify__: fd: float * string: obj * ?position: float option * ?encoding: string option -> Promise<obj>
+            abstract __promisify__: fd: float * string: obj option * ?position: float option * ?encoding: string option -> Promise<obj>
 
     module read =
 
@@ -2983,13 +2983,13 @@ module fs =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously writes data to a file, replacing the file if it already exists.
-            abstract __promisify__: path: U2<PathLike, float> * data: obj * ?options: U2<obj, string> option -> Promise<unit>
+            abstract __promisify__: path: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> Promise<unit>
 
     module appendFile =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously append data to a file, creating the file if it does not exist.
-            abstract __promisify__: file: U2<PathLike, float> * data: obj * ?options: U2<obj, string> option -> Promise<unit>
+            abstract __promisify__: file: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> Promise<unit>
 
     module exists =
 
@@ -3077,7 +3077,7 @@ module path =
         /// Starting from leftmost {from} paramter, resolves {to} to an absolute path.
         /// 
         /// If {to} isn't already absolute, {from} arguments are prepended in right to left order, until an absolute path is found. If after using all {from} paths still no absolute path is found, the current working directory is used as well. The resulting path is normalized, and trailing slashes are removed unless the path gets resolved to the root directory.
-        abstract resolve: [<ParamArray>] pathSegments: ResizeArray<obj> -> string
+        abstract resolve: [<ParamArray>] pathSegments: ResizeArray<obj option> -> string
         /// Determines whether {path} is an absolute path. An absolute path will always resolve to the same location, regardless of the working directory.
         abstract isAbsolute: path: string -> bool
         /// Solve the relative path from {from} to {to}.
@@ -3127,8 +3127,8 @@ module path =
 
         type [<AllowNullLiteral>] IExports =
             abstract normalize: p: string -> string
-            abstract join: [<ParamArray>] paths: ResizeArray<obj> -> string
-            abstract resolve: [<ParamArray>] pathSegments: ResizeArray<obj> -> string
+            abstract join: [<ParamArray>] paths: ResizeArray<obj option> -> string
+            abstract resolve: [<ParamArray>] pathSegments: ResizeArray<obj option> -> string
             abstract isAbsolute: p: string -> bool
             abstract relative: from: string * ``to``: string -> string
             abstract dirname: p: string -> string
@@ -3143,8 +3143,8 @@ module path =
 
         type [<AllowNullLiteral>] IExports =
             abstract normalize: p: string -> string
-            abstract join: [<ParamArray>] paths: ResizeArray<obj> -> string
-            abstract resolve: [<ParamArray>] pathSegments: ResizeArray<obj> -> string
+            abstract join: [<ParamArray>] paths: ResizeArray<obj option> -> string
+            abstract resolve: [<ParamArray>] pathSegments: ResizeArray<obj option> -> string
             abstract isAbsolute: p: string -> bool
             abstract relative: from: string * ``to``: string -> string
             abstract dirname: p: string -> string
@@ -3239,15 +3239,15 @@ module tls =
         abstract getPeerCertificate: ?detailed: obj -> PeerCertificate
         abstract getPeerCertificate: ?detailed: bool -> U2<PeerCertificate, DetailedPeerCertificate>
         /// Could be used to speed up handshake establishment when reconnecting to the server.
-        abstract getSession: unit -> obj
+        abstract getSession: unit -> obj option
         /// NOTE: Works only with client TLS sockets.
         /// Useful only for debugging, for session reuse provide session option to tls.connect().
-        abstract getTLSTicket: unit -> obj
+        abstract getTLSTicket: unit -> obj option
         /// Initiate TLS renegotiation process.
         /// 
         /// NOTE: Can be used to request peer's certificate after the secure connection has been established.
         /// ANOTHER NOTE: When running as the server, socket will be destroyed with an error after handshakeTimeout timeout.
-        abstract renegotiate: options: TlsOptions * callback: (Error option -> unit) -> obj
+        abstract renegotiate: options: TlsOptions * callback: (Error option -> unit) -> obj option
         /// Set maximum TLS fragment size (default and maximum value is: 16384, minimum is: 512).
         /// Smaller fragment size decreases buffering latency on the client: large fragments are buffered by
         /// the TLS layer until the entire fragment is received and its integrity is verified;
@@ -3258,22 +3258,22 @@ module tls =
         /// events.EventEmitter
         /// 1. OCSPResponse
         /// 2. secureConnect
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> TLSSocket
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> TLSSocket
         [<Emit "$0.addListener('OCSPResponse',$1)">] abstract addListener_OCSPResponse: listener: (Buffer -> unit) -> TLSSocket
         [<Emit "$0.addListener('secureConnect',$1)">] abstract addListener_secureConnect: listener: (unit -> unit) -> TLSSocket
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('OCSPResponse',$1)">] abstract emit_OCSPResponse: response: Buffer -> bool
         [<Emit "$0.emit('secureConnect')">] abstract emit_secureConnect: unit -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> TLSSocket
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> TLSSocket
         [<Emit "$0.on('OCSPResponse',$1)">] abstract on_OCSPResponse: listener: (Buffer -> unit) -> TLSSocket
         [<Emit "$0.on('secureConnect',$1)">] abstract on_secureConnect: listener: (unit -> unit) -> TLSSocket
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> TLSSocket
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> TLSSocket
         [<Emit "$0.once('OCSPResponse',$1)">] abstract once_OCSPResponse: listener: (Buffer -> unit) -> TLSSocket
         [<Emit "$0.once('secureConnect',$1)">] abstract once_secureConnect: listener: (unit -> unit) -> TLSSocket
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> TLSSocket
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> TLSSocket
         [<Emit "$0.prependListener('OCSPResponse',$1)">] abstract prependListener_OCSPResponse: listener: (Buffer -> unit) -> TLSSocket
         [<Emit "$0.prependListener('secureConnect',$1)">] abstract prependListener_secureConnect: listener: (unit -> unit) -> TLSSocket
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> TLSSocket
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> TLSSocket
         [<Emit "$0.prependOnceListener('OCSPResponse',$1)">] abstract prependOnceListener_OCSPResponse: listener: (Buffer -> unit) -> TLSSocket
         [<Emit "$0.prependOnceListener('secureConnect',$1)">] abstract prependOnceListener_secureConnect: listener: (unit -> unit) -> TLSSocket
 
@@ -3285,7 +3285,7 @@ module tls =
         abstract host: string option with get, set
         abstract port: float option with get, set
         abstract pfx: U2<string, ResizeArray<Buffer>> option with get, set
-        abstract key: U4<string, ResizeArray<string>, Buffer, ResizeArray<obj>> option with get, set
+        abstract key: U4<string, ResizeArray<string>, Buffer, ResizeArray<obj option>> option with get, set
         abstract passphrase: string option with get, set
         abstract cert: U4<string, ResizeArray<string>, Buffer, ResizeArray<Buffer>> option with get, set
         abstract ca: U4<string, ResizeArray<string>, Buffer, ResizeArray<Buffer>> option with get, set
@@ -3320,7 +3320,7 @@ module tls =
         abstract servername: string option with get, set
         abstract path: string option with get, set
         abstract ALPNProtocols: Array<U2<string, Buffer>> option with get, set
-        abstract checkServerIdentity: (string -> U3<string, Buffer, Array<U2<string, Buffer>>> -> obj) option with get, set
+        abstract checkServerIdentity: (string -> U3<string, Buffer, Array<U2<string, Buffer>>> -> obj option) option with get, set
         abstract secureProtocol: string option with get, set
         abstract secureContext: Object option with get, set
         abstract session: Buffer option with get, set
@@ -3336,41 +3336,41 @@ module tls =
         /// 3. OCSPRequest
         /// 4. resumeSession
         /// 5. secureConnection
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.addListener('tlsClientError',$1)">] abstract addListener_tlsClientError: listener: (Error -> TLSSocket -> unit) -> Server
-        [<Emit "$0.addListener('newSession',$1)">] abstract addListener_newSession: listener: (obj -> obj -> (Error -> Buffer -> unit) -> unit) -> Server
+        [<Emit "$0.addListener('newSession',$1)">] abstract addListener_newSession: listener: (obj option -> obj option -> (Error -> Buffer -> unit) -> unit) -> Server
         [<Emit "$0.addListener('OCSPRequest',$1)">] abstract addListener_OCSPRequest: listener: (Buffer -> Buffer -> Function -> unit) -> Server
-        [<Emit "$0.addListener('resumeSession',$1)">] abstract addListener_resumeSession: listener: (obj -> (Error -> obj -> unit) -> unit) -> Server
+        [<Emit "$0.addListener('resumeSession',$1)">] abstract addListener_resumeSession: listener: (obj option -> (Error -> obj option -> unit) -> unit) -> Server
         [<Emit "$0.addListener('secureConnection',$1)">] abstract addListener_secureConnection: listener: (TLSSocket -> unit) -> Server
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('tlsClientError',$1,$2)">] abstract emit_tlsClientError: err: Error * tlsSocket: TLSSocket -> bool
-        [<Emit "$0.emit('newSession',$1,$2,$3)">] abstract emit_newSession: sessionId: obj * sessionData: obj * callback: (Error -> Buffer -> unit) -> bool
+        [<Emit "$0.emit('newSession',$1,$2,$3)">] abstract emit_newSession: sessionId: obj option * sessionData: obj option * callback: (Error -> Buffer -> unit) -> bool
         [<Emit "$0.emit('OCSPRequest',$1,$2,$3)">] abstract emit_OCSPRequest: certificate: Buffer * issuer: Buffer * callback: Function -> bool
-        [<Emit "$0.emit('resumeSession',$1,$2)">] abstract emit_resumeSession: sessionId: obj * callback: (Error -> obj -> unit) -> bool
+        [<Emit "$0.emit('resumeSession',$1,$2)">] abstract emit_resumeSession: sessionId: obj option * callback: (Error -> obj option -> unit) -> bool
         [<Emit "$0.emit('secureConnection',$1)">] abstract emit_secureConnection: tlsSocket: TLSSocket -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.on('tlsClientError',$1)">] abstract on_tlsClientError: listener: (Error -> TLSSocket -> unit) -> Server
-        [<Emit "$0.on('newSession',$1)">] abstract on_newSession: listener: (obj -> obj -> (Error -> Buffer -> unit) -> unit) -> Server
+        [<Emit "$0.on('newSession',$1)">] abstract on_newSession: listener: (obj option -> obj option -> (Error -> Buffer -> unit) -> unit) -> Server
         [<Emit "$0.on('OCSPRequest',$1)">] abstract on_OCSPRequest: listener: (Buffer -> Buffer -> Function -> unit) -> Server
-        [<Emit "$0.on('resumeSession',$1)">] abstract on_resumeSession: listener: (obj -> (Error -> obj -> unit) -> unit) -> Server
+        [<Emit "$0.on('resumeSession',$1)">] abstract on_resumeSession: listener: (obj option -> (Error -> obj option -> unit) -> unit) -> Server
         [<Emit "$0.on('secureConnection',$1)">] abstract on_secureConnection: listener: (TLSSocket -> unit) -> Server
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.once('tlsClientError',$1)">] abstract once_tlsClientError: listener: (Error -> TLSSocket -> unit) -> Server
-        [<Emit "$0.once('newSession',$1)">] abstract once_newSession: listener: (obj -> obj -> (Error -> Buffer -> unit) -> unit) -> Server
+        [<Emit "$0.once('newSession',$1)">] abstract once_newSession: listener: (obj option -> obj option -> (Error -> Buffer -> unit) -> unit) -> Server
         [<Emit "$0.once('OCSPRequest',$1)">] abstract once_OCSPRequest: listener: (Buffer -> Buffer -> Function -> unit) -> Server
-        [<Emit "$0.once('resumeSession',$1)">] abstract once_resumeSession: listener: (obj -> (Error -> obj -> unit) -> unit) -> Server
+        [<Emit "$0.once('resumeSession',$1)">] abstract once_resumeSession: listener: (obj option -> (Error -> obj option -> unit) -> unit) -> Server
         [<Emit "$0.once('secureConnection',$1)">] abstract once_secureConnection: listener: (TLSSocket -> unit) -> Server
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.prependListener('tlsClientError',$1)">] abstract prependListener_tlsClientError: listener: (Error -> TLSSocket -> unit) -> Server
-        [<Emit "$0.prependListener('newSession',$1)">] abstract prependListener_newSession: listener: (obj -> obj -> (Error -> Buffer -> unit) -> unit) -> Server
+        [<Emit "$0.prependListener('newSession',$1)">] abstract prependListener_newSession: listener: (obj option -> obj option -> (Error -> Buffer -> unit) -> unit) -> Server
         [<Emit "$0.prependListener('OCSPRequest',$1)">] abstract prependListener_OCSPRequest: listener: (Buffer -> Buffer -> Function -> unit) -> Server
-        [<Emit "$0.prependListener('resumeSession',$1)">] abstract prependListener_resumeSession: listener: (obj -> (Error -> obj -> unit) -> unit) -> Server
+        [<Emit "$0.prependListener('resumeSession',$1)">] abstract prependListener_resumeSession: listener: (obj option -> (Error -> obj option -> unit) -> unit) -> Server
         [<Emit "$0.prependListener('secureConnection',$1)">] abstract prependListener_secureConnection: listener: (TLSSocket -> unit) -> Server
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Server
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Server
         [<Emit "$0.prependOnceListener('tlsClientError',$1)">] abstract prependOnceListener_tlsClientError: listener: (Error -> TLSSocket -> unit) -> Server
-        [<Emit "$0.prependOnceListener('newSession',$1)">] abstract prependOnceListener_newSession: listener: (obj -> obj -> (Error -> Buffer -> unit) -> unit) -> Server
+        [<Emit "$0.prependOnceListener('newSession',$1)">] abstract prependOnceListener_newSession: listener: (obj option -> obj option -> (Error -> Buffer -> unit) -> unit) -> Server
         [<Emit "$0.prependOnceListener('OCSPRequest',$1)">] abstract prependOnceListener_OCSPRequest: listener: (Buffer -> Buffer -> Function -> unit) -> Server
-        [<Emit "$0.prependOnceListener('resumeSession',$1)">] abstract prependOnceListener_resumeSession: listener: (obj -> (Error -> obj -> unit) -> unit) -> Server
+        [<Emit "$0.prependOnceListener('resumeSession',$1)">] abstract prependOnceListener_resumeSession: listener: (obj option -> (Error -> obj option -> unit) -> unit) -> Server
         [<Emit "$0.prependOnceListener('secureConnection',$1)">] abstract prependOnceListener_secureConnection: listener: (TLSSocket -> unit) -> Server
 
     type [<AllowNullLiteral>] ServerStatic =
@@ -3380,15 +3380,15 @@ module tls =
         inherit stream.Duplex
         abstract authorized: bool with get, set
         abstract authorizationError: Error with get, set
-        abstract getPeerCertificate: unit -> obj
+        abstract getPeerCertificate: unit -> obj option
         abstract getCipher: obj with get, set
         abstract address: obj with get, set
         abstract remoteAddress: string with get, set
         abstract remotePort: float with get, set
 
     type [<AllowNullLiteral>] SecurePair =
-        abstract encrypted: obj with get, set
-        abstract cleartext: obj with get, set
+        abstract encrypted: obj option with get, set
+        abstract cleartext: obj option with get, set
 
     type [<AllowNullLiteral>] SecureContextOptions =
         abstract pfx: U2<string, Buffer> option with get, set
@@ -3401,7 +3401,7 @@ module tls =
         abstract honorCipherOrder: bool option with get, set
 
     type [<AllowNullLiteral>] SecureContext =
-        abstract context: obj with get, set
+        abstract context: obj option with get, set
 
 module crypto =
 
@@ -3411,10 +3411,10 @@ module crypto =
         abstract createCredentials: details: CredentialDetails -> Credentials
         abstract createHash: algorithm: string -> Hash
         abstract createHmac: algorithm: string * key: U2<string, Buffer> -> Hmac
-        abstract createCipher: algorithm: string * password: obj -> Cipher
-        abstract createCipheriv: algorithm: string * key: obj * iv: obj -> Cipher
-        abstract createDecipher: algorithm: string * password: obj -> Decipher
-        abstract createDecipheriv: algorithm: string * key: obj * iv: obj -> Decipher
+        abstract createCipher: algorithm: string * password: obj option -> Cipher
+        abstract createCipheriv: algorithm: string * key: obj option * iv: obj option -> Cipher
+        abstract createDecipher: algorithm: string * password: obj option -> Decipher
+        abstract createDecipheriv: algorithm: string * key: obj option * iv: obj option -> Decipher
         abstract createSign: algorithm: string -> Signer
         abstract createVerify: algorith: string -> Verify
         abstract createDiffieHellman: prime_length: float * ?generator: float -> DiffieHellman
@@ -3423,7 +3423,7 @@ module crypto =
         abstract createDiffieHellman: prime: string * prime_encoding: HexBase64Latin1Encoding * generator: U2<float, Buffer> -> DiffieHellman
         abstract createDiffieHellman: prime: string * prime_encoding: HexBase64Latin1Encoding * generator: string * generator_encoding: HexBase64Latin1Encoding -> DiffieHellman
         abstract getDiffieHellman: group_name: string -> DiffieHellman
-        abstract pbkdf2: password: U2<string, Buffer> * salt: U2<string, Buffer> * iterations: float * keylen: float * digest: string * callback: (Error -> Buffer -> obj) -> unit
+        abstract pbkdf2: password: U2<string, Buffer> * salt: U2<string, Buffer> * iterations: float * keylen: float * digest: string * callback: (Error -> Buffer -> obj option) -> unit
         abstract pbkdf2Sync: password: U2<string, Buffer> * salt: U2<string, Buffer> * iterations: float * keylen: float * digest: string -> Buffer
         abstract randomBytes: size: float -> Buffer
         abstract randomBytes: size: float * callback: (Error -> Buffer -> unit) -> unit
@@ -3462,7 +3462,7 @@ module crypto =
         abstract ciphers: string with get, set
 
     type [<AllowNullLiteral>] Credentials =
-        abstract context: obj option with get, set
+        abstract context: obj option option with get, set
 
     type [<StringEnum>] [<RequireQualifiedAccess>] Utf8AsciiLatin1Encoding =
         | Utf8
@@ -3507,7 +3507,7 @@ module crypto =
         inherit NodeJS.ReadWriteStream
         abstract update: data: Buffer -> Buffer
         abstract update: data: string * input_encoding: Utf8AsciiBinaryEncoding -> Buffer
-        abstract update: data: Buffer * input_encoding: obj * output_encoding: HexBase64BinaryEncoding -> string
+        abstract update: data: Buffer * input_encoding: obj option * output_encoding: HexBase64BinaryEncoding -> string
         abstract update: data: string * input_encoding: Utf8AsciiBinaryEncoding * output_encoding: HexBase64BinaryEncoding -> string
         abstract final: unit -> Buffer
         abstract final: output_encoding: string -> string
@@ -3519,7 +3519,7 @@ module crypto =
         inherit NodeJS.ReadWriteStream
         abstract update: data: Buffer -> Buffer
         abstract update: data: string * input_encoding: HexBase64BinaryEncoding -> Buffer
-        abstract update: data: Buffer * input_encoding: obj * output_encoding: Utf8AsciiBinaryEncoding -> string
+        abstract update: data: Buffer * input_encoding: obj option * output_encoding: Utf8AsciiBinaryEncoding -> string
         abstract update: data: string * input_encoding: HexBase64BinaryEncoding * output_encoding: Utf8AsciiBinaryEncoding -> string
         abstract final: unit -> Buffer
         abstract final: output_encoding: string -> string
@@ -3613,23 +3613,23 @@ module stream =
         abstract highWaterMark: float option with get, set
         abstract encoding: string option with get, set
         abstract objectMode: bool option with get, set
-        abstract read: (Readable -> float -> obj) option with get, set
-        abstract destroy: (Error -> obj) option with get, set
+        abstract read: (Readable -> float -> obj option) option with get, set
+        abstract destroy: (Error -> obj option) option with get, set
 
     type [<AllowNullLiteral>] Readable =
         inherit Stream
         inherit NodeJS.ReadableStream
         abstract readable: bool with get, set
         abstract _read: size: float -> unit
-        abstract read: ?size: float -> obj
+        abstract read: ?size: float -> obj option
         abstract setEncoding: encoding: string -> Readable
         abstract pause: unit -> Readable
         abstract resume: unit -> Readable
         abstract isPaused: unit -> bool
         abstract unpipe: ?destination: 'T -> Readable
-        abstract unshift: chunk: obj -> unit
+        abstract unshift: chunk: obj option -> unit
         abstract wrap: oldStream: NodeJS.ReadableStream -> Readable
-        abstract push: chunk: obj * ?encoding: string -> bool
+        abstract push: chunk: obj option * ?encoding: string -> bool
         abstract _destroy: err: Error * callback: Function -> unit
         abstract destroy: ?error: Error -> unit
         /// Event emitter
@@ -3639,43 +3639,43 @@ module stream =
         /// 3. end
         /// 4. readable
         /// 5. error
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Readable
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Readable
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> Readable
         [<Emit "$0.addListener('data',$1)">] abstract addListener_data: listener: (U2<Buffer, string> -> unit) -> Readable
         [<Emit "$0.addListener('end',$1)">] abstract addListener_end: listener: (unit -> unit) -> Readable
         [<Emit "$0.addListener('readable',$1)">] abstract addListener_readable: listener: (unit -> unit) -> Readable
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Readable
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close')">] abstract emit_close: unit -> bool
         [<Emit "$0.emit('data',$1)">] abstract emit_data: chunk: U2<Buffer, string> -> bool
         [<Emit "$0.emit('end')">] abstract emit_end: unit -> bool
         [<Emit "$0.emit('readable')">] abstract emit_readable: unit -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Readable
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Readable
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> Readable
         [<Emit "$0.on('data',$1)">] abstract on_data: listener: (U2<Buffer, string> -> unit) -> Readable
         [<Emit "$0.on('end',$1)">] abstract on_end: listener: (unit -> unit) -> Readable
         [<Emit "$0.on('readable',$1)">] abstract on_readable: listener: (unit -> unit) -> Readable
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Readable
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Readable
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Readable
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> Readable
         [<Emit "$0.once('data',$1)">] abstract once_data: listener: (U2<Buffer, string> -> unit) -> Readable
         [<Emit "$0.once('end',$1)">] abstract once_end: listener: (unit -> unit) -> Readable
         [<Emit "$0.once('readable',$1)">] abstract once_readable: listener: (unit -> unit) -> Readable
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Readable
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Readable
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Readable
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> Readable
         [<Emit "$0.prependListener('data',$1)">] abstract prependListener_data: listener: (U2<Buffer, string> -> unit) -> Readable
         [<Emit "$0.prependListener('end',$1)">] abstract prependListener_end: listener: (unit -> unit) -> Readable
         [<Emit "$0.prependListener('readable',$1)">] abstract prependListener_readable: listener: (unit -> unit) -> Readable
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Readable
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Readable
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Readable
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> Readable
         [<Emit "$0.prependOnceListener('data',$1)">] abstract prependOnceListener_data: listener: (U2<Buffer, string> -> unit) -> Readable
         [<Emit "$0.prependOnceListener('end',$1)">] abstract prependOnceListener_end: listener: (unit -> unit) -> Readable
         [<Emit "$0.prependOnceListener('readable',$1)">] abstract prependOnceListener_readable: listener: (unit -> unit) -> Readable
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Readable
-        abstract removeListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Readable
+        abstract removeListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Readable
         [<Emit "$0.removeListener('close',$1)">] abstract removeListener_close: listener: (unit -> unit) -> Readable
         [<Emit "$0.removeListener('data',$1)">] abstract removeListener_data: listener: (U2<Buffer, string> -> unit) -> Readable
         [<Emit "$0.removeListener('end',$1)">] abstract removeListener_end: listener: (unit -> unit) -> Readable
@@ -3689,25 +3689,25 @@ module stream =
         abstract highWaterMark: float option with get, set
         abstract decodeStrings: bool option with get, set
         abstract objectMode: bool option with get, set
-        abstract write: (U2<string, Buffer> -> string -> Function -> obj) option with get, set
-        abstract writev: (Array<obj> -> Function -> obj) option with get, set
-        abstract destroy: (Error -> obj) option with get, set
+        abstract write: (U2<string, Buffer> -> string -> Function -> obj option) option with get, set
+        abstract writev: (Array<obj> -> Function -> obj option) option with get, set
+        abstract destroy: (Error -> obj option) option with get, set
         abstract final: ((Error -> unit) -> unit) option with get, set
 
     type [<AllowNullLiteral>] Writable =
         inherit Stream
         inherit NodeJS.WritableStream
         abstract writable: bool with get, set
-        abstract _write: chunk: obj * encoding: string * callback: (Error -> unit) -> unit
+        abstract _write: chunk: obj option * encoding: string * callback: (Error -> unit) -> unit
         abstract _writev: chunks: Array<obj> * callback: (Error -> unit) -> unit
         abstract _destroy: err: Error * callback: Function -> unit
         abstract _final: callback: Function -> unit
-        abstract write: chunk: obj * ?cb: Function -> bool
-        abstract write: chunk: obj * ?encoding: string * ?cb: Function -> bool
+        abstract write: chunk: obj option * ?cb: Function -> bool
+        abstract write: chunk: obj option * ?encoding: string * ?cb: Function -> bool
         abstract setDefaultEncoding: encoding: string -> Writable
         abstract ``end``: unit -> unit
-        abstract ``end``: chunk: obj * ?cb: Function -> unit
-        abstract ``end``: chunk: obj * ?encoding: string * ?cb: Function -> unit
+        abstract ``end``: chunk: obj option * ?cb: Function -> unit
+        abstract ``end``: chunk: obj option * ?encoding: string * ?cb: Function -> unit
         abstract cork: unit -> unit
         abstract uncork: unit -> unit
         abstract destroy: ?error: Error -> unit
@@ -3719,49 +3719,49 @@ module stream =
         /// 4. finish
         /// 5. pipe
         /// 6. unpipe
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Writable
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Writable
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> Writable
         [<Emit "$0.addListener('drain',$1)">] abstract addListener_drain: listener: (unit -> unit) -> Writable
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Writable
         [<Emit "$0.addListener('finish',$1)">] abstract addListener_finish: listener: (unit -> unit) -> Writable
         [<Emit "$0.addListener('pipe',$1)">] abstract addListener_pipe: listener: (Readable -> unit) -> Writable
         [<Emit "$0.addListener('unpipe',$1)">] abstract addListener_unpipe: listener: (Readable -> unit) -> Writable
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close')">] abstract emit_close: unit -> bool
         [<Emit "$0.emit('drain',$1)">] abstract emit_drain: chunk: U2<Buffer, string> -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
         [<Emit "$0.emit('finish')">] abstract emit_finish: unit -> bool
         [<Emit "$0.emit('pipe',$1)">] abstract emit_pipe: src: Readable -> bool
         [<Emit "$0.emit('unpipe',$1)">] abstract emit_unpipe: src: Readable -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Writable
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Writable
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> Writable
         [<Emit "$0.on('drain',$1)">] abstract on_drain: listener: (unit -> unit) -> Writable
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Writable
         [<Emit "$0.on('finish',$1)">] abstract on_finish: listener: (unit -> unit) -> Writable
         [<Emit "$0.on('pipe',$1)">] abstract on_pipe: listener: (Readable -> unit) -> Writable
         [<Emit "$0.on('unpipe',$1)">] abstract on_unpipe: listener: (Readable -> unit) -> Writable
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Writable
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Writable
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> Writable
         [<Emit "$0.once('drain',$1)">] abstract once_drain: listener: (unit -> unit) -> Writable
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Writable
         [<Emit "$0.once('finish',$1)">] abstract once_finish: listener: (unit -> unit) -> Writable
         [<Emit "$0.once('pipe',$1)">] abstract once_pipe: listener: (Readable -> unit) -> Writable
         [<Emit "$0.once('unpipe',$1)">] abstract once_unpipe: listener: (Readable -> unit) -> Writable
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Writable
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Writable
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> Writable
         [<Emit "$0.prependListener('drain',$1)">] abstract prependListener_drain: listener: (unit -> unit) -> Writable
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Writable
         [<Emit "$0.prependListener('finish',$1)">] abstract prependListener_finish: listener: (unit -> unit) -> Writable
         [<Emit "$0.prependListener('pipe',$1)">] abstract prependListener_pipe: listener: (Readable -> unit) -> Writable
         [<Emit "$0.prependListener('unpipe',$1)">] abstract prependListener_unpipe: listener: (Readable -> unit) -> Writable
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Writable
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Writable
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> Writable
         [<Emit "$0.prependOnceListener('drain',$1)">] abstract prependOnceListener_drain: listener: (unit -> unit) -> Writable
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Writable
         [<Emit "$0.prependOnceListener('finish',$1)">] abstract prependOnceListener_finish: listener: (unit -> unit) -> Writable
         [<Emit "$0.prependOnceListener('pipe',$1)">] abstract prependOnceListener_pipe: listener: (Readable -> unit) -> Writable
         [<Emit "$0.prependOnceListener('unpipe',$1)">] abstract prependOnceListener_unpipe: listener: (Readable -> unit) -> Writable
-        abstract removeListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Writable
+        abstract removeListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Writable
         [<Emit "$0.removeListener('close',$1)">] abstract removeListener_close: listener: (unit -> unit) -> Writable
         [<Emit "$0.removeListener('drain',$1)">] abstract removeListener_drain: listener: (unit -> unit) -> Writable
         [<Emit "$0.removeListener('error',$1)">] abstract removeListener_error: listener: (Error -> unit) -> Writable
@@ -3783,16 +3783,16 @@ module stream =
         inherit Readable
         inherit Writable
         abstract writable: bool with get, set
-        abstract _write: chunk: obj * encoding: string * callback: (Error -> unit) -> unit
+        abstract _write: chunk: obj option * encoding: string * callback: (Error -> unit) -> unit
         abstract _writev: chunks: Array<obj> * callback: (Error -> unit) -> unit
         abstract _destroy: err: Error * callback: Function -> unit
         abstract _final: callback: Function -> unit
-        abstract write: chunk: obj * ?cb: Function -> bool
-        abstract write: chunk: obj * ?encoding: string * ?cb: Function -> bool
+        abstract write: chunk: obj option * ?cb: Function -> bool
+        abstract write: chunk: obj option * ?encoding: string * ?cb: Function -> bool
         abstract setDefaultEncoding: encoding: string -> Duplex
         abstract ``end``: unit -> unit
-        abstract ``end``: chunk: obj * ?cb: Function -> unit
-        abstract ``end``: chunk: obj * ?encoding: string * ?cb: Function -> unit
+        abstract ``end``: chunk: obj option * ?cb: Function -> unit
+        abstract ``end``: chunk: obj option * ?encoding: string * ?cb: Function -> unit
         abstract cork: unit -> unit
         abstract uncork: unit -> unit
 
@@ -3801,12 +3801,12 @@ module stream =
 
     type [<AllowNullLiteral>] TransformOptions =
         inherit DuplexOptions
-        abstract transform: (U2<string, Buffer> -> string -> Function -> obj) option with get, set
-        abstract flush: (Function -> obj) option with get, set
+        abstract transform: (U2<string, Buffer> -> string -> Function -> obj option) option with get, set
+        abstract flush: (Function -> obj option) option with get, set
 
     type [<AllowNullLiteral>] Transform =
         inherit Duplex
-        abstract _transform: chunk: obj * encoding: string * callback: Function -> unit
+        abstract _transform: chunk: obj option * encoding: string * callback: Function -> unit
         abstract destroy: ?error: Error -> unit
 
     type [<AllowNullLiteral>] TransformStatic =
@@ -3821,30 +3821,30 @@ module stream =
 module util =
 
     type [<AllowNullLiteral>] IExports =
-        abstract format: format: obj * [<ParamArray>] param: ResizeArray<obj> -> string
+        abstract format: format: obj option * [<ParamArray>] param: ResizeArray<obj option> -> string
         abstract debug: string: string -> unit
-        abstract error: [<ParamArray>] param: ResizeArray<obj> -> unit
-        abstract puts: [<ParamArray>] param: ResizeArray<obj> -> unit
-        abstract print: [<ParamArray>] param: ResizeArray<obj> -> unit
+        abstract error: [<ParamArray>] param: ResizeArray<obj option> -> unit
+        abstract puts: [<ParamArray>] param: ResizeArray<obj option> -> unit
+        abstract print: [<ParamArray>] param: ResizeArray<obj option> -> unit
         abstract log: string: string -> unit
         abstract inspect: obj with get, set
-        abstract isArray: ``object``: obj -> bool
-        abstract isRegExp: ``object``: obj -> bool
-        abstract isDate: ``object``: obj -> bool
-        abstract isError: ``object``: obj -> bool
-        abstract inherits: ``constructor``: obj * superConstructor: obj -> unit
-        abstract debuglog: key: string -> (string -> ResizeArray<obj> -> unit)
-        abstract isBoolean: ``object``: obj -> bool
-        abstract isBuffer: ``object``: obj -> bool
-        abstract isFunction: ``object``: obj -> bool
-        abstract isNull: ``object``: obj -> bool
-        abstract isNullOrUndefined: ``object``: obj -> bool
-        abstract isNumber: ``object``: obj -> bool
-        abstract isObject: ``object``: obj -> bool
-        abstract isPrimitive: ``object``: obj -> bool
-        abstract isString: ``object``: obj -> bool
-        abstract isSymbol: ``object``: obj -> bool
-        abstract isUndefined: ``object``: obj -> bool
+        abstract isArray: ``object``: obj option -> bool
+        abstract isRegExp: ``object``: obj option -> bool
+        abstract isDate: ``object``: obj option -> bool
+        abstract isError: ``object``: obj option -> bool
+        abstract inherits: ``constructor``: obj option * superConstructor: obj option -> unit
+        abstract debuglog: key: string -> (string -> ResizeArray<obj option> -> unit)
+        abstract isBoolean: ``object``: obj option -> bool
+        abstract isBuffer: ``object``: obj option -> bool
+        abstract isFunction: ``object``: obj option -> bool
+        abstract isNull: ``object``: obj option -> bool
+        abstract isNullOrUndefined: ``object``: obj option -> bool
+        abstract isNumber: ``object``: obj option -> bool
+        abstract isObject: ``object``: obj option -> bool
+        abstract isPrimitive: ``object``: obj option -> bool
+        abstract isString: ``object``: obj option -> bool
+        abstract isSymbol: ``object``: obj option -> bool
+        abstract isUndefined: ``object``: obj option -> bool
         abstract deprecate: fn: 'T * message: string -> 'T
         abstract callbackify: fn: (unit -> Promise<unit>) -> ((NodeJS.ErrnoException -> unit) -> unit)
         abstract callbackify: fn: (unit -> Promise<'TResult>) -> ((NodeJS.ErrnoException -> 'TResult -> unit) -> unit)
@@ -3890,35 +3890,35 @@ module util =
 module assert_ =
 
     type [<AllowNullLiteral>] IExports =
-        abstract ``internal``: value: obj * ?message: string -> unit
+        abstract ``internal``: value: obj option * ?message: string -> unit
         abstract AssertionError: AssertionErrorStatic
         abstract fail: message: string -> unit
-        abstract fail: actual: obj * expected: obj * ?message: string * ?operator: string -> unit
-        abstract ok: value: obj * ?message: string -> unit
-        abstract equal: actual: obj * expected: obj * ?message: string -> unit
-        abstract notEqual: actual: obj * expected: obj * ?message: string -> unit
-        abstract deepEqual: actual: obj * expected: obj * ?message: string -> unit
-        abstract notDeepEqual: acutal: obj * expected: obj * ?message: string -> unit
-        abstract strictEqual: actual: obj * expected: obj * ?message: string -> unit
-        abstract notStrictEqual: actual: obj * expected: obj * ?message: string -> unit
-        abstract deepStrictEqual: actual: obj * expected: obj * ?message: string -> unit
-        abstract notDeepStrictEqual: actual: obj * expected: obj * ?message: string -> unit
+        abstract fail: actual: obj option * expected: obj option * ?message: string * ?operator: string -> unit
+        abstract ok: value: obj option * ?message: string -> unit
+        abstract equal: actual: obj option * expected: obj option * ?message: string -> unit
+        abstract notEqual: actual: obj option * expected: obj option * ?message: string -> unit
+        abstract deepEqual: actual: obj option * expected: obj option * ?message: string -> unit
+        abstract notDeepEqual: acutal: obj option * expected: obj option * ?message: string -> unit
+        abstract strictEqual: actual: obj option * expected: obj option * ?message: string -> unit
+        abstract notStrictEqual: actual: obj option * expected: obj option * ?message: string -> unit
+        abstract deepStrictEqual: actual: obj option * expected: obj option * ?message: string -> unit
+        abstract notDeepStrictEqual: actual: obj option * expected: obj option * ?message: string -> unit
         abstract throws: block: Function * ?message: string -> unit
         abstract throws: block: Function * error: Function * ?message: string -> unit
         abstract throws: block: Function * error: RegExp * ?message: string -> unit
-        abstract throws: block: Function * error: (obj -> bool) * ?message: string -> unit
+        abstract throws: block: Function * error: (obj option -> bool) * ?message: string -> unit
         abstract doesNotThrow: block: Function * ?message: string -> unit
         abstract doesNotThrow: block: Function * error: Function * ?message: string -> unit
         abstract doesNotThrow: block: Function * error: RegExp * ?message: string -> unit
-        abstract doesNotThrow: block: Function * error: (obj -> bool) * ?message: string -> unit
-        abstract ifError: value: obj -> unit
+        abstract doesNotThrow: block: Function * error: (obj option -> bool) * ?message: string -> unit
+        abstract ifError: value: obj option -> unit
 
     type [<AllowNullLiteral>] AssertionError =
         inherit Error
         abstract name: string with get, set
         abstract message: string with get, set
-        abstract actual: obj with get, set
-        abstract expected: obj with get, set
+        abstract actual: obj option with get, set
+        abstract expected: obj option with get, set
         abstract operator: string with get, set
         abstract generatedMessage: bool with get, set
 
@@ -3954,10 +3954,10 @@ module domain =
         abstract run: fn: Function -> unit
         abstract add: emitter: events.EventEmitter -> unit
         abstract remove: emitter: events.EventEmitter -> unit
-        abstract bind: cb: (Error -> obj -> obj) -> obj
-        abstract intercept: cb: (obj -> obj) -> obj
+        abstract bind: cb: (Error -> obj option -> obj option) -> obj option
+        abstract intercept: cb: (obj option -> obj option) -> obj option
         abstract dispose: unit -> unit
-        abstract members: ResizeArray<obj> with get, set
+        abstract members: ResizeArray<obj option> with get, set
         abstract enter: unit -> unit
         abstract exit: unit -> unit
 
@@ -4273,12 +4273,12 @@ module v8 =
 module timers =
 
     type [<AllowNullLiteral>] IExports =
-        abstract setTimeout: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj> -> NodeJS.Timer
+        abstract setTimeout: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer
         abstract clearTimeout: timeoutId: NodeJS.Timer -> unit
-        abstract setInterval: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj> -> NodeJS.Timer
+        abstract setInterval: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer
         abstract clearInterval: intervalId: NodeJS.Timer -> unit
-        abstract setImmediate: callback: (ResizeArray<obj> -> unit) * [<ParamArray>] args: ResizeArray<obj> -> obj
-        abstract clearImmediate: immediateId: obj -> unit
+        abstract setImmediate: callback: (ResizeArray<obj option> -> unit) * [<ParamArray>] args: ResizeArray<obj option> -> obj option
+        abstract clearImmediate: immediateId: obj option -> unit
 
     module setTimeout =
 
@@ -4312,7 +4312,7 @@ module _debugger =
 
     type [<AllowNullLiteral>] RequestInfo =
         abstract command: string with get, set
-        abstract arguments: obj with get, set
+        abstract arguments: obj option with get, set
 
     type [<AllowNullLiteral>] Request =
         inherit Message
@@ -4321,7 +4321,7 @@ module _debugger =
     type [<AllowNullLiteral>] Event =
         inherit Message
         abstract ``event``: string with get, set
-        abstract body: obj option with get, set
+        abstract body: obj option option with get, set
 
     type [<AllowNullLiteral>] Response =
         inherit Message
@@ -4330,7 +4330,7 @@ module _debugger =
         /// Contains error message if success === false. 
         abstract message: string option with get, set
         /// Contains message body if success === true. 
-        abstract body: obj option with get, set
+        abstract body: obj option option with get, set
 
     type [<AllowNullLiteral>] BreakpointMessageBody =
         abstract ``type``: string with get, set
@@ -4370,7 +4370,7 @@ module _debugger =
         abstract request_seq: float option with get, set
 
     type [<AllowNullLiteral>] ResponseBodyHandler =
-        [<Emit "$0($1...)">] abstract Invoke: err: bool * ?body: obj -> unit
+        [<Emit "$0($1...)">] abstract Invoke: err: bool * ?body: obj option -> unit
         abstract request_seq: float option with get, set
 
     type [<AllowNullLiteral>] ExceptionInfo =
@@ -4395,14 +4395,14 @@ module _debugger =
         abstract currentFrame: float with get, set
         abstract currentScript: string with get, set
         abstract connect: port: float * host: string -> unit
-        abstract req: req: obj * cb: RequestHandler -> unit
+        abstract req: req: obj option * cb: RequestHandler -> unit
         abstract reqFrameEval: code: string * frame: float * cb: RequestHandler -> unit
-        abstract mirrorObject: obj: obj * depth: float * cb: ResponseBodyHandler -> unit
+        abstract mirrorObject: obj: obj option * depth: float * cb: ResponseBodyHandler -> unit
         abstract setBreakpoint: rq: BreakpointMessageBody * cb: RequestHandler -> unit
         abstract clearBreakpoint: rq: Request * cb: RequestHandler -> unit
         abstract listbreakpoints: cb: RequestHandler -> unit
         abstract reqSource: from: float * ``to``: float * cb: RequestHandler -> unit
-        abstract reqScripts: cb: obj -> unit
+        abstract reqScripts: cb: obj option -> unit
         abstract reqContinue: cb: RequestHandler -> unit
 
 module async_hooks =
@@ -4521,7 +4521,7 @@ module http2 =
         abstract session: Http2Session
         abstract setTimeout: msecs: float * ?callback: (unit -> unit) -> unit
         abstract state: StreamState
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Stream
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Stream
         [<Emit "$0.addListener('aborted',$1)">] abstract addListener_aborted: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.addListener('data',$1)">] abstract addListener_data: listener: (U2<Buffer, string> -> unit) -> Http2Stream
@@ -4535,7 +4535,7 @@ module http2 =
         [<Emit "$0.addListener('streamClosed',$1)">] abstract addListener_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.addListener('timeout',$1)">] abstract addListener_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.addListener('trailers',$1)">] abstract addListener_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('aborted')">] abstract emit_aborted: unit -> bool
         [<Emit "$0.emit('close')">] abstract emit_close: unit -> bool
         [<Emit "$0.emit('data',$1)">] abstract emit_data: chunk: U2<Buffer, string> -> bool
@@ -4549,7 +4549,7 @@ module http2 =
         [<Emit "$0.emit('streamClosed',$1)">] abstract emit_streamClosed: code: float -> bool
         [<Emit "$0.emit('timeout')">] abstract emit_timeout: unit -> bool
         [<Emit "$0.emit('trailers',$1,$2)">] abstract emit_trailers: trailers: IncomingHttpHeaders * flags: float -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Stream
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Stream
         [<Emit "$0.on('aborted',$1)">] abstract on_aborted: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.on('data',$1)">] abstract on_data: listener: (U2<Buffer, string> -> unit) -> Http2Stream
@@ -4563,7 +4563,7 @@ module http2 =
         [<Emit "$0.on('streamClosed',$1)">] abstract on_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.on('timeout',$1)">] abstract on_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.on('trailers',$1)">] abstract on_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Stream
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Stream
         [<Emit "$0.once('aborted',$1)">] abstract once_aborted: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.once('data',$1)">] abstract once_data: listener: (U2<Buffer, string> -> unit) -> Http2Stream
@@ -4577,7 +4577,7 @@ module http2 =
         [<Emit "$0.once('streamClosed',$1)">] abstract once_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.once('timeout',$1)">] abstract once_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.once('trailers',$1)">] abstract once_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Stream
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Stream
         [<Emit "$0.prependListener('aborted',$1)">] abstract prependListener_aborted: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependListener('data',$1)">] abstract prependListener_data: listener: (U2<Buffer, string> -> unit) -> Http2Stream
@@ -4591,7 +4591,7 @@ module http2 =
         [<Emit "$0.prependListener('streamClosed',$1)">] abstract prependListener_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.prependListener('timeout',$1)">] abstract prependListener_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependListener('trailers',$1)">] abstract prependListener_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Stream
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Stream
         [<Emit "$0.prependOnceListener('aborted',$1)">] abstract prependOnceListener_aborted: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependOnceListener('data',$1)">] abstract prependOnceListener_data: listener: (U2<Buffer, string> -> unit) -> Http2Stream
@@ -4608,27 +4608,27 @@ module http2 =
 
     type [<AllowNullLiteral>] ClientHttp2Stream =
         inherit Http2Stream
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Stream
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Stream
         [<Emit "$0.addListener('headers',$1)">] abstract addListener_headers: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.addListener('push',$1)">] abstract addListener_push: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.addListener('response',$1)">] abstract addListener_response: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('headers',$1,$2)">] abstract emit_headers: headers: IncomingHttpHeaders * flags: float -> bool
         [<Emit "$0.emit('push',$1,$2)">] abstract emit_push: headers: IncomingHttpHeaders * flags: float -> bool
         [<Emit "$0.emit('response',$1,$2)">] abstract emit_response: headers: IncomingHttpHeaders * flags: float -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Stream
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Stream
         [<Emit "$0.on('headers',$1)">] abstract on_headers: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.on('push',$1)">] abstract on_push: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.on('response',$1)">] abstract on_response: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Stream
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Stream
         [<Emit "$0.once('headers',$1)">] abstract once_headers: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.once('push',$1)">] abstract once_push: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.once('response',$1)">] abstract once_response: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Stream
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Stream
         [<Emit "$0.prependListener('headers',$1)">] abstract prependListener_headers: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.prependListener('push',$1)">] abstract prependListener_push: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.prependListener('response',$1)">] abstract prependListener_response: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Stream
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Stream
         [<Emit "$0.prependOnceListener('headers',$1)">] abstract prependOnceListener_headers: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.prependOnceListener('push',$1)">] abstract prependOnceListener_push: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
         [<Emit "$0.prependOnceListener('response',$1)">] abstract prependOnceListener_response: listener: (IncomingHttpHeaders -> float -> unit) -> ClientHttp2Stream
@@ -4692,7 +4692,7 @@ module http2 =
         abstract priority: stream: Http2Stream * options: StreamPriorityOptions -> unit
         abstract settings: settings: Settings -> unit
         abstract ``type``: float
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Session
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Session
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> Http2Session
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.addListener('frameError',$1)">] abstract addListener_frameError: listener: (float -> float -> float -> unit) -> Http2Session
@@ -4701,7 +4701,7 @@ module http2 =
         [<Emit "$0.addListener('remoteSettings',$1)">] abstract addListener_remoteSettings: listener: (Settings -> unit) -> Http2Session
         [<Emit "$0.addListener('socketError',$1)">] abstract addListener_socketError: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.addListener('timeout',$1)">] abstract addListener_timeout: listener: (unit -> unit) -> Http2Session
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close')">] abstract emit_close: unit -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
         [<Emit "$0.emit('frameError',$1,$2,$3)">] abstract emit_frameError: frameType: float * errorCode: float * streamID: float -> bool
@@ -4710,7 +4710,7 @@ module http2 =
         [<Emit "$0.emit('remoteSettings',$1)">] abstract emit_remoteSettings: settings: Settings -> bool
         [<Emit "$0.emit('socketError',$1)">] abstract emit_socketError: err: Error -> bool
         [<Emit "$0.emit('timeout')">] abstract emit_timeout: unit -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Session
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Session
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> Http2Session
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.on('frameError',$1)">] abstract on_frameError: listener: (float -> float -> float -> unit) -> Http2Session
@@ -4719,7 +4719,7 @@ module http2 =
         [<Emit "$0.on('remoteSettings',$1)">] abstract on_remoteSettings: listener: (Settings -> unit) -> Http2Session
         [<Emit "$0.on('socketError',$1)">] abstract on_socketError: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.on('timeout',$1)">] abstract on_timeout: listener: (unit -> unit) -> Http2Session
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Session
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Session
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> Http2Session
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.once('frameError',$1)">] abstract once_frameError: listener: (float -> float -> float -> unit) -> Http2Session
@@ -4728,7 +4728,7 @@ module http2 =
         [<Emit "$0.once('remoteSettings',$1)">] abstract once_remoteSettings: listener: (Settings -> unit) -> Http2Session
         [<Emit "$0.once('socketError',$1)">] abstract once_socketError: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.once('timeout',$1)">] abstract once_timeout: listener: (unit -> unit) -> Http2Session
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Session
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Session
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> Http2Session
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.prependListener('frameError',$1)">] abstract prependListener_frameError: listener: (float -> float -> float -> unit) -> Http2Session
@@ -4737,7 +4737,7 @@ module http2 =
         [<Emit "$0.prependListener('remoteSettings',$1)">] abstract prependListener_remoteSettings: listener: (Settings -> unit) -> Http2Session
         [<Emit "$0.prependListener('socketError',$1)">] abstract prependListener_socketError: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.prependListener('timeout',$1)">] abstract prependListener_timeout: listener: (unit -> unit) -> Http2Session
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Session
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Session
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> Http2Session
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Http2Session
         [<Emit "$0.prependOnceListener('frameError',$1)">] abstract prependOnceListener_frameError: listener: (float -> float -> float -> unit) -> Http2Session
@@ -4750,44 +4750,44 @@ module http2 =
     type [<AllowNullLiteral>] ClientHttp2Session =
         inherit Http2Session
         abstract request: ?headers: OutgoingHttpHeaders * ?options: ClientSessionRequestOptions -> ClientHttp2Stream
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Session
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
         [<Emit "$0.addListener('connect',$1)">] abstract addListener_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.addListener('stream',$1)">] abstract addListener_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('connect',$1,$2)">] abstract emit_connect: session: ClientHttp2Session * socket: U2<net.Socket, tls.TLSSocket> -> bool
         [<Emit "$0.emit('stream',$1,$2,$3)">] abstract emit_stream: stream: ClientHttp2Stream * headers: IncomingHttpHeaders * flags: float -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Session
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
         [<Emit "$0.on('connect',$1)">] abstract on_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.on('stream',$1)">] abstract on_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Session
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
         [<Emit "$0.once('connect',$1)">] abstract once_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.once('stream',$1)">] abstract once_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Session
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
         [<Emit "$0.prependListener('connect',$1)">] abstract prependListener_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.prependListener('stream',$1)">] abstract prependListener_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ClientHttp2Session
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
         [<Emit "$0.prependOnceListener('connect',$1)">] abstract prependOnceListener_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.prependOnceListener('stream',$1)">] abstract prependOnceListener_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
 
     type [<AllowNullLiteral>] ServerHttp2Session =
         inherit Http2Session
         abstract server: U2<Http2Server, Http2SecureServer>
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ServerHttp2Session
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
         [<Emit "$0.addListener('connect',$1)">] abstract addListener_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.addListener('stream',$1)">] abstract addListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('connect',$1,$2)">] abstract emit_connect: session: ServerHttp2Session * socket: U2<net.Socket, tls.TLSSocket> -> bool
         [<Emit "$0.emit('stream',$1,$2,$3)">] abstract emit_stream: stream: ServerHttp2Stream * headers: IncomingHttpHeaders * flags: float -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ServerHttp2Session
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
         [<Emit "$0.on('connect',$1)">] abstract on_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.on('stream',$1)">] abstract on_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ServerHttp2Session
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
         [<Emit "$0.once('connect',$1)">] abstract once_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.once('stream',$1)">] abstract once_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ServerHttp2Session
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
         [<Emit "$0.prependListener('connect',$1)">] abstract prependListener_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.prependListener('stream',$1)">] abstract prependListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> ServerHttp2Session
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
         [<Emit "$0.prependOnceListener('connect',$1)">] abstract prependOnceListener_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.prependOnceListener('stream',$1)">] abstract prependOnceListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
 
@@ -4824,37 +4824,37 @@ module http2 =
 
     type [<AllowNullLiteral>] Http2Server =
         inherit net.Server
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Server
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Server
         [<Emit "$0.addListener('request',$1)">] abstract addListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2Server
         [<Emit "$0.addListener('sessionError',$1)">] abstract addListener_sessionError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.addListener('socketError',$1)">] abstract addListener_socketError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.addListener('stream',$1)">] abstract addListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2Server
         [<Emit "$0.addListener('timeout',$1)">] abstract addListener_timeout: listener: (unit -> unit) -> Http2Server
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('request',$1,$2)">] abstract emit_request: request: Http2ServerRequest * response: Http2ServerResponse -> bool
         [<Emit "$0.emit('sessionError',$1)">] abstract emit_sessionError: err: Error -> bool
         [<Emit "$0.emit('socketError',$1)">] abstract emit_socketError: err: Error -> bool
         [<Emit "$0.emit('stream',$1,$2,$3)">] abstract emit_stream: stream: ServerHttp2Stream * headers: IncomingHttpHeaders * flags: float -> bool
         [<Emit "$0.emit('timeout')">] abstract emit_timeout: unit -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Server
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Server
         [<Emit "$0.on('request',$1)">] abstract on_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2Server
         [<Emit "$0.on('sessionError',$1)">] abstract on_sessionError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.on('socketError',$1)">] abstract on_socketError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.on('stream',$1)">] abstract on_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2Server
         [<Emit "$0.on('timeout',$1)">] abstract on_timeout: listener: (unit -> unit) -> Http2Server
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Server
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Server
         [<Emit "$0.once('request',$1)">] abstract once_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2Server
         [<Emit "$0.once('sessionError',$1)">] abstract once_sessionError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.once('socketError',$1)">] abstract once_socketError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.once('stream',$1)">] abstract once_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2Server
         [<Emit "$0.once('timeout',$1)">] abstract once_timeout: listener: (unit -> unit) -> Http2Server
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Server
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Server
         [<Emit "$0.prependListener('request',$1)">] abstract prependListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2Server
         [<Emit "$0.prependListener('sessionError',$1)">] abstract prependListener_sessionError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.prependListener('socketError',$1)">] abstract prependListener_socketError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.prependListener('stream',$1)">] abstract prependListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2Server
         [<Emit "$0.prependListener('timeout',$1)">] abstract prependListener_timeout: listener: (unit -> unit) -> Http2Server
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2Server
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Server
         [<Emit "$0.prependOnceListener('request',$1)">] abstract prependOnceListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2Server
         [<Emit "$0.prependOnceListener('sessionError',$1)">] abstract prependOnceListener_sessionError: listener: (Error -> unit) -> Http2Server
         [<Emit "$0.prependOnceListener('socketError',$1)">] abstract prependOnceListener_socketError: listener: (Error -> unit) -> Http2Server
@@ -4863,42 +4863,42 @@ module http2 =
 
     type [<AllowNullLiteral>] Http2SecureServer =
         inherit tls.Server
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2SecureServer
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('request',$1)">] abstract addListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('sessionError',$1)">] abstract addListener_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('socketError',$1)">] abstract addListener_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('stream',$1)">] abstract addListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('timeout',$1)">] abstract addListener_timeout: listener: (unit -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('unknownProtocol',$1)">] abstract addListener_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('request',$1,$2)">] abstract emit_request: request: Http2ServerRequest * response: Http2ServerResponse -> bool
         [<Emit "$0.emit('sessionError',$1)">] abstract emit_sessionError: err: Error -> bool
         [<Emit "$0.emit('socketError',$1)">] abstract emit_socketError: err: Error -> bool
         [<Emit "$0.emit('stream',$1,$2,$3)">] abstract emit_stream: stream: ServerHttp2Stream * headers: IncomingHttpHeaders * flags: float -> bool
         [<Emit "$0.emit('timeout')">] abstract emit_timeout: unit -> bool
         [<Emit "$0.emit('unknownProtocol',$1)">] abstract emit_unknownProtocol: socket: tls.TLSSocket -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2SecureServer
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.on('request',$1)">] abstract on_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.on('sessionError',$1)">] abstract on_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.on('socketError',$1)">] abstract on_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.on('stream',$1)">] abstract on_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.on('timeout',$1)">] abstract on_timeout: listener: (unit -> unit) -> Http2SecureServer
         [<Emit "$0.on('unknownProtocol',$1)">] abstract on_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2SecureServer
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.once('request',$1)">] abstract once_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.once('sessionError',$1)">] abstract once_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.once('socketError',$1)">] abstract once_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.once('stream',$1)">] abstract once_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.once('timeout',$1)">] abstract once_timeout: listener: (unit -> unit) -> Http2SecureServer
         [<Emit "$0.once('unknownProtocol',$1)">] abstract once_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2SecureServer
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('request',$1)">] abstract prependListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('sessionError',$1)">] abstract prependListener_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('socketError',$1)">] abstract prependListener_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('stream',$1)">] abstract prependListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('timeout',$1)">] abstract prependListener_timeout: listener: (unit -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('unknownProtocol',$1)">] abstract prependListener_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2SecureServer
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.prependOnceListener('request',$1)">] abstract prependOnceListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.prependOnceListener('sessionError',$1)">] abstract prependOnceListener_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.prependOnceListener('socketError',$1)">] abstract prependOnceListener_socketError: listener: (Error -> unit) -> Http2SecureServer
@@ -4918,17 +4918,17 @@ module http2 =
         abstract stream: ServerHttp2Stream with get, set
         abstract trailers: IncomingHttpHeaders with get, set
         abstract url: string with get, set
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerRequest
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerRequest
         [<Emit "$0.addListener('aborted',$1)">] abstract addListener_aborted: listener: (bool -> float -> unit) -> Http2ServerRequest
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('aborted',$1,$2)">] abstract emit_aborted: hadError: bool * code: float -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerRequest
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerRequest
         [<Emit "$0.on('aborted',$1)">] abstract on_aborted: listener: (bool -> float -> unit) -> Http2ServerRequest
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerRequest
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerRequest
         [<Emit "$0.once('aborted',$1)">] abstract once_aborted: listener: (bool -> float -> unit) -> Http2ServerRequest
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerRequest
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerRequest
         [<Emit "$0.prependListener('aborted',$1)">] abstract prependListener_aborted: listener: (bool -> float -> unit) -> Http2ServerRequest
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerRequest
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerRequest
         [<Emit "$0.prependOnceListener('aborted',$1)">] abstract prependOnceListener_aborted: listener: (bool -> float -> unit) -> Http2ServerRequest
 
     type [<AllowNullLiteral>] Http2ServerResponse =
@@ -4958,37 +4958,37 @@ module http2 =
         abstract writeHead: statusCode: float * ?headers: OutgoingHttpHeaders -> unit
         abstract writeHead: statusCode: float * ?statusMessage: string * ?headers: OutgoingHttpHeaders -> unit
         abstract createPushResponse: headers: OutgoingHttpHeaders * callback: (Error option -> Http2ServerResponse -> unit) -> unit
-        abstract addListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerResponse
+        abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerResponse
         [<Emit "$0.addListener('aborted',$1)">] abstract addListener_aborted: listener: (bool -> float -> unit) -> Http2ServerResponse
         [<Emit "$0.addListener('close',$1)">] abstract addListener_close: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.addListener('drain',$1)">] abstract addListener_drain: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Http2ServerResponse
         [<Emit "$0.addListener('finish',$1)">] abstract addListener_finish: listener: (unit -> unit) -> Http2ServerResponse
-        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj> -> bool
+        abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('aborted',$1,$2)">] abstract emit_aborted: hadError: bool * code: float -> bool
         [<Emit "$0.emit('close')">] abstract emit_close: unit -> bool
         [<Emit "$0.emit('drain')">] abstract emit_drain: unit -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: error: Error -> bool
         [<Emit "$0.emit('finish')">] abstract emit_finish: unit -> bool
-        abstract on: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerResponse
+        abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerResponse
         [<Emit "$0.on('aborted',$1)">] abstract on_aborted: listener: (bool -> float -> unit) -> Http2ServerResponse
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.on('drain',$1)">] abstract on_drain: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Http2ServerResponse
         [<Emit "$0.on('finish',$1)">] abstract on_finish: listener: (unit -> unit) -> Http2ServerResponse
-        abstract once: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerResponse
+        abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerResponse
         [<Emit "$0.once('aborted',$1)">] abstract once_aborted: listener: (bool -> float -> unit) -> Http2ServerResponse
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.once('drain',$1)">] abstract once_drain: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Http2ServerResponse
         [<Emit "$0.once('finish',$1)">] abstract once_finish: listener: (unit -> unit) -> Http2ServerResponse
-        abstract prependListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerResponse
+        abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerResponse
         [<Emit "$0.prependListener('aborted',$1)">] abstract prependListener_aborted: listener: (bool -> float -> unit) -> Http2ServerResponse
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.prependListener('drain',$1)">] abstract prependListener_drain: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Http2ServerResponse
         [<Emit "$0.prependListener('finish',$1)">] abstract prependListener_finish: listener: (unit -> unit) -> Http2ServerResponse
-        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj> -> unit) -> Http2ServerResponse
+        abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2ServerResponse
         [<Emit "$0.prependOnceListener('aborted',$1)">] abstract prependOnceListener_aborted: listener: (bool -> float -> unit) -> Http2ServerResponse
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.prependOnceListener('drain',$1)">] abstract prependOnceListener_drain: listener: (unit -> unit) -> Http2ServerResponse

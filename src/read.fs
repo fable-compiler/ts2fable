@@ -235,7 +235,12 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
                 else ts
         }
         |> FsType.Union
-    | SyntaxKind.AnyKeyword -> simpleType "obj"
+    | SyntaxKind.AnyKeyword ->
+        {
+            Option = true // any allows null or undefined
+            Types = [simpleType "obj"]
+        }
+        |> FsType.Union
     | SyntaxKind.VoidKeyword -> simpleType "unit"
     | SyntaxKind.TupleType ->
         let tp = t :?> TupleTypeNode
