@@ -1,12 +1,12 @@
 module ts2fable.App
 
 open Fable.Core
-open Fable.Import.JS
 open Fable.Core.JsInterop
 open TypeScript
 open TypeScript.ts
 open System.Collections.Generic
 open Node
+open Yargs
 
 open ts2fable.Naming
 open ts2fable.Read
@@ -98,11 +98,15 @@ let argv = ``process``.argv |> List.ofSeq
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
-    writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
+    // used by ts2fable
     writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/TypeScript.fs"
+    writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Node.fs"
+    writeFile ["node_modules/@types/yargs/index.d.ts"] "test-compile/Yargs.fs"
+
+    // for test-compile
+    writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
     writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Electron.fs"
     writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/React.fs"
-    writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Node.fs"
     writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
     writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Chai.fs"
     writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Chalk.fs"
@@ -119,12 +123,27 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     printfn "done writing test-compile files"
 
 else
-    printfn "ts2fable %s" Version.version
+    let argv =
+        yargs
+            .usage("Usage: ts2fable some.d.ts src/Some.fs")
+            .command(U2.Case1 "$0 [files..]", "")
+            .demandOption(U2.Case1 "files", "")
+            .help()
+            .argv
 
-    let tsfiles = argv |> List.filter (fun s -> s.EndsWith ".ts")
-    let fsfile = argv |> List.tryFind (fun s -> s.EndsWith ".fs")
+    let files = argv.["files"].Value :?> string array |> List.ofArray
+    let tsfiles = files |> List.filter (fun s -> s.EndsWith ".ts")
+    let fsfile = files |> List.tryFind (fun s -> s.EndsWith ".fs")
     
     match tsfiles.Length, fsfile with
-    | 0, _ -> failwithf "Please provide the path to a TypeScript definition file"
+    | 0, _ -> failwithf "Please provide the path to a TypeScript file"
     | _, None -> failwithf "Please provide the path to the F# file to be written "
-    | _, Some fsf -> writeFile tsfiles fsf
+    | _, Some fsf ->
+        printfn "ts2fable %s" Version.version
+
+        // validate ts files exist
+        for ts in tsfiles do
+            if fs.existsSync(PathLike.ofString ts) = false then
+                failwithf "TypeScript file not found: %s" ts
+
+        writeFile tsfiles fsf
