@@ -7,8 +7,8 @@ open Fable.Import.JS
 let [<Import("*","typescript")>] ts: ts.IExports = jsNative
 
 type [<AllowNullLiteral>] IExports =
-    abstract setTimeout: handler: (ResizeArray<obj> -> unit) * timeout: float -> obj
-    abstract clearTimeout: handle: obj -> unit
+    abstract setTimeout: handler: (ResizeArray<obj option> -> unit) * timeout: float -> obj option
+    abstract clearTimeout: handle: obj option -> unit
 
 module ts =
 
@@ -715,13 +715,13 @@ module ts =
         /// Read tsconfig.json file
         abstract readJsonConfigFile: fileName: string * readFile: (string -> string option) -> JsonSourceFile
         /// Convert the json syntax tree into the json value
-        abstract convertToObject: sourceFile: JsonSourceFile * errors: Push<Diagnostic> -> obj
+        abstract convertToObject: sourceFile: JsonSourceFile * errors: Push<Diagnostic> -> obj option
         /// Parse the contents of a config file (tsconfig.json).
-        abstract parseJsonConfigFileContent: json: obj * host: ParseConfigHost * basePath: string * ?existingOptions: CompilerOptions * ?configFileName: string * ?resolutionStack: ResizeArray<Path> * ?extraFileExtensions: ResizeArray<JsFileExtensionInfo> -> ParsedCommandLine
+        abstract parseJsonConfigFileContent: json: obj option * host: ParseConfigHost * basePath: string * ?existingOptions: CompilerOptions * ?configFileName: string * ?resolutionStack: ResizeArray<Path> * ?extraFileExtensions: ResizeArray<JsFileExtensionInfo> -> ParsedCommandLine
         /// Parse the contents of a config file (tsconfig.json).
         abstract parseJsonSourceFileConfigFileContent: sourceFile: JsonSourceFile * host: ParseConfigHost * basePath: string * ?existingOptions: CompilerOptions * ?configFileName: string * ?resolutionStack: ResizeArray<Path> * ?extraFileExtensions: ResizeArray<JsFileExtensionInfo> -> ParsedCommandLine
-        abstract convertCompilerOptionsFromJson: jsonOptions: obj * basePath: string * ?configFileName: string -> obj
-        abstract convertTypeAcquisitionFromJson: jsonOptions: obj * basePath: string * ?configFileName: string -> obj
+        abstract convertCompilerOptionsFromJson: jsonOptions: obj option * basePath: string * ?configFileName: string -> obj
+        abstract convertTypeAcquisitionFromJson: jsonOptions: obj option * basePath: string * ?configFileName: string -> obj
         abstract TextChange: TextChangeStatic
         abstract createClassifier: unit -> Classifier
         abstract createDocumentRegistry: ?useCaseSensitiveFileNames: bool * ?currentDirectory: string -> DocumentRegistry
@@ -1265,7 +1265,7 @@ module ts =
 
     type [<AllowNullLiteral>] Declaration =
         inherit Node
-        abstract _declarationBrand: obj with get, set
+        abstract _declarationBrand: obj option with get, set
 
     type [<AllowNullLiteral>] NamedDeclaration =
         inherit Declaration
@@ -1375,7 +1375,7 @@ module ts =
 
     type [<AllowNullLiteral>] ObjectLiteralElement =
         inherit NamedDeclaration
-        abstract _objectLiteralBrandBrand: obj with get, set
+        abstract _objectLiteralBrandBrand: obj option with get, set
         abstract name: PropertyName option with get, set
 
     type ObjectLiteralElementLike =
@@ -1446,7 +1446,7 @@ module ts =
     /// - AccessorDeclaration
     type [<AllowNullLiteral>] FunctionLikeDeclarationBase =
         inherit SignatureDeclarationBase
-        abstract _functionLikeDeclarationBrand: obj with get, set
+        abstract _functionLikeDeclarationBrand: obj option with get, set
         abstract asteriskToken: AsteriskToken option with get, set
         abstract questionToken: QuestionToken option with get, set
         abstract body: U2<Block, Expression> option with get, set
@@ -1525,7 +1525,7 @@ module ts =
 
     type [<AllowNullLiteral>] TypeNode =
         inherit Node
-        abstract _typeNodeBrand: obj with get, set
+        abstract _typeNodeBrand: obj option with get, set
 
     type [<AllowNullLiteral>] KeywordTypeNode =
         inherit TypeNode
@@ -1635,7 +1635,7 @@ module ts =
 
     type [<AllowNullLiteral>] Expression =
         inherit Node
-        abstract _expressionBrand: obj with get, set
+        abstract _expressionBrand: obj option with get, set
 
     type [<AllowNullLiteral>] OmittedExpression =
         inherit Expression
@@ -1648,14 +1648,14 @@ module ts =
 
     type [<AllowNullLiteral>] UnaryExpression =
         inherit Expression
-        abstract _unaryExpressionBrand: obj with get, set
+        abstract _unaryExpressionBrand: obj option with get, set
 
     type IncrementExpression =
         UpdateExpression
 
     type [<AllowNullLiteral>] UpdateExpression =
         inherit UnaryExpression
-        abstract _updateExpressionBrand: obj with get, set
+        abstract _updateExpressionBrand: obj option with get, set
 
     type PrefixUnaryOperator =
         SyntaxKind
@@ -1677,15 +1677,15 @@ module ts =
 
     type [<AllowNullLiteral>] LeftHandSideExpression =
         inherit UpdateExpression
-        abstract _leftHandSideExpressionBrand: obj with get, set
+        abstract _leftHandSideExpressionBrand: obj option with get, set
 
     type [<AllowNullLiteral>] MemberExpression =
         inherit LeftHandSideExpression
-        abstract _memberExpressionBrand: obj with get, set
+        abstract _memberExpressionBrand: obj option with get, set
 
     type [<AllowNullLiteral>] PrimaryExpression =
         inherit MemberExpression
-        abstract _primaryExpressionBrand: obj with get, set
+        abstract _primaryExpressionBrand: obj option with get, set
 
     type [<AllowNullLiteral>] NullLiteral =
         inherit PrimaryExpression
@@ -1884,7 +1884,7 @@ module ts =
     type [<AllowNullLiteral>] LiteralExpression =
         inherit LiteralLikeNode
         inherit PrimaryExpression
-        abstract _literalExpressionBrand: obj with get, set
+        abstract _literalExpressionBrand: obj option with get, set
 
     type [<AllowNullLiteral>] RegularExpressionLiteral =
         inherit LiteralExpression
@@ -1979,7 +1979,7 @@ module ts =
     /// Brand for a PropertyAccessExpression which, like a QualifiedName, consists of a sequence of identifiers separated by dots. 
     type [<AllowNullLiteral>] PropertyAccessEntityNameExpression =
         inherit PropertyAccessExpression
-        abstract _propertyAccessExpressionLikeQualifiedNameBrand: obj option with get, set
+        abstract _propertyAccessExpressionLikeQualifiedNameBrand: obj option option with get, set
         abstract expression: EntityNameExpression with get, set
 
     type [<AllowNullLiteral>] ElementAccessExpression =
@@ -2131,7 +2131,7 @@ module ts =
 
     type [<AllowNullLiteral>] Statement =
         inherit Node
-        abstract _statementBrand: obj with get, set
+        abstract _statementBrand: obj option with get, set
 
     type [<AllowNullLiteral>] NotEmittedStatement =
         inherit Statement
@@ -2333,12 +2333,12 @@ module ts =
 
     type [<AllowNullLiteral>] ClassElement =
         inherit NamedDeclaration
-        abstract _classElementBrand: obj with get, set
+        abstract _classElementBrand: obj option with get, set
         abstract name: PropertyName option with get, set
 
     type [<AllowNullLiteral>] TypeElement =
         inherit NamedDeclaration
-        abstract _typeElementBrand: obj with get, set
+        abstract _typeElementBrand: obj option with get, set
         abstract name: PropertyName option with get, set
         abstract questionToken: QuestionToken option with get, set
 
@@ -2543,7 +2543,7 @@ module ts =
 
     type [<AllowNullLiteral>] JSDocType =
         inherit TypeNode
-        abstract _jsDocTypeBrand: obj with get, set
+        abstract _jsDocTypeBrand: obj option with get, set
 
     type [<AllowNullLiteral>] JSDocAllType =
         inherit JSDocType
@@ -3540,7 +3540,7 @@ module ts =
         abstract options: CompilerOptions with get, set
         abstract typeAcquisition: TypeAcquisition option with get, set
         abstract fileNames: ResizeArray<string> with get, set
-        abstract raw: obj option with get, set
+        abstract raw: obj option option with get, set
         abstract errors: ResizeArray<Diagnostic> with get, set
         abstract wildcardDirectories: MapLike<WatchDirectoryFlags> option with get, set
         abstract compileOnSave: bool option with get, set
@@ -3836,8 +3836,8 @@ module ts =
         abstract createHash: data: string -> string
         abstract getMemoryUsage: unit -> float
         abstract realpath: path: string -> string
-        abstract setTimeout: callback: (ResizeArray<obj> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj> -> obj
-        abstract clearTimeout: timeoutId: obj -> unit
+        abstract setTimeout: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> obj option
+        abstract clearTimeout: timeoutId: obj option -> unit
 
     type [<AllowNullLiteral>] FileWatcher =
         abstract close: unit -> unit
@@ -3957,7 +3957,7 @@ module ts =
         abstract getScriptKind: fileName: string -> ScriptKind
         abstract getScriptVersion: fileName: string -> string
         abstract getScriptSnapshot: fileName: string -> IScriptSnapshot option
-        abstract getLocalizedDiagnosticMessages: unit -> obj
+        abstract getLocalizedDiagnosticMessages: unit -> obj option
         abstract getCancellationToken: unit -> HostCancellationToken
         abstract getCurrentDirectory: unit -> string
         abstract getDefaultLibFileName: options: CompilerOptions -> string
