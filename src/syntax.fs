@@ -17,6 +17,11 @@ type FsInterface =
         Members: FsType list
     }
 
+type FsTypeLiteral =
+    {
+        Members: FsType list
+    }
+
 [<RequireQualifiedAccess>]
 type FsEnumCaseType =
     | Numeric
@@ -168,6 +173,7 @@ type FsType =
     | ExportAssignment of string
     | This
     | Import of FsImport
+    | TypeLiteral of FsTypeLiteral
 
 type FsModule =
     {

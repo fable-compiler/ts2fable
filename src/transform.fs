@@ -41,6 +41,11 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
             Members = it.Members |> List.map (fixType fix)
         }
         |> FsType.Interface
+    | FsType.TypeLiteral tl ->
+        { tl with
+            Members = tl.Members |> List.map (fixType fix)
+        }
+        |> FsType.TypeLiteral
     | FsType.Property pr ->
         { pr with
             Index = Option.map fixParam pr.Index
@@ -749,5 +754,86 @@ let rec moveDeclaredVariables (f: FsFile): FsFile =
                     Types = md.Types |> filterDeclares
                 }
                 |> FsType.Module
+        | _ -> tp
+    )
+
+let extractTypeLiterals(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+
+            let typeNames =
+                md.Types
+                |> List.map getName
+                |> HashSet<_>
+
+            // append an underscores until a unique name is created
+            let rec newTypeName (name: string): string =
+                let name = capitalize name
+                if typeNames.Contains name then
+                    let name = sprintf "%s_" name
+                    if typeNames.Contains name then
+                        newTypeName name
+                    else
+                        typeNames.Add name |> ignore
+                        name
+                else
+                    typeNames.Add name |> ignore
+                    name
+
+            { md with
+                Types = md.Types |> List.collect (fun tp ->
+                    match tp with
+                    | FsType.Interface it ->
+
+                        let newTypes = List<FsType>()
+                        let it2 =
+                            { it with
+                                Members = it.Members |> List.map (fun mb ->
+                                    match mb with
+                                    | FsType.Function fn ->
+                                        { fn with
+                                            Params = fn.Params |> List.map (fun prm ->
+                                                match prm.Type with
+                                                | FsType.TypeLiteral tl ->
+                                                    let name =
+                                                        let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
+                                                        let fnName = fn.Name.Value.Replace("`","")
+                                                        let pmName = prm.Name.Replace("`","")
+                                                        if fnName = "Create" then
+                                                            sprintf "%s%s" itName (capitalize pmName) |> newTypeName
+                                                        else if fnName = pmName then
+                                                            sprintf "%s%s" itName (capitalize pmName) |> newTypeName
+                                                        else
+                                                            sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
+                                                    {
+                                                        Comments = []
+                                                        IsStatic = false
+                                                        IsClass = false
+                                                        Name = name
+                                                        FullName = name
+                                                        Inherits = []
+                                                        Members = tl.Members
+                                                        TypeParameters = []
+                                                    }
+                                                    |> FsType.Interface
+                                                    |> newTypes.Add |> ignore
+
+                                                    { prm with Type = simpleType name }
+                                                | _ -> prm
+                                            )
+                                        }
+                                        |> FsType.Function
+                                    | _ -> mb
+                                )
+                            }
+                            |> FsType.Interface
+
+                        [it2] @ (List.ofSeq newTypes) // append new types
+
+                    | _ -> [tp]
+                )
+            }
+            |> FsType.Module
         | _ -> tp
     )

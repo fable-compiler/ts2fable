@@ -44,7 +44,12 @@ let printType (tp: FsType): string =
         let vtp = vb.Type |> printType
         sprintf "abstract %s: %s with get, set" vb.Name vtp
     | FsType.StringLiteral _ -> "string"
-    | _ -> printfn "unsupported printType %A" tp; "TODO"
+    | FsType.TypeLiteral _ ->
+        // printfn "TypeLiteral %A" tp
+        "obj"
+    | _ ->
+        printfn "unsupported printType %A" tp
+        "obj"
 
 let printFunction (f: FsFunction): string =
     let line = List()

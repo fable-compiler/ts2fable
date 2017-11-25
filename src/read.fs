@@ -122,6 +122,11 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
         TypeParameters = readTypeParameters checker id.typeParameters
     }
 
+let readTypeLiteral (checker: TypeChecker) (tl: TypeLiteralNode): FsTypeLiteral =
+    {
+        Members = tl.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
+    }
+
 let getFullTypeName (checker: TypeChecker) (tp: ts.Type) =
     match tp.symbol with
     | None -> ""
@@ -253,9 +258,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.TypePredicate -> simpleType "bool"
     | SyntaxKind.TypeLiteral ->
         let tl = t :?> TypeLiteralNode
-        // TODO https://github.com/fable-compiler/ts2fable/issues/93
-        // printfn "TODO TypeLiteral just set to `obj`: %s" (tl.getText())
-        simpleType "obj"
+        readTypeLiteral checker tl |> FsType.TypeLiteral
     | SyntaxKind.IntersectionType -> simpleType "obj"
     | SyntaxKind.IndexedAccessType ->
         // function createKeywordTypeNode(kind: KeywordTypeNode["kind"]): KeywordTypeNode;
@@ -291,12 +294,19 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         // TODO map mapped types https://github.com/fable-compiler/ts2fable/issues/44
         // printfn "TODO mapped types %s" (mt.getText())
         simpleType "obj"
-    | SyntaxKind.NeverKeyword -> FsType.TODO
+    | SyntaxKind.NeverKeyword ->
+        // printfn "unsupported TypeNode NeverKeyword: %A" t
+        // simpleType "obj"
+        FsType.TODO
     | SyntaxKind.UndefinedKeyword -> simpleType "obj"
     | SyntaxKind.NullKeyword -> FsType.TODO // It should be an option
     | SyntaxKind.ObjectKeyword -> simpleType "obj"
-    | SyntaxKind.TypeOperator -> FsType.TODO // jQuery
-    | _ -> printfn "unsupported TypeNode kind: %A" t.kind; FsType.TODO
+    | SyntaxKind.TypeOperator ->
+        printfn "unsupported TypeNode TypeOperator: %A" t
+        FsType.TODO // jQuery
+    | _ ->
+        printfn "unsupported TypeNode kind: %A" t.kind
+        FsType.TODO
 
 let readParameterDeclaration (checker: TypeChecker) (pd: ParameterDeclaration): FsParam =
     let stringLiteral =

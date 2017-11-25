@@ -71,7 +71,7 @@ module ts =
         abstract getCombinedNodeFlags: node: Node -> NodeFlags
         /// Checks to see if the locale is in the appropriate format,
         /// and if it is, attempts to set the appropriate language.
-        abstract validateLocaleAndSetLanguage: locale: string * sys: obj * ?errors: Push<Diagnostic> -> unit
+        abstract validateLocaleAndSetLanguage: locale: string * sys: ValidateLocaleAndSetLanguageSys * ?errors: Push<Diagnostic> -> unit
         abstract getOriginalNode: node: Node -> Node
         abstract getOriginalNode: node: Node * nodeTest: (Node -> bool) -> 'T
         /// Gets a value indicating whether a node originated in the parse tree.
@@ -744,6 +744,12 @@ module ts =
         /// Transform one or more nodes using the supplied transformers.
         abstract transform: source: U2<'T, ResizeArray<'T>> * transformers: ResizeArray<TransformerFactory<'T>> * ?compilerOptions: CompilerOptions -> TransformationResult<'T>
 
+    type [<AllowNullLiteral>] ValidateLocaleAndSetLanguageSys =
+        abstract getExecutingFilePath: unit -> string
+        abstract resolvePath: path: string -> string
+        abstract fileExists: fileName: string -> bool
+        abstract readFile: fileName: string -> string option
+
     /// Type of objects whose values are all of the same type.
     /// The `in` and `for-in` operators can *not* be safely used,
     /// since `Object.prototype` may be modified by outside code.
@@ -769,7 +775,7 @@ module ts =
 
     /// ES6 Iterator type. 
     type [<AllowNullLiteral>] Iterator<'T> =
-        abstract next: unit -> obj
+        interface end
 
     /// Array that is only intended to be pushed to, never read. 
     type [<AllowNullLiteral>] Push<'T> =
