@@ -168,7 +168,7 @@ module yargs =
         [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> string with get, set
 
     type [<AllowNullLiteral>] ArgvCoerceOpts =
-        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> (T -> U) with get, set
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> ('T -> 'U) with get, set
 
     type [<AllowNullLiteral>] ArgvUpdateLocaleObj =
         [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> string with get, set

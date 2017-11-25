@@ -34,13 +34,13 @@ let transform (file: FsFile): FsFile =
     |> fixOverloadingOnStringParameters // fixEscapeWords must be after
     |> fixEnumReferences
     |> fixDuplicatesInUnion
-    |> extractTypeLiterals // after createIExports before fixEscapeWords
     |> fixEscapeWords
     |> addTicForGenericFunctions // must be after fixEscapeWords
     |> addTicForGenericTypes
     |> removeTodoMembers
     |> removeTypeParamsFromStatic
     |> removeDuplicateFunctions
+    |> extractTypeLiterals // after fixEscapeWords
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
 

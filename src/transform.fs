@@ -797,9 +797,9 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                 match prm.Type with
                                                 | FsType.TypeLiteral tl ->
                                                     let name =
-                                                        let itName = if it.Name = "IExports" then "" else it.Name
-                                                        let fnName = fn.Name.Value
-                                                        let pmName = prm.Name
+                                                        let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
+                                                        let fnName = fn.Name.Value.Replace("`","")
+                                                        let pmName = prm.Name.Replace("`","")
                                                         if fnName = "Create" then
                                                             sprintf "%s%s" itName (capitalize pmName) |> newTypeName
                                                         else if fnName = pmName then
