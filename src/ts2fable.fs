@@ -40,6 +40,7 @@ let transform (file: FsFile): FsFile =
     |> removeTodoMembers
     |> removeTypeParamsFromStatic
     |> removeDuplicateFunctions
+    |> extractTypeLiterals
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
 
@@ -116,7 +117,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
         ]
         "test-compile/Protobuf.fs"
 
-    // files that have TODOs
+    // files that have too many TODOs
     // writeFile ["node_modules/@types/jquery/index.d.ts"] "test-compile/JQuery.fs"
     // writeFile ["node_modules/typescript/lib/lib.es2015.promise.d.ts"] "test-compile/Promise.fs"
 

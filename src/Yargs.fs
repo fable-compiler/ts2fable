@@ -19,11 +19,11 @@ module yargs =
         abstract terminalWidth: unit -> float
         abstract alias: shortName: string * longName: U2<string, ResizeArray<string>> -> Argv
         abstract alias: shortNames: ResizeArray<string> * longName: string -> Argv
-        abstract alias: aliases: obj -> Argv
+        abstract alias: aliases: AliasAliases -> Argv
         abstract array: key: string -> Argv
         abstract array: keys: ResizeArray<string> -> Argv
         abstract ``default``: key: string * value: obj option * ?description: string -> Argv
-        abstract ``default``: defaults: obj * ?description: string -> Argv
+        abstract ``default``: defaults: DefaultDefaults * ?description: string -> Argv
         abstract demand: key: string * msg: string -> Argv
         abstract demand: key: string * ?required: bool -> Argv
         abstract demand: keys: ResizeArray<string> * msg: string -> Argv
@@ -50,17 +50,17 @@ module yargs =
         abstract requiresArg: key: string -> Argv
         abstract requiresArg: keys: ResizeArray<string> -> Argv
         abstract describe: key: U2<string, ResizeArray<string>> * description: string -> Argv
-        abstract describe: descriptions: obj -> Argv
+        abstract describe: descriptions: DescribeDescriptions -> Argv
         abstract option: key: string * options: Options -> Argv
-        abstract option: options: obj -> Argv
+        abstract option: options: OptionOptions -> Argv
         abstract options: key: string * options: Options -> Argv
-        abstract options: options: obj -> Argv
-        abstract usage: message: string * ?options: obj -> Argv
-        abstract usage: ?options: obj -> Argv
+        abstract options: options: Options_ -> Argv
+        abstract usage: message: string * ?options: UsageOptions -> Argv
+        abstract usage: ?options: UsageOptions_ -> Argv
         abstract command: command: U2<string, ResizeArray<string>> * description: string -> Argv
         abstract command: command: U2<string, ResizeArray<string>> * description: string * builder: (Argv -> Argv) -> Argv
-        abstract command: command: U2<string, ResizeArray<string>> * description: string * builder: obj -> Argv
-        abstract command: command: U2<string, ResizeArray<string>> * description: string * builder: obj * handler: (Arguments -> unit) -> Argv
+        abstract command: command: U2<string, ResizeArray<string>> * description: string * builder: CommandBuilder_ -> Argv
+        abstract command: command: U2<string, ResizeArray<string>> * description: string * builder: CommandBuilder__ * handler: (Arguments -> unit) -> Argv
         abstract command: command: U2<string, ResizeArray<string>> * description: string * builder: (Argv -> Argv) * handler: (Arguments -> unit) -> Argv
         abstract command: command: U2<string, ResizeArray<string>> * description: string * ``module``: CommandModule -> Argv
         abstract command: ``module``: CommandModule -> Argv
@@ -78,7 +78,7 @@ module yargs =
         abstract string: keys: ResizeArray<string> -> Argv
         abstract number: key: string -> Argv
         abstract number: keys: ResizeArray<string> -> Argv
-        abstract choices: choices: obj -> Argv
+        abstract choices: choices: Choices_ -> Argv
         abstract choices: key: string * values: Choices -> Argv
         abstract config: unit -> Argv
         abstract config: explicitConfigurationObject: obj -> Argv
@@ -87,7 +87,7 @@ module yargs =
         abstract config: key: string * parseFn: (string -> obj) -> Argv
         abstract config: keys: ResizeArray<string> * parseFn: (string -> obj) -> Argv
         abstract conflicts: key: string * value: string -> Argv
-        abstract conflicts: conflicts: obj -> Argv
+        abstract conflicts: conflicts: Conflicts -> Argv
         abstract wrap: columns: float -> Argv
         abstract strict: unit -> Argv
         abstract help: unit -> Argv
@@ -108,16 +108,16 @@ module yargs =
         abstract group: key: string * groupName: string -> Argv
         abstract group: keys: ResizeArray<string> * groupName: string -> Argv
         abstract nargs: key: string * count: float -> Argv
-        abstract nargs: nargs: obj -> Argv
+        abstract nargs: nargs: Nargs -> Argv
         abstract normalize: key: string -> Argv
         abstract normalize: keys: ResizeArray<string> -> Argv
         abstract implies: key: string * value: string -> Argv
-        abstract implies: implies: obj -> Argv
+        abstract implies: implies: Implies -> Argv
         abstract count: key: string -> Argv
         abstract count: keys: ResizeArray<string> -> Argv
         abstract fail: func: (string -> Error -> obj option) -> Argv
         abstract coerce: key: U2<string, ResizeArray<string>> * func: ('T -> 'U) -> Argv
-        abstract coerce: opts: obj -> Argv
+        abstract coerce: opts: CoerceOpts -> Argv
         abstract getCompletion: args: ResizeArray<string> * ``done``: (ResizeArray<string> -> unit) -> Argv
         abstract pkgConf: key: string * ?cwd: string -> Argv
         abstract pkgConf: keys: ResizeArray<string> * ?cwd: string -> Argv
@@ -125,8 +125,56 @@ module yargs =
         abstract showCompletionScript: unit -> Argv
         abstract skipValidation: key: string -> Argv
         abstract skipValidation: keys: ResizeArray<string> -> Argv
-        abstract updateLocale: obj: obj -> Argv
-        abstract updateStrings: obj: obj -> Argv
+        abstract updateLocale: obj: UpdateLocaleObj -> Argv
+        abstract updateStrings: obj: UpdateStringsObj -> Argv
+
+    type [<AllowNullLiteral>] AliasAliases =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: shortName: string -> U2<string, ResizeArray<string>> with get, set
+
+    type [<AllowNullLiteral>] DefaultDefaults =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> obj option with get, set
+
+    type [<AllowNullLiteral>] DescribeDescriptions =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> string with get, set
+
+    type [<AllowNullLiteral>] OptionOptions =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> Options with get, set
+
+    type [<AllowNullLiteral>] Options_ =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> Options with get, set
+
+    type [<AllowNullLiteral>] UsageOptions =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> Options with get, set
+
+    type [<AllowNullLiteral>] UsageOptions_ =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> Options with get, set
+
+    type [<AllowNullLiteral>] CommandBuilder_ =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: optionName: string -> Options with get, set
+
+    type [<AllowNullLiteral>] CommandBuilder__ =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: optionName: string -> Options with get, set
+
+    type [<AllowNullLiteral>] Choices_ =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: argName: string -> Choices with get, set
+
+    type [<AllowNullLiteral>] Conflicts =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> string with get, set
+
+    type [<AllowNullLiteral>] Nargs =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> float with get, set
+
+    type [<AllowNullLiteral>] Implies =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> string with get, set
+
+    type [<AllowNullLiteral>] CoerceOpts =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> ('T -> 'U) with get, set
+
+    type [<AllowNullLiteral>] UpdateLocaleObj =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> string with get, set
+
+    type [<AllowNullLiteral>] UpdateStringsObj =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> string with get, set
 
     type [<AllowNullLiteral>] Arguments =
         /// Non-option arguments 

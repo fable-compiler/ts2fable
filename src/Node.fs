@@ -215,11 +215,14 @@ module NodeJS =
         abstract pause: unit -> ReadableStream
         abstract resume: unit -> ReadableStream
         abstract isPaused: unit -> bool
-        abstract pipe: destination: 'T * ?options: obj -> 'T
+        abstract pipe: destination: 'T * ?options: PipeOptions -> 'T
         abstract unpipe: ?destination: 'T -> ReadableStream
         abstract unshift: chunk: string -> unit
         abstract unshift: chunk: Buffer -> unit
         abstract wrap: oldStream: ReadableStream -> ReadableStream
+
+    type [<AllowNullLiteral>] PipeOptions =
+        abstract ``end``: bool option with get, set
 
     type [<AllowNullLiteral>] WritableStream =
         inherit EventEmitter
@@ -1293,13 +1296,16 @@ module os =
         abstract release: unit -> string
         abstract networkInterfaces: unit -> obj
         abstract homedir: unit -> string
-        abstract userInfo: ?options: obj -> obj
+        abstract userInfo: ?options: UserInfoOptions -> obj
         abstract constants: obj with get, set
         abstract arch: unit -> string
         abstract platform: unit -> NodeJS.Platform
         abstract tmpdir: unit -> string
         abstract EOL: string with get, set
         abstract endianness: unit -> U2<string, string>
+
+    type [<AllowNullLiteral>] UserInfoOptions =
+        abstract encoding: string with get, set
 
     type [<AllowNullLiteral>] CpuInfo =
         abstract model: string with get, set
@@ -2092,7 +2098,7 @@ module net =
         abstract Socket: SocketStatic
         abstract Server: ServerStatic
         abstract createServer: ?connectionListener: (Socket -> unit) -> Server
-        abstract createServer: ?options: obj * ?connectionListener: (Socket -> unit) -> Server
+        abstract createServer: ?options: CreateServerOptions * ?connectionListener: (Socket -> unit) -> Server
         abstract connect: options: NetConnectOpts * ?connectionListener: Function -> Socket
         abstract connect: port: float * ?host: string * ?connectionListener: Function -> Socket
         abstract connect: path: string * ?connectionListener: Function -> Socket
@@ -2102,6 +2108,10 @@ module net =
         abstract isIP: input: string -> float
         abstract isIPv4: input: string -> bool
         abstract isIPv6: input: string -> bool
+
+    type [<AllowNullLiteral>] CreateServerOptions =
+        abstract allowHalfOpen: bool option with get, set
+        abstract pauseOnConnect: bool option with get, set
 
     type LookupFunction =
         (string -> dns.LookupOneOptions -> (NodeJS.ErrnoException option -> string -> float -> unit) -> unit)
@@ -2295,7 +2305,11 @@ module net =
 
     type [<AllowNullLiteral>] ServerStatic =
         [<Emit "new $0($1...)">] abstract Create: ?connectionListener: (Socket -> unit) -> Server
-        [<Emit "new $0($1...)">] abstract Create: ?options: obj * ?connectionListener: (Socket -> unit) -> Server
+        [<Emit "new $0($1...)">] abstract Create: ?options: ServerStaticOptions * ?connectionListener: (Socket -> unit) -> Server
+
+    type [<AllowNullLiteral>] ServerStaticOptions =
+        abstract allowHalfOpen: bool option with get, set
+        abstract pauseOnConnect: bool option with get, set
 
     type [<AllowNullLiteral>] TcpNetConnectOpts =
         inherit TcpSocketConnectOpts
@@ -2596,15 +2610,11 @@ module fs =
         /// Synchronously reads data from the file referenced by the supplied file descriptor, returning the number of bytes read.
         abstract readSync: fd: float * buffer: U2<Buffer, Uint8Array> * offset: float * length: float * position: float option -> float
         /// Asynchronously reads the entire contents of a file.
-        abstract readFile: path: U2<PathLike, float> * options: obj option * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
-        /// Asynchronously reads the entire contents of a file.
         abstract readFile: path: U2<PathLike, float> * options: U2<obj, string> * callback: (NodeJS.ErrnoException -> string -> unit) -> unit
         /// Asynchronously reads the entire contents of a file.
         abstract readFile: path: U2<PathLike, float> * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> U2<string, Buffer> -> unit) -> unit
         /// Asynchronously reads the entire contents of a file.
         abstract readFile: path: U2<PathLike, float> * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
-        /// Synchronously reads the entire contents of a file.
-        abstract readFileSync: path: U2<PathLike, float> * ?options: obj option -> Buffer
         /// Synchronously reads the entire contents of a file.
         abstract readFileSync: path: U2<PathLike, float> * options: U2<obj, string> -> string
         /// Synchronously reads the entire contents of a file.
@@ -2973,8 +2983,6 @@ module fs =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously reads the entire contents of a file.
-            abstract __promisify__: path: U2<PathLike, float> * ?options: obj option -> Promise<Buffer>
-            /// Asynchronously reads the entire contents of a file.
             abstract __promisify__: path: U2<PathLike, float> * options: U2<obj, string> -> Promise<string>
             /// Asynchronously reads the entire contents of a file.
             abstract __promisify__: path: U2<PathLike, float> * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
@@ -3279,7 +3287,47 @@ module tls =
 
     type [<AllowNullLiteral>] TLSSocketStatic =
         /// Construct a new tls.TLSSocket object from an existing TCP socket.
-        [<Emit "new $0($1...)">] abstract Create: socket: net.Socket * ?options: obj -> TLSSocket
+        [<Emit "new $0($1...)">] abstract Create: socket: net.Socket * ?options: TLSSocketStaticOptions -> TLSSocket
+
+    type [<AllowNullLiteral>] TLSSocketStaticOptions =
+        /// An optional TLS context object from tls.createSecureContext()
+        abstract secureContext: SecureContext option with get, set
+        /// If true the TLS socket will be instantiated in server-mode.
+        /// Defaults to false.
+        abstract isServer: bool option with get, set
+        /// An optional net.Server instance.
+        abstract server: net.Server option with get, set
+        /// If true the server will request a certificate from clients that
+        /// connect and attempt to verify that certificate. Defaults to
+        /// false.
+        abstract requestCert: bool option with get, set
+        /// If true the server will reject any connection which is not
+        /// authorized with the list of supplied CAs. This option only has an
+        /// effect if requestCert is true. Defaults to false.
+        abstract rejectUnauthorized: bool option with get, set
+        /// An array of strings or a Buffer naming possible NPN protocols.
+        /// (Protocols should be ordered by their priority.)
+        abstract NPNProtocols: U2<ResizeArray<string>, Buffer> option with get, set
+        /// An array of strings or a Buffer naming possible ALPN protocols.
+        /// (Protocols should be ordered by their priority.) When the server
+        /// receives both NPN and ALPN extensions from the client, ALPN takes
+        /// precedence over NPN and the server does not send an NPN extension
+        /// to the client.
+        abstract ALPNProtocols: U2<ResizeArray<string>, Buffer> option with get, set
+        /// SNICallback(servername, cb) <Function> A function that will be
+        /// called if the client supports SNI TLS extension. Two arguments
+        /// will be passed when called: servername and cb. SNICallback should
+        /// invoke cb(null, ctx), where ctx is a SecureContext instance.
+        /// (tls.createSecureContext(...) can be used to get a proper
+        /// SecureContext.) If SNICallback wasn't provided the default callback
+        /// with high-level API will be used (see below).
+        abstract SNICallback: (string -> (Error option -> SecureContext -> unit) -> unit) option with get, set
+        /// An optional Buffer instance containing a TLS session.
+        abstract session: Buffer option with get, set
+        /// If true, specifies that the OCSP status request extension will be
+        /// added to the client hello and an 'OCSPResponse' event will be
+        /// emitted on the socket before establishing a secure communication
+        abstract requestOCSP: bool option with get, set
 
     type [<AllowNullLiteral>] TlsOptions =
         abstract host: string option with get, set
@@ -3329,7 +3377,7 @@ module tls =
 
     type [<AllowNullLiteral>] Server =
         inherit net.Server
-        abstract addContext: hostName: string * credentials: obj -> unit
+        abstract addContext: hostName: string * credentials: AddContextCredentials -> unit
         /// events.EventEmitter
         /// 1. tlsClientError
         /// 2. newSession
@@ -3372,6 +3420,11 @@ module tls =
         [<Emit "$0.prependOnceListener('OCSPRequest',$1)">] abstract prependOnceListener_OCSPRequest: listener: (Buffer -> Buffer -> Function -> unit) -> Server
         [<Emit "$0.prependOnceListener('resumeSession',$1)">] abstract prependOnceListener_resumeSession: listener: (obj option -> (Error -> obj option -> unit) -> unit) -> Server
         [<Emit "$0.prependOnceListener('secureConnection',$1)">] abstract prependOnceListener_secureConnection: listener: (TLSSocket -> unit) -> Server
+
+    type [<AllowNullLiteral>] AddContextCredentials =
+        abstract key: string with get, set
+        abstract cert: string with get, set
+        abstract ca: string with get, set
 
     type [<AllowNullLiteral>] ServerStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> Server
@@ -3598,7 +3651,10 @@ module stream =
 
     type [<AllowNullLiteral>] ``internal`` =
         inherit events.EventEmitter
-        abstract pipe: destination: 'T * ?options: obj -> 'T
+        abstract pipe: destination: 'T * ?options: PipeOptions -> 'T
+
+    type [<AllowNullLiteral>] PipeOptions =
+        abstract ``end``: bool option with get, set
 
     type [<AllowNullLiteral>] internalStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> ``internal``
@@ -3923,7 +3979,14 @@ module assert_ =
         abstract generatedMessage: bool with get, set
 
     type [<AllowNullLiteral>] AssertionErrorStatic =
-        [<Emit "new $0($1...)">] abstract Create: ?options: obj -> AssertionError
+        [<Emit "new $0($1...)">] abstract Create: ?options: AssertionErrorStaticOptions -> AssertionError
+
+    type [<AllowNullLiteral>] AssertionErrorStaticOptions =
+        abstract message: string option with get, set
+        abstract actual: obj option option with get, set
+        abstract expected: obj option option with get, set
+        abstract operator: string option with get, set
+        abstract stackStartFunction: Function option with get, set
 
 module tty =
 
