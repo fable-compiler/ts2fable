@@ -215,13 +215,13 @@ module NodeJS =
         abstract pause: unit -> ReadableStream
         abstract resume: unit -> ReadableStream
         abstract isPaused: unit -> bool
-        abstract pipe: destination: 'T * ?options: PipeOptions -> 'T
+        abstract pipe: destination: 'T * ?options: ReadableStreamPipeOptions -> 'T
         abstract unpipe: ?destination: 'T -> ReadableStream
         abstract unshift: chunk: string -> unit
         abstract unshift: chunk: Buffer -> unit
         abstract wrap: oldStream: ReadableStream -> ReadableStream
 
-    type [<AllowNullLiteral>] PipeOptions =
+    type [<AllowNullLiteral>] ReadableStreamPipeOptions =
         abstract ``end``: bool option with get, set
 
     type [<AllowNullLiteral>] WritableStream =
@@ -3377,7 +3377,7 @@ module tls =
 
     type [<AllowNullLiteral>] Server =
         inherit net.Server
-        abstract addContext: hostName: string * credentials: AddContextCredentials -> unit
+        abstract addContext: hostName: string * credentials: ServerAddContextCredentials -> unit
         /// events.EventEmitter
         /// 1. tlsClientError
         /// 2. newSession
@@ -3421,7 +3421,7 @@ module tls =
         [<Emit "$0.prependOnceListener('resumeSession',$1)">] abstract prependOnceListener_resumeSession: listener: (obj option -> (Error -> obj option -> unit) -> unit) -> Server
         [<Emit "$0.prependOnceListener('secureConnection',$1)">] abstract prependOnceListener_secureConnection: listener: (TLSSocket -> unit) -> Server
 
-    type [<AllowNullLiteral>] AddContextCredentials =
+    type [<AllowNullLiteral>] ServerAddContextCredentials =
         abstract key: string with get, set
         abstract cert: string with get, set
         abstract ca: string with get, set
@@ -3651,9 +3651,9 @@ module stream =
 
     type [<AllowNullLiteral>] ``internal`` =
         inherit events.EventEmitter
-        abstract pipe: destination: 'T * ?options: PipeOptions -> 'T
+        abstract pipe: destination: 'T * ?options: InternalPipeOptions -> 'T
 
-    type [<AllowNullLiteral>] PipeOptions =
+    type [<AllowNullLiteral>] InternalPipeOptions =
         abstract ``end``: bool option with get, set
 
     type [<AllowNullLiteral>] internalStatic =

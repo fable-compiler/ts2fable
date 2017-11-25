@@ -797,14 +797,15 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                 match prm.Type with
                                                 | FsType.TypeLiteral tl ->
                                                     let name =
-                                                        let fnName = fn.Name.Value.Replace("`","") // unescape
-                                                        let pmName = prm.Name.Replace("`","")
+                                                        let itName = if it.Name = "IExports" then "" else it.Name
+                                                        let fnName = fn.Name.Value
+                                                        let pmName = prm.Name
                                                         if fnName = "Create" then
-                                                            sprintf "%s%s" it.Name (capitalize pmName) |> newTypeName
+                                                            sprintf "%s%s" itName (capitalize pmName) |> newTypeName
                                                         else if fnName = pmName then
-                                                            sprintf "%s" (capitalize pmName) |> newTypeName
+                                                            sprintf "%s%s" itName (capitalize pmName) |> newTypeName
                                                         else
-                                                            sprintf "%s%s" fnName (capitalize pmName) |> newTypeName
+                                                            sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
                                                     {
                                                         Comments = []
                                                         IsStatic = false
