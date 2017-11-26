@@ -244,6 +244,7 @@ let createIExports (f: FsFile): FsFile =
                                     HasDeclare = true
                                     Name = md.Name
                                     Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
+                                    IsConst = true
                                 }
                                 |> FsType.Variable |> Some
                             else

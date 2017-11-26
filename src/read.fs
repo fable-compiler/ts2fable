@@ -159,14 +159,20 @@ let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
     | None -> false
     | Some mds -> mds |> Seq.exists (fun md -> md.kind = kind)
 
-let readVariable (checker: TypeChecker) (vb: VariableStatement): FsVariable =
-    let vd = vb.declarationList.declarations.[0] // TODO more than 1
-    {
-        Export = None
-        HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers
-        Name = vd.name |> getBindingName
-        Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
-    }
+let isConst (nd: Node): bool =
+    (int nd.flags) ||| (int NodeFlags.Const) <> 0
+
+let readVariable (checker: TypeChecker) (vb: VariableStatement) =
+    vb.declarationList.declarations |> List.ofSeq |> List.map (fun vd ->
+        {
+            Export = None
+            HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers
+            Name = vd.name |> getBindingName
+            Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
+            IsConst = isConst vd
+        }
+        |> FsType.Variable
+    )
 
 let readEnum(ed: EnumDeclaration): FsEnum =
     {
@@ -355,6 +361,10 @@ let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
             | Some t -> readTypeNode checker t
             | None -> simpleType "unit"
     }
+
+let isReadOnly (modifiers: ModifiersArray option) =
+    hasModifier SyntaxKind.ReadonlyKeyword modifiers
+
 let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProperty =
     {
         Comments = readPropertyNameComments checker ps.name
@@ -366,7 +376,7 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
             match ps.``type`` with
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
-        IsReadonly = hasModifier SyntaxKind.ReadonlyKeyword ps.modifiers
+        IsReadonly = isReadOnly ps.modifiers
     }
 
 let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): string list =
@@ -387,7 +397,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
             match pd.``type`` with
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
-        IsReadonly = hasModifier SyntaxKind.ReadonlyKeyword pd.modifiers
+        IsReadonly = isReadOnly pd.modifiers
     }
 
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
@@ -416,7 +426,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
             match ps.``type`` with
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
-        IsReadonly = hasModifier SyntaxKind.ReadonlyKeyword ps.modifiers
+        IsReadonly = isReadOnly ps.modifiers
     }
 
 let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsFunction =
@@ -566,7 +576,7 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     | SyntaxKind.ClassDeclaration ->
         [readClass checker (sd :?> ClassDeclaration) |> FsType.Interface]
     | SyntaxKind.VariableStatement ->
-        [readVariable checker (sd :?> VariableStatement) |> FsType.Variable]
+        readVariable checker (sd :?> VariableStatement)
     | SyntaxKind.FunctionDeclaration ->
         [readFunctionDeclaration checker (sd :?> FunctionDeclaration) |> FsType.Function]
     | SyntaxKind.ModuleDeclaration ->
