@@ -837,3 +837,58 @@ let extractTypeLiterals(f: FsFile): FsFile =
             |> FsType.Module
         | _ -> tp
     )
+
+let addAliasUnionHelpers(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+            
+            { md with
+                Types = md.Types |> List.collect(fun tp2 ->
+                    match tp2 with
+                    | FsType.Alias al ->
+                        match al.Type with
+                        | FsType.Union un ->
+                            if un.Types.Length > 1 then
+                                [tp2] @
+                                [
+                                    {
+                                        HasDeclare = false
+                                        Name = al.Name
+                                        Types = []
+                                        HelperLines =
+                                            let mutable i = 0
+                                            un.Types |> List.collect (fun tp3 ->
+                                                let n = un.Types.Length
+                                                i <- i + 1
+                                                let name = getName tp3
+                                                let name = if name = "" then sprintf "Case%d" i else name
+                                                let name = name.Replace("'","") // strip generics
+                                                let name = capitalize name
+                                                let aliasNameWithTypes = sprintf "%s%s" al.Name (Print.printTypeParameters al.TypeParameters)
+                                                if un.Option then
+                                                    [
+                                                        sprintf "let of%sOption v: %s = v |> Option.map U%d.Case%d" name aliasNameWithTypes n i
+                                                        sprintf "let of%s v: %s = v |> U%d.Case%d |> Some" name aliasNameWithTypes n i
+                                                        sprintf "let is%s (v: %s) = match v with None -> false | Some o -> match o with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
+                                                        sprintf "let as%s (v: %s) = match v with None -> None | Some o -> match o with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
+                                                    ]
+                                                else
+                                                    [
+                                                        sprintf "let of%s v: %s = v |> U%d.Case%d" name aliasNameWithTypes n i
+                                                        sprintf "let is%s (v: %s) = match v with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
+                                                        sprintf "let as%s (v: %s) = match v with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
+                                                    ]
+                                            )
+                                    }
+                                    |> FsType.Module
+                                ]
+                            else [tp2]
+                        | _ -> [tp2]
+                    | _ -> [tp2]
+                )
+            }
+            |> FsType.Module
+
+        | _ -> tp
+    )

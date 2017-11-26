@@ -41,6 +41,7 @@ let transform (file: FsFile): FsFile =
     |> removeTypeParamsFromStatic
     |> removeDuplicateFunctions
     |> extractTypeLiterals // after fixEscapeWords
+    |> addAliasUnionHelpers
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
 

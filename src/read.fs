@@ -611,6 +611,7 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
         HasDeclare = hasModifier SyntaxKind.DeclareKeyword md.modifiers
         Name = readModuleName md.name
         Types = types |> List.ofSeq
+        HelperLines = []
     }
 
 let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile): FsFile =
@@ -625,6 +626,7 @@ let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile):
                 |> List.map (fun sf -> sf.statements |> List.ofSeq)
                 |> List.concat
                 |> List.collect (readStatement checker)
+            HelperLines = []
         }
     modules.Add gbl
 

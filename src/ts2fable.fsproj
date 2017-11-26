@@ -11,6 +11,7 @@
     <Compile Include="naming.fs" />
     <Compile Include="syntax.fs" />
     <Compile Include="read.fs" />
+    <Compile Include="print.fs" />
     <Compile Include="transform.fs" />
     <Compile Include="version.fs" />
     <Compile Include="write.fs" />
