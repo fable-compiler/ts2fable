@@ -275,7 +275,7 @@ let rec getFullName (tp: FsType) =
     | FsType.Mapped en -> en.FullName
     | FsType.Generic gn -> getFullName gn.Type
     | FsType.File fl -> fl.FileName
-    | _ -> ""
+    | _ -> getName tp
 
 type FsVariable with
     member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal

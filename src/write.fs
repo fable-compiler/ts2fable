@@ -118,6 +118,9 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                     )
                     vb.Name (printType vb.Type)
                 |> lines.Add
+            // else
+            //     printfn "Variable no declare: %A" vb
+                // sprintf "%s// let %s = " indent vb.Name |> lines.Add
         | _ -> ()
     let addedLines = lines.Count - lineCountStart
     // remove empty modules
