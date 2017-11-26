@@ -41,7 +41,7 @@ let printType (tp: FsType): string =
         line |> String.concat ""
     | FsType.Variable vb ->
         let vtp = vb.Type |> printType
-        sprintf "abstract %s: %s with get, set" vb.Name vtp
+        sprintf "abstract %s: %s%s" vb.Name vtp (if vb.IsConst then "" else " with get, set")
     | FsType.StringLiteral _ -> "string"
     | FsType.TypeLiteral _ ->
         // printfn "TypeLiteral %A" tp

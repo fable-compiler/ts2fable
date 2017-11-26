@@ -139,6 +139,7 @@ type FsVariable =
         HasDeclare: bool
         Name: string
         Type: FsType
+        IsConst: bool
     }
 
 type FsMapped =

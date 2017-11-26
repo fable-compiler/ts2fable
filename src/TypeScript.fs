@@ -14,11 +14,11 @@ module ts =
 
     type [<AllowNullLiteral>] IExports =
         abstract OperationCanceledException: OperationCanceledExceptionStatic
-        abstract versionMajorMinor: obj with get, set
-        abstract version: string with get, set
+        abstract versionMajorMinor: obj
+        abstract version: string
         abstract isExternalModuleNameRelative: moduleName: string -> bool
         abstract getNodeMajorVersion: unit -> float
-        abstract sys: System with get, set
+        abstract sys: System
         abstract tokenToString: t: SyntaxKind -> string option
         abstract getPositionOfLineAndCharacter: sourceFile: SourceFile * line: float * character: float -> float
         abstract getLineAndCharacterOfPosition: sourceFile: SourceFileLike * position: float -> LineAndCharacter
@@ -55,7 +55,7 @@ module ts =
         abstract textChangeRangeNewSpan: range: TextChangeRange -> TextSpan
         abstract textChangeRangeIsUnchanged: range: TextChangeRange -> bool
         abstract createTextChangeRange: span: TextSpan * newLength: float -> TextChangeRange
-        abstract unchangedTextChangeRange: TextChangeRange with get, set
+        abstract unchangedTextChangeRange: TextChangeRange
         /// Called to merge all the changes that occurred across several versions of a script snapshot
         /// into a single change.  i.e. if a user keeps making successive edits to a script we will
         /// have a text change from V1 to V2, V2 to V3, ..., Vn.
@@ -728,13 +728,13 @@ module ts =
         abstract preProcessFile: sourceText: string * ?readImportFiles: bool * ?detectJavaScriptImports: bool -> PreProcessedFileInfo
         abstract transpileModule: input: string * transpileOptions: TranspileOptions -> TranspileOutput
         abstract transpile: input: string * ?compilerOptions: CompilerOptions * ?fileName: string * ?diagnostics: ResizeArray<Diagnostic> * ?moduleName: string -> string
-        abstract servicesVersion: obj with get, set
+        abstract servicesVersion: obj
         abstract toEditorSettings: options: U2<EditorOptions, EditorSettings> -> EditorSettings
         abstract displayPartsToString: displayParts: ResizeArray<SymbolDisplayPart> -> string
         abstract getDefaultCompilerOptions: unit -> CompilerOptions
         abstract getSupportedCodeFixes: unit -> ResizeArray<string>
         abstract createLanguageServiceSourceFile: fileName: string * scriptSnapshot: IScriptSnapshot * scriptTarget: ScriptTarget * version: string * setNodeParents: bool * ?scriptKind: ScriptKind -> SourceFile
-        abstract disableIncrementalParsing: bool with get, set
+        abstract disableIncrementalParsing: bool
         abstract updateLanguageServiceSourceFile: sourceFile: SourceFile * scriptSnapshot: IScriptSnapshot * version: string * textChangeRange: TextChangeRange * ?aggressiveChecks: bool -> SourceFile
         abstract createLanguageService: host: LanguageServiceHost * ?documentRegistry: DocumentRegistry -> LanguageService
         /// Get the path of the default library files (lib.d.ts) as distributed with the typescript

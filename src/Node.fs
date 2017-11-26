@@ -667,9 +667,9 @@ type [<AllowNullLiteral>] NodeBuffer =
 module buffer =
 
     type [<AllowNullLiteral>] IExports =
-        abstract INSPECT_MAX_BYTES: float with get, set
-        abstract BuffType: obj with get, set
-        abstract SlowBuffType: obj with get, set
+        abstract INSPECT_MAX_BYTES: float
+        abstract BuffType: obj
+        abstract SlowBuffType: obj
 
 module querystring =
 
@@ -732,13 +732,13 @@ module http =
         abstract IncomingMessage: IncomingMessageStatic
         abstract ClientResponse: ClientResponseStatic
         abstract Agent: AgentStatic
-        abstract METHODS: ResizeArray<string> with get, set
-        abstract STATUS_CODES: obj with get, set
+        abstract METHODS: ResizeArray<string>
+        abstract STATUS_CODES: obj
         abstract createServer: ?requestListener: (IncomingMessage -> ServerResponse -> unit) -> Server
         abstract createClient: ?port: float * ?host: string -> obj option
         abstract request: options: U3<RequestOptions, string, URL> * ?callback: (IncomingMessage -> unit) -> ClientRequest
         abstract get: options: U3<RequestOptions, string, URL> * ?callback: (IncomingMessage -> unit) -> ClientRequest
-        abstract globalAgent: Agent with get, set
+        abstract globalAgent: Agent
 
     type [<AllowNullLiteral>] IncomingHttpHeaders =
         abstract accept: string option with get, set
@@ -938,12 +938,12 @@ module cluster =
         abstract Worker: WorkerStatic
         abstract disconnect: ?callback: Function -> unit
         abstract fork: ?env: obj option -> Worker
-        abstract isMaster: bool with get, set
-        abstract isWorker: bool with get, set
-        abstract settings: ClusterSettings with get, set
+        abstract isMaster: bool
+        abstract isWorker: bool
+        abstract settings: ClusterSettings
         abstract setupMaster: ?settings: ClusterSetupMasterSettings -> unit
-        abstract worker: Worker with get, set
-        abstract workers: obj with get, set
+        abstract worker: Worker
+        abstract workers: obj
         /// events.EventEmitter
         ///    1. disconnect
         ///    2. exit
@@ -1192,36 +1192,36 @@ module zlib =
         abstract unzip: buf: U2<Buffer, string> * callback: (Error option -> Buffer -> unit) -> unit
         abstract unzip: buf: U2<Buffer, string> * options: ZlibOptions * callback: (Error option -> Buffer -> unit) -> unit
         abstract unzipSync: buf: U2<Buffer, string> * ?options: ZlibOptions -> Buffer
-        abstract Z_NO_FLUSH: float with get, set
-        abstract Z_PARTIAL_FLUSH: float with get, set
-        abstract Z_SYNC_FLUSH: float with get, set
-        abstract Z_FULL_FLUSH: float with get, set
-        abstract Z_FINISH: float with get, set
-        abstract Z_BLOCK: float with get, set
-        abstract Z_TREES: float with get, set
-        abstract Z_OK: float with get, set
-        abstract Z_STREAM_END: float with get, set
-        abstract Z_NEED_DICT: float with get, set
-        abstract Z_ERRNO: float with get, set
-        abstract Z_STREAM_ERROR: float with get, set
-        abstract Z_DATA_ERROR: float with get, set
-        abstract Z_MEM_ERROR: float with get, set
-        abstract Z_BUF_ERROR: float with get, set
-        abstract Z_VERSION_ERROR: float with get, set
-        abstract Z_NO_COMPRESSION: float with get, set
-        abstract Z_BEST_SPEED: float with get, set
-        abstract Z_BEST_COMPRESSION: float with get, set
-        abstract Z_DEFAULT_COMPRESSION: float with get, set
-        abstract Z_FILTERED: float with get, set
-        abstract Z_HUFFMAN_ONLY: float with get, set
-        abstract Z_RLE: float with get, set
-        abstract Z_FIXED: float with get, set
-        abstract Z_DEFAULT_STRATEGY: float with get, set
-        abstract Z_BINARY: float with get, set
-        abstract Z_TEXT: float with get, set
-        abstract Z_ASCII: float with get, set
-        abstract Z_UNKNOWN: float with get, set
-        abstract Z_DEFLATED: float with get, set
+        abstract Z_NO_FLUSH: float
+        abstract Z_PARTIAL_FLUSH: float
+        abstract Z_SYNC_FLUSH: float
+        abstract Z_FULL_FLUSH: float
+        abstract Z_FINISH: float
+        abstract Z_BLOCK: float
+        abstract Z_TREES: float
+        abstract Z_OK: float
+        abstract Z_STREAM_END: float
+        abstract Z_NEED_DICT: float
+        abstract Z_ERRNO: float
+        abstract Z_STREAM_ERROR: float
+        abstract Z_DATA_ERROR: float
+        abstract Z_MEM_ERROR: float
+        abstract Z_BUF_ERROR: float
+        abstract Z_VERSION_ERROR: float
+        abstract Z_NO_COMPRESSION: float
+        abstract Z_BEST_SPEED: float
+        abstract Z_BEST_COMPRESSION: float
+        abstract Z_DEFAULT_COMPRESSION: float
+        abstract Z_FILTERED: float
+        abstract Z_HUFFMAN_ONLY: float
+        abstract Z_RLE: float
+        abstract Z_FIXED: float
+        abstract Z_DEFAULT_STRATEGY: float
+        abstract Z_BINARY: float
+        abstract Z_TEXT: float
+        abstract Z_ASCII: float
+        abstract Z_UNKNOWN: float
+        abstract Z_DEFLATED: float
 
     type [<AllowNullLiteral>] ZlibOptions =
         abstract flush: float option with get, set
@@ -1257,31 +1257,31 @@ module zlib =
     module constants =
 
         type [<AllowNullLiteral>] IExports =
-            abstract Z_NO_FLUSH: float with get, set
-            abstract Z_PARTIAL_FLUSH: float with get, set
-            abstract Z_SYNC_FLUSH: float with get, set
-            abstract Z_FULL_FLUSH: float with get, set
-            abstract Z_FINISH: float with get, set
-            abstract Z_BLOCK: float with get, set
-            abstract Z_TREES: float with get, set
-            abstract Z_OK: float with get, set
-            abstract Z_STREAM_END: float with get, set
-            abstract Z_NEED_DICT: float with get, set
-            abstract Z_ERRNO: float with get, set
-            abstract Z_STREAM_ERROR: float with get, set
-            abstract Z_DATA_ERROR: float with get, set
-            abstract Z_MEM_ERROR: float with get, set
-            abstract Z_BUF_ERROR: float with get, set
-            abstract Z_VERSION_ERROR: float with get, set
-            abstract Z_NO_COMPRESSION: float with get, set
-            abstract Z_BEST_SPEED: float with get, set
-            abstract Z_BEST_COMPRESSION: float with get, set
-            abstract Z_DEFAULT_COMPRESSION: float with get, set
-            abstract Z_FILTERED: float with get, set
-            abstract Z_HUFFMAN_ONLY: float with get, set
-            abstract Z_RLE: float with get, set
-            abstract Z_FIXED: float with get, set
-            abstract Z_DEFAULT_STRATEGY: float with get, set
+            abstract Z_NO_FLUSH: float
+            abstract Z_PARTIAL_FLUSH: float
+            abstract Z_SYNC_FLUSH: float
+            abstract Z_FULL_FLUSH: float
+            abstract Z_FINISH: float
+            abstract Z_BLOCK: float
+            abstract Z_TREES: float
+            abstract Z_OK: float
+            abstract Z_STREAM_END: float
+            abstract Z_NEED_DICT: float
+            abstract Z_ERRNO: float
+            abstract Z_STREAM_ERROR: float
+            abstract Z_DATA_ERROR: float
+            abstract Z_MEM_ERROR: float
+            abstract Z_BUF_ERROR: float
+            abstract Z_VERSION_ERROR: float
+            abstract Z_NO_COMPRESSION: float
+            abstract Z_BEST_SPEED: float
+            abstract Z_BEST_COMPRESSION: float
+            abstract Z_DEFAULT_COMPRESSION: float
+            abstract Z_FILTERED: float
+            abstract Z_HUFFMAN_ONLY: float
+            abstract Z_RLE: float
+            abstract Z_FIXED: float
+            abstract Z_DEFAULT_STRATEGY: float
 
 module os =
 
@@ -1297,11 +1297,11 @@ module os =
         abstract networkInterfaces: unit -> obj
         abstract homedir: unit -> string
         abstract userInfo: ?options: UserInfoOptions -> obj
-        abstract constants: obj with get, set
+        abstract constants: obj
         abstract arch: unit -> string
         abstract platform: unit -> NodeJS.Platform
         abstract tmpdir: unit -> string
-        abstract EOL: string with get, set
+        abstract EOL: string
         abstract endianness: unit -> U2<string, string>
 
     type [<AllowNullLiteral>] UserInfoOptions =
@@ -1348,7 +1348,7 @@ module https =
         abstract createServer: options: ServerOptions * ?requestListener: (http.IncomingMessage -> http.ServerResponse -> unit) -> Server
         abstract request: options: U3<RequestOptions, string, URL> * ?callback: (http.IncomingMessage -> unit) -> http.ClientRequest
         abstract get: options: U3<RequestOptions, string, URL> * ?callback: (http.IncomingMessage -> unit) -> http.ClientRequest
-        abstract globalAgent: Agent with get, set
+        abstract globalAgent: Agent
 
     type [<AllowNullLiteral>] ServerOptions =
         abstract pfx: obj option option with get, set
@@ -1412,8 +1412,8 @@ module punycode =
         abstract encode: string: string -> string
         abstract toUnicode: domain: string -> string
         abstract toASCII: domain: string -> string
-        abstract ucs2: ucs2 with get, set
-        abstract version: obj option with get, set
+        abstract ucs2: ucs2
+        abstract version: obj option
 
     type [<AllowNullLiteral>] ucs2 =
         abstract decode: string: string -> ResizeArray<float>
@@ -1954,8 +1954,8 @@ module url =
 module dns =
 
     type [<AllowNullLiteral>] IExports =
-        abstract ADDRCONFIG: float with get, set
-        abstract V4MAPPED: float with get, set
+        abstract ADDRCONFIG: float
+        abstract V4MAPPED: float
         abstract lookup: hostname: string * family: float * callback: (NodeJS.ErrnoException -> string -> float -> unit) -> unit
         abstract lookup: hostname: string * options: LookupOneOptions * callback: (NodeJS.ErrnoException -> string -> float -> unit) -> unit
         abstract lookup: hostname: string * options: LookupAllOptions * callback: (NodeJS.ErrnoException -> ResizeArray<LookupAddress> -> unit) -> unit
@@ -1989,30 +1989,30 @@ module dns =
         abstract resolveTxt: hostname: string * callback: (NodeJS.ErrnoException -> ResizeArray<ResizeArray<string>> -> unit) -> unit
         abstract reverse: ip: string * callback: (NodeJS.ErrnoException -> ResizeArray<string> -> unit) -> unit
         abstract setServers: servers: ResizeArray<string> -> unit
-        abstract NODATA: string with get, set
-        abstract FORMERR: string with get, set
-        abstract SERVFAIL: string with get, set
-        abstract NOTFOUND: string with get, set
-        abstract NOTIMP: string with get, set
-        abstract REFUSED: string with get, set
-        abstract BADQUERY: string with get, set
-        abstract BADNAME: string with get, set
-        abstract BADFAMILY: string with get, set
-        abstract BADRESP: string with get, set
-        abstract CONNREFUSED: string with get, set
-        abstract TIMEOUT: string with get, set
-        abstract EOF: string with get, set
-        abstract FILE: string with get, set
-        abstract NOMEM: string with get, set
-        abstract DESTRUCTION: string with get, set
-        abstract BADSTR: string with get, set
-        abstract BADFLAGS: string with get, set
-        abstract NONAME: string with get, set
-        abstract BADHINTS: string with get, set
-        abstract NOTINITIALIZED: string with get, set
-        abstract LOADIPHLPAPI: string with get, set
-        abstract ADDRGETNETWORKPARAMS: string with get, set
-        abstract CANCELLED: string with get, set
+        abstract NODATA: string
+        abstract FORMERR: string
+        abstract SERVFAIL: string
+        abstract NOTFOUND: string
+        abstract NOTIMP: string
+        abstract REFUSED: string
+        abstract BADQUERY: string
+        abstract BADNAME: string
+        abstract BADFAMILY: string
+        abstract BADRESP: string
+        abstract CONNREFUSED: string
+        abstract TIMEOUT: string
+        abstract EOF: string
+        abstract FILE: string
+        abstract NOMEM: string
+        abstract DESTRUCTION: string
+        abstract BADSTR: string
+        abstract BADFLAGS: string
+        abstract NONAME: string
+        abstract BADHINTS: string
+        abstract NOTINITIALIZED: string
+        abstract LOADIPHLPAPI: string
+        abstract ADDRGETNETWORKPARAMS: string
+        abstract CANCELLED: string
 
     type [<AllowNullLiteral>] LookupOptions =
         abstract family: float option with get, set
@@ -3046,47 +3046,47 @@ module fs =
     module constants =
 
         type [<AllowNullLiteral>] IExports =
-            abstract F_OK: float with get, set
-            abstract R_OK: float with get, set
-            abstract W_OK: float with get, set
-            abstract X_OK: float with get, set
-            abstract O_RDONLY: float with get, set
-            abstract O_WRONLY: float with get, set
-            abstract O_RDWR: float with get, set
-            abstract O_CREAT: float with get, set
-            abstract O_EXCL: float with get, set
-            abstract O_NOCTTY: float with get, set
-            abstract O_TRUNC: float with get, set
-            abstract O_APPEND: float with get, set
-            abstract O_DIRECTORY: float with get, set
-            abstract O_NOATIME: float with get, set
-            abstract O_NOFOLLOW: float with get, set
-            abstract O_SYNC: float with get, set
-            abstract O_DSYNC: float with get, set
-            abstract O_SYMLINK: float with get, set
-            abstract O_DIRECT: float with get, set
-            abstract O_NONBLOCK: float with get, set
-            abstract S_IFMT: float with get, set
-            abstract S_IFREG: float with get, set
-            abstract S_IFDIR: float with get, set
-            abstract S_IFCHR: float with get, set
-            abstract S_IFBLK: float with get, set
-            abstract S_IFIFO: float with get, set
-            abstract S_IFLNK: float with get, set
-            abstract S_IFSOCK: float with get, set
-            abstract S_IRWXU: float with get, set
-            abstract S_IRUSR: float with get, set
-            abstract S_IWUSR: float with get, set
-            abstract S_IXUSR: float with get, set
-            abstract S_IRWXG: float with get, set
-            abstract S_IRGRP: float with get, set
-            abstract S_IWGRP: float with get, set
-            abstract S_IXGRP: float with get, set
-            abstract S_IRWXO: float with get, set
-            abstract S_IROTH: float with get, set
-            abstract S_IWOTH: float with get, set
-            abstract S_IXOTH: float with get, set
-            abstract COPYFILE_EXCL: float with get, set
+            abstract F_OK: float
+            abstract R_OK: float
+            abstract W_OK: float
+            abstract X_OK: float
+            abstract O_RDONLY: float
+            abstract O_WRONLY: float
+            abstract O_RDWR: float
+            abstract O_CREAT: float
+            abstract O_EXCL: float
+            abstract O_NOCTTY: float
+            abstract O_TRUNC: float
+            abstract O_APPEND: float
+            abstract O_DIRECTORY: float
+            abstract O_NOATIME: float
+            abstract O_NOFOLLOW: float
+            abstract O_SYNC: float
+            abstract O_DSYNC: float
+            abstract O_SYMLINK: float
+            abstract O_DIRECT: float
+            abstract O_NONBLOCK: float
+            abstract S_IFMT: float
+            abstract S_IFREG: float
+            abstract S_IFDIR: float
+            abstract S_IFCHR: float
+            abstract S_IFBLK: float
+            abstract S_IFIFO: float
+            abstract S_IFLNK: float
+            abstract S_IFSOCK: float
+            abstract S_IRWXU: float
+            abstract S_IRUSR: float
+            abstract S_IWUSR: float
+            abstract S_IXUSR: float
+            abstract S_IRWXG: float
+            abstract S_IRGRP: float
+            abstract S_IWGRP: float
+            abstract S_IXGRP: float
+            abstract S_IRWXO: float
+            abstract S_IROTH: float
+            abstract S_IWOTH: float
+            abstract S_IXOTH: float
+            abstract COPYFILE_EXCL: float
 
     module access =
 
@@ -3138,8 +3138,8 @@ module path =
         /// Return the extension of the path, from the last '.' to end of string in the last portion of the path.
         /// If there is no '.' in the last portion of the path or the first character of it is '.', then it returns an empty string
         abstract extname: p: string -> string
-        abstract sep: string with get, set
-        abstract delimiter: string with get, set
+        abstract sep: string
+        abstract delimiter: string
         /// Returns an object from a path string - the opposite of format().
         abstract parse: pathString: string -> ParsedPath
         /// Returns a path string from an object - the opposite of parse().
@@ -3181,8 +3181,8 @@ module path =
             abstract dirname: p: string -> string
             abstract basename: p: string * ?ext: string -> string
             abstract extname: p: string -> string
-            abstract sep: string with get, set
-            abstract delimiter: string with get, set
+            abstract sep: string
+            abstract delimiter: string
             abstract parse: p: string -> ParsedPath
             abstract format: pP: ParsedPath -> string
 
@@ -3197,15 +3197,15 @@ module path =
             abstract dirname: p: string -> string
             abstract basename: p: string * ?ext: string -> string
             abstract extname: p: string -> string
-            abstract sep: string with get, set
-            abstract delimiter: string with get, set
+            abstract sep: string
+            abstract delimiter: string
             abstract parse: p: string -> ParsedPath
             abstract format: pP: ParsedPath -> string
 
 module string_decoder =
 
     type [<AllowNullLiteral>] IExports =
-        abstract StringDecoder: obj with get, set
+        abstract StringDecoder: obj
 
     type [<AllowNullLiteral>] NodeStringDecoder =
         abstract write: buffer: Buffer -> string
@@ -3214,8 +3214,8 @@ module string_decoder =
 module tls =
 
     type [<AllowNullLiteral>] IExports =
-        abstract CLIENT_RENEG_LIMIT: float with get, set
-        abstract CLIENT_RENEG_WINDOW: float with get, set
+        abstract CLIENT_RENEG_LIMIT: float
+        abstract CLIENT_RENEG_WINDOW: float
         abstract TLSSocket: TLSSocketStatic
         abstract Server: ServerStatic
         abstract createServer: options: TlsOptions * ?secureConnectionListener: (TLSSocket -> unit) -> Server
@@ -3225,7 +3225,7 @@ module tls =
         abstract createSecurePair: ?credentials: crypto.Credentials * ?isServer: bool * ?requestCert: bool * ?rejectUnauthorized: bool -> SecurePair
         abstract createSecureContext: details: SecureContextOptions -> SecureContext
         abstract getCiphers: unit -> ResizeArray<string>
-        abstract DEFAULT_ECDH_CURVE: string with get, set
+        abstract DEFAULT_ECDH_CURVE: string
 
     type [<AllowNullLiteral>] Certificate =
         /// Country code.
@@ -3498,8 +3498,8 @@ module tls =
 module crypto =
 
     type [<AllowNullLiteral>] IExports =
-        abstract Certificate: obj with get, set
-        abstract fips: bool with get, set
+        abstract Certificate: obj
+        abstract fips: bool
         abstract createCredentials: details: CredentialDetails -> Credentials
         abstract createHash: algorithm: string -> Hash
         abstract createHmac: algorithm: string * key: U2<string, Buffer> -> Hmac
@@ -3537,7 +3537,7 @@ module crypto =
         abstract getHashes: unit -> ResizeArray<string>
         abstract createECDH: curve_name: string -> ECDH
         abstract timingSafeEqual: a: Buffer * b: Buffer -> bool
-        abstract DEFAULT_ENCODING: string with get, set
+        abstract DEFAULT_ENCODING: string
 
     type [<AllowNullLiteral>] Certificate =
         abstract exportChallenge: spkac: U2<string, Buffer> -> Buffer
@@ -3922,7 +3922,7 @@ module util =
         abstract puts: [<ParamArray>] param: ResizeArray<obj option> -> unit
         abstract print: [<ParamArray>] param: ResizeArray<obj option> -> unit
         abstract log: string: string -> unit
-        abstract inspect: obj with get, set
+        abstract inspect: obj
         abstract isArray: ``object``: obj option -> bool
         abstract isRegExp: ``object``: obj option -> bool
         abstract isDate: ``object``: obj option -> bool
@@ -3980,7 +3980,7 @@ module util =
     module promisify =
 
         type [<AllowNullLiteral>] IExports =
-            abstract custom: Symbol with get, set
+            abstract custom: Symbol
 
 module assert_ =
 
@@ -4069,280 +4069,280 @@ module domain =
 module constants =
 
     type [<AllowNullLiteral>] IExports =
-        abstract E2BIG: float with get, set
-        abstract EACCES: float with get, set
-        abstract EADDRINUSE: float with get, set
-        abstract EADDRNOTAVAIL: float with get, set
-        abstract EAFNOSUPPORT: float with get, set
-        abstract EAGAIN: float with get, set
-        abstract EALREADY: float with get, set
-        abstract EBADF: float with get, set
-        abstract EBADMSG: float with get, set
-        abstract EBUSY: float with get, set
-        abstract ECANCELED: float with get, set
-        abstract ECHILD: float with get, set
-        abstract ECONNABORTED: float with get, set
-        abstract ECONNREFUSED: float with get, set
-        abstract ECONNRESET: float with get, set
-        abstract EDEADLK: float with get, set
-        abstract EDESTADDRREQ: float with get, set
-        abstract EDOM: float with get, set
-        abstract EEXIST: float with get, set
-        abstract EFAULT: float with get, set
-        abstract EFBIG: float with get, set
-        abstract EHOSTUNREACH: float with get, set
-        abstract EIDRM: float with get, set
-        abstract EILSEQ: float with get, set
-        abstract EINPROGRESS: float with get, set
-        abstract EINTR: float with get, set
-        abstract EINVAL: float with get, set
-        abstract EIO: float with get, set
-        abstract EISCONN: float with get, set
-        abstract EISDIR: float with get, set
-        abstract ELOOP: float with get, set
-        abstract EMFILE: float with get, set
-        abstract EMLINK: float with get, set
-        abstract EMSGSIZE: float with get, set
-        abstract ENAMETOOLONG: float with get, set
-        abstract ENETDOWN: float with get, set
-        abstract ENETRESET: float with get, set
-        abstract ENETUNREACH: float with get, set
-        abstract ENFILE: float with get, set
-        abstract ENOBUFS: float with get, set
-        abstract ENODATA: float with get, set
-        abstract ENODEV: float with get, set
-        abstract ENOENT: float with get, set
-        abstract ENOEXEC: float with get, set
-        abstract ENOLCK: float with get, set
-        abstract ENOLINK: float with get, set
-        abstract ENOMEM: float with get, set
-        abstract ENOMSG: float with get, set
-        abstract ENOPROTOOPT: float with get, set
-        abstract ENOSPC: float with get, set
-        abstract ENOSR: float with get, set
-        abstract ENOSTR: float with get, set
-        abstract ENOSYS: float with get, set
-        abstract ENOTCONN: float with get, set
-        abstract ENOTDIR: float with get, set
-        abstract ENOTEMPTY: float with get, set
-        abstract ENOTSOCK: float with get, set
-        abstract ENOTSUP: float with get, set
-        abstract ENOTTY: float with get, set
-        abstract ENXIO: float with get, set
-        abstract EOPNOTSUPP: float with get, set
-        abstract EOVERFLOW: float with get, set
-        abstract EPERM: float with get, set
-        abstract EPIPE: float with get, set
-        abstract EPROTO: float with get, set
-        abstract EPROTONOSUPPORT: float with get, set
-        abstract EPROTOTYPE: float with get, set
-        abstract ERANGE: float with get, set
-        abstract EROFS: float with get, set
-        abstract ESPIPE: float with get, set
-        abstract ESRCH: float with get, set
-        abstract ETIME: float with get, set
-        abstract ETIMEDOUT: float with get, set
-        abstract ETXTBSY: float with get, set
-        abstract EWOULDBLOCK: float with get, set
-        abstract EXDEV: float with get, set
-        abstract WSAEINTR: float with get, set
-        abstract WSAEBADF: float with get, set
-        abstract WSAEACCES: float with get, set
-        abstract WSAEFAULT: float with get, set
-        abstract WSAEINVAL: float with get, set
-        abstract WSAEMFILE: float with get, set
-        abstract WSAEWOULDBLOCK: float with get, set
-        abstract WSAEINPROGRESS: float with get, set
-        abstract WSAEALREADY: float with get, set
-        abstract WSAENOTSOCK: float with get, set
-        abstract WSAEDESTADDRREQ: float with get, set
-        abstract WSAEMSGSIZE: float with get, set
-        abstract WSAEPROTOTYPE: float with get, set
-        abstract WSAENOPROTOOPT: float with get, set
-        abstract WSAEPROTONOSUPPORT: float with get, set
-        abstract WSAESOCKTNOSUPPORT: float with get, set
-        abstract WSAEOPNOTSUPP: float with get, set
-        abstract WSAEPFNOSUPPORT: float with get, set
-        abstract WSAEAFNOSUPPORT: float with get, set
-        abstract WSAEADDRINUSE: float with get, set
-        abstract WSAEADDRNOTAVAIL: float with get, set
-        abstract WSAENETDOWN: float with get, set
-        abstract WSAENETUNREACH: float with get, set
-        abstract WSAENETRESET: float with get, set
-        abstract WSAECONNABORTED: float with get, set
-        abstract WSAECONNRESET: float with get, set
-        abstract WSAENOBUFS: float with get, set
-        abstract WSAEISCONN: float with get, set
-        abstract WSAENOTCONN: float with get, set
-        abstract WSAESHUTDOWN: float with get, set
-        abstract WSAETOOMANYREFS: float with get, set
-        abstract WSAETIMEDOUT: float with get, set
-        abstract WSAECONNREFUSED: float with get, set
-        abstract WSAELOOP: float with get, set
-        abstract WSAENAMETOOLONG: float with get, set
-        abstract WSAEHOSTDOWN: float with get, set
-        abstract WSAEHOSTUNREACH: float with get, set
-        abstract WSAENOTEMPTY: float with get, set
-        abstract WSAEPROCLIM: float with get, set
-        abstract WSAEUSERS: float with get, set
-        abstract WSAEDQUOT: float with get, set
-        abstract WSAESTALE: float with get, set
-        abstract WSAEREMOTE: float with get, set
-        abstract WSASYSNOTREADY: float with get, set
-        abstract WSAVERNOTSUPPORTED: float with get, set
-        abstract WSANOTINITIALISED: float with get, set
-        abstract WSAEDISCON: float with get, set
-        abstract WSAENOMORE: float with get, set
-        abstract WSAECANCELLED: float with get, set
-        abstract WSAEINVALIDPROCTABLE: float with get, set
-        abstract WSAEINVALIDPROVIDER: float with get, set
-        abstract WSAEPROVIDERFAILEDINIT: float with get, set
-        abstract WSASYSCALLFAILURE: float with get, set
-        abstract WSASERVICE_NOT_FOUND: float with get, set
-        abstract WSATYPE_NOT_FOUND: float with get, set
-        abstract WSA_E_NO_MORE: float with get, set
-        abstract WSA_E_CANCELLED: float with get, set
-        abstract WSAEREFUSED: float with get, set
-        abstract SIGHUP: float with get, set
-        abstract SIGINT: float with get, set
-        abstract SIGILL: float with get, set
-        abstract SIGABRT: float with get, set
-        abstract SIGFPE: float with get, set
-        abstract SIGKILL: float with get, set
-        abstract SIGSEGV: float with get, set
-        abstract SIGTERM: float with get, set
-        abstract SIGBREAK: float with get, set
-        abstract SIGWINCH: float with get, set
-        abstract SSL_OP_ALL: float with get, set
-        abstract SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION: float with get, set
-        abstract SSL_OP_CIPHER_SERVER_PREFERENCE: float with get, set
-        abstract SSL_OP_CISCO_ANYCONNECT: float with get, set
-        abstract SSL_OP_COOKIE_EXCHANGE: float with get, set
-        abstract SSL_OP_CRYPTOPRO_TLSEXT_BUG: float with get, set
-        abstract SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS: float with get, set
-        abstract SSL_OP_EPHEMERAL_RSA: float with get, set
-        abstract SSL_OP_LEGACY_SERVER_CONNECT: float with get, set
-        abstract SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER: float with get, set
-        abstract SSL_OP_MICROSOFT_SESS_ID_BUG: float with get, set
-        abstract SSL_OP_MSIE_SSLV2_RSA_PADDING: float with get, set
-        abstract SSL_OP_NETSCAPE_CA_DN_BUG: float with get, set
-        abstract SSL_OP_NETSCAPE_CHALLENGE_BUG: float with get, set
-        abstract SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG: float with get, set
-        abstract SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG: float with get, set
-        abstract SSL_OP_NO_COMPRESSION: float with get, set
-        abstract SSL_OP_NO_QUERY_MTU: float with get, set
-        abstract SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: float with get, set
-        abstract SSL_OP_NO_SSLv2: float with get, set
-        abstract SSL_OP_NO_SSLv3: float with get, set
-        abstract SSL_OP_NO_TICKET: float with get, set
-        abstract SSL_OP_NO_TLSv1: float with get, set
-        abstract SSL_OP_NO_TLSv1_1: float with get, set
-        abstract SSL_OP_NO_TLSv1_2: float with get, set
-        abstract SSL_OP_PKCS1_CHECK_1: float with get, set
-        abstract SSL_OP_PKCS1_CHECK_2: float with get, set
-        abstract SSL_OP_SINGLE_DH_USE: float with get, set
-        abstract SSL_OP_SINGLE_ECDH_USE: float with get, set
-        abstract SSL_OP_SSLEAY_080_CLIENT_DH_BUG: float with get, set
-        abstract SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG: float with get, set
-        abstract SSL_OP_TLS_BLOCK_PADDING_BUG: float with get, set
-        abstract SSL_OP_TLS_D5_BUG: float with get, set
-        abstract SSL_OP_TLS_ROLLBACK_BUG: float with get, set
-        abstract ENGINE_METHOD_DSA: float with get, set
-        abstract ENGINE_METHOD_DH: float with get, set
-        abstract ENGINE_METHOD_RAND: float with get, set
-        abstract ENGINE_METHOD_ECDH: float with get, set
-        abstract ENGINE_METHOD_ECDSA: float with get, set
-        abstract ENGINE_METHOD_CIPHERS: float with get, set
-        abstract ENGINE_METHOD_DIGESTS: float with get, set
-        abstract ENGINE_METHOD_STORE: float with get, set
-        abstract ENGINE_METHOD_PKEY_METHS: float with get, set
-        abstract ENGINE_METHOD_PKEY_ASN1_METHS: float with get, set
-        abstract ENGINE_METHOD_ALL: float with get, set
-        abstract ENGINE_METHOD_NONE: float with get, set
-        abstract DH_CHECK_P_NOT_SAFE_PRIME: float with get, set
-        abstract DH_CHECK_P_NOT_PRIME: float with get, set
-        abstract DH_UNABLE_TO_CHECK_GENERATOR: float with get, set
-        abstract DH_NOT_SUITABLE_GENERATOR: float with get, set
-        abstract NPN_ENABLED: float with get, set
-        abstract RSA_PKCS1_PADDING: float with get, set
-        abstract RSA_SSLV23_PADDING: float with get, set
-        abstract RSA_NO_PADDING: float with get, set
-        abstract RSA_PKCS1_OAEP_PADDING: float with get, set
-        abstract RSA_X931_PADDING: float with get, set
-        abstract RSA_PKCS1_PSS_PADDING: float with get, set
-        abstract POINT_CONVERSION_COMPRESSED: float with get, set
-        abstract POINT_CONVERSION_UNCOMPRESSED: float with get, set
-        abstract POINT_CONVERSION_HYBRID: float with get, set
-        abstract O_RDONLY: float with get, set
-        abstract O_WRONLY: float with get, set
-        abstract O_RDWR: float with get, set
-        abstract S_IFMT: float with get, set
-        abstract S_IFREG: float with get, set
-        abstract S_IFDIR: float with get, set
-        abstract S_IFCHR: float with get, set
-        abstract S_IFBLK: float with get, set
-        abstract S_IFIFO: float with get, set
-        abstract S_IFSOCK: float with get, set
-        abstract S_IRWXU: float with get, set
-        abstract S_IRUSR: float with get, set
-        abstract S_IWUSR: float with get, set
-        abstract S_IXUSR: float with get, set
-        abstract S_IRWXG: float with get, set
-        abstract S_IRGRP: float with get, set
-        abstract S_IWGRP: float with get, set
-        abstract S_IXGRP: float with get, set
-        abstract S_IRWXO: float with get, set
-        abstract S_IROTH: float with get, set
-        abstract S_IWOTH: float with get, set
-        abstract S_IXOTH: float with get, set
-        abstract S_IFLNK: float with get, set
-        abstract O_CREAT: float with get, set
-        abstract O_EXCL: float with get, set
-        abstract O_NOCTTY: float with get, set
-        abstract O_DIRECTORY: float with get, set
-        abstract O_NOATIME: float with get, set
-        abstract O_NOFOLLOW: float with get, set
-        abstract O_SYNC: float with get, set
-        abstract O_DSYNC: float with get, set
-        abstract O_SYMLINK: float with get, set
-        abstract O_DIRECT: float with get, set
-        abstract O_NONBLOCK: float with get, set
-        abstract O_TRUNC: float with get, set
-        abstract O_APPEND: float with get, set
-        abstract F_OK: float with get, set
-        abstract R_OK: float with get, set
-        abstract W_OK: float with get, set
-        abstract X_OK: float with get, set
-        abstract UV_UDP_REUSEADDR: float with get, set
-        abstract SIGQUIT: float with get, set
-        abstract SIGTRAP: float with get, set
-        abstract SIGIOT: float with get, set
-        abstract SIGBUS: float with get, set
-        abstract SIGUSR1: float with get, set
-        abstract SIGUSR2: float with get, set
-        abstract SIGPIPE: float with get, set
-        abstract SIGALRM: float with get, set
-        abstract SIGCHLD: float with get, set
-        abstract SIGSTKFLT: float with get, set
-        abstract SIGCONT: float with get, set
-        abstract SIGSTOP: float with get, set
-        abstract SIGTSTP: float with get, set
-        abstract SIGTTIN: float with get, set
-        abstract SIGTTOU: float with get, set
-        abstract SIGURG: float with get, set
-        abstract SIGXCPU: float with get, set
-        abstract SIGXFSZ: float with get, set
-        abstract SIGVTALRM: float with get, set
-        abstract SIGPROF: float with get, set
-        abstract SIGIO: float with get, set
-        abstract SIGPOLL: float with get, set
-        abstract SIGPWR: float with get, set
-        abstract SIGSYS: float with get, set
-        abstract SIGUNUSED: float with get, set
-        abstract defaultCoreCipherList: string with get, set
-        abstract defaultCipherList: string with get, set
-        abstract ENGINE_METHOD_RSA: float with get, set
-        abstract ALPN_ENABLED: float with get, set
+        abstract E2BIG: float
+        abstract EACCES: float
+        abstract EADDRINUSE: float
+        abstract EADDRNOTAVAIL: float
+        abstract EAFNOSUPPORT: float
+        abstract EAGAIN: float
+        abstract EALREADY: float
+        abstract EBADF: float
+        abstract EBADMSG: float
+        abstract EBUSY: float
+        abstract ECANCELED: float
+        abstract ECHILD: float
+        abstract ECONNABORTED: float
+        abstract ECONNREFUSED: float
+        abstract ECONNRESET: float
+        abstract EDEADLK: float
+        abstract EDESTADDRREQ: float
+        abstract EDOM: float
+        abstract EEXIST: float
+        abstract EFAULT: float
+        abstract EFBIG: float
+        abstract EHOSTUNREACH: float
+        abstract EIDRM: float
+        abstract EILSEQ: float
+        abstract EINPROGRESS: float
+        abstract EINTR: float
+        abstract EINVAL: float
+        abstract EIO: float
+        abstract EISCONN: float
+        abstract EISDIR: float
+        abstract ELOOP: float
+        abstract EMFILE: float
+        abstract EMLINK: float
+        abstract EMSGSIZE: float
+        abstract ENAMETOOLONG: float
+        abstract ENETDOWN: float
+        abstract ENETRESET: float
+        abstract ENETUNREACH: float
+        abstract ENFILE: float
+        abstract ENOBUFS: float
+        abstract ENODATA: float
+        abstract ENODEV: float
+        abstract ENOENT: float
+        abstract ENOEXEC: float
+        abstract ENOLCK: float
+        abstract ENOLINK: float
+        abstract ENOMEM: float
+        abstract ENOMSG: float
+        abstract ENOPROTOOPT: float
+        abstract ENOSPC: float
+        abstract ENOSR: float
+        abstract ENOSTR: float
+        abstract ENOSYS: float
+        abstract ENOTCONN: float
+        abstract ENOTDIR: float
+        abstract ENOTEMPTY: float
+        abstract ENOTSOCK: float
+        abstract ENOTSUP: float
+        abstract ENOTTY: float
+        abstract ENXIO: float
+        abstract EOPNOTSUPP: float
+        abstract EOVERFLOW: float
+        abstract EPERM: float
+        abstract EPIPE: float
+        abstract EPROTO: float
+        abstract EPROTONOSUPPORT: float
+        abstract EPROTOTYPE: float
+        abstract ERANGE: float
+        abstract EROFS: float
+        abstract ESPIPE: float
+        abstract ESRCH: float
+        abstract ETIME: float
+        abstract ETIMEDOUT: float
+        abstract ETXTBSY: float
+        abstract EWOULDBLOCK: float
+        abstract EXDEV: float
+        abstract WSAEINTR: float
+        abstract WSAEBADF: float
+        abstract WSAEACCES: float
+        abstract WSAEFAULT: float
+        abstract WSAEINVAL: float
+        abstract WSAEMFILE: float
+        abstract WSAEWOULDBLOCK: float
+        abstract WSAEINPROGRESS: float
+        abstract WSAEALREADY: float
+        abstract WSAENOTSOCK: float
+        abstract WSAEDESTADDRREQ: float
+        abstract WSAEMSGSIZE: float
+        abstract WSAEPROTOTYPE: float
+        abstract WSAENOPROTOOPT: float
+        abstract WSAEPROTONOSUPPORT: float
+        abstract WSAESOCKTNOSUPPORT: float
+        abstract WSAEOPNOTSUPP: float
+        abstract WSAEPFNOSUPPORT: float
+        abstract WSAEAFNOSUPPORT: float
+        abstract WSAEADDRINUSE: float
+        abstract WSAEADDRNOTAVAIL: float
+        abstract WSAENETDOWN: float
+        abstract WSAENETUNREACH: float
+        abstract WSAENETRESET: float
+        abstract WSAECONNABORTED: float
+        abstract WSAECONNRESET: float
+        abstract WSAENOBUFS: float
+        abstract WSAEISCONN: float
+        abstract WSAENOTCONN: float
+        abstract WSAESHUTDOWN: float
+        abstract WSAETOOMANYREFS: float
+        abstract WSAETIMEDOUT: float
+        abstract WSAECONNREFUSED: float
+        abstract WSAELOOP: float
+        abstract WSAENAMETOOLONG: float
+        abstract WSAEHOSTDOWN: float
+        abstract WSAEHOSTUNREACH: float
+        abstract WSAENOTEMPTY: float
+        abstract WSAEPROCLIM: float
+        abstract WSAEUSERS: float
+        abstract WSAEDQUOT: float
+        abstract WSAESTALE: float
+        abstract WSAEREMOTE: float
+        abstract WSASYSNOTREADY: float
+        abstract WSAVERNOTSUPPORTED: float
+        abstract WSANOTINITIALISED: float
+        abstract WSAEDISCON: float
+        abstract WSAENOMORE: float
+        abstract WSAECANCELLED: float
+        abstract WSAEINVALIDPROCTABLE: float
+        abstract WSAEINVALIDPROVIDER: float
+        abstract WSAEPROVIDERFAILEDINIT: float
+        abstract WSASYSCALLFAILURE: float
+        abstract WSASERVICE_NOT_FOUND: float
+        abstract WSATYPE_NOT_FOUND: float
+        abstract WSA_E_NO_MORE: float
+        abstract WSA_E_CANCELLED: float
+        abstract WSAEREFUSED: float
+        abstract SIGHUP: float
+        abstract SIGINT: float
+        abstract SIGILL: float
+        abstract SIGABRT: float
+        abstract SIGFPE: float
+        abstract SIGKILL: float
+        abstract SIGSEGV: float
+        abstract SIGTERM: float
+        abstract SIGBREAK: float
+        abstract SIGWINCH: float
+        abstract SSL_OP_ALL: float
+        abstract SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION: float
+        abstract SSL_OP_CIPHER_SERVER_PREFERENCE: float
+        abstract SSL_OP_CISCO_ANYCONNECT: float
+        abstract SSL_OP_COOKIE_EXCHANGE: float
+        abstract SSL_OP_CRYPTOPRO_TLSEXT_BUG: float
+        abstract SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS: float
+        abstract SSL_OP_EPHEMERAL_RSA: float
+        abstract SSL_OP_LEGACY_SERVER_CONNECT: float
+        abstract SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER: float
+        abstract SSL_OP_MICROSOFT_SESS_ID_BUG: float
+        abstract SSL_OP_MSIE_SSLV2_RSA_PADDING: float
+        abstract SSL_OP_NETSCAPE_CA_DN_BUG: float
+        abstract SSL_OP_NETSCAPE_CHALLENGE_BUG: float
+        abstract SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG: float
+        abstract SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG: float
+        abstract SSL_OP_NO_COMPRESSION: float
+        abstract SSL_OP_NO_QUERY_MTU: float
+        abstract SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: float
+        abstract SSL_OP_NO_SSLv2: float
+        abstract SSL_OP_NO_SSLv3: float
+        abstract SSL_OP_NO_TICKET: float
+        abstract SSL_OP_NO_TLSv1: float
+        abstract SSL_OP_NO_TLSv1_1: float
+        abstract SSL_OP_NO_TLSv1_2: float
+        abstract SSL_OP_PKCS1_CHECK_1: float
+        abstract SSL_OP_PKCS1_CHECK_2: float
+        abstract SSL_OP_SINGLE_DH_USE: float
+        abstract SSL_OP_SINGLE_ECDH_USE: float
+        abstract SSL_OP_SSLEAY_080_CLIENT_DH_BUG: float
+        abstract SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG: float
+        abstract SSL_OP_TLS_BLOCK_PADDING_BUG: float
+        abstract SSL_OP_TLS_D5_BUG: float
+        abstract SSL_OP_TLS_ROLLBACK_BUG: float
+        abstract ENGINE_METHOD_DSA: float
+        abstract ENGINE_METHOD_DH: float
+        abstract ENGINE_METHOD_RAND: float
+        abstract ENGINE_METHOD_ECDH: float
+        abstract ENGINE_METHOD_ECDSA: float
+        abstract ENGINE_METHOD_CIPHERS: float
+        abstract ENGINE_METHOD_DIGESTS: float
+        abstract ENGINE_METHOD_STORE: float
+        abstract ENGINE_METHOD_PKEY_METHS: float
+        abstract ENGINE_METHOD_PKEY_ASN1_METHS: float
+        abstract ENGINE_METHOD_ALL: float
+        abstract ENGINE_METHOD_NONE: float
+        abstract DH_CHECK_P_NOT_SAFE_PRIME: float
+        abstract DH_CHECK_P_NOT_PRIME: float
+        abstract DH_UNABLE_TO_CHECK_GENERATOR: float
+        abstract DH_NOT_SUITABLE_GENERATOR: float
+        abstract NPN_ENABLED: float
+        abstract RSA_PKCS1_PADDING: float
+        abstract RSA_SSLV23_PADDING: float
+        abstract RSA_NO_PADDING: float
+        abstract RSA_PKCS1_OAEP_PADDING: float
+        abstract RSA_X931_PADDING: float
+        abstract RSA_PKCS1_PSS_PADDING: float
+        abstract POINT_CONVERSION_COMPRESSED: float
+        abstract POINT_CONVERSION_UNCOMPRESSED: float
+        abstract POINT_CONVERSION_HYBRID: float
+        abstract O_RDONLY: float
+        abstract O_WRONLY: float
+        abstract O_RDWR: float
+        abstract S_IFMT: float
+        abstract S_IFREG: float
+        abstract S_IFDIR: float
+        abstract S_IFCHR: float
+        abstract S_IFBLK: float
+        abstract S_IFIFO: float
+        abstract S_IFSOCK: float
+        abstract S_IRWXU: float
+        abstract S_IRUSR: float
+        abstract S_IWUSR: float
+        abstract S_IXUSR: float
+        abstract S_IRWXG: float
+        abstract S_IRGRP: float
+        abstract S_IWGRP: float
+        abstract S_IXGRP: float
+        abstract S_IRWXO: float
+        abstract S_IROTH: float
+        abstract S_IWOTH: float
+        abstract S_IXOTH: float
+        abstract S_IFLNK: float
+        abstract O_CREAT: float
+        abstract O_EXCL: float
+        abstract O_NOCTTY: float
+        abstract O_DIRECTORY: float
+        abstract O_NOATIME: float
+        abstract O_NOFOLLOW: float
+        abstract O_SYNC: float
+        abstract O_DSYNC: float
+        abstract O_SYMLINK: float
+        abstract O_DIRECT: float
+        abstract O_NONBLOCK: float
+        abstract O_TRUNC: float
+        abstract O_APPEND: float
+        abstract F_OK: float
+        abstract R_OK: float
+        abstract W_OK: float
+        abstract X_OK: float
+        abstract UV_UDP_REUSEADDR: float
+        abstract SIGQUIT: float
+        abstract SIGTRAP: float
+        abstract SIGIOT: float
+        abstract SIGBUS: float
+        abstract SIGUSR1: float
+        abstract SIGUSR2: float
+        abstract SIGPIPE: float
+        abstract SIGALRM: float
+        abstract SIGCHLD: float
+        abstract SIGSTKFLT: float
+        abstract SIGCONT: float
+        abstract SIGSTOP: float
+        abstract SIGTSTP: float
+        abstract SIGTTIN: float
+        abstract SIGTTOU: float
+        abstract SIGURG: float
+        abstract SIGXCPU: float
+        abstract SIGXFSZ: float
+        abstract SIGVTALRM: float
+        abstract SIGPROF: float
+        abstract SIGIO: float
+        abstract SIGPOLL: float
+        abstract SIGPWR: float
+        abstract SIGSYS: float
+        abstract SIGUNUSED: float
+        abstract defaultCoreCipherList: string
+        abstract defaultCipherList: string
+        abstract ENGINE_METHOD_RSA: float
+        abstract ALPN_ENABLED: float
 
 module v8 =
 
@@ -4398,10 +4398,10 @@ module _debugger =
 
     type [<AllowNullLiteral>] IExports =
         abstract Protocol: ProtocolStatic
-        abstract NO_FRAME: float with get, set
-        abstract port: float with get, set
+        abstract NO_FRAME: float
+        abstract port: float
         abstract SourceInfo: body: BreakResponse -> string
-        abstract Client: obj with get, set
+        abstract Client: obj
 
     type [<AllowNullLiteral>] Packet =
         abstract raw: string with get, set
@@ -4565,7 +4565,7 @@ module http2 =
     type OutgoingHttpHeaders = http.OutgoingHttpHeaders
 
     type [<AllowNullLiteral>] IExports =
-        abstract constants: obj with get, set
+        abstract constants: obj
         abstract getDefaultSettings: unit -> Settings
         abstract getPackedSettings: settings: Settings -> Settings
         abstract getUnpackedSettings: buf: U2<Buffer, Uint8Array> -> Settings
