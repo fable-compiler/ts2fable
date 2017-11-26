@@ -2450,6 +2450,8 @@ module fs =
     type URL = url.URL
 
     type [<AllowNullLiteral>] IExports =
+        // let [<Import("*","constants")>] constants: constants.IExports = jsNative
+        abstract constants: constants.IExports
         abstract Stats: StatsStatic
         abstract ReadStream: ReadStreamStatic
         abstract WriteStream: WriteStreamStatic

@@ -99,6 +99,8 @@ let argv = ``process``.argv |> List.ofSeq
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
+    printfn "Node O_RDWR %A" Node.fs.constants.O_RDWR // read/write should be 2
+
     // used by ts2fable
     writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/TypeScript.fs"
     writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Node.fs"
