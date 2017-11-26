@@ -3102,7 +3102,6 @@ module fs =
             /// to remove the destination.
             abstract __promisify__: src: PathLike * dst: PathLike * ?flags: float -> Promise<unit>
 
-    [<AutoOpen>]
     module AliasUnionHelpers =
 
         [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
