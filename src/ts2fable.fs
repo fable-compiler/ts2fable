@@ -3,7 +3,7 @@ module ts2fable.App
 open Fable.Core
 open Fable.Core.JsInterop
 open TypeScript
-open TypeScript.ts
+open TypeScript.Ts
 open Node
 open Yargs
 
@@ -47,7 +47,7 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     // for tsPath in tsPaths do
     //     path.existsSync(tsPath)
 
-    let options = jsOptions<ts.CompilerOptions>(fun o ->
+    let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
         o.``module`` <- Some ModuleKind.CommonJS
     )

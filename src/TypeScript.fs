@@ -4,16 +4,16 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
-let [<Import("*","typescript")>] ts: ts.IExports = jsNative
+let [<Import("*","typescript")>] ts: Ts.IExports = jsNative
 
 type [<AllowNullLiteral>] IExports =
     abstract setTimeout: handler: (ResizeArray<obj option> -> unit) * timeout: float -> obj option
     abstract clearTimeout: handle: obj option -> unit
 
-module ts =
+module Ts =
+    let ScriptSnapshot: ScriptSnapshot.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
-        abstract ScriptSnapshot: ScriptSnapshot.IExports
         abstract OperationCanceledException: OperationCanceledExceptionStatic
         abstract versionMajorMinor: obj
         abstract version: string

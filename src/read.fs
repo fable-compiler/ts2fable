@@ -4,7 +4,7 @@ open Fable.Core
 open Fable.Core.JsInterop
 open Node
 open TypeScript
-open TypeScript.ts
+open TypeScript.Ts
 open System.Collections.Generic
 open System
 open ts2fable.Naming
@@ -127,7 +127,7 @@ let readTypeLiteral (checker: TypeChecker) (tl: TypeLiteralNode): FsTypeLiteral 
         Members = tl.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
     }
 
-let getFullTypeName (checker: TypeChecker) (tp: ts.Type) =
+let getFullTypeName (checker: TypeChecker) (tp: Ts.Type) =
     match tp.symbol with
     | None -> ""
     | Some smb -> checker.getFullyQualifiedName smb

@@ -4,9 +4,9 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
-let [<Import("*","yargs")>] yargs: yargs.Argv = jsNative
+let [<Import("*","yargs")>] yargs: Yargs.Argv = jsNative
 
-module yargs =
+module Yargs =
 
     type [<AllowNullLiteral>] Argv =
         abstract argv: Arguments with get, set
