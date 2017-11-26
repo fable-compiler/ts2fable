@@ -4,7 +4,6 @@ open Fable.Core
 open Fable.Core.JsInterop
 open TypeScript
 open TypeScript.ts
-open System.Collections.Generic
 open Node
 open Yargs
 
@@ -41,6 +40,7 @@ let transform (file: FsFile): FsFile =
     |> removeTypeParamsFromStatic
     |> removeDuplicateFunctions
     |> extractTypeLiterals // after fixEscapeWords
+    |> addAliasUnionHelpers
 
 let writeFile (tsPaths: string list) (fsPath: string): unit =
 
@@ -54,7 +54,7 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     )
     let setParentNodes = true
     let host = ts.createCompilerHost(options, setParentNodes)
-    let program = ts.createProgram(List tsPaths, options, host)
+    let program = ts.createProgram(ResizeArray tsPaths, options, host)
     let tsFiles = tsPaths |> List.map program.getSourceFile
     let checker = program.getTypeChecker()
 
@@ -88,7 +88,7 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
         }
         |> fixOpens
 
-    let file = fs.createWriteStream (PathLike.ofString fsPath)
+    let file = fs.createWriteStream (!^fsPath)
     for line in printFsFile fsFileOut do
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``()
@@ -144,7 +144,7 @@ else
 
         // validate ts files exist
         for ts in tsfiles do
-            if fs.existsSync(PathLike.ofString ts) = false then
+            if not <| fs.existsSync(!^ts) then
                 failwithf "TypeScript file not found: %s" ts
 
         writeFile tsfiles fsf

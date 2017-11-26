@@ -286,9 +286,9 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
         match tp with
         | FsType.Function fn ->
             if fn.HasStringLiteralParams then
-                let kind = List()
-                let name = List()
-                let prms = List()
+                let kind = ResizeArray()
+                let name = ResizeArray()
+                let prms = ResizeArray()
                 sprintf "$0.%s(" fn.Name.Value |> kind.Add
                 sprintf "%s" fn.Name.Value |> name.Add
                 let slCount = ref 0
@@ -835,5 +835,77 @@ let extractTypeLiterals(f: FsFile): FsFile =
                 )
             }
             |> FsType.Module
+        | _ -> tp
+    )
+
+let addAliasUnionHelpers(f: FsFile): FsFile =
+    
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Module md ->
+            let helpers = ResizeArray<FsType>()
+
+            { md with
+                Types = 
+                    (md.Types |> List.collect(fun tp2 ->
+                        match tp2 with
+                        | FsType.Alias al ->
+                            match al.Type with
+                            | FsType.Union un ->
+                                if un.Types.Length > 1 then
+                                    // [tp2] @
+                                    // [
+                                        {
+                                            Attributes = ["RequireQualifiedAccess"; "CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix"]
+                                            HasDeclare = false
+                                            Name = al.Name
+                                            Types = []
+                                            HelperLines =
+                                                let mutable i = 0
+                                                un.Types |> List.collect (fun tp3 ->
+                                                    let n = un.Types.Length
+                                                    i <- i + 1
+                                                    let name = getName tp3
+                                                    let name = if name = "" then sprintf "Case%d" i else name
+                                                    let name = name.Replace("'","") // strip generics
+                                                    let name = capitalize name
+                                                    let aliasNameWithTypes = sprintf "%s%s" al.Name (Print.printTypeParameters al.TypeParameters)
+                                                    if un.Option then
+                                                        [
+                                                            sprintf "let of%sOption v: %s = v |> Option.map U%d.Case%d" name aliasNameWithTypes n i
+                                                            sprintf "let of%s v: %s = v |> U%d.Case%d |> Some" name aliasNameWithTypes n i
+                                                            sprintf "let is%s (v: %s) = match v with None -> false | Some o -> match o with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
+                                                            sprintf "let as%s (v: %s) = match v with None -> None | Some o -> match o with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
+                                                        ]
+                                                    else
+                                                        [
+                                                            sprintf "let of%s v: %s = v |> U%d.Case%d" name aliasNameWithTypes n i
+                                                            sprintf "let is%s (v: %s) = match v with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
+                                                            sprintf "let as%s (v: %s) = match v with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
+                                                        ]
+                                                )
+                                        }
+                                        |> FsType.Module
+                                        |> helpers.Add
+                                    // ]
+                                        [tp2]
+                                else [tp2]
+                            | _ -> [tp2]
+                        | _ -> [tp2]
+                    ))
+                    @
+                    [
+                        {
+                            Attributes = [] // ["AutoOpen"] TODO fails too
+                            HasDeclare = false
+                            Name = "AliasUnionHelpers"
+                            Types = helpers |> List.ofSeq
+                            HelperLines = []
+                        }
+                        |> FsType.Module
+                    ]
+            }
+            |> FsType.Module
+
         | _ -> tp
     )

@@ -1,125 +1,24 @@
 module rec ts2fable.Write
-open System.Collections.Generic
 open ts2fable.Naming
+open ts2fable.Print
 
-let printType (tp: FsType): string =
-    match tp with
-    | FsType.Mapped mp -> mp.Name
-    | FsType.TODO -> "TODO"
-    | FsType.Array at ->
-        sprintf "ResizeArray<%s>" (printType at)
-    | FsType.Union un ->
-        if un.Types.Length = 1 then
-            sprintf "%s%s" (printType un.Types.[0]) (if un.Option then " option" else "")
-        else
-            let line = List()
-            sprintf "U%d<" un.Types.Length |> line.Add
-            un.Types |> List.map printType |> String.concat ", " |> line.Add
-            sprintf ">%s" (if un.Option then " option" else "") |> line.Add
-            line |> String.concat ""
-    | FsType.Generic g ->
-        let line = List()
-        sprintf "%s" (printType g.Type) |> line.Add
-        if g.TypeParameters.Length > 0 then
-            "<" |> line.Add
-            g.TypeParameters |> List.map printType |> String.concat ", " |> line.Add
-            ">" |> line.Add
-        line |> String.concat ""
-    | FsType.Function ft ->
-        let line = List()
-        let typs =
-            if ft.Params.Length = 0 then
-                [ simpleType "unit"; ft.ReturnType ]
-            else
-                (ft.Params |> List.map (fun p -> p.Type)) @ [ ft.ReturnType ]
-        "(" |> line.Add
-        typs |> List.map printType |> String.concat " -> " |> line.Add
-        ")"|> line.Add
-        line |> String.concat ""
-    | FsType.Tuple tp ->
-        let line = List()
-        tp.Types |> List.map printType |> String.concat " * " |> line.Add
-        line |> String.concat ""
-    | FsType.Variable vb ->
-        let vtp = vb.Type |> printType
-        sprintf "abstract %s: %s with get, set" vb.Name vtp
-    | FsType.StringLiteral _ -> "string"
-    | FsType.TypeLiteral _ ->
-        // printfn "TypeLiteral %A" tp
-        "obj"
-    | _ ->
-        printfn "unsupported printType %A" tp
-        "obj"
-
-let printFunction (f: FsFunction): string =
-    let line = List()
-
-    match f.Kind with
-    | FsFunctionKind.Regular -> ()
-    | FsFunctionKind.Constructor ->
-        "[<Emit \"new $0($1...)\">] " |> line.Add
-    | FsFunctionKind.Call ->
-        "[<Emit \"$0($1...)\">] " |> line.Add
-    | FsFunctionKind.StringParam emit ->
-        sprintf  "[<Emit \"%s\">] " emit |> line.Add
-
-    sprintf "abstract %s" f.Name.Value |> line.Add
-    let prms = 
-        f.Params |> List.map(fun p ->
-            if p.ParamArray then
-                sprintf "[<ParamArray>] %s%s: %s" (if p.Optional then "?" else "") p.Name
-                    (   match p.Type with
-                        | FsType.Array _ -> printType p.Type
-                        | _ -> 
-                            // failwithf "function with unsupported param array type: %s" f.Name.Value
-                            printfn "ParamArray function is not an array type: %s" (getName(FsType.Function f))
-                            printType p.Type
-                    )
-            else
-                sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name (printType p.Type)
-        )
-    if prms.Length = 0 then
-        sprintf ": unit" |> line.Add
-    else
-        sprintf ": %s" (prms |> String.concat " * ") |> line.Add
-    sprintf " -> %s" (printType f.ReturnType) |> line.Add
-    line |> String.concat ""
-let printProperty (pr: FsProperty): string =
-    sprintf "%sabstract %s: %s%s%s%s"
-        (   match pr.Kind with
-            | FsPropertyKind.Regular -> ""
-            | FsPropertyKind.Index -> "[<Emit \"$0[$1]{{=$2}}\">] "
-        )
-        pr.Name
-        (   match pr.Index with
-            | None -> ""
-            | Some idx -> sprintf "%s: %s -> " idx.Name (printType idx.Type)
-        )
-        (printType pr.Type)
-        (if pr.Option then " option" else "")
-        (if pr.IsReadonly then "" else " with get, set")
-
-let printTypeParameters (tps: FsType list): string =
-    if tps.Length = 0 then ""
-    else
-        let line = List()
-        line.Add "<"
-        tps |> List.map printType |> String.concat ", " |> line.Add
-        line.Add ">"
-        line |> String.concat ""
-
-let printComments (lines: List<string>) (indent: string) (comments: string list): unit =
+let printComments (lines: ResizeArray<string>) (indent: string) (comments: string list): unit =
     for comment in comments do
         sprintf "%s/// %s" indent comment |> lines.Add
 
-let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit =
+let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
     let lineCountStart = lines.Count
     let indent =
         if md.Name <> "" then
             "" |> lines.Add
+            if md.HasAttributes then
+                sprintf "%s[<%s)>]" indent (md.Attributes |> String.concat "; " ) |> lines.Add
             sprintf "%smodule %s =" indent md.Name |> lines.Add
             sprintf "%s    " indent
         else indent
+
+    for line in md.HelperLines do
+        sprintf "%s%s" indent line |> lines.Add
 
     // print module aliases first
     for tp in md.Types do
@@ -179,7 +78,7 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
                 for cs in en.Cases do
                     let nm = cs.Name
                     let unm = createEnumName nm
-                    let line = List()
+                    let line = ResizeArray()
                     sprintf "    | %s" unm |> line.Add
                     if cs.Value.IsSome then
                         sprintf " = %s" cs.Value.Value |> line.Add
@@ -190,7 +89,7 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
                     let nm = cs.Name
                     let v = cs.Value |> Option.defaultValue nm
                     let unm = createEnumName nm
-                    let line = List()
+                    let line = ResizeArray()
                     if nameEqualsDefaultFableValue unm v then
                         sprintf "    | %s" unm |> line.Add
                     else
@@ -227,8 +126,8 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
         for _ in 0..1 do
             lines.RemoveAt (lines.Count-1)
 
-let printFsFile (file: FsFileOut): List<string> =
-    let lines = List<string>()
+let printFsFile (file: FsFileOut): ResizeArray<string> =
+    let lines = ResizeArray<string>()
 
     sprintf "// ts2fable %s" Version.version |> lines.Add
     sprintf "module rec %s" file.Namespace |> lines.Add

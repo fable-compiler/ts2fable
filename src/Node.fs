@@ -1330,6 +1330,17 @@ module os =
     type NetworkInterfaceInfo =
         U2<NetworkInterfaceInfoIPv4, NetworkInterfaceInfoIPv6>
 
+    module AliasUnionHelpers =
+
+        [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module NetworkInterfaceInfo =
+            let ofNetworkInterfaceInfoIPv4 v: NetworkInterfaceInfo = v |> U2.Case1
+            let isNetworkInterfaceInfoIPv4 (v: NetworkInterfaceInfo) = match v with U2.Case1 _ -> true | _ -> false
+            let asNetworkInterfaceInfoIPv4 (v: NetworkInterfaceInfo) = match v with U2.Case1 o -> Some o | _ -> None
+            let ofNetworkInterfaceInfoIPv6 v: NetworkInterfaceInfo = v |> U2.Case2
+            let isNetworkInterfaceInfoIPv6 (v: NetworkInterfaceInfo) = match v with U2.Case2 _ -> true | _ -> false
+            let asNetworkInterfaceInfoIPv6 (v: NetworkInterfaceInfo) = match v with U2.Case2 o -> Some o | _ -> None
+
 module https =
     type URL = url.URL
 
@@ -2324,6 +2335,26 @@ module net =
     type NetConnectOpts =
         U2<TcpNetConnectOpts, IpcNetConnectOpts>
 
+    module AliasUnionHelpers =
+
+        [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module SocketConnectOpts =
+            let ofTcpSocketConnectOpts v: SocketConnectOpts = v |> U2.Case1
+            let isTcpSocketConnectOpts (v: SocketConnectOpts) = match v with U2.Case1 _ -> true | _ -> false
+            let asTcpSocketConnectOpts (v: SocketConnectOpts) = match v with U2.Case1 o -> Some o | _ -> None
+            let ofIpcSocketConnectOpts v: SocketConnectOpts = v |> U2.Case2
+            let isIpcSocketConnectOpts (v: SocketConnectOpts) = match v with U2.Case2 _ -> true | _ -> false
+            let asIpcSocketConnectOpts (v: SocketConnectOpts) = match v with U2.Case2 o -> Some o | _ -> None
+
+        [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module NetConnectOpts =
+            let ofTcpNetConnectOpts v: NetConnectOpts = v |> U2.Case1
+            let isTcpNetConnectOpts (v: NetConnectOpts) = match v with U2.Case1 _ -> true | _ -> false
+            let asTcpNetConnectOpts (v: NetConnectOpts) = match v with U2.Case1 o -> Some o | _ -> None
+            let ofIpcNetConnectOpts v: NetConnectOpts = v |> U2.Case2
+            let isIpcNetConnectOpts (v: NetConnectOpts) = match v with U2.Case2 _ -> true | _ -> false
+            let asIpcNetConnectOpts (v: NetConnectOpts) = match v with U2.Case2 o -> Some o | _ -> None
+
 module dgram =
 
     type [<AllowNullLiteral>] IExports =
@@ -3070,6 +3101,20 @@ module fs =
             /// If an error occurs after the destination file has been opened for writing, Node.js will attempt
             /// to remove the destination.
             abstract __promisify__: src: PathLike * dst: PathLike * ?flags: float -> Promise<unit>
+
+    module AliasUnionHelpers =
+
+        [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module PathLike =
+            let ofString v: PathLike = v |> U3.Case1
+            let isString (v: PathLike) = match v with U3.Case1 _ -> true | _ -> false
+            let asString (v: PathLike) = match v with U3.Case1 o -> Some o | _ -> None
+            let ofBuffer v: PathLike = v |> U3.Case2
+            let isBuffer (v: PathLike) = match v with U3.Case2 _ -> true | _ -> false
+            let asBuffer (v: PathLike) = match v with U3.Case2 o -> Some o | _ -> None
+            let ofURL v: PathLike = v |> U3.Case3
+            let isURL (v: PathLike) = match v with U3.Case3 _ -> true | _ -> false
+            let asURL (v: PathLike) = match v with U3.Case3 o -> Some o | _ -> None
 
 module path =
 

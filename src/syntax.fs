@@ -180,6 +180,8 @@ type FsModule =
         HasDeclare: bool
         Name: string
         Types: FsType list
+        HelperLines: string list
+        Attributes: string list
     }
 
 type FsFile =
@@ -260,6 +262,10 @@ let rec getName (tp: FsType) =
     | FsType.Module md -> md.Name
     | FsType.File fl -> fl.ModuleName
     | FsType.Generic gn -> getName gn.Type
+    | FsType.Mapped mp -> mp.Name
+    | FsType.Array ar ->
+        let name = getName ar
+        if name = "" then "" else sprintf "%sArray" name
     | _ -> ""
 
 let rec getFullName (tp: FsType) =
@@ -272,3 +278,7 @@ let rec getFullName (tp: FsType) =
 
 type FsVariable with
     member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal
+
+type FsModule with
+    member x.IsHelper = x.HelperLines.Length > 0
+    member x.HasAttributes = x.Attributes.Length > 0
