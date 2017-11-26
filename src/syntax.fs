@@ -181,6 +181,7 @@ type FsModule =
         Name: string
         Types: FsType list
         HelperLines: string list
+        Attributes: string list
     }
 
 type FsFile =
@@ -280,3 +281,4 @@ type FsVariable with
 
 type FsModule with
     member x.IsHelper = x.HelperLines.Length > 0
+    member x.HasAttributes = x.Attributes.Length > 0

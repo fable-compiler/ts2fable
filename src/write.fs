@@ -12,8 +12,8 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
     let indent =
         if md.Name <> "" then
             "" |> lines.Add
-            if md.IsHelper then
-                sprintf "%s[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]" indent |> lines.Add
+            if md.HasAttributes then
+                sprintf "%s[<%s)>]" indent (md.Attributes |> String.concat "; " ) |> lines.Add
             sprintf "%smodule %s =" indent md.Name |> lines.Add
             sprintf "%s    " indent
         else indent
