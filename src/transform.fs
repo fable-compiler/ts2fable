@@ -839,12 +839,9 @@ let extractTypeLiterals(f: FsFile): FsFile =
     )
 
 let addAliasUnionHelpers(f: FsFile): FsFile =
-    
     f |> fixFile (fun tp ->
         match tp with
         | FsType.Module md ->
-            let helpers = ResizeArray<FsType>()
-
             { md with
                 Types = 
                     (md.Types |> List.collect(fun tp2 ->
@@ -853,8 +850,8 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                             match al.Type with
                             | FsType.Union un ->
                                 if un.Types.Length > 1 then
-                                    // [tp2] @
-                                    // [
+                                    [tp2] @
+                                    [
                                         {
                                             Attributes = ["RequireQualifiedAccess"; "CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix"]
                                             HasDeclare = false
@@ -886,26 +883,12 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                                                 )
                                         }
                                         |> FsType.Module
-                                        |> helpers.Add
-                                    // ]
-                                        [tp2]
+                                    ]
                                 else [tp2]
                             | _ -> [tp2]
                         | _ -> [tp2]
                     ))
-                    @
-                    [
-                        {
-                            Attributes = [] // ["AutoOpen"] TODO fails too
-                            HasDeclare = false
-                            Name = "AliasUnionHelpers"
-                            Types = helpers |> List.ofSeq
-                            HelperLines = []
-                        }
-                        |> FsType.Module
-                    ]
             }
             |> FsType.Module
-
         | _ -> tp
     )
