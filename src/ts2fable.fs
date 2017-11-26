@@ -32,6 +32,7 @@ let transform (file: FsFile): FsFile =
     |> fixEnumReferences
     |> fixDuplicatesInUnion
     |> fixEscapeWords
+    |> fixNamespace
     |> addTicForGenericFunctions // must be after fixEscapeWords
     |> addTicForGenericTypes
     |> removeTodoMembers
@@ -39,7 +40,7 @@ let transform (file: FsFile): FsFile =
     |> removeDuplicateFunctions
     |> extractTypeLiterals // after fixEscapeWords
     |> addAliasUnionHelpers
-
+    
 let writeFile (tsPaths: string list) (fsPath: string): unit =
 
     // TODO ensure the files exist

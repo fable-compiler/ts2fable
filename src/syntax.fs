@@ -144,12 +144,18 @@ type FsVariable =
 
 type FsMapped =
     {
+        // Namespace: string list // TODO
         Name: string
         FullName: string
     }
 
 let simpleType name: FsType =
-    { Name = name; FullName = name } |> FsType.Mapped
+    { 
+        // Namespace = []
+        Name = name
+        FullName = name 
+    }
+    |> FsType.Mapped
 
 [<RequireQualifiedAccess>]
 type FsType =

@@ -95,7 +95,7 @@ let fixModuleName (s: string) =
         if Keywords.reserved.Contains s || Keywords.keywords.Contains s then
             sprintf "%s_" s
         else s
-    s
+    capitalize s
 
 let removeQuotes (s:string): string =
     if isNull s then ""
@@ -119,3 +119,18 @@ let getJsModuleName (fileName: string): string =
         |> List.last
 
     last.Replace(".ts","").Replace(".d","")
+
+let primatives = ["string"; "obj"; "unit"; "float"; "bool"] |> Set.ofList
+
+// espects a type where the namespace is simply dot separated
+let fixNamespaceString (name: string): string =
+    if primatives.Contains name then
+        name
+    else
+        let parts = name.Split [|'.'|]
+        if parts.Length = 1 then
+            name
+        else
+            let parts = parts |> List.ofArray |> List.rev
+            let parts = [parts.Head] @ parts.Tail |> List.map fixModuleName
+            parts |> List.rev |> String.concat "."

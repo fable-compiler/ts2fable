@@ -275,8 +275,7 @@ let rec createIExportsModule (fileModuleName: string) (md: FsModule): FsModule *
                     Inherits = []
                     TypeParameters = []
                     Members =
-                        (typesChild |> List.ofSeq)
-                        @ (typesInIExports |> List.ofSeq)
+                        (typesInIExports |> List.ofSeq)
                 }
                 |> FsType.Interface
             ]
@@ -286,6 +285,7 @@ let rec createIExportsModule (fileModuleName: string) (md: FsModule): FsModule *
             Types =
                 (typesGlobal |> List.ofSeq)
                 @ (typesChildExport |> List.ofSeq)
+                @ (typesChild |> List.ofSeq)
                 @ iexports
                 @ (typesOther |> List.ofSeq)
         }
@@ -406,7 +406,6 @@ let fixEscapeWords(f: FsFile): FsFile =
         | FsType.Interface it ->
             { it with Name = escapeWord it.Name } |> FsType.Interface
         | FsType.Module md ->
-            // can't just escape module names
             { md with Name = fixModuleName md.Name } |> FsType.Module
         | FsType.Variable vb ->
             { vb with Name = escapeWord vb.Name } |> FsType.Variable
@@ -829,5 +828,27 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                     ))
             }
             |> FsType.Module
+        | _ -> tp
+    )
+
+let fixNamespace (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Mapped mp ->
+            { mp with Name = fixNamespaceString mp.Name } |> FsType.Mapped
+        | FsType.Import im ->
+            match im with
+            | FsImport.Module immd ->
+                { immd with
+                    Module = fixModuleName immd.Module
+                    SpecifiedModule = fixModuleName immd.SpecifiedModule
+                }
+                |> FsImport.Module
+            | FsImport.Type imtp ->
+                { imtp with 
+                    SpecifiedModule = fixModuleName imtp.SpecifiedModule
+                }
+                |> FsImport.Type
+            |> FsType.Import
         | _ -> tp
     )
