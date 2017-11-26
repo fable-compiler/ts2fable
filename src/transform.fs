@@ -190,7 +190,7 @@ let mergeModulesInFile (f: FsFile): FsFile =
             |> List.choose asModule
     }
 
-let rec createIExportsModule (md: FsModule): FsModule * FsVariable list =
+let rec createIExportsModule (fileModuleName: string) (md: FsModule): FsModule * FsVariable list =
     let typesInIExports = ResizeArray<FsType>()
     let typesGlobal = ResizeArray<FsType>()
     let typesChild = ResizeArray<FsType>()
@@ -201,17 +201,25 @@ let rec createIExportsModule (md: FsModule): FsModule * FsVariable list =
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
-            let smd, vars = createIExportsModule smd
+            let smd, vars = createIExportsModule fileModuleName smd
             for v in vars do
                 if v.Export.IsSome then v |> FsType.Variable |> typesChildExport.Add
                 else v |> FsType.Variable |> typesChild.Add
             smd |> FsType.Module |> typesOther.Add
         | FsType.Variable vb ->
             if vb.HasDeclare then
-                if vb.IsGlobal then
-                    typesGlobal.Add tp
-                else 
-                    typesOther.Add tp
+                // addExportAssigments
+                if md.Name = "" then
+                    { vb with
+                        Export = { IsGlobal = fileModuleName = "node"; Selector = "*"; Path = fileModuleName } |> Some
+                    }
+                    |> FsType.Variable
+                    |> typesGlobal.Add
+                else
+                    if vb.IsGlobal then
+                        typesGlobal.Add tp
+                    else 
+                        typesOther.Add tp
             else
                 typesInIExports.Add tp
         | FsType.Function _ -> typesInIExports.Add tp
@@ -235,10 +243,9 @@ let rec createIExportsModule (md: FsModule): FsModule * FsVariable list =
 
     if typesInIExports.Count > 0 then
         if md.HasDeclare then
-            // let path = if md.ModuleName = "node" then md.Name else f.ModuleName
+            let path = if fileModuleName = "node" then md.Name else fileModuleName
             {
-                // Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
-                Export = { IsGlobal = false; Selector = "*"; Path = md.Name } |> Some
+                Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                 HasDeclare = true
                 Name = md.Name
                 Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
@@ -291,7 +298,7 @@ let createIExports (f: FsFile): FsFile =
             f.Modules
             |> List.ofSeq
             |> List.map (fun md ->
-                let md, _ = createIExportsModule md
+                let md, _ = createIExportsModule f.ModuleName md
                 md
             )
     }
@@ -649,64 +656,6 @@ let addConstructors  (f: FsFile): FsFile =
             else tp
         | _ -> tp
     )
-
-let rec addExportAssigments (f: FsFile): FsFile =
-
-    let globalModule = f.Modules |> List.find (fun md -> md.Name = "")
-
-    // get a list of modules
-    let modules =
-        globalModule.Types
-        |> List.choose asModule
-        |> List.map (fun md -> md.Name)
-        |> Set.ofList
-
-    // get a list of variables in global
-    let variables =
-        globalModule.Types
-        |> List.choose asVariable
-        |> List.map (fun vb -> vb.Name)
-        |> Set.ofList
-
-    // let exports =
-    //     globalModule.Types
-    //     |> List.choose asExport
-    //     |> Set.ofList
-
-    // printfn "modules %A" modules
-    // printfn "variables %A" variables
-    // printfn "exports %A" exports
-
-    { f with
-        Modules = f.Modules |> List.map (fun md ->
-            if md.Name = "" then // global
-                { md with
-                    Types = md.Types |> List.map (fun tp ->
-                        match tp with
-                        // TODO
-                        // | FsType.Export ep ->
-                        //     if modules.Contains ep && variables.Contains ep = false then
-                        //         {
-                        //             Export = { IsGlobal = false; Selector = "*"; Path = f.ModuleName } |> Some
-                        //             HasDeclare = true // so it is not in IExports
-                        //             Name = ep
-                        //             Type = sprintf "%s.IExports" ep |> simpleType
-                        //         }
-                        //         |> FsType.Variable
-                        //     else tp
-                        | FsType.Variable vb ->
-                            if vb.HasDeclare then
-                                { vb with
-                                    Export = { IsGlobal = f.ModuleName = "node"; Selector = "*"; Path = f.ModuleName } |> Some
-                                }
-                                |> FsType.Variable
-                            else tp
-                        | _ -> tp
-                    )
-                }
-            else md
-        )
-    }
 
 let removeInternalModules(f: FsFile): FsFile =
     f |> fixFile (fun tp ->

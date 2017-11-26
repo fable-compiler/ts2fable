@@ -35,7 +35,7 @@ let [<Import("*","url")>] url: url.IExports = jsNative
 let [<Import("*","dns")>] dns: dns.IExports = jsNative
 let [<Import("*","net")>] net: net.IExports = jsNative
 let [<Import("*","dgram")>] dgram: dgram.IExports = jsNative
-let [<Import("*","fs")>] fs: fs.IExports = jsNative
+let [<Import("*","fs")>] fs: Fs.IExports = jsNative
 let [<Import("*","path")>] path: path.IExports = jsNative
 let [<Import("*","string_decoder")>] string_decoder: string_decoder.IExports = jsNative
 let [<Import("*","tls")>] tls: tls.IExports = jsNative
@@ -1164,6 +1164,7 @@ module cluster =
 module zlib =
 
     type [<AllowNullLiteral>] IExports =
+        abstract constants: constants.IExports
         abstract createGzip: ?options: ZlibOptions -> Gzip
         abstract createGunzip: ?options: ZlibOptions -> Gunzip
         abstract createDeflate: ?options: ZlibOptions -> Deflate
@@ -1616,6 +1617,8 @@ module vm =
 module child_process =
 
     type [<AllowNullLiteral>] IExports =
+        // abstract exec: exec.IExports
+        // abstract execFile: execFile.IExports
         abstract spawn: command: string * ?args: ResizeArray<string> * ?options: SpawnOptions -> ChildProcess
         abstract exec: command: string * ?callback: (Error option -> string -> string -> unit) -> ChildProcess
         abstract exec: command: string * options: obj * ?callback: (Error option -> Buffer -> Buffer -> unit) -> ChildProcess
@@ -1954,6 +1957,10 @@ module url =
 module dns =
 
     type [<AllowNullLiteral>] IExports =
+        // abstract lookup: lookup.IExports
+        // abstract resolve: resolve.IExports
+        // abstract resolve4: resolve4.IExports
+        // abstract resolve6: resolve6.IExports
         abstract ADDRCONFIG: float
         abstract V4MAPPED: float
         abstract lookup: hostname: string * family: float * callback: (NodeJS.ErrnoException -> string -> float -> unit) -> unit
@@ -2446,12 +2453,49 @@ module dgram =
     type [<AllowNullLiteral>] SocketStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> Socket
 
-module fs =
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Fs =
     type URL = url.URL
 
+    let [<Import("constants","fs")>] constants: constants.IExports = jsNative
+
     type [<AllowNullLiteral>] IExports =
-        // let [<Import("*","constants")>] constants: constants.IExports = jsNative
-        abstract constants: constants.IExports
+        // abstract rename: rename.IExports
+        // abstract truncate: truncate.IExports
+        // abstract ftruncate: ftruncate.IExports
+        // abstract chown: chown.IExports
+        // abstract fchown: fchown.IExports
+        // abstract lchown: lchown.IExports
+        // abstract chmod: chmod.IExports
+        // abstract fchmod: fchmod.IExports
+        // abstract lchmod: lchmod.IExports
+        // abstract stat: stat.IExports
+        // abstract fstat: fstat.IExports
+        // abstract lstat: lstat.IExports
+        // abstract link: link.IExports
+        // abstract symlink: symlink.IExports
+        // abstract readlink: readlink.IExports
+        // abstract realpath: realpath.IExports
+        // abstract unlink: unlink.IExports
+        // abstract rmdir: rmdir.IExports
+        // abstract mkdir: mkdir.IExports
+        // abstract mkdtemp: mkdtemp.IExports
+        // abstract readdir: readdir.IExports
+        // abstract close: close.IExports
+        // abstract ``open``: open_.IExports
+        // abstract utimes: utimes.IExports
+        // abstract futimes: futimes.IExports
+        // abstract fsync: fsync.IExports
+        // abstract write: write.IExports
+        // abstract read: read.IExports
+        // abstract readFile: readFile.IExports
+        // abstract writeFile: writeFile.IExports
+        // abstract appendFile: appendFile.IExports
+        // abstract exists: exists.IExports
+        // abstract constants: constants.IExports
+        // abstract access: access.IExports
+        // abstract fdatasync: fdatasync.IExports
+        // abstract copyFile: copyFile.IExports
         abstract Stats: StatsStatic
         abstract ReadStream: ReadStreamStatic
         abstract WriteStream: WriteStreamStatic
@@ -3115,6 +3159,8 @@ module fs =
 module path =
 
     type [<AllowNullLiteral>] IExports =
+        abstract posix: posix.IExports
+        abstract win32: win32.IExports
         /// Normalize a string path, reducing '..' and '.' parts.
         /// When multiple slashes are found, they're replaced by a single one; when the path contains a trailing slash, it is preserved. On Windows backslashes are used.
         abstract normalize: p: string -> string
@@ -3918,6 +3964,7 @@ module stream =
 module util =
 
     type [<AllowNullLiteral>] IExports =
+        // abstract promisify: promisify.IExports
         abstract format: format: obj option * [<ParamArray>] param: ResizeArray<obj option> -> string
         abstract debug: string: string -> unit
         abstract error: [<ParamArray>] param: ResizeArray<obj option> -> unit
@@ -4377,6 +4424,8 @@ module v8 =
 module timers =
 
     type [<AllowNullLiteral>] IExports =
+        // abstract setTimeout: setTimeout.IExports
+        // abstract setImmediate: setImmediate.IExports
         abstract setTimeout: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer
         abstract clearTimeout: timeoutId: NodeJS.Timer -> unit
         abstract setInterval: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer
@@ -4601,7 +4650,7 @@ module http2 =
         abstract length: float with get, set
 
     type [<AllowNullLiteral>] ServerStreamFileResponseOptions =
-        abstract statCheck: (fs.Stats -> OutgoingHttpHeaders -> StatOptions -> U2<unit, bool>) option with get, set
+        abstract statCheck: (Fs.Stats -> OutgoingHttpHeaders -> StatOptions -> U2<unit, bool>) option with get, set
         abstract getTrailers: (OutgoingHttpHeaders -> unit) option with get, set
         abstract offset: float option with get, set
         abstract length: float option with get, set

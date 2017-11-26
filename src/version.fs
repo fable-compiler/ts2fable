@@ -1,7 +1,6 @@
 module ts2fable.Version
 
 open Node
-open Node.fs
 open Fable.Core.JsInterop
 
 type PackageJson =

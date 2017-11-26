@@ -13,6 +13,7 @@ type [<AllowNullLiteral>] IExports =
 module ts =
 
     type [<AllowNullLiteral>] IExports =
+        abstract ScriptSnapshot: ScriptSnapshot.IExports
         abstract OperationCanceledException: OperationCanceledExceptionStatic
         abstract versionMajorMinor: obj
         abstract version: string
