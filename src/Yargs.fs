@@ -234,6 +234,15 @@ module yargs =
     type CommandBuilder =
         U2<obj, (Argv -> Argv)>
 
+    [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module CommandBuilder =
+        let ofCase1 v: CommandBuilder = v |> U2.Case1
+        let isCase1 (v: CommandBuilder) = match v with U2.Case1 _ -> true | _ -> false
+        let asCase1 (v: CommandBuilder) = match v with U2.Case1 o -> Some o | _ -> None
+        let ofCase2 v: CommandBuilder = v |> U2.Case2
+        let isCase2 (v: CommandBuilder) = match v with U2.Case2 _ -> true | _ -> false
+        let asCase2 (v: CommandBuilder) = match v with U2.Case2 o -> Some o | _ -> None
+
     type SyncCompletionFunction =
         (string -> obj option -> ResizeArray<string>)
 
@@ -243,27 +252,16 @@ module yargs =
     type Choice =
         U2<string, obj> option
 
+    [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module Choice =
+        let ofStringOption v: Choice = v |> Option.map U2.Case1
+        let ofString v: Choice = v |> U2.Case1 |> Some
+        let isString (v: Choice) = match v with None -> false | Some o -> match o with U2.Case1 _ -> true | _ -> false
+        let asString (v: Choice) = match v with None -> None | Some o -> match o with U2.Case1 o -> Some o | _ -> None
+        let ofObjOption v: Choice = v |> Option.map U2.Case2
+        let ofObj v: Choice = v |> U2.Case2 |> Some
+        let isObj (v: Choice) = match v with None -> false | Some o -> match o with U2.Case2 _ -> true | _ -> false
+        let asObj (v: Choice) = match v with None -> None | Some o -> match o with U2.Case2 o -> Some o | _ -> None
+
     type Choices =
         ResizeArray<Choice>
-
-    module AliasUnionHelpers =
-
-        [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-        module CommandBuilder =
-            let ofCase1 v: CommandBuilder = v |> U2.Case1
-            let isCase1 (v: CommandBuilder) = match v with U2.Case1 _ -> true | _ -> false
-            let asCase1 (v: CommandBuilder) = match v with U2.Case1 o -> Some o | _ -> None
-            let ofCase2 v: CommandBuilder = v |> U2.Case2
-            let isCase2 (v: CommandBuilder) = match v with U2.Case2 _ -> true | _ -> false
-            let asCase2 (v: CommandBuilder) = match v with U2.Case2 o -> Some o | _ -> None
-
-        [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-        module Choice =
-            let ofStringOption v: Choice = v |> Option.map U2.Case1
-            let ofString v: Choice = v |> U2.Case1 |> Some
-            let isString (v: Choice) = match v with None -> false | Some o -> match o with U2.Case1 _ -> true | _ -> false
-            let asString (v: Choice) = match v with None -> None | Some o -> match o with U2.Case1 o -> Some o | _ -> None
-            let ofObjOption v: Choice = v |> Option.map U2.Case2
-            let ofObj v: Choice = v |> U2.Case2 |> Some
-            let isObj (v: Choice) = match v with None -> false | Some o -> match o with U2.Case2 _ -> true | _ -> false
-            let asObj (v: Choice) = match v with None -> None | Some o -> match o with U2.Case2 o -> Some o | _ -> None
