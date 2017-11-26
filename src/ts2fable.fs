@@ -29,7 +29,6 @@ let transform (file: FsFile): FsFile =
     |> fixDateTime
     |> fixStatic
     |> createIExports
-    |> moveDeclaredVariables
     |> fixOverloadingOnStringParameters // fixEscapeWords must be after
     |> fixEnumReferences
     |> fixDuplicatesInUnion
