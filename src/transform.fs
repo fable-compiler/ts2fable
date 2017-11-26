@@ -286,9 +286,9 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
         match tp with
         | FsType.Function fn ->
             if fn.HasStringLiteralParams then
-                let kind = List()
-                let name = List()
-                let prms = List()
+                let kind = ResizeArray()
+                let name = ResizeArray()
+                let prms = ResizeArray()
                 sprintf "$0.%s(" fn.Name.Value |> kind.Add
                 sprintf "%s" fn.Name.Value |> name.Add
                 let slCount = ref 0

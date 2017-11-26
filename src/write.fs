@@ -1,13 +1,12 @@
 module rec ts2fable.Write
-open System.Collections.Generic
 open ts2fable.Naming
 open ts2fable.Print
 
-let printComments (lines: List<string>) (indent: string) (comments: string list): unit =
+let printComments (lines: ResizeArray<string>) (indent: string) (comments: string list): unit =
     for comment in comments do
         sprintf "%s/// %s" indent comment |> lines.Add
 
-let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit =
+let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
     let lineCountStart = lines.Count
     let indent =
         if md.Name <> "" then
@@ -79,7 +78,7 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
                 for cs in en.Cases do
                     let nm = cs.Name
                     let unm = createEnumName nm
-                    let line = List()
+                    let line = ResizeArray()
                     sprintf "    | %s" unm |> line.Add
                     if cs.Value.IsSome then
                         sprintf " = %s" cs.Value.Value |> line.Add
@@ -90,7 +89,7 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
                     let nm = cs.Name
                     let v = cs.Value |> Option.defaultValue nm
                     let unm = createEnumName nm
-                    let line = List()
+                    let line = ResizeArray()
                     if nameEqualsDefaultFableValue unm v then
                         sprintf "    | %s" unm |> line.Add
                     else
@@ -127,8 +126,8 @@ let rec printModule (lines: List<string>) (indent: string) (md: FsModule): unit 
         for _ in 0..1 do
             lines.RemoveAt (lines.Count-1)
 
-let printFsFile (file: FsFileOut): List<string> =
-    let lines = List<string>()
+let printFsFile (file: FsFileOut): ResizeArray<string> =
+    let lines = ResizeArray<string>()
 
     sprintf "// ts2fable %s" Version.version |> lines.Add
     sprintf "module rec %s" file.Namespace |> lines.Add

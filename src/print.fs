@@ -1,5 +1,4 @@
 module rec ts2fable.Print
-open System.Collections.Generic
 open ts2fable.Naming
 
 let printType (tp: FsType): string =
@@ -12,13 +11,13 @@ let printType (tp: FsType): string =
         if un.Types.Length = 1 then
             sprintf "%s%s" (printType un.Types.[0]) (if un.Option then " option" else "")
         else
-            let line = List()
+            let line = ResizeArray()
             sprintf "U%d<" un.Types.Length |> line.Add
             un.Types |> List.map printType |> String.concat ", " |> line.Add
             sprintf ">%s" (if un.Option then " option" else "") |> line.Add
             line |> String.concat ""
     | FsType.Generic g ->
-        let line = List()
+        let line = ResizeArray()
         sprintf "%s" (printType g.Type) |> line.Add
         if g.TypeParameters.Length > 0 then
             "<" |> line.Add
@@ -26,7 +25,7 @@ let printType (tp: FsType): string =
             ">" |> line.Add
         line |> String.concat ""
     | FsType.Function ft ->
-        let line = List()
+        let line = ResizeArray()
         let typs =
             if ft.Params.Length = 0 then
                 [ simpleType "unit"; ft.ReturnType ]
@@ -37,7 +36,7 @@ let printType (tp: FsType): string =
         ")"|> line.Add
         line |> String.concat ""
     | FsType.Tuple tp ->
-        let line = List()
+        let line = ResizeArray()
         tp.Types |> List.map printType |> String.concat " * " |> line.Add
         line |> String.concat ""
     | FsType.Variable vb ->
@@ -52,7 +51,7 @@ let printType (tp: FsType): string =
         "obj"
 
 let printFunction (f: FsFunction): string =
-    let line = List()
+    let line = ResizeArray()
 
     match f.Kind with
     | FsFunctionKind.Regular -> ()
@@ -102,7 +101,7 @@ let printProperty (pr: FsProperty): string =
 let printTypeParameters (tps: FsType list): string =
     if tps.Length = 0 then ""
     else
-        let line = List()
+        let line = ResizeArray()
         line.Add "<"
         tps |> List.map printType |> String.concat ", " |> line.Add
         line.Add ">"
