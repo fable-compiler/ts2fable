@@ -2711,17 +2711,17 @@ module fs =
     type PathLike =
         U3<string, Buffer, URL>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module PathLike =
-    //     let ofString v: PathLike = v |> U3.Case1
-    //     let isString (v: PathLike) = match v with U3.Case1 _ -> true | _ -> false
-    //     let asString (v: PathLike) = match v with U3.Case1 o -> Some o | _ -> None
-    //     let ofBuffer v: PathLike = v |> U3.Case2
-    //     let isBuffer (v: PathLike) = match v with U3.Case2 _ -> true | _ -> false
-    //     let asBuffer (v: PathLike) = match v with U3.Case2 o -> Some o | _ -> None
-    //     let ofURL v: PathLike = v |> U3.Case3
-    //     let isURL (v: PathLike) = match v with U3.Case3 _ -> true | _ -> false
-    //     let asURL (v: PathLike) = match v with U3.Case3 o -> Some o | _ -> None
+    [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module PathLike =
+        let ofString v: PathLike = v |> U3.Case1
+        let isString (v: PathLike) = match v with U3.Case1 _ -> true | _ -> false
+        let asString (v: PathLike) = match v with U3.Case1 o -> Some o | _ -> None
+        let ofBuffer v: PathLike = v |> U3.Case2
+        let isBuffer (v: PathLike) = match v with U3.Case2 _ -> true | _ -> false
+        let asBuffer (v: PathLike) = match v with U3.Case2 o -> Some o | _ -> None
+        let ofURL v: PathLike = v |> U3.Case3
+        let isURL (v: PathLike) = match v with U3.Case3 _ -> true | _ -> false
+        let asURL (v: PathLike) = match v with U3.Case3 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] Stats =
         abstract isFile: unit -> bool
