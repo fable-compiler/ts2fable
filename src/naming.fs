@@ -43,6 +43,10 @@ let capitalize (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
     else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1)
 
+let lowerFirst (input: string): string =
+    if String.IsNullOrWhiteSpace input then ""
+    else sprintf "%c%s" (Char.ToLower input.[0]) (input.Substring 1)
+
 let createEnumName s =
     if String.IsNullOrWhiteSpace s then "Empty"
     else s |> createEnumNameParts |> List.map capitalize |> String.concat ""
@@ -88,6 +92,7 @@ let escapeWord (s: string) =
 
 let fixModuleName (s: string) =
     let s = s.Replace("'","") // remove single quotes
+    let s = capitalize s
     let s =
         let parts = s |> createModuleNameParts
         parts |> String.concat "_"
@@ -119,3 +124,18 @@ let getJsModuleName (fileName: string): string =
         |> List.last
 
     last.Replace(".ts","").Replace(".d","")
+
+let primatives = ["string"; "obj"; "unit"; "float"; "bool"] |> Set.ofList
+
+// espects a type where the namespace is simply dot separated
+let fixNamespaceString (name: string): string =
+    if primatives.Contains name then
+        name
+    else
+        let parts = name.Split [|'.'|]
+        if parts.Length = 1 then
+            name
+        else
+            let parts = parts |> List.ofArray |> List.rev
+            let parts = [parts.Head] @ parts.Tail |> List.map fixModuleName
+            parts |> List.rev |> String.concat "."

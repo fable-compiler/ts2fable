@@ -11,7 +11,7 @@
     <!-- <Compile Include="Electron.fs" /> -->
     <!-- <Compile Include="React.fs" /> -->
     <Compile Include="Mocha.fs" />
-    <Compile Include="Chai.fs" />
+    <!-- <Compile Include="Chai.fs" /> -->
     <Compile Include="Chalk.fs" />
     <!-- <Compile Include="Protobuf.fs" /> -->
 

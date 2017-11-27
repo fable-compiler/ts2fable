@@ -144,12 +144,18 @@ type FsVariable =
 
 type FsMapped =
     {
+        // Namespace: string list // TODO
         Name: string
         FullName: string
     }
 
 let simpleType name: FsType =
-    { Name = name; FullName = name } |> FsType.Mapped
+    { 
+        // Namespace = []
+        Name = name
+        FullName = name 
+    }
+    |> FsType.Mapped
 
 [<RequireQualifiedAccess>]
 type FsType =
@@ -275,7 +281,7 @@ let rec getFullName (tp: FsType) =
     | FsType.Mapped en -> en.FullName
     | FsType.Generic gn -> getFullName gn.Type
     | FsType.File fl -> fl.FileName
-    | _ -> ""
+    | _ -> getName tp
 
 type FsVariable with
     member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal

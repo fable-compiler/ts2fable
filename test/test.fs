@@ -131,16 +131,16 @@ describe "fixModuleName tests" <| fun _ ->
 
     it "open" <| fun _ ->
         fixModuleName "open"
-        |> equal "open_"
+        |> equal "Open"
 
     it "module" <| fun _ ->
         fixModuleName "module"
-        |> equal "module_"
+        |> equal "Module"
 
     it "process" <| fun _ ->
         fixModuleName "process"
-        |> equal "process_"
+        |> equal "Process"
 
     it "assert" <| fun _ ->
         fixModuleName "assert"
-        |> equal "assert_"
+        |> equal "Assert"

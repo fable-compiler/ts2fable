@@ -4,7 +4,7 @@ open Fable.Core
 open Fable.Core.JsInterop
 open Node
 open TypeScript
-open TypeScript.ts
+open TypeScript.Ts
 open System.Collections.Generic
 open System
 open ts2fable.Naming
@@ -190,74 +190,127 @@ let mergeModulesInFile (f: FsFile): FsFile =
             |> List.choose asModule
     }
 
-let createIExports (f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVariable list =
+    // printfn "createIExportsModule %A, %s" ns md.Name
+    let typesInIExports = ResizeArray<FsType>()
+    let typesGlobal = ResizeArray<FsType>()
+    let typesChild = ResizeArray<FsType>()
+    let typesChildExport = ResizeArray<FsType>()
+    let typesOther = ResizeArray<FsType>()
+    let variablesForParent = ResizeArray<FsVariable>()
+
+    md.Types |> List.iter(fun tp ->
         match tp with
-        | FsType.Module md ->
-
-            let tps = md.Types |> List.collect(fun t ->
-                match t with
-                | FsType.Variable vb ->
-                    if vb.HasDeclare then []
-                    else [t]
-                | FsType.Function _ -> [t]
-                | FsType.Interface it ->
-                    if it.IsStatic then
-                        [
-                            // add a property for accessing the static class
-                            {
-                                Comments = []
-                                Kind = FsPropertyKind.Regular
-                                Index = None
-                                Name = it.Name.Replace("Static","")
-                                Option = false
-                                Type = it.Name |> simpleType
-                                IsReadonly = true
-                            }
-                            |> FsType.Property
-                        ]
-                    else []
-                | _ -> []
-            )
-            if tps.Length = 0 then
-                tp
+        | FsType.Module smd ->
+            let ns = if md.Name = "" then ns else ns @ [md.Name]
+            let smd, vars = createIExportsModule ns smd
+            for v in vars do
+                if v.Export.IsSome then v |> FsType.Variable |> typesChildExport.Add
+                else v |> FsType.Variable |> typesChild.Add
+            smd |> FsType.Module |> typesOther.Add
+        | FsType.Variable vb ->
+            if vb.HasDeclare then
+                // addExportAssigments
+                if md.Name = "" then
+                    { vb with
+                        Export = { IsGlobal = ns.[0] = "node"; Selector = "*"; Path = ns.[0] } |> Some
+                    }
+                    |> FsType.Variable
+                    |> typesGlobal.Add
+                else
+                    if vb.IsGlobal then
+                        typesGlobal.Add tp
+                    else 
+                        typesOther.Add tp
             else
-                let newTypes =
-                    [
-                        {
-                            Comments = []
-                            IsStatic = false
-                            IsClass = false
-                            Name = "IExports"
-                            FullName = "IExports"
-                            Inherits = []
-                            TypeParameters = []
-                            Members = tps
-                        }
-                        |> FsType.Interface |> Some
-
-                        (
-                            if md.HasDeclare then
-                                let path = if f.ModuleName = "node" then md.Name else f.ModuleName
-                                {
-                                    Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
-                                    HasDeclare = true
-                                    Name = md.Name
-                                    Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
-                                    IsConst = true
-                                }
-                                |> FsType.Variable |> Some
-                            else
-                                None
-                        )
-                    ]
-                    |> List.choose id
-                { md with
-                    Types = newTypes @ md.Types
+                typesInIExports.Add tp
+        | FsType.Function _ -> typesInIExports.Add tp
+        | FsType.Interface it ->
+            if it.IsStatic then
+                // add a property for accessing the static class
+                {
+                    Comments = []
+                    Kind = FsPropertyKind.Regular
+                    Index = None
+                    Name = it.Name.Replace("Static","")
+                    Option = false
+                    Type = it.Name |> simpleType
+                    IsReadonly = true
                 }
-                |> FsType.Module
-        | _ -> tp
+                |> FsType.Property
+                |> typesInIExports.Add
+            typesOther.Add tp
+        | _ -> typesOther.Add tp
     )
+
+    if typesInIExports.Count > 0 then
+        let ns = if ns.[0] = "node" then ns.[1..] else ns
+        let selector =
+            if ns.Length = 0 then "*"
+            else md.Name
+        let path =
+            if ns.Length = 0 then 
+                md.Name
+            else ns |> String.concat "/"
+        if md.HasDeclare then
+            {
+                Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
+                HasDeclare = true
+                Name = md.Name |> lowerFirst
+                Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
+                IsConst = true
+            }
+            |> variablesForParent.Add
+        else
+            {
+                Export = { IsGlobal = false; Selector = selector; Path = path } |> Some
+                HasDeclare = true
+                Name = md.Name |> lowerFirst
+                Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
+                IsConst = true
+            }
+            |> variablesForParent.Add
+
+    let iexports =
+        if typesInIExports.Count = 0 then []
+        else
+            [
+                {
+                    Comments = []
+                    IsStatic = false
+                    IsClass = false
+                    Name = "IExports"
+                    FullName = "IExports"
+                    Inherits = []
+                    TypeParameters = []
+                    Members =
+                        (typesInIExports |> List.ofSeq)
+                }
+                |> FsType.Interface
+            ]
+
+    let newMd =
+        { md with
+            Types =
+                (typesGlobal |> List.ofSeq)
+                @ (typesChildExport |> List.ofSeq)
+                @ (typesChild |> List.ofSeq)
+                @ iexports
+                @ (typesOther |> List.ofSeq)
+        }
+    
+    newMd, variablesForParent |> List.ofSeq
+
+let createIExports (f: FsFile): FsFile =
+    { f with
+        Modules = 
+            f.Modules
+            |> List.ofSeq
+            |> List.map (fun md ->
+                let md, _ = createIExportsModule [f.ModuleName] md
+                md
+            )
+    }
 
 let fixTic (typeParameters: FsType list) (tp: FsType) =
     if typeParameters.Length = 0 then
@@ -362,7 +415,6 @@ let fixEscapeWords(f: FsFile): FsFile =
         | FsType.Interface it ->
             { it with Name = escapeWord it.Name } |> FsType.Interface
         | FsType.Module md ->
-            // can't just escape module names
             { md with Name = fixModuleName md.Name } |> FsType.Module
         | FsType.Variable vb ->
             { vb with Name = escapeWord vb.Name } |> FsType.Variable
@@ -613,64 +665,6 @@ let addConstructors  (f: FsFile): FsFile =
         | _ -> tp
     )
 
-let rec addExportAssigments (f: FsFile): FsFile =
-
-    let globalModule = f.Modules |> List.find (fun md -> md.Name = "")
-
-    // get a list of modules
-    let modules =
-        globalModule.Types
-        |> List.choose asModule
-        |> List.map (fun md -> md.Name)
-        |> Set.ofList
-
-    // get a list of variables in global
-    let variables =
-        globalModule.Types
-        |> List.choose asVariable
-        |> List.map (fun vb -> vb.Name)
-        |> Set.ofList
-
-    // let exports =
-    //     globalModule.Types
-    //     |> List.choose asExport
-    //     |> Set.ofList
-
-    // printfn "modules %A" modules
-    // printfn "variables %A" variables
-    // printfn "exports %A" exports
-
-    { f with
-        Modules = f.Modules |> List.map (fun md ->
-            if md.Name = "" then // global
-                { md with
-                    Types = md.Types |> List.map (fun tp ->
-                        match tp with
-                        // TODO
-                        // | FsType.Export ep ->
-                        //     if modules.Contains ep && variables.Contains ep = false then
-                        //         {
-                        //             Export = { IsGlobal = false; Selector = "*"; Path = f.ModuleName } |> Some
-                        //             HasDeclare = true // so it is not in IExports
-                        //             Name = ep
-                        //             Type = sprintf "%s.IExports" ep |> simpleType
-                        //         }
-                        //         |> FsType.Variable
-                        //     else tp
-                        | FsType.Variable vb ->
-                            if vb.HasDeclare then
-                                { vb with
-                                    Export = { IsGlobal = f.ModuleName = "node"; Selector = "*"; Path = f.ModuleName } |> Some
-                                }
-                                |> FsType.Variable
-                            else tp
-                        | _ -> tp
-                    )
-                }
-            else md
-        )
-    }
-
 let removeInternalModules(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
@@ -707,54 +701,6 @@ let removeDuplicateFunctions(f: FsFile): FsFile =
                 )
             }
             |> FsType.Interface
-        | _ -> tp
-    )
-
-let rec moveDeclaredVariables (f: FsFile): FsFile =
-    let globalDeclares = List<_>()
-    let otherDeclares = List<_>()
-    f |> fixFile (fun tp ->
-        match tp with
-        | FsType.Module md ->
-            for tp in md.Types do
-                match tp with
-                | FsType.Variable vb ->
-                    if vb.HasDeclare then
-                        if vb.IsGlobal then
-                            globalDeclares.Add tp |> ignore
-                        else
-                            otherDeclares.Add tp |> ignore
-                | _ -> ()
-            tp
-        | _ -> tp
-    ) |> ignore
-
-    let filterDeclares (tps: FsType list) =
-        tps |> List.collect (fun tp ->
-            match tp with
-            | FsType.Variable vb ->
-                if vb.HasDeclare then []
-                else [tp]
-            | _ -> [tp]
-        )
-
-    f |> fixFile (fun tp ->
-        match tp with
-        | FsType.Module md ->
-            if md.Name = "" then // global
-                { md with
-                    Types =
-                        (globalDeclares |> List.ofSeq)
-                        @ (otherDeclares |> List.ofSeq)
-                        @ (md.Types |> filterDeclares)
-                }
-                |> FsType.Module
-            else
-                // filter out the declares that were just moved
-                { md with
-                    Types = md.Types |> filterDeclares
-                }
-                |> FsType.Module
         | _ -> tp
     )
 
@@ -891,5 +837,27 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                     ))
             }
             |> FsType.Module
+        | _ -> tp
+    )
+
+let fixNamespace (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Mapped mp ->
+            { mp with Name = fixNamespaceString mp.Name } |> FsType.Mapped
+        | FsType.Import im ->
+            match im with
+            | FsImport.Module immd ->
+                { immd with
+                    Module = fixModuleName immd.Module
+                    SpecifiedModule = fixModuleName immd.SpecifiedModule
+                }
+                |> FsImport.Module
+            | FsImport.Type imtp ->
+                { imtp with 
+                    SpecifiedModule = fixModuleName imtp.SpecifiedModule
+                }
+                |> FsImport.Type
+            |> FsType.Import
         | _ -> tp
     )

@@ -15,42 +15,42 @@ let [<Global>] ``module``: NodeModule = jsNative
 let [<Global>] exports: obj option = jsNative
 let [<Global>] SlowBuffer: obj = jsNative
 let [<Global>] Buffer: obj = jsNative
-let [<Import("*","setTimeout")>] setTimeout: setTimeout.IExports = jsNative
-let [<Import("*","setImmediate")>] setImmediate: setImmediate.IExports = jsNative
-let [<Import("*","NodeJS")>] NodeJS: NodeJS.IExports = jsNative
-let [<Import("*","buffer")>] buffer: buffer.IExports = jsNative
-let [<Import("*","querystring")>] querystring: querystring.IExports = jsNative
-let [<Import("*","events")>] events: events.IExports = jsNative
-let [<Import("*","http")>] http: http.IExports = jsNative
-let [<Import("*","cluster")>] cluster: cluster.IExports = jsNative
-let [<Import("*","zlib")>] zlib: zlib.IExports = jsNative
-let [<Import("*","os")>] os: os.IExports = jsNative
-let [<Import("*","https")>] https: https.IExports = jsNative
-let [<Import("*","punycode")>] punycode: punycode.IExports = jsNative
-let [<Import("*","repl")>] repl: repl.IExports = jsNative
-let [<Import("*","readline")>] readline: readline.IExports = jsNative
-let [<Import("*","vm")>] vm: vm.IExports = jsNative
-let [<Import("*","child_process")>] child_process: child_process.IExports = jsNative
-let [<Import("*","url")>] url: url.IExports = jsNative
-let [<Import("*","dns")>] dns: dns.IExports = jsNative
-let [<Import("*","net")>] net: net.IExports = jsNative
-let [<Import("*","dgram")>] dgram: dgram.IExports = jsNative
-let [<Import("*","fs")>] fs: fs.IExports = jsNative
-let [<Import("*","path")>] path: path.IExports = jsNative
-let [<Import("*","string_decoder")>] string_decoder: string_decoder.IExports = jsNative
-let [<Import("*","tls")>] tls: tls.IExports = jsNative
-let [<Import("*","crypto")>] crypto: crypto.IExports = jsNative
-let [<Import("*","stream")>] stream: stream.IExports = jsNative
-let [<Import("*","util")>] util: util.IExports = jsNative
-let [<Import("*","assert")>] ``assert``: assert_.IExports = jsNative
-let [<Import("*","tty")>] tty: tty.IExports = jsNative
-let [<Import("*","domain")>] domain: domain.IExports = jsNative
-let [<Import("*","constants")>] constants: constants.IExports = jsNative
-let [<Import("*","v8")>] v8: v8.IExports = jsNative
-let [<Import("*","timers")>] timers: timers.IExports = jsNative
+let [<Import("*","setTimeout")>] setTimeout: SetTimeout.IExports = jsNative
+let [<Import("*","setImmediate")>] setImmediate: SetImmediate.IExports = jsNative
+let [<Import("*","NodeJS")>] nodeJS: NodeJS.IExports = jsNative
+let [<Import("*","buffer")>] buffer: Buffer.IExports = jsNative
+let [<Import("*","querystring")>] querystring: Querystring.IExports = jsNative
+let [<Import("*","events")>] events: Events.IExports = jsNative
+let [<Import("*","http")>] http: Http.IExports = jsNative
+let [<Import("*","cluster")>] cluster: Cluster.IExports = jsNative
+let [<Import("*","zlib")>] zlib: Zlib.IExports = jsNative
+let [<Import("*","os")>] os: Os.IExports = jsNative
+let [<Import("*","https")>] https: Https.IExports = jsNative
+let [<Import("*","punycode")>] punycode: Punycode.IExports = jsNative
+let [<Import("*","repl")>] repl: Repl.IExports = jsNative
+let [<Import("*","readline")>] readline: Readline.IExports = jsNative
+let [<Import("*","vm")>] vm: Vm.IExports = jsNative
+let [<Import("*","child_process")>] child_process: Child_process.IExports = jsNative
+let [<Import("*","url")>] url: Url.IExports = jsNative
+let [<Import("*","dns")>] dns: Dns.IExports = jsNative
+let [<Import("*","net")>] net: Net.IExports = jsNative
+let [<Import("*","dgram")>] dgram: Dgram.IExports = jsNative
+let [<Import("*","fs")>] fs: Fs.IExports = jsNative
+let [<Import("*","path")>] path: Path.IExports = jsNative
+let [<Import("*","string_decoder")>] string_decoder: String_decoder.IExports = jsNative
+let [<Import("*","tls")>] tls: Tls.IExports = jsNative
+let [<Import("*","crypto")>] crypto: Crypto.IExports = jsNative
+let [<Import("*","stream")>] stream: Stream.IExports = jsNative
+let [<Import("*","util")>] util: Util.IExports = jsNative
+let [<Import("*","assert")>] ``assert``: Assert.IExports = jsNative
+let [<Import("*","tty")>] tty: Tty.IExports = jsNative
+let [<Import("*","domain")>] domain: Domain.IExports = jsNative
+let [<Import("*","constants")>] constants: Constants.IExports = jsNative
+let [<Import("*","v8")>] v8: V8.IExports = jsNative
+let [<Import("*","timers")>] timers: Timers.IExports = jsNative
 let [<Import("*","_debugger")>] _debugger: _debugger.IExports = jsNative
-let [<Import("*","async_hooks")>] async_hooks: async_hooks.IExports = jsNative
-let [<Import("*","http2")>] http2: http2.IExports = jsNative
+let [<Import("*","async_hooks")>] async_hooks: Async_hooks.IExports = jsNative
+let [<Import("*","http2")>] http2: Http2.IExports = jsNative
 
 type [<AllowNullLiteral>] IExports =
     abstract setTimeout: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer
@@ -106,13 +106,13 @@ type [<AllowNullLiteral>] SymbolConstructor =
     /// for-of statement.
     abstract iterator: Symbol
 
-module setTimeout =
+module SetTimeout =
 
     type [<AllowNullLiteral>] IExports =
         abstract __promisify__: ms: float -> Promise<unit>
         abstract __promisify__: ms: float * value: 'T -> Promise<'T>
 
-module setImmediate =
+module SetImmediate =
 
     type [<AllowNullLiteral>] IExports =
         abstract __promisify__: unit -> Promise<unit>
@@ -664,14 +664,14 @@ type [<AllowNullLiteral>] NodeBuffer =
     abstract keys: unit -> IterableIterator<float>
     abstract values: unit -> IterableIterator<float>
 
-module buffer =
+module Buffer =
 
     type [<AllowNullLiteral>] IExports =
         abstract INSPECT_MAX_BYTES: float
         abstract BuffType: obj
         abstract SlowBuffType: obj
 
-module querystring =
+module Querystring =
 
     type [<AllowNullLiteral>] IExports =
         abstract stringify: obj: 'T * ?sep: string * ?eq: string * ?options: StringifyOptions -> string
@@ -687,7 +687,7 @@ module querystring =
         abstract maxKeys: float option with get, set
         abstract decodeURIComponent: Function option with get, set
 
-module events =
+module Events =
 
     type [<AllowNullLiteral>] IExports =
         abstract ``internal``: internalStatic
@@ -720,8 +720,8 @@ module events =
         [<Emit "new $0($1...)">] abstract Create: unit -> EventEmitter
         abstract listenerCount: emitter: EventEmitter * ``event``: U2<string, Symbol> -> float
 
-module http =
-    type URL = url.URL
+module Http =
+    type URL = Url.URL
 
     type [<AllowNullLiteral>] IExports =
         abstract Server: ServerStatic
@@ -802,10 +802,10 @@ module http =
         abstract agent: U2<Agent, bool> option with get, set
         abstract _defaultAgent: Agent option with get, set
         abstract timeout: float option with get, set
-        abstract createConnection: (ClientRequestArgs -> (Error -> net.Socket -> unit) -> net.Socket) option with get, set
+        abstract createConnection: (ClientRequestArgs -> (Error -> Net.Socket -> unit) -> Net.Socket) option with get, set
 
     type [<AllowNullLiteral>] Server =
-        inherit net.Server
+        inherit Net.Server
         abstract setTimeout: ?msecs: float * ?callback: (unit -> unit) -> Server
         abstract setTimeout: callback: (unit -> unit) -> Server
         abstract maxHeadersCount: float with get, set
@@ -817,13 +817,13 @@ module http =
 
     type [<AllowNullLiteral>] ServerRequest =
         inherit IncomingMessage
-        abstract connection: net.Socket with get, set
+        abstract connection: Net.Socket with get, set
 
     type [<AllowNullLiteral>] ServerRequestStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> ServerRequest
 
     type [<AllowNullLiteral>] OutgoingMessage =
-        inherit stream.Writable
+        inherit Stream.Writable
         abstract upgrading: bool with get, set
         abstract chunkedEncoding: bool with get, set
         abstract shouldKeepAlive: bool with get, set
@@ -831,7 +831,7 @@ module http =
         abstract sendDate: bool with get, set
         abstract finished: bool with get, set
         abstract headersSent: bool with get, set
-        abstract connection: net.Socket with get, set
+        abstract connection: Net.Socket with get, set
         abstract setTimeout: msecs: float * ?callback: (unit -> unit) -> OutgoingMessage
         abstract destroy: error: Error -> unit
         abstract setHeader: name: string * value: U3<float, string, ResizeArray<string>> -> unit
@@ -850,8 +850,8 @@ module http =
         inherit OutgoingMessage
         abstract statusCode: float with get, set
         abstract statusMessage: string with get, set
-        abstract assignSocket: socket: net.Socket -> unit
-        abstract detachSocket: socket: net.Socket -> unit
+        abstract assignSocket: socket: Net.Socket -> unit
+        abstract detachSocket: socket: Net.Socket -> unit
         abstract writeContinue: ?callback: (unit -> unit) -> unit
         abstract writeHead: statusCode: float * ?reasonPhrase: string * ?headers: OutgoingHttpHeaders -> unit
         abstract writeHead: statusCode: float * ?headers: OutgoingHttpHeaders -> unit
@@ -861,11 +861,11 @@ module http =
 
     type [<AllowNullLiteral>] ClientRequest =
         inherit OutgoingMessage
-        abstract connection: net.Socket with get, set
-        abstract socket: net.Socket with get, set
+        abstract connection: Net.Socket with get, set
+        abstract socket: Net.Socket with get, set
         abstract aborted: float with get, set
         abstract abort: unit -> unit
-        abstract onSocket: socket: net.Socket -> unit
+        abstract onSocket: socket: Net.Socket -> unit
         abstract setTimeout: timeout: float * ?callback: (unit -> unit) -> ClientRequest
         abstract setNoDelay: ?noDelay: bool -> unit
         abstract setSocketKeepAlive: ?enable: bool * ?initialDelay: float -> unit
@@ -874,11 +874,11 @@ module http =
         [<Emit "new $0($1...)">] abstract Create: url: U3<string, URL, ClientRequestArgs> * ?cb: (IncomingMessage -> unit) -> ClientRequest
 
     type [<AllowNullLiteral>] IncomingMessage =
-        inherit stream.Readable
+        inherit Stream.Readable
         abstract httpVersion: string with get, set
         abstract httpVersionMajor: float with get, set
         abstract httpVersionMinor: float with get, set
-        abstract connection: net.Socket with get, set
+        abstract connection: Net.Socket with get, set
         abstract headers: IncomingHttpHeaders with get, set
         abstract rawHeaders: ResizeArray<string> with get, set
         abstract trailers: obj with get, set
@@ -892,11 +892,11 @@ module http =
         abstract statusCode: float option with get, set
         /// Only valid for response obtained from http.ClientRequest.
         abstract statusMessage: string option with get, set
-        abstract socket: net.Socket with get, set
+        abstract socket: Net.Socket with get, set
         abstract destroy: ?error: Error -> unit
 
     type [<AllowNullLiteral>] IncomingMessageStatic =
-        [<Emit "new $0($1...)">] abstract Create: socket: net.Socket -> IncomingMessage
+        [<Emit "new $0($1...)">] abstract Create: socket: Net.Socket -> IncomingMessage
 
     type [<AllowNullLiteral>] ClientResponse =
         inherit IncomingMessage
@@ -931,8 +931,8 @@ module http =
     type [<AllowNullLiteral>] RequestOptions =
         inherit ClientRequestArgs
 
-module cluster =
-    module child = child_process
+module Cluster =
+    module Child = Child_process
 
     type [<AllowNullLiteral>] IExports =
         abstract Worker: WorkerStatic
@@ -957,7 +957,7 @@ module cluster =
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.addListener('fork',$1)">] abstract addListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.addListener('listening',$1)">] abstract addListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.addListener('online',$1)">] abstract addListener_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.addListener('setup',$1)">] abstract addListener_setup: listener: (obj option -> unit) -> Cluster
         abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
@@ -965,7 +965,7 @@ module cluster =
         [<Emit "$0.emit('exit',$1,$2,$3)">] abstract emit_exit: worker: Worker * code: float * signal: string -> bool
         [<Emit "$0.emit('fork',$1)">] abstract emit_fork: worker: Worker -> bool
         [<Emit "$0.emit('listening',$1,$2)">] abstract emit_listening: worker: Worker * address: Address -> bool
-        [<Emit "$0.emit('message',$1,$2,$3)">] abstract emit_message: worker: Worker * message: obj option * handle: U2<net.Socket, net.Server> -> bool
+        [<Emit "$0.emit('message',$1,$2,$3)">] abstract emit_message: worker: Worker * message: obj option * handle: U2<Net.Socket, Net.Server> -> bool
         [<Emit "$0.emit('online',$1)">] abstract emit_online: worker: Worker -> bool
         [<Emit "$0.emit('setup',$1)">] abstract emit_setup: settings: obj option -> bool
         abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
@@ -973,7 +973,7 @@ module cluster =
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.on('fork',$1)">] abstract on_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.on('listening',$1)">] abstract on_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.on('online',$1)">] abstract on_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.on('setup',$1)">] abstract on_setup: listener: (obj option -> unit) -> Cluster
         abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
@@ -981,7 +981,7 @@ module cluster =
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.once('fork',$1)">] abstract once_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.once('listening',$1)">] abstract once_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.once('online',$1)">] abstract once_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.once('setup',$1)">] abstract once_setup: listener: (obj option -> unit) -> Cluster
         abstract removeListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
@@ -995,7 +995,7 @@ module cluster =
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.prependListener('fork',$1)">] abstract prependListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependListener('listening',$1)">] abstract prependListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.prependListener('online',$1)">] abstract prependListener_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependListener('setup',$1)">] abstract prependListener_setup: listener: (obj option -> unit) -> Cluster
         abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
@@ -1003,7 +1003,7 @@ module cluster =
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('fork',$1)">] abstract prependOnceListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('listening',$1)">] abstract prependOnceListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('online',$1)">] abstract prependOnceListener_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('setup',$1)">] abstract prependOnceListener_setup: listener: (obj option -> unit) -> Cluster
         abstract eventNames: unit -> ResizeArray<string>
@@ -1029,9 +1029,9 @@ module cluster =
         abstract addressType: U3<float, string, string> with get, set
 
     type [<AllowNullLiteral>] Worker =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract id: string with get, set
-        abstract ``process``: child.ChildProcess with get, set
+        abstract ``process``: Child.ChildProcess with get, set
         abstract suicide: bool with get, set
         abstract send: message: obj option * ?sendHandle: obj option * ?callback: (Error -> unit) -> bool
         abstract kill: ?signal: string -> unit
@@ -1052,49 +1052,49 @@ module cluster =
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.addListener('listening',$1)">] abstract addListener_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> Worker
         [<Emit "$0.addListener('online',$1)">] abstract addListener_online: listener: (unit -> unit) -> Worker
         abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('disconnect')">] abstract emit_disconnect: unit -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: error: Error -> bool
         [<Emit "$0.emit('exit',$1,$2)">] abstract emit_exit: code: float * signal: string -> bool
         [<Emit "$0.emit('listening',$1)">] abstract emit_listening: address: Address -> bool
-        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj option * handle: U2<net.Socket, net.Server> -> bool
+        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj option * handle: U2<Net.Socket, Net.Server> -> bool
         [<Emit "$0.emit('online')">] abstract emit_online: unit -> bool
         abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.on('disconnect',$1)">] abstract on_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.on('listening',$1)">] abstract on_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> Worker
         [<Emit "$0.on('online',$1)">] abstract on_online: listener: (unit -> unit) -> Worker
         abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.once('disconnect',$1)">] abstract once_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.once('listening',$1)">] abstract once_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> Worker
         [<Emit "$0.once('online',$1)">] abstract once_online: listener: (unit -> unit) -> Worker
         abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.prependListener('disconnect',$1)">] abstract prependListener_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.prependListener('listening',$1)">] abstract prependListener_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> Worker
         [<Emit "$0.prependListener('online',$1)">] abstract prependListener_online: listener: (unit -> unit) -> Worker
         abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Worker
         [<Emit "$0.prependOnceListener('disconnect',$1)">] abstract prependOnceListener_disconnect: listener: (unit -> unit) -> Worker
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Worker
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (float -> string -> unit) -> Worker
         [<Emit "$0.prependOnceListener('listening',$1)">] abstract prependOnceListener_listening: listener: (Address -> unit) -> Worker
-        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> Worker
+        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> Worker
         [<Emit "$0.prependOnceListener('online',$1)">] abstract prependOnceListener_online: listener: (unit -> unit) -> Worker
 
     type [<AllowNullLiteral>] WorkerStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> Worker
 
     type [<AllowNullLiteral>] Cluster =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract Worker: Worker with get, set
         abstract disconnect: ?callback: Function -> unit
         abstract fork: ?env: obj option -> Worker
@@ -1117,7 +1117,7 @@ module cluster =
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.addListener('fork',$1)">] abstract addListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.addListener('listening',$1)">] abstract addListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.addListener('online',$1)">] abstract addListener_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.addListener('setup',$1)">] abstract addListener_setup: listener: (obj option -> unit) -> Cluster
         abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
@@ -1125,7 +1125,7 @@ module cluster =
         [<Emit "$0.emit('exit',$1,$2,$3)">] abstract emit_exit: worker: Worker * code: float * signal: string -> bool
         [<Emit "$0.emit('fork',$1)">] abstract emit_fork: worker: Worker -> bool
         [<Emit "$0.emit('listening',$1,$2)">] abstract emit_listening: worker: Worker * address: Address -> bool
-        [<Emit "$0.emit('message',$1,$2,$3)">] abstract emit_message: worker: Worker * message: obj option * handle: U2<net.Socket, net.Server> -> bool
+        [<Emit "$0.emit('message',$1,$2,$3)">] abstract emit_message: worker: Worker * message: obj option * handle: U2<Net.Socket, Net.Server> -> bool
         [<Emit "$0.emit('online',$1)">] abstract emit_online: worker: Worker -> bool
         [<Emit "$0.emit('setup',$1)">] abstract emit_setup: settings: obj option -> bool
         abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
@@ -1133,7 +1133,7 @@ module cluster =
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.on('fork',$1)">] abstract on_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.on('listening',$1)">] abstract on_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.on('online',$1)">] abstract on_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.on('setup',$1)">] abstract on_setup: listener: (obj option -> unit) -> Cluster
         abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
@@ -1141,7 +1141,7 @@ module cluster =
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.once('fork',$1)">] abstract once_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.once('listening',$1)">] abstract once_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.once('online',$1)">] abstract once_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.once('setup',$1)">] abstract once_setup: listener: (obj option -> unit) -> Cluster
         abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
@@ -1149,7 +1149,7 @@ module cluster =
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.prependListener('fork',$1)">] abstract prependListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependListener('listening',$1)">] abstract prependListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.prependListener('online',$1)">] abstract prependListener_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependListener('setup',$1)">] abstract prependListener_setup: listener: (obj option -> unit) -> Cluster
         abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Cluster
@@ -1157,11 +1157,12 @@ module cluster =
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (Worker -> float -> string -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('fork',$1)">] abstract prependOnceListener_fork: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('listening',$1)">] abstract prependOnceListener_listening: listener: (Worker -> Address -> unit) -> Cluster
-        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (Worker -> obj option -> U2<net.Socket, net.Server> -> unit) -> Cluster
+        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (Worker -> obj option -> U2<Net.Socket, Net.Server> -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('online',$1)">] abstract prependOnceListener_online: listener: (Worker -> unit) -> Cluster
         [<Emit "$0.prependOnceListener('setup',$1)">] abstract prependOnceListener_setup: listener: (obj option -> unit) -> Cluster
 
-module zlib =
+module Zlib =
+    let [<Import("constants","zlib")>] constants: Constants.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract createGzip: ?options: ZlibOptions -> Gzip
@@ -1234,27 +1235,27 @@ module zlib =
         abstract dictionary: obj option option with get, set
 
     type [<AllowNullLiteral>] Gzip =
-        inherit stream.Transform
+        inherit Stream.Transform
 
     type [<AllowNullLiteral>] Gunzip =
-        inherit stream.Transform
+        inherit Stream.Transform
 
     type [<AllowNullLiteral>] Deflate =
-        inherit stream.Transform
+        inherit Stream.Transform
 
     type [<AllowNullLiteral>] Inflate =
-        inherit stream.Transform
+        inherit Stream.Transform
 
     type [<AllowNullLiteral>] DeflateRaw =
-        inherit stream.Transform
+        inherit Stream.Transform
 
     type [<AllowNullLiteral>] InflateRaw =
-        inherit stream.Transform
+        inherit Stream.Transform
 
     type [<AllowNullLiteral>] Unzip =
-        inherit stream.Transform
+        inherit Stream.Transform
 
-    module constants =
+    module Constants =
 
         type [<AllowNullLiteral>] IExports =
             abstract Z_NO_FLUSH: float
@@ -1283,7 +1284,7 @@ module zlib =
             abstract Z_FIXED: float
             abstract Z_DEFAULT_STRATEGY: float
 
-module os =
+module Os =
 
     type [<AllowNullLiteral>] IExports =
         abstract hostname: unit -> string
@@ -1339,15 +1340,15 @@ module os =
         let isNetworkInterfaceInfoIPv6 (v: NetworkInterfaceInfo) = match v with U2.Case2 _ -> true | _ -> false
         let asNetworkInterfaceInfoIPv6 (v: NetworkInterfaceInfo) = match v with U2.Case2 o -> Some o | _ -> None
 
-module https =
-    type URL = url.URL
+module Https =
+    type URL = Url.URL
 
     type [<AllowNullLiteral>] IExports =
         abstract Agent: AgentStatic
         abstract Server: ServerStatic
-        abstract createServer: options: ServerOptions * ?requestListener: (http.IncomingMessage -> http.ServerResponse -> unit) -> Server
-        abstract request: options: U3<RequestOptions, string, URL> * ?callback: (http.IncomingMessage -> unit) -> http.ClientRequest
-        abstract get: options: U3<RequestOptions, string, URL> * ?callback: (http.IncomingMessage -> unit) -> http.ClientRequest
+        abstract createServer: options: ServerOptions * ?requestListener: (Http.IncomingMessage -> Http.ServerResponse -> unit) -> Server
+        abstract request: options: U3<RequestOptions, string, URL> * ?callback: (Http.IncomingMessage -> unit) -> Http.ClientRequest
+        abstract get: options: U3<RequestOptions, string, URL> * ?callback: (Http.IncomingMessage -> unit) -> Http.ClientRequest
         abstract globalAgent: Agent
 
     type [<AllowNullLiteral>] ServerOptions =
@@ -1362,10 +1363,10 @@ module https =
         abstract requestCert: bool option with get, set
         abstract rejectUnauthorized: bool option with get, set
         abstract NPNProtocols: obj option option with get, set
-        abstract SNICallback: (string -> (Error option -> tls.SecureContext -> unit) -> unit) option with get, set
+        abstract SNICallback: (string -> (Error option -> Tls.SecureContext -> unit) -> unit) option with get, set
 
     type [<AllowNullLiteral>] RequestOptions =
-        inherit http.RequestOptions
+        inherit Http.RequestOptions
         abstract pfx: obj option option with get, set
         abstract key: obj option option with get, set
         abstract passphrase: string option with get, set
@@ -1377,7 +1378,7 @@ module https =
         abstract servername: string option with get, set
 
     type [<AllowNullLiteral>] AgentOptions =
-        inherit http.AgentOptions
+        inherit Http.AgentOptions
         abstract pfx: obj option option with get, set
         abstract key: obj option option with get, set
         abstract passphrase: string option with get, set
@@ -1390,13 +1391,13 @@ module https =
         abstract maxCachedSessions: float option with get, set
 
     type [<AllowNullLiteral>] Agent =
-        inherit http.Agent
+        inherit Http.Agent
 
     type [<AllowNullLiteral>] AgentStatic =
         [<Emit "new $0($1...)">] abstract Create: ?options: AgentOptions -> Agent
 
     type [<AllowNullLiteral>] Server =
-        inherit tls.Server
+        inherit Tls.Server
         abstract setTimeout: callback: (unit -> unit) -> Server
         abstract setTimeout: ?msecs: float * ?callback: (unit -> unit) -> Server
         abstract timeout: float with get, set
@@ -1405,7 +1406,7 @@ module https =
     type [<AllowNullLiteral>] ServerStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> Server
 
-module punycode =
+module Punycode =
 
     type [<AllowNullLiteral>] IExports =
         abstract decode: string: string -> string
@@ -1419,7 +1420,7 @@ module punycode =
         abstract decode: string: string -> ResizeArray<float>
         abstract encode: codePoints: ResizeArray<float> -> string
 
-module repl =
+module Repl =
 
     type [<AllowNullLiteral>] IExports =
         abstract start: ?options: U2<string, ReplOptions> -> REPLServer
@@ -1440,7 +1441,7 @@ module repl =
         abstract breakEvalOnSigint: obj option option with get, set
 
     type [<AllowNullLiteral>] REPLServer =
-        inherit readline.ReadLine
+        inherit Readline.ReadLine
         abstract context: obj option with get, set
         abstract inputStream: NodeJS.ReadableStream with get, set
         abstract outputStream: NodeJS.WritableStream with get, set
@@ -1475,7 +1476,7 @@ module repl =
     type [<AllowNullLiteral>] RecoverableStatic =
         [<Emit "new $0($1...)">] abstract Create: err: Error -> Recoverable
 
-module readline =
+module Readline =
 
     type [<AllowNullLiteral>] IExports =
         abstract createInterface: input: NodeJS.ReadableStream * ?output: NodeJS.WritableStream * ?completer: U2<Completer, AsyncCompleter> * ?terminal: bool -> ReadLine
@@ -1494,7 +1495,7 @@ module readline =
         abstract shift: bool option with get, set
 
     type [<AllowNullLiteral>] ReadLine =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract setPrompt: prompt: string -> unit
         abstract prompt: ?preserveCursor: bool -> unit
         abstract question: query: string * callback: (string -> unit) -> unit
@@ -1575,7 +1576,7 @@ module readline =
         abstract terminal: bool option with get, set
         abstract historySize: float option with get, set
 
-module vm =
+module Vm =
 
     type [<AllowNullLiteral>] IExports =
         abstract Script: ScriptStatic
@@ -1613,7 +1614,9 @@ module vm =
     type [<AllowNullLiteral>] ScriptStatic =
         [<Emit "new $0($1...)">] abstract Create: code: string * ?options: ScriptOptions -> Script
 
-module child_process =
+module Child_process =
+    let [<Import("exec","child_process")>] exec: Exec.IExports = jsNative
+    let [<Import("execFile","child_process")>] execFile: ExecFile.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract spawn: command: string * ?args: ResizeArray<string> * ?options: SpawnOptions -> ChildProcess
@@ -1660,17 +1663,17 @@ module child_process =
         abstract execFileSync: command: string * ?args: ResizeArray<string> * ?options: ExecFileSyncOptions -> Buffer
 
     type [<AllowNullLiteral>] ChildProcess =
-        inherit events.EventEmitter
-        abstract stdin: stream.Writable with get, set
-        abstract stdout: stream.Readable with get, set
-        abstract stderr: stream.Readable with get, set
-        abstract stdio: stream.Writable * stream.Readable * stream.Readable with get, set
+        inherit Events.EventEmitter
+        abstract stdin: Stream.Writable with get, set
+        abstract stdout: Stream.Readable with get, set
+        abstract stderr: Stream.Readable with get, set
+        abstract stdio: Stream.Writable * Stream.Readable * Stream.Readable with get, set
         abstract killed: bool with get, set
         abstract pid: float with get, set
         abstract kill: ?signal: string -> unit
         abstract send: message: obj option * ?callback: (Error -> unit) -> bool
-        abstract send: message: obj option * ?sendHandle: U2<net.Socket, net.Server> * ?callback: (Error -> unit) -> bool
-        abstract send: message: obj option * ?sendHandle: U2<net.Socket, net.Server> * ?options: MessageOptions * ?callback: (Error -> unit) -> bool
+        abstract send: message: obj option * ?sendHandle: U2<Net.Socket, Net.Server> * ?callback: (Error -> unit) -> bool
+        abstract send: message: obj option * ?sendHandle: U2<Net.Socket, Net.Server> * ?options: MessageOptions * ?callback: (Error -> unit) -> bool
         abstract connected: bool with get, set
         abstract disconnect: unit -> unit
         abstract unref: unit -> unit
@@ -1686,37 +1689,37 @@ module child_process =
         [<Emit "$0.addListener('disconnect',$1)">] abstract addListener_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.addListener('exit',$1)">] abstract addListener_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        [<Emit "$0.addListener('message',$1)">] abstract addListener_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> ChildProcess
         abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('close',$1,$2)">] abstract emit_close: code: float * signal: string -> bool
         [<Emit "$0.emit('disconnect')">] abstract emit_disconnect: unit -> bool
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
         [<Emit "$0.emit('exit',$1,$2)">] abstract emit_exit: code: float * signal: string -> bool
-        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj option * sendHandle: U2<net.Socket, net.Server> -> bool
+        [<Emit "$0.emit('message',$1,$2)">] abstract emit_message: message: obj option * sendHandle: U2<Net.Socket, Net.Server> -> bool
         abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.on('close',$1)">] abstract on_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.on('disconnect',$1)">] abstract on_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.on('exit',$1)">] abstract on_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        [<Emit "$0.on('message',$1)">] abstract on_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> ChildProcess
         abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.once('close',$1)">] abstract once_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.once('disconnect',$1)">] abstract once_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.once('exit',$1)">] abstract once_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        [<Emit "$0.once('message',$1)">] abstract once_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> ChildProcess
         abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.prependListener('close',$1)">] abstract prependListener_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.prependListener('disconnect',$1)">] abstract prependListener_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.prependListener('exit',$1)">] abstract prependListener_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        [<Emit "$0.prependListener('message',$1)">] abstract prependListener_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> ChildProcess
         abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ChildProcess
         [<Emit "$0.prependOnceListener('close',$1)">] abstract prependOnceListener_close: listener: (float -> string -> unit) -> ChildProcess
         [<Emit "$0.prependOnceListener('disconnect',$1)">] abstract prependOnceListener_disconnect: listener: (unit -> unit) -> ChildProcess
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> ChildProcess
         [<Emit "$0.prependOnceListener('exit',$1)">] abstract prependOnceListener_exit: listener: (float -> string -> unit) -> ChildProcess
-        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (obj option -> U2<net.Socket, net.Server> -> unit) -> ChildProcess
+        [<Emit "$0.prependOnceListener('message',$1)">] abstract prependOnceListener_message: listener: (obj option -> U2<Net.Socket, Net.Server> -> unit) -> ChildProcess
 
     type [<AllowNullLiteral>] MessageOptions =
         abstract keepOpen: bool option with get, set
@@ -1749,7 +1752,7 @@ module child_process =
         inherit ExecOptions
         abstract encoding: string option with get, set
 
-    module exec =
+    module Exec =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: command: string -> Promise<obj>
@@ -1779,7 +1782,7 @@ module child_process =
         inherit ExecFileOptions
         abstract encoding: string with get, set
 
-    module execFile =
+    module ExecFile =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: file: string -> Promise<obj>
@@ -1878,7 +1881,7 @@ module child_process =
         inherit ExecFileSyncOptions
         abstract encoding: string with get, set
 
-module url =
+module Url =
 
     type [<AllowNullLiteral>] IExports =
         abstract parse: urlStr: string * ?parseQueryString: bool * ?slashesDenoteHost: bool -> Url
@@ -1951,7 +1954,11 @@ module url =
     type [<AllowNullLiteral>] URLStatic =
         [<Emit "new $0($1...)">] abstract Create: input: string * ?``base``: U2<string, URL> -> URL
 
-module dns =
+module Dns =
+    let [<Import("lookup","dns")>] lookup: Lookup.IExports = jsNative
+    let [<Import("resolve","dns")>] resolve: Resolve.IExports = jsNative
+    let [<Import("resolve4","dns")>] resolve4: Resolve4.IExports = jsNative
+    let [<Import("resolve6","dns")>] resolve6: Resolve6.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract ADDRCONFIG: float
@@ -2031,7 +2038,7 @@ module dns =
         abstract address: string with get, set
         abstract family: float with get, set
 
-    module lookup =
+    module Lookup =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: hostname: string * options: LookupAllOptions -> Promise<obj>
@@ -2076,7 +2083,7 @@ module dns =
         abstract port: float with get, set
         abstract name: string with get, set
 
-    module resolve =
+    module Resolve =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: hostname: string * ?rrtype: U5<string, string, string, string, string> -> Promise<ResizeArray<string>>
@@ -2087,21 +2094,21 @@ module dns =
             [<Emit "$0.__promisify__($1,'TXT')">] abstract __promisify___TXT: hostname: string -> Promise<ResizeArray<ResizeArray<string>>>
             abstract __promisify__: hostname: string * ?rrtype: string -> Promise<U6<ResizeArray<string>, ResizeArray<MxRecord>, ResizeArray<NaptrRecord>, SoaRecord, ResizeArray<SrvRecord>, ResizeArray<ResizeArray<string>>>>
 
-    module resolve4 =
+    module Resolve4 =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: hostname: string -> Promise<ResizeArray<string>>
             abstract __promisify__: hostname: string * options: ResolveWithTtlOptions -> Promise<ResizeArray<RecordWithTtl>>
             abstract __promisify__: hostname: string * ?options: ResolveOptions -> Promise<U2<ResizeArray<string>, ResizeArray<RecordWithTtl>>>
 
-    module resolve6 =
+    module Resolve6 =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: hostname: string -> Promise<ResizeArray<string>>
             abstract __promisify__: hostname: string * options: ResolveWithTtlOptions -> Promise<ResizeArray<RecordWithTtl>>
             abstract __promisify__: hostname: string * ?options: ResolveOptions -> Promise<U2<ResizeArray<string>, ResizeArray<RecordWithTtl>>>
 
-module net =
+module Net =
 
     type [<AllowNullLiteral>] IExports =
         abstract Socket: SocketStatic
@@ -2123,7 +2130,7 @@ module net =
         abstract pauseOnConnect: bool option with get, set
 
     type LookupFunction =
-        (string -> dns.LookupOneOptions -> (NodeJS.ErrnoException option -> string -> float -> unit) -> unit)
+        (string -> Dns.LookupOneOptions -> (NodeJS.ErrnoException option -> string -> float -> unit) -> unit)
 
     type [<AllowNullLiteral>] SocketConstructorOpts =
         abstract fd: float option with get, set
@@ -2156,7 +2163,7 @@ module net =
         let asIpcSocketConnectOpts (v: SocketConnectOpts) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] Socket =
-        inherit stream.Duplex
+        inherit Stream.Duplex
         abstract write: buffer: Buffer -> bool
         abstract write: buffer: Buffer * ?cb: Function -> bool
         abstract write: str: string * ?cb: Function -> bool
@@ -2267,7 +2274,7 @@ module net =
         abstract exclusive: bool option with get, set
 
     type [<AllowNullLiteral>] Server =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract listen: ?port: float * ?hostname: string * ?backlog: float * ?listeningListener: Function -> Server
         abstract listen: ?port: float * ?hostname: string * ?listeningListener: Function -> Server
         abstract listen: ?port: float * ?backlog: float * ?listeningListener: Function -> Server
@@ -2351,7 +2358,7 @@ module net =
         let isIpcNetConnectOpts (v: NetConnectOpts) = match v with U2.Case2 _ -> true | _ -> false
         let asIpcNetConnectOpts (v: NetConnectOpts) = match v with U2.Case2 o -> Some o | _ -> None
 
-module dgram =
+module Dgram =
 
     type [<AllowNullLiteral>] IExports =
         abstract createSocket: ``type``: SocketType * ?callback: (Buffer -> RemoteInfo -> unit) -> Socket
@@ -2382,10 +2389,10 @@ module dgram =
         abstract reuseAddr: bool option with get, set
         abstract recvBufferSize: float option with get, set
         abstract sendBufferSize: float option with get, set
-        abstract lookup: (string -> dns.LookupOneOptions -> (NodeJS.ErrnoException -> string -> float -> unit) -> unit) option with get, set
+        abstract lookup: (string -> Dns.LookupOneOptions -> (NodeJS.ErrnoException -> string -> float -> unit) -> unit) option with get, set
 
     type [<AllowNullLiteral>] Socket =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract send: msg: U3<Buffer, String, ResizeArray<obj option>> * port: float * address: string * ?callback: (Error option -> float -> unit) -> unit
         abstract send: msg: U3<Buffer, String, ResizeArray<obj option>> * offset: float * length: float * port: float * address: string * ?callback: (Error option -> float -> unit) -> unit
         abstract bind: ?port: float * ?address: string * ?callback: (unit -> unit) -> unit
@@ -2446,8 +2453,44 @@ module dgram =
     type [<AllowNullLiteral>] SocketStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> Socket
 
-module fs =
-    type URL = url.URL
+module Fs =
+    type URL = Url.URL
+    let [<Import("rename","fs")>] rename: Rename.IExports = jsNative
+    let [<Import("truncate","fs")>] truncate: Truncate.IExports = jsNative
+    let [<Import("ftruncate","fs")>] ftruncate: Ftruncate.IExports = jsNative
+    let [<Import("chown","fs")>] chown: Chown.IExports = jsNative
+    let [<Import("fchown","fs")>] fchown: Fchown.IExports = jsNative
+    let [<Import("lchown","fs")>] lchown: Lchown.IExports = jsNative
+    let [<Import("chmod","fs")>] chmod: Chmod.IExports = jsNative
+    let [<Import("fchmod","fs")>] fchmod: Fchmod.IExports = jsNative
+    let [<Import("lchmod","fs")>] lchmod: Lchmod.IExports = jsNative
+    let [<Import("stat","fs")>] stat: Stat.IExports = jsNative
+    let [<Import("fstat","fs")>] fstat: Fstat.IExports = jsNative
+    let [<Import("lstat","fs")>] lstat: Lstat.IExports = jsNative
+    let [<Import("link","fs")>] link: Link.IExports = jsNative
+    let [<Import("symlink","fs")>] symlink: Symlink.IExports = jsNative
+    let [<Import("readlink","fs")>] readlink: Readlink.IExports = jsNative
+    let [<Import("realpath","fs")>] realpath: Realpath.IExports = jsNative
+    let [<Import("unlink","fs")>] unlink: Unlink.IExports = jsNative
+    let [<Import("rmdir","fs")>] rmdir: Rmdir.IExports = jsNative
+    let [<Import("mkdir","fs")>] mkdir: Mkdir.IExports = jsNative
+    let [<Import("mkdtemp","fs")>] mkdtemp: Mkdtemp.IExports = jsNative
+    let [<Import("readdir","fs")>] readdir: Readdir.IExports = jsNative
+    let [<Import("close","fs")>] close: Close.IExports = jsNative
+    let [<Import("open","fs")>] ``open``: Open.IExports = jsNative
+    let [<Import("utimes","fs")>] utimes: Utimes.IExports = jsNative
+    let [<Import("futimes","fs")>] futimes: Futimes.IExports = jsNative
+    let [<Import("fsync","fs")>] fsync: Fsync.IExports = jsNative
+    let [<Import("write","fs")>] write: Write.IExports = jsNative
+    let [<Import("read","fs")>] read: Read.IExports = jsNative
+    let [<Import("readFile","fs")>] readFile: ReadFile.IExports = jsNative
+    let [<Import("writeFile","fs")>] writeFile: WriteFile.IExports = jsNative
+    let [<Import("appendFile","fs")>] appendFile: AppendFile.IExports = jsNative
+    let [<Import("exists","fs")>] exists: Exists.IExports = jsNative
+    let [<Import("constants","fs")>] constants: Constants.IExports = jsNative
+    let [<Import("access","fs")>] access: Access.IExports = jsNative
+    let [<Import("fdatasync","fs")>] fdatasync: Fdatasync.IExports = jsNative
+    let [<Import("copyFile","fs")>] copyFile: CopyFile.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract Stats: StatsStatic
@@ -2754,7 +2797,7 @@ module fs =
         [<Emit "new $0($1...)">] abstract Create: unit -> Stats
 
     type [<AllowNullLiteral>] FSWatcher =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract close: unit -> unit
         /// events.EventEmitter
         ///    1. change
@@ -2776,7 +2819,7 @@ module fs =
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> FSWatcher
 
     type [<AllowNullLiteral>] ReadStream =
-        inherit stream.Readable
+        inherit Stream.Readable
         abstract close: unit -> unit
         abstract destroy: unit -> unit
         abstract bytesRead: float with get, set
@@ -2804,7 +2847,7 @@ module fs =
         [<Emit "new $0($1...)">] abstract Create: unit -> ReadStream
 
     type [<AllowNullLiteral>] WriteStream =
-        inherit stream.Writable
+        inherit Stream.Writable
         abstract close: unit -> unit
         abstract bytesWritten: float with get, set
         abstract path: U2<string, Buffer> with get, set
@@ -2830,91 +2873,91 @@ module fs =
     type [<AllowNullLiteral>] WriteStreamStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> WriteStream
 
-    module rename =
+    module Rename =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous rename(2) - Change the name or location of a file or directory.
             abstract __promisify__: oldPath: PathLike * newPath: PathLike -> Promise<unit>
 
-    module truncate =
+    module Truncate =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous truncate(2) - Truncate a file to a specified length.
             abstract __promisify__: path: PathLike * ?len: float option -> Promise<unit>
 
-    module ftruncate =
+    module Ftruncate =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous ftruncate(2) - Truncate a file to a specified length.
             abstract __promisify__: fd: float * ?len: float option -> Promise<unit>
 
-    module chown =
+    module Chown =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous chown(2) - Change ownership of a file.
             abstract __promisify__: path: PathLike * uid: float * gid: float -> Promise<unit>
 
-    module fchown =
+    module Fchown =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous fchown(2) - Change ownership of a file.
             abstract __promisify__: fd: float * uid: float * gid: float -> Promise<unit>
 
-    module lchown =
+    module Lchown =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
             abstract __promisify__: path: PathLike * uid: float * gid: float -> Promise<unit>
 
-    module chmod =
+    module Chmod =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous chmod(2) - Change permissions of a file.
             abstract __promisify__: path: PathLike * mode: U2<string, float> -> Promise<unit>
 
-    module fchmod =
+    module Fchmod =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous fchmod(2) - Change permissions of a file.
             abstract __promisify__: fd: float * mode: U2<string, float> -> Promise<unit>
 
-    module lchmod =
+    module Lchmod =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
             abstract __promisify__: path: PathLike * mode: U2<string, float> -> Promise<unit>
 
-    module stat =
+    module Stat =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous stat(2) - Get file status.
             abstract __promisify__: path: PathLike -> Promise<Stats>
 
-    module fstat =
+    module Fstat =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous fstat(2) - Get file status.
             abstract __promisify__: fd: float -> Promise<Stats>
 
-    module lstat =
+    module Lstat =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
             abstract __promisify__: path: PathLike -> Promise<Stats>
 
-    module link =
+    module Link =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
             abstract link: existingPath: PathLike * newPath: PathLike -> Promise<unit>
 
-    module symlink =
+    module Symlink =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous symlink(2) - Create a new symbolic link to an existing file.
             abstract __promisify__: target: PathLike * path: PathLike * ?``type``: string option -> Promise<unit>
 
-    module readlink =
+    module Readlink =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous readlink(2) - read value of a symbolic link.
@@ -2924,7 +2967,7 @@ module fs =
             /// Asynchronous readlink(2) - read value of a symbolic link.
             abstract __promisify__: path: PathLike * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
 
-    module realpath =
+    module Realpath =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
@@ -2934,25 +2977,25 @@ module fs =
             /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
             abstract __promisify__: path: PathLike * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
 
-    module unlink =
+    module Unlink =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous unlink(2) - delete a name and possibly the file it refers to.
             abstract __promisify__: path: PathLike -> Promise<unit>
 
-    module rmdir =
+    module Rmdir =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous rmdir(2) - delete a directory.
             abstract __promisify__: path: PathLike -> Promise<unit>
 
-    module mkdir =
+    module Mkdir =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous mkdir(2) - create a directory.
             abstract __promisify__: path: PathLike * ?mode: U2<float, string> option -> Promise<unit>
 
-    module mkdtemp =
+    module Mkdtemp =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously creates a unique temporary directory.
@@ -2965,7 +3008,7 @@ module fs =
             /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
             abstract __promisify__: prefix: string * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
 
-    module readdir =
+    module Readdir =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous readdir(3) - read a directory.
@@ -2975,37 +3018,37 @@ module fs =
             /// Asynchronous readdir(3) - read a directory.
             abstract __promisify__: path: PathLike * ?options: U2<obj, string> option -> Promise<Array<U2<string, Buffer>>>
 
-    module close =
+    module Close =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous close(2) - close a file descriptor.
             abstract __promisify__: fd: float -> Promise<unit>
 
-    module open_ =
+    module Open =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous open(2) - open and possibly create a file.
             abstract __promisify__: path: PathLike * flags: U2<string, float> * ?mode: U2<string, float> option -> Promise<float>
 
-    module utimes =
+    module Utimes =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously change file timestamps of the file referenced by the supplied path.
             abstract __promisify__: path: PathLike * atime: U3<string, float, DateTime> * mtime: U3<string, float, DateTime> -> Promise<unit>
 
-    module futimes =
+    module Futimes =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously change file timestamps of the file referenced by the supplied file descriptor.
             abstract __promisify__: fd: float * atime: U3<string, float, DateTime> * mtime: U3<string, float, DateTime> -> Promise<unit>
 
-    module fsync =
+    module Fsync =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
             abstract __promisify__: fd: float -> Promise<unit>
 
-    module write =
+    module Write =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.
@@ -3013,12 +3056,12 @@ module fs =
             /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
             abstract __promisify__: fd: float * string: obj option * ?position: float option * ?encoding: string option -> Promise<obj>
 
-    module read =
+    module Read =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: fd: float * buffer: 'TBuffer * offset: float * length: float * position: float option -> Promise<obj>
 
-    module readFile =
+    module ReadFile =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously reads the entire contents of a file.
@@ -3026,24 +3069,24 @@ module fs =
             /// Asynchronously reads the entire contents of a file.
             abstract __promisify__: path: U2<PathLike, float> * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
 
-    module writeFile =
+    module WriteFile =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously writes data to a file, replacing the file if it already exists.
             abstract __promisify__: path: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> Promise<unit>
 
-    module appendFile =
+    module AppendFile =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously append data to a file, creating the file if it does not exist.
             abstract __promisify__: file: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> Promise<unit>
 
-    module exists =
+    module Exists =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: path: PathLike -> Promise<bool>
 
-    module constants =
+    module Constants =
 
         type [<AllowNullLiteral>] IExports =
             abstract F_OK: float
@@ -3088,19 +3131,19 @@ module fs =
             abstract S_IXOTH: float
             abstract COPYFILE_EXCL: float
 
-    module access =
+    module Access =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously tests a user's permissions for the file specified by path.
             abstract __promisify__: path: PathLike * ?mode: float -> Promise<unit>
 
-    module fdatasync =
+    module Fdatasync =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
             abstract __promisify__: fd: float -> Promise<unit>
 
-    module copyFile =
+    module CopyFile =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
@@ -3110,7 +3153,9 @@ module fs =
             /// to remove the destination.
             abstract __promisify__: src: PathLike * dst: PathLike * ?flags: float -> Promise<unit>
 
-module path =
+module Path =
+    let [<Import("posix","path")>] posix: Posix.IExports = jsNative
+    let [<Import("win32","path")>] win32: Win32.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         /// Normalize a string path, reducing '..' and '.' parts.
@@ -3170,7 +3215,7 @@ module path =
         /// The file name without extension (if any) such as 'index'
         abstract name: string option with get, set
 
-    module posix =
+    module Posix =
 
         type [<AllowNullLiteral>] IExports =
             abstract normalize: p: string -> string
@@ -3186,7 +3231,7 @@ module path =
             abstract parse: p: string -> ParsedPath
             abstract format: pP: ParsedPath -> string
 
-    module win32 =
+    module Win32 =
 
         type [<AllowNullLiteral>] IExports =
             abstract normalize: p: string -> string
@@ -3202,7 +3247,7 @@ module path =
             abstract parse: p: string -> ParsedPath
             abstract format: pP: ParsedPath -> string
 
-module string_decoder =
+module String_decoder =
 
     type [<AllowNullLiteral>] IExports =
         abstract StringDecoder: obj
@@ -3211,7 +3256,7 @@ module string_decoder =
         abstract write: buffer: Buffer -> string
         abstract ``end``: ?buffer: Buffer -> string
 
-module tls =
+module Tls =
 
     type [<AllowNullLiteral>] IExports =
         abstract CLIENT_RENEG_LIMIT: float
@@ -3222,7 +3267,7 @@ module tls =
         abstract connect: options: ConnectionOptions * ?secureConnectionListener: (unit -> unit) -> TLSSocket
         abstract connect: port: float * ?host: string * ?options: ConnectionOptions * ?secureConnectListener: (unit -> unit) -> TLSSocket
         abstract connect: port: float * ?options: ConnectionOptions * ?secureConnectListener: (unit -> unit) -> TLSSocket
-        abstract createSecurePair: ?credentials: crypto.Credentials * ?isServer: bool * ?requestCert: bool * ?rejectUnauthorized: bool -> SecurePair
+        abstract createSecurePair: ?credentials: Crypto.Credentials * ?isServer: bool * ?requestCert: bool * ?rejectUnauthorized: bool -> SecurePair
         abstract createSecureContext: details: SecureContextOptions -> SecureContext
         abstract getCiphers: unit -> ResizeArray<string>
         abstract DEFAULT_ECDH_CURVE: string
@@ -3266,7 +3311,7 @@ module tls =
         abstract version: string with get, set
 
     type [<AllowNullLiteral>] TLSSocket =
-        inherit net.Socket
+        inherit Net.Socket
         /// A boolean that is true if the peer certificate was signed by one of the specified CAs, otherwise false.
         abstract authorized: bool with get, set
         /// The reason why the peer's certificate has not been verified.
@@ -3326,7 +3371,7 @@ module tls =
 
     type [<AllowNullLiteral>] TLSSocketStatic =
         /// Construct a new tls.TLSSocket object from an existing TCP socket.
-        [<Emit "new $0($1...)">] abstract Create: socket: net.Socket * ?options: TLSSocketStaticOptions -> TLSSocket
+        [<Emit "new $0($1...)">] abstract Create: socket: Net.Socket * ?options: TLSSocketStaticOptions -> TLSSocket
 
     type [<AllowNullLiteral>] TLSSocketStaticOptions =
         /// An optional TLS context object from tls.createSecureContext()
@@ -3335,7 +3380,7 @@ module tls =
         /// Defaults to false.
         abstract isServer: bool option with get, set
         /// An optional net.Server instance.
-        abstract server: net.Server option with get, set
+        abstract server: Net.Server option with get, set
         /// If true the server will request a certificate from clients that
         /// connect and attempt to verify that certificate. Defaults to
         /// false.
@@ -3396,7 +3441,7 @@ module tls =
     type [<AllowNullLiteral>] ConnectionOptions =
         abstract host: string option with get, set
         abstract port: float option with get, set
-        abstract socket: net.Socket option with get, set
+        abstract socket: Net.Socket option with get, set
         abstract pfx: U2<string, Buffer> option with get, set
         abstract key: U4<string, ResizeArray<string>, Buffer, ResizeArray<Buffer>> option with get, set
         abstract passphrase: string option with get, set
@@ -3412,10 +3457,10 @@ module tls =
         abstract secureContext: Object option with get, set
         abstract session: Buffer option with get, set
         abstract minDHSize: float option with get, set
-        abstract lookup: net.LookupFunction option with get, set
+        abstract lookup: Net.LookupFunction option with get, set
 
     type [<AllowNullLiteral>] Server =
-        inherit net.Server
+        inherit Net.Server
         abstract addContext: hostName: string * credentials: ServerAddContextCredentials -> unit
         /// events.EventEmitter
         /// 1. tlsClientError
@@ -3469,7 +3514,7 @@ module tls =
         [<Emit "new $0($1...)">] abstract Create: unit -> Server
 
     type [<AllowNullLiteral>] ClearTextStream =
-        inherit stream.Duplex
+        inherit Stream.Duplex
         abstract authorized: bool with get, set
         abstract authorizationError: Error with get, set
         abstract getPeerCertificate: unit -> obj option
@@ -3495,7 +3540,7 @@ module tls =
     type [<AllowNullLiteral>] SecureContext =
         abstract context: obj option with get, set
 
-module crypto =
+module Crypto =
 
     type [<AllowNullLiteral>] IExports =
         abstract Certificate: obj
@@ -3677,7 +3722,7 @@ module crypto =
         abstract setPrivateKey: private_key: Buffer -> unit
         abstract setPrivateKey: private_key: string * encoding: HexBase64Latin1Encoding -> unit
 
-module stream =
+module Stream =
 
     type [<AllowNullLiteral>] IExports =
         abstract ``internal``: internalStatic
@@ -3689,7 +3734,7 @@ module stream =
         abstract PassThrough: PassThroughStatic
 
     type [<AllowNullLiteral>] ``internal`` =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract pipe: destination: 'T * ?options: InternalPipeOptions -> 'T
 
     type [<AllowNullLiteral>] InternalPipeOptions =
@@ -3913,7 +3958,8 @@ module stream =
     type [<AllowNullLiteral>] PassThroughStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> PassThrough
 
-module util =
+module Util =
+    let [<Import("promisify","util")>] promisify: Promisify.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract format: format: obj option * [<ParamArray>] param: ResizeArray<obj option> -> string
@@ -3977,12 +4023,12 @@ module util =
         inherit Function
         abstract __promisify__: 'TCustom with get, set
 
-    module promisify =
+    module Promisify =
 
         type [<AllowNullLiteral>] IExports =
             abstract custom: Symbol
 
-module assert_ =
+module Assert =
 
     type [<AllowNullLiteral>] IExports =
         abstract ``internal``: value: obj option * ?message: string -> unit
@@ -4027,35 +4073,35 @@ module assert_ =
         abstract operator: string option with get, set
         abstract stackStartFunction: Function option with get, set
 
-module tty =
+module Tty =
 
     type [<AllowNullLiteral>] IExports =
         abstract isatty: fd: float -> bool
 
     type [<AllowNullLiteral>] ReadStream =
-        inherit net.Socket
+        inherit Net.Socket
         abstract isRaw: bool with get, set
         abstract setRawMode: mode: bool -> unit
         abstract isTTY: bool with get, set
 
     type [<AllowNullLiteral>] WriteStream =
-        inherit net.Socket
+        inherit Net.Socket
         abstract columns: float with get, set
         abstract rows: float with get, set
         abstract isTTY: bool with get, set
 
-module domain =
+module Domain =
 
     type [<AllowNullLiteral>] IExports =
         abstract Domain: DomainStatic
         abstract create: unit -> Domain
 
     type [<AllowNullLiteral>] Domain =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         inherit NodeJS.Domain
         abstract run: fn: Function -> unit
-        abstract add: emitter: events.EventEmitter -> unit
-        abstract remove: emitter: events.EventEmitter -> unit
+        abstract add: emitter: Events.EventEmitter -> unit
+        abstract remove: emitter: Events.EventEmitter -> unit
         abstract bind: cb: (Error -> obj option -> obj option) -> obj option
         abstract intercept: cb: (obj option -> obj option) -> obj option
         abstract dispose: unit -> unit
@@ -4066,7 +4112,7 @@ module domain =
     type [<AllowNullLiteral>] DomainStatic =
         [<Emit "new $0($1...)">] abstract Create: unit -> Domain
 
-module constants =
+module Constants =
 
     type [<AllowNullLiteral>] IExports =
         abstract E2BIG: float
@@ -4344,7 +4390,7 @@ module constants =
         abstract ENGINE_METHOD_RSA: float
         abstract ALPN_ENABLED: float
 
-module v8 =
+module V8 =
 
     type [<AllowNullLiteral>] IExports =
         abstract getHeapStatistics: unit -> HeapInfo
@@ -4372,7 +4418,9 @@ module v8 =
         abstract peak_malloced_memory: float with get, set
         abstract does_zap_garbage: DoesZapCodeSpaceFlag with get, set
 
-module timers =
+module Timers =
+    let [<Import("setTimeout","timers")>] setTimeout: SetTimeout.IExports = jsNative
+    let [<Import("setImmediate","timers")>] setImmediate: SetImmediate.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract setTimeout: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer
@@ -4382,13 +4430,13 @@ module timers =
         abstract setImmediate: callback: (ResizeArray<obj option> -> unit) * [<ParamArray>] args: ResizeArray<obj option> -> obj option
         abstract clearImmediate: immediateId: obj option -> unit
 
-    module setTimeout =
+    module SetTimeout =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: ms: float -> Promise<unit>
             abstract __promisify__: ms: float * value: 'T -> Promise<'T>
 
-    module setImmediate =
+    module SetImmediate =
 
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: unit -> Promise<unit>
@@ -4507,7 +4555,7 @@ module _debugger =
         abstract reqScripts: cb: obj option -> unit
         abstract reqContinue: cb: RequestHandler -> unit
 
-module async_hooks =
+module Async_hooks =
 
     type [<AllowNullLiteral>] IExports =
         /// Returns the asyncId of the current execution context.
@@ -4560,9 +4608,9 @@ module async_hooks =
         /// async_hook.executionAsyncId() is used.
         [<Emit "new $0($1...)">] abstract Create: ``type``: string * ?triggerAsyncId: float -> AsyncResource
 
-module http2 =
-    type IncomingHttpHeaders = http.IncomingHttpHeaders
-    type OutgoingHttpHeaders = http.OutgoingHttpHeaders
+module Http2 =
+    type IncomingHttpHeaders = Http.IncomingHttpHeaders
+    type OutgoingHttpHeaders = Http.OutgoingHttpHeaders
 
     type [<AllowNullLiteral>] IExports =
         abstract constants: obj
@@ -4573,8 +4621,8 @@ module http2 =
         abstract createServer: options: ServerOptions * ?onRequestHandler: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2Server
         abstract createSecureServer: ?onRequestHandler: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         abstract createSecureServer: options: SecureServerOptions * ?onRequestHandler: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
-        abstract connect: authority: U2<string, url.URL> * ?listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
-        abstract connect: authority: U2<string, url.URL> * ?options: U2<ClientSessionOptions, SecureClientSessionOptions> * ?listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
+        abstract connect: authority: U2<string, Url.URL> * ?listener: (ClientHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ClientHttp2Session
+        abstract connect: authority: U2<string, Url.URL> * ?options: U2<ClientSessionOptions, SecureClientSessionOptions> * ?listener: (ClientHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ClientHttp2Session
 
     type [<AllowNullLiteral>] StreamPriorityOptions =
         abstract exclusive: bool option with get, set
@@ -4599,7 +4647,7 @@ module http2 =
         abstract length: float with get, set
 
     type [<AllowNullLiteral>] ServerStreamFileResponseOptions =
-        abstract statCheck: (fs.Stats -> OutgoingHttpHeaders -> StatOptions -> U2<unit, bool>) option with get, set
+        abstract statCheck: (Fs.Stats -> OutgoingHttpHeaders -> StatOptions -> U2<unit, bool>) option with get, set
         abstract getTrailers: (OutgoingHttpHeaders -> unit) option with get, set
         abstract offset: float option with get, set
         abstract length: float option with get, set
@@ -4609,7 +4657,7 @@ module http2 =
         abstract onError: (NodeJS.ErrnoException -> unit) option with get, set
 
     type [<AllowNullLiteral>] Http2Stream =
-        inherit stream.Duplex
+        inherit Stream.Duplex
         abstract aborted: bool
         abstract destroyed: bool
         abstract priority: options: StreamPriorityOptions -> unit
@@ -4632,8 +4680,8 @@ module http2 =
         [<Emit "$0.addListener('error',$1)">] abstract addListener_error: listener: (Error -> unit) -> Http2Stream
         [<Emit "$0.addListener('finish',$1)">] abstract addListener_finish: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.addListener('frameError',$1)">] abstract addListener_frameError: listener: (float -> float -> unit) -> Http2Stream
-        [<Emit "$0.addListener('pipe',$1)">] abstract addListener_pipe: listener: (stream.Readable -> unit) -> Http2Stream
-        [<Emit "$0.addListener('unpipe',$1)">] abstract addListener_unpipe: listener: (stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.addListener('pipe',$1)">] abstract addListener_pipe: listener: (Stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.addListener('unpipe',$1)">] abstract addListener_unpipe: listener: (Stream.Readable -> unit) -> Http2Stream
         [<Emit "$0.addListener('streamClosed',$1)">] abstract addListener_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.addListener('timeout',$1)">] abstract addListener_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.addListener('trailers',$1)">] abstract addListener_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
@@ -4646,8 +4694,8 @@ module http2 =
         [<Emit "$0.emit('error',$1)">] abstract emit_error: err: Error -> bool
         [<Emit "$0.emit('finish')">] abstract emit_finish: unit -> bool
         [<Emit "$0.emit('frameError',$1,$2)">] abstract emit_frameError: frameType: float * errorCode: float -> bool
-        [<Emit "$0.emit('pipe',$1)">] abstract emit_pipe: src: stream.Readable -> bool
-        [<Emit "$0.emit('unpipe',$1)">] abstract emit_unpipe: src: stream.Readable -> bool
+        [<Emit "$0.emit('pipe',$1)">] abstract emit_pipe: src: Stream.Readable -> bool
+        [<Emit "$0.emit('unpipe',$1)">] abstract emit_unpipe: src: Stream.Readable -> bool
         [<Emit "$0.emit('streamClosed',$1)">] abstract emit_streamClosed: code: float -> bool
         [<Emit "$0.emit('timeout')">] abstract emit_timeout: unit -> bool
         [<Emit "$0.emit('trailers',$1,$2)">] abstract emit_trailers: trailers: IncomingHttpHeaders * flags: float -> bool
@@ -4660,8 +4708,8 @@ module http2 =
         [<Emit "$0.on('error',$1)">] abstract on_error: listener: (Error -> unit) -> Http2Stream
         [<Emit "$0.on('finish',$1)">] abstract on_finish: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.on('frameError',$1)">] abstract on_frameError: listener: (float -> float -> unit) -> Http2Stream
-        [<Emit "$0.on('pipe',$1)">] abstract on_pipe: listener: (stream.Readable -> unit) -> Http2Stream
-        [<Emit "$0.on('unpipe',$1)">] abstract on_unpipe: listener: (stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.on('pipe',$1)">] abstract on_pipe: listener: (Stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.on('unpipe',$1)">] abstract on_unpipe: listener: (Stream.Readable -> unit) -> Http2Stream
         [<Emit "$0.on('streamClosed',$1)">] abstract on_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.on('timeout',$1)">] abstract on_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.on('trailers',$1)">] abstract on_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
@@ -4674,8 +4722,8 @@ module http2 =
         [<Emit "$0.once('error',$1)">] abstract once_error: listener: (Error -> unit) -> Http2Stream
         [<Emit "$0.once('finish',$1)">] abstract once_finish: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.once('frameError',$1)">] abstract once_frameError: listener: (float -> float -> unit) -> Http2Stream
-        [<Emit "$0.once('pipe',$1)">] abstract once_pipe: listener: (stream.Readable -> unit) -> Http2Stream
-        [<Emit "$0.once('unpipe',$1)">] abstract once_unpipe: listener: (stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.once('pipe',$1)">] abstract once_pipe: listener: (Stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.once('unpipe',$1)">] abstract once_unpipe: listener: (Stream.Readable -> unit) -> Http2Stream
         [<Emit "$0.once('streamClosed',$1)">] abstract once_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.once('timeout',$1)">] abstract once_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.once('trailers',$1)">] abstract once_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
@@ -4688,8 +4736,8 @@ module http2 =
         [<Emit "$0.prependListener('error',$1)">] abstract prependListener_error: listener: (Error -> unit) -> Http2Stream
         [<Emit "$0.prependListener('finish',$1)">] abstract prependListener_finish: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependListener('frameError',$1)">] abstract prependListener_frameError: listener: (float -> float -> unit) -> Http2Stream
-        [<Emit "$0.prependListener('pipe',$1)">] abstract prependListener_pipe: listener: (stream.Readable -> unit) -> Http2Stream
-        [<Emit "$0.prependListener('unpipe',$1)">] abstract prependListener_unpipe: listener: (stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.prependListener('pipe',$1)">] abstract prependListener_pipe: listener: (Stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.prependListener('unpipe',$1)">] abstract prependListener_unpipe: listener: (Stream.Readable -> unit) -> Http2Stream
         [<Emit "$0.prependListener('streamClosed',$1)">] abstract prependListener_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.prependListener('timeout',$1)">] abstract prependListener_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependListener('trailers',$1)">] abstract prependListener_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
@@ -4702,8 +4750,8 @@ module http2 =
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Http2Stream
         [<Emit "$0.prependOnceListener('finish',$1)">] abstract prependOnceListener_finish: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependOnceListener('frameError',$1)">] abstract prependOnceListener_frameError: listener: (float -> float -> unit) -> Http2Stream
-        [<Emit "$0.prependOnceListener('pipe',$1)">] abstract prependOnceListener_pipe: listener: (stream.Readable -> unit) -> Http2Stream
-        [<Emit "$0.prependOnceListener('unpipe',$1)">] abstract prependOnceListener_unpipe: listener: (stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.prependOnceListener('pipe',$1)">] abstract prependOnceListener_pipe: listener: (Stream.Readable -> unit) -> Http2Stream
+        [<Emit "$0.prependOnceListener('unpipe',$1)">] abstract prependOnceListener_unpipe: listener: (Stream.Readable -> unit) -> Http2Stream
         [<Emit "$0.prependOnceListener('streamClosed',$1)">] abstract prependOnceListener_streamClosed: listener: (float -> unit) -> Http2Stream
         [<Emit "$0.prependOnceListener('timeout',$1)">] abstract prependOnceListener_timeout: listener: (unit -> unit) -> Http2Stream
         [<Emit "$0.prependOnceListener('trailers',$1)">] abstract prependOnceListener_trailers: listener: (IncomingHttpHeaders -> float -> unit) -> Http2Stream
@@ -4779,7 +4827,7 @@ module http2 =
         abstract inflateDynamicTableSize: float option with get, set
 
     type [<AllowNullLiteral>] Http2Session =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract destroy: unit -> unit
         abstract destroyed: bool
         abstract localSettings: Settings
@@ -4789,7 +4837,7 @@ module http2 =
         abstract setTimeout: msecs: float * ?callback: (unit -> unit) -> unit
         abstract shutdown: ?callback: (unit -> unit) -> unit
         abstract shutdown: options: SessionShutdownOptions * ?callback: (unit -> unit) -> unit
-        abstract socket: U2<net.Socket, tls.TLSSocket>
+        abstract socket: U2<Net.Socket, Tls.TLSSocket>
         abstract state: SessionState
         abstract priority: stream: Http2Stream * options: StreamPriorityOptions -> unit
         abstract settings: settings: Settings -> unit
@@ -4853,44 +4901,44 @@ module http2 =
         inherit Http2Session
         abstract request: ?headers: OutgoingHttpHeaders * ?options: ClientSessionRequestOptions -> ClientHttp2Stream
         abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
-        [<Emit "$0.addListener('connect',$1)">] abstract addListener_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
+        [<Emit "$0.addListener('connect',$1)">] abstract addListener_connect: listener: (ClientHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.addListener('stream',$1)">] abstract addListener_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
         abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
-        [<Emit "$0.emit('connect',$1,$2)">] abstract emit_connect: session: ClientHttp2Session * socket: U2<net.Socket, tls.TLSSocket> -> bool
+        [<Emit "$0.emit('connect',$1,$2)">] abstract emit_connect: session: ClientHttp2Session * socket: U2<Net.Socket, Tls.TLSSocket> -> bool
         [<Emit "$0.emit('stream',$1,$2,$3)">] abstract emit_stream: stream: ClientHttp2Stream * headers: IncomingHttpHeaders * flags: float -> bool
         abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
-        [<Emit "$0.on('connect',$1)">] abstract on_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
+        [<Emit "$0.on('connect',$1)">] abstract on_connect: listener: (ClientHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.on('stream',$1)">] abstract on_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
         abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
-        [<Emit "$0.once('connect',$1)">] abstract once_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
+        [<Emit "$0.once('connect',$1)">] abstract once_connect: listener: (ClientHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.once('stream',$1)">] abstract once_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
         abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
-        [<Emit "$0.prependListener('connect',$1)">] abstract prependListener_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
+        [<Emit "$0.prependListener('connect',$1)">] abstract prependListener_connect: listener: (ClientHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.prependListener('stream',$1)">] abstract prependListener_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
         abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ClientHttp2Session
-        [<Emit "$0.prependOnceListener('connect',$1)">] abstract prependOnceListener_connect: listener: (ClientHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ClientHttp2Session
+        [<Emit "$0.prependOnceListener('connect',$1)">] abstract prependOnceListener_connect: listener: (ClientHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ClientHttp2Session
         [<Emit "$0.prependOnceListener('stream',$1)">] abstract prependOnceListener_stream: listener: (ClientHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ClientHttp2Session
 
     type [<AllowNullLiteral>] ServerHttp2Session =
         inherit Http2Session
         abstract server: U2<Http2Server, Http2SecureServer>
         abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
-        [<Emit "$0.addListener('connect',$1)">] abstract addListener_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
+        [<Emit "$0.addListener('connect',$1)">] abstract addListener_connect: listener: (ServerHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.addListener('stream',$1)">] abstract addListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
         abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
-        [<Emit "$0.emit('connect',$1,$2)">] abstract emit_connect: session: ServerHttp2Session * socket: U2<net.Socket, tls.TLSSocket> -> bool
+        [<Emit "$0.emit('connect',$1,$2)">] abstract emit_connect: session: ServerHttp2Session * socket: U2<Net.Socket, Tls.TLSSocket> -> bool
         [<Emit "$0.emit('stream',$1,$2,$3)">] abstract emit_stream: stream: ServerHttp2Stream * headers: IncomingHttpHeaders * flags: float -> bool
         abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
-        [<Emit "$0.on('connect',$1)">] abstract on_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
+        [<Emit "$0.on('connect',$1)">] abstract on_connect: listener: (ServerHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.on('stream',$1)">] abstract on_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
         abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
-        [<Emit "$0.once('connect',$1)">] abstract once_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
+        [<Emit "$0.once('connect',$1)">] abstract once_connect: listener: (ServerHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.once('stream',$1)">] abstract once_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
         abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
-        [<Emit "$0.prependListener('connect',$1)">] abstract prependListener_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
+        [<Emit "$0.prependListener('connect',$1)">] abstract prependListener_connect: listener: (ServerHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.prependListener('stream',$1)">] abstract prependListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
         abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> ServerHttp2Session
-        [<Emit "$0.prependOnceListener('connect',$1)">] abstract prependOnceListener_connect: listener: (ServerHttp2Session -> U2<net.Socket, tls.TLSSocket> -> unit) -> ServerHttp2Session
+        [<Emit "$0.prependOnceListener('connect',$1)">] abstract prependOnceListener_connect: listener: (ServerHttp2Session -> U2<Net.Socket, Tls.TLSSocket> -> unit) -> ServerHttp2Session
         [<Emit "$0.prependOnceListener('stream',$1)">] abstract prependOnceListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> ServerHttp2Session
 
     type [<AllowNullLiteral>] SessionOptions =
@@ -4910,11 +4958,11 @@ module http2 =
 
     type [<AllowNullLiteral>] SecureClientSessionOptions =
         inherit ClientSessionOptions
-        inherit tls.ConnectionOptions
+        inherit Tls.ConnectionOptions
 
     type [<AllowNullLiteral>] SecureServerSessionOptions =
         inherit ServerSessionOptions
-        inherit tls.TlsOptions
+        inherit Tls.TlsOptions
 
     type [<AllowNullLiteral>] ServerOptions =
         inherit ServerSessionOptions
@@ -4925,7 +4973,7 @@ module http2 =
         abstract allowHTTP1: bool option with get, set
 
     type [<AllowNullLiteral>] Http2Server =
-        inherit net.Server
+        inherit Net.Server
         abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2Server
         [<Emit "$0.addListener('request',$1)">] abstract addListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2Server
         [<Emit "$0.addListener('sessionError',$1)">] abstract addListener_sessionError: listener: (Error -> unit) -> Http2Server
@@ -4964,59 +5012,59 @@ module http2 =
         [<Emit "$0.prependOnceListener('timeout',$1)">] abstract prependOnceListener_timeout: listener: (unit -> unit) -> Http2Server
 
     type [<AllowNullLiteral>] Http2SecureServer =
-        inherit tls.Server
+        inherit Tls.Server
         abstract addListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('request',$1)">] abstract addListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('sessionError',$1)">] abstract addListener_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('socketError',$1)">] abstract addListener_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('stream',$1)">] abstract addListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.addListener('timeout',$1)">] abstract addListener_timeout: listener: (unit -> unit) -> Http2SecureServer
-        [<Emit "$0.addListener('unknownProtocol',$1)">] abstract addListener_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
+        [<Emit "$0.addListener('unknownProtocol',$1)">] abstract addListener_unknownProtocol: listener: (Tls.TLSSocket -> unit) -> Http2SecureServer
         abstract emit: ``event``: U2<string, Symbol> * [<ParamArray>] args: ResizeArray<obj option> -> bool
         [<Emit "$0.emit('request',$1,$2)">] abstract emit_request: request: Http2ServerRequest * response: Http2ServerResponse -> bool
         [<Emit "$0.emit('sessionError',$1)">] abstract emit_sessionError: err: Error -> bool
         [<Emit "$0.emit('socketError',$1)">] abstract emit_socketError: err: Error -> bool
         [<Emit "$0.emit('stream',$1,$2,$3)">] abstract emit_stream: stream: ServerHttp2Stream * headers: IncomingHttpHeaders * flags: float -> bool
         [<Emit "$0.emit('timeout')">] abstract emit_timeout: unit -> bool
-        [<Emit "$0.emit('unknownProtocol',$1)">] abstract emit_unknownProtocol: socket: tls.TLSSocket -> bool
+        [<Emit "$0.emit('unknownProtocol',$1)">] abstract emit_unknownProtocol: socket: Tls.TLSSocket -> bool
         abstract on: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.on('request',$1)">] abstract on_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.on('sessionError',$1)">] abstract on_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.on('socketError',$1)">] abstract on_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.on('stream',$1)">] abstract on_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.on('timeout',$1)">] abstract on_timeout: listener: (unit -> unit) -> Http2SecureServer
-        [<Emit "$0.on('unknownProtocol',$1)">] abstract on_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
+        [<Emit "$0.on('unknownProtocol',$1)">] abstract on_unknownProtocol: listener: (Tls.TLSSocket -> unit) -> Http2SecureServer
         abstract once: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.once('request',$1)">] abstract once_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.once('sessionError',$1)">] abstract once_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.once('socketError',$1)">] abstract once_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.once('stream',$1)">] abstract once_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.once('timeout',$1)">] abstract once_timeout: listener: (unit -> unit) -> Http2SecureServer
-        [<Emit "$0.once('unknownProtocol',$1)">] abstract once_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
+        [<Emit "$0.once('unknownProtocol',$1)">] abstract once_unknownProtocol: listener: (Tls.TLSSocket -> unit) -> Http2SecureServer
         abstract prependListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('request',$1)">] abstract prependListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('sessionError',$1)">] abstract prependListener_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('socketError',$1)">] abstract prependListener_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('stream',$1)">] abstract prependListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.prependListener('timeout',$1)">] abstract prependListener_timeout: listener: (unit -> unit) -> Http2SecureServer
-        [<Emit "$0.prependListener('unknownProtocol',$1)">] abstract prependListener_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
+        [<Emit "$0.prependListener('unknownProtocol',$1)">] abstract prependListener_unknownProtocol: listener: (Tls.TLSSocket -> unit) -> Http2SecureServer
         abstract prependOnceListener: ``event``: string * listener: (ResizeArray<obj option> -> unit) -> Http2SecureServer
         [<Emit "$0.prependOnceListener('request',$1)">] abstract prependOnceListener_request: listener: (Http2ServerRequest -> Http2ServerResponse -> unit) -> Http2SecureServer
         [<Emit "$0.prependOnceListener('sessionError',$1)">] abstract prependOnceListener_sessionError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.prependOnceListener('socketError',$1)">] abstract prependOnceListener_socketError: listener: (Error -> unit) -> Http2SecureServer
         [<Emit "$0.prependOnceListener('stream',$1)">] abstract prependOnceListener_stream: listener: (ServerHttp2Stream -> IncomingHttpHeaders -> float -> unit) -> Http2SecureServer
         [<Emit "$0.prependOnceListener('timeout',$1)">] abstract prependOnceListener_timeout: listener: (unit -> unit) -> Http2SecureServer
-        [<Emit "$0.prependOnceListener('unknownProtocol',$1)">] abstract prependOnceListener_unknownProtocol: listener: (tls.TLSSocket -> unit) -> Http2SecureServer
+        [<Emit "$0.prependOnceListener('unknownProtocol',$1)">] abstract prependOnceListener_unknownProtocol: listener: (Tls.TLSSocket -> unit) -> Http2SecureServer
 
     type [<AllowNullLiteral>] Http2ServerRequest =
-        inherit stream.Readable
+        inherit Stream.Readable
         abstract headers: IncomingHttpHeaders with get, set
         abstract httpVersion: string with get, set
         abstract ``method``: string with get, set
         abstract rawHeaders: ResizeArray<string> with get, set
         abstract rawTrailers: ResizeArray<string> with get, set
         abstract setTimeout: msecs: float * ?callback: (unit -> unit) -> unit
-        abstract socket: U2<net.Socket, tls.TLSSocket> with get, set
+        abstract socket: U2<Net.Socket, Tls.TLSSocket> with get, set
         abstract stream: ServerHttp2Stream with get, set
         abstract trailers: IncomingHttpHeaders with get, set
         abstract url: string with get, set
@@ -5034,9 +5082,9 @@ module http2 =
         [<Emit "$0.prependOnceListener('aborted',$1)">] abstract prependOnceListener_aborted: listener: (bool -> float -> unit) -> Http2ServerRequest
 
     type [<AllowNullLiteral>] Http2ServerResponse =
-        inherit events.EventEmitter
+        inherit Events.EventEmitter
         abstract addTrailers: trailers: OutgoingHttpHeaders -> unit
-        abstract connection: U2<net.Socket, tls.TLSSocket> with get, set
+        abstract connection: U2<Net.Socket, Tls.TLSSocket> with get, set
         abstract ``end``: ?callback: (unit -> unit) -> unit
         abstract ``end``: ?data: U2<string, Buffer> * ?callback: (unit -> unit) -> unit
         abstract ``end``: ?data: U2<string, Buffer> * ?encoding: string * ?callback: (unit -> unit) -> unit
@@ -5050,7 +5098,7 @@ module http2 =
         abstract sendDate: bool with get, set
         abstract setHeader: name: string * value: U3<float, string, ResizeArray<string>> -> unit
         abstract setTimeout: msecs: float * ?callback: (unit -> unit) -> unit
-        abstract socket: U2<net.Socket, tls.TLSSocket> with get, set
+        abstract socket: U2<Net.Socket, Tls.TLSSocket> with get, set
         abstract statusCode: float with get, set
         abstract statusMessage: string with get, set
         abstract stream: ServerHttp2Stream with get, set
