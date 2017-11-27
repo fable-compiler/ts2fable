@@ -19,7 +19,7 @@ if ($env:appveyor){
 
 $v = "$version$versionSuffix"
 
-yarn
+yarn install --ignore-engines
 
 Set-Location $psscriptroot\src
 dotnet restore
