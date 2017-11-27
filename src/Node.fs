@@ -42,7 +42,7 @@ let [<Import("*","tls")>] tls: Tls.IExports = jsNative
 let [<Import("*","crypto")>] crypto: Crypto.IExports = jsNative
 let [<Import("*","stream")>] stream: Stream.IExports = jsNative
 let [<Import("*","util")>] util: Util.IExports = jsNative
-let [<Import("*","assert")>] ``assert``: Assert_.IExports = jsNative
+let [<Import("*","assert")>] ``assert``: Assert.IExports = jsNative
 let [<Import("*","tty")>] tty: Tty.IExports = jsNative
 let [<Import("*","domain")>] domain: Domain.IExports = jsNative
 let [<Import("*","constants")>] constants: Constants.IExports = jsNative
@@ -2477,7 +2477,7 @@ module Fs =
     let [<Import("mkdtemp","fs")>] mkdtemp: Mkdtemp.IExports = jsNative
     let [<Import("readdir","fs")>] readdir: Readdir.IExports = jsNative
     let [<Import("close","fs")>] close: Close.IExports = jsNative
-    let [<Import("open","fs")>] ``open``: Open_.IExports = jsNative
+    let [<Import("open","fs")>] ``open``: Open.IExports = jsNative
     let [<Import("utimes","fs")>] utimes: Utimes.IExports = jsNative
     let [<Import("futimes","fs")>] futimes: Futimes.IExports = jsNative
     let [<Import("fsync","fs")>] fsync: Fsync.IExports = jsNative
@@ -3024,7 +3024,7 @@ module Fs =
             /// Asynchronous close(2) - close a file descriptor.
             abstract __promisify__: fd: float -> Promise<unit>
 
-    module Open_ =
+    module Open =
 
         type [<AllowNullLiteral>] IExports =
             /// Asynchronous open(2) - open and possibly create a file.
@@ -4028,7 +4028,7 @@ module Util =
         type [<AllowNullLiteral>] IExports =
             abstract custom: Symbol
 
-module Assert_ =
+module Assert =
 
     type [<AllowNullLiteral>] IExports =
         abstract ``internal``: value: obj option * ?message: string -> unit
