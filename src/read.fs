@@ -88,23 +88,41 @@ let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsTy
             )
         )
 
-let readComments (comments: List<SymbolDisplayPart>): string list =
+let readCommentLines (text: string): string list =
+    text.Replace("\r\n","\n").Replace("\r","\n").Split [|'\n'|] |> List.ofArray
+
+let readComments (comments: List<SymbolDisplayPart>): FsComment list =
     if comments.Count = 0 then []
     else
         comments |> List.ofSeq |> List.collect (fun dp ->
             match dp.kind with
             // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
-            | "text" -> dp.text.Split [|'\n'|] |> List.ofArray
+            | "text" -> dp.text |> readCommentLines |> List.map FsComment.SummaryLine
             | _ -> []
         )
 
-let readCommentsForSignatureDeclaration (checker: TypeChecker) (declaration: SignatureDeclaration): string list =
+let readCommentTags (nd: Node) =
+    match ts.getJSDocTags nd with
+    | None -> List.empty
+    | Some tags ->
+        tags |> List.ofSeq |> List.collect (fun tag ->
+            match tag.kind with
+            | SyntaxKind.JSDocParameterTag ->
+                match tag.comment with
+                | None -> []
+                | Some comment -> [{ Name = ""; Description = readCommentLines comment} |> FsComment.Param]
+            | _ ->
+                // printfn "uknown comment kind tag kind %A %A" tag.kind tag.comment
+                [tag.comment |> FsComment.Unknown]
+        )
+
+let readCommentsForSignatureDeclaration (checker: TypeChecker) (declaration: SignatureDeclaration): FsComment list =
     match checker.getSignatureFromDeclaration declaration with
     | None -> []
     | Some signature ->
         signature.getDocumentationComment() |> readComments
 
-let readCommentsAtLocation (checker: TypeChecker) (nd: Node): string list =
+let readCommentsAtLocation (checker: TypeChecker) (nd: Node): FsComment list =
     match checker.getSymbolAtLocation nd with
     | None -> []
     | Some symbol ->
@@ -326,9 +344,18 @@ let readParameterDeclaration (checker: TypeChecker) (pd: ParameterDeclaration): 
             match pd.``type`` with
             | Some t -> readTypeNode checker t
             | None -> simpleType "obj"
-
+    
+    let name = pd.name |> getBindingName
     {
-        Name = pd.name |> getBindingName
+        Comment =
+            readCommentTags pd
+            |> List.tryFind FsComment.isParam
+            |> Option.map (fun comment ->
+                match comment with
+                | FsComment.Param c -> { c with Name = name} |> FsComment.Param
+                | _ -> comment
+            )
+        Name = name
         Optional = pd.questionToken.IsSome
         ParamArray = pd.dotDotDotToken.IsSome
         Type = tp
@@ -379,7 +406,7 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
         IsReadonly = isReadOnly ps.modifiers
     }
 
-let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): string list =
+let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): FsComment list =
     match pn with
     | U4.Case1 id -> readCommentsAtLocation checker id
     | U4.Case2 sl -> readCommentsAtLocation checker sl
@@ -497,7 +524,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
         |> FsType.Alias
     match tp with
     | FsType.Union un ->
-        let sls = un.Types |> List.choose asStringLiteral
+        let sls = un.Types |> List.choose FsType.asStringLiteral
         if un.Types.Length = sls.Length then
             // It is a string literal type. Map it is a string enum.
             {

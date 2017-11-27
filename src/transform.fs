@@ -123,7 +123,7 @@ let fixFile (fix: FsType -> FsType) (f: FsFile): FsFile =
             f.Modules 
             |> List.map FsType.Module 
             |> List.map (fixType fix) 
-            |> List.choose asModule
+            |> List.choose FsType.asModule
     }
 
 
@@ -167,7 +167,7 @@ let mergeModules(tps: FsType list): FsType list =
             
             if index.ContainsKey md.Name then
                 let i = index.[md.Name]
-                let a = (list.[i] |> asModule).Value
+                let a = (list.[i] |> FsType.asModule).Value
                 list.[i] <-
                     { a with
                         Types = a.Types @ md2.Types |> mergeTypes
@@ -187,7 +187,7 @@ let mergeModulesInFile (f: FsFile): FsFile =
             |> List.ofSeq
             |> List.map FsType.Module
             |> mergeModules
-            |> List.choose asModule
+            |> List.choose FsType.asModule
     }
 
 let engines = ["node"; "vscode"] |> Set.ofList
@@ -349,7 +349,7 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                 sprintf "%s" fn.Name.Value |> name.Add
                 let slCount = ref 0
                 fn.Params |> List.iteri (fun i prm ->
-                    match asStringLiteral prm.Type with
+                    match FsType.asStringLiteral prm.Type with
                     | None ->
                         sprintf "$%d" (i + 1 - !slCount) |> kind.Add
                         prms.Add prm
