@@ -190,6 +190,8 @@ let mergeModulesInFile (f: FsFile): FsFile =
             |> List.choose asModule
     }
 
+let engines = ["node"; "vscode"] |> Set.ofList
+
 let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVariable list =
     // printfn "createIExportsModule %A, %s" ns md.Name
     let typesInIExports = ResizeArray<FsType>()
@@ -202,7 +204,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
-            let ns = if md.Name = "" then ns else ns @ [md.Name]
+            let ns = if md.Name = "" then ns else ns @ [md.Name.Replace("'","")]
             let smd, vars = createIExportsModule ns smd
             for v in vars do
                 if v.Export.IsSome then v |> FsType.Variable |> typesChildExport.Add
@@ -213,7 +215,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 // addExportAssigments
                 if md.Name = "" then
                     { vb with
-                        Export = { IsGlobal = ns.[0] = "node"; Selector = "*"; Path = ns.[0] } |> Some
+                        Export = { IsGlobal = engines.Contains ns.[0]; Selector = "*"; Path = ns.[0] } |> Some
                     }
                     |> FsType.Variable
                     |> typesGlobal.Add
@@ -244,13 +246,13 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     )
 
     if typesInIExports.Count > 0 then
-        let ns = if ns.[0] = "node" then ns.[1..] else ns
+        let ns = if engines.Contains ns.[0] then ns.[1..] else ns
         let selector =
             if ns.Length = 0 then "*"
-            else md.Name
+            else md.Name.Replace("'","")
         let path =
             if ns.Length = 0 then 
-                md.Name
+                md.Name.Replace("'","")
             else ns |> String.concat "/"
         if md.HasDeclare then
             {
