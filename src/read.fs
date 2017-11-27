@@ -88,13 +88,16 @@ let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsTy
             )
         )
 
+let readCommentLines (text: string): string list =
+    text.Replace("\r\n","\n").Replace("\r","\n").Split [|'\n'|] |> List.ofArray
+
 let readComments (comments: List<SymbolDisplayPart>): FsComment list =
     if comments.Count = 0 then []
     else
         comments |> List.ofSeq |> List.collect (fun dp ->
             match dp.kind with
             // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
-            | "text" -> dp.text.Split [|'\n'|] |> List.ofArray |> List.map FsComment.SummaryLine
+            | "text" -> dp.text |> readCommentLines |> List.map FsComment.SummaryLine
             | _ -> []
         )
 
@@ -107,7 +110,7 @@ let readCommentTags (nd: Node) =
             | SyntaxKind.JSDocParameterTag ->
                 match tag.comment with
                 | None -> []
-                | Some comment -> [{ Name = ""; Description = comment} |> FsComment.Param]
+                | Some comment -> [{ Name = ""; Description = readCommentLines comment} |> FsComment.Param]
             | _ ->
                 // printfn "uknown comment kind tag kind %A %A" tag.kind tag.comment
                 [tag.comment |> FsComment.Unknown]

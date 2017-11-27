@@ -58,7 +58,7 @@ with
 type FsParamComment =
     {
         Name: string
-        Description: string
+        Description: string list
     }
 
 [<RequireQualifiedAccess>]

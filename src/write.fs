@@ -3,18 +3,23 @@ open ts2fable.Naming
 open ts2fable.Print
 
 let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsComment list): unit =
-
     if comments |> List.exists FsComment.isParam then
         let summaryLines = comments |> List.choose FsComment.asSummaryLine
-        summaryLines |> List.iteri (fun i comment ->
+        summaryLines |> List.iteri (fun i desc ->
             sprintf "%s/// %s%s%s" indent 
                 (if i = 0 then "<summary>" else "")
-                comment
+                desc
                 (if i = summaryLines.Length - 1 then "</summary>" else "")
             |> lines.Add
         )
         comments |> List.choose FsComment.asParam |> List.iter (fun comment ->
-            sprintf "%s/// <param name=\"%s\">%s</param>" indent comment.Name comment.Description |> lines.Add
+            comment.Description |> List.iteri (fun i desc ->
+                sprintf "%s/// %s%s%s" indent
+                    (if i = 0 then sprintf "<param name=\"%s\">" comment.Name else "")
+                    desc
+                    (if i = comment.Description.Length - 1 then "</param>" else "")
+                |> lines.Add
+            )
         )
     else
         comments |> List.choose FsComment.asSummaryLine |> List.iter (fun comment ->
