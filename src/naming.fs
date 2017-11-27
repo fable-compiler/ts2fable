@@ -43,6 +43,10 @@ let capitalize (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
     else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1)
 
+let lowerFirst (input: string): string =
+    if String.IsNullOrWhiteSpace input then ""
+    else sprintf "%c%s" (Char.ToLower input.[0]) (input.Substring 1)
+
 let createEnumName s =
     if String.IsNullOrWhiteSpace s then "Empty"
     else s |> createEnumNameParts |> List.map capitalize |> String.concat ""

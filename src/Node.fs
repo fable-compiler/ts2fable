@@ -15,9 +15,9 @@ let [<Global>] ``module``: NodeModule = jsNative
 let [<Global>] exports: obj option = jsNative
 let [<Global>] SlowBuffer: obj = jsNative
 let [<Global>] Buffer: obj = jsNative
-// let [<Import("*","setTimeout")>] setTimeout: SetTimeout.IExports = jsNative
-// let [<Import("*","setImmediate")>] setImmediate: SetImmediate.IExports = jsNative
-// let [<Import("*","NodeJS")>] NodeJS: NodeJS.IExports = jsNative
+let [<Import("*","setTimeout")>] setTimeout: SetTimeout.IExports = jsNative
+let [<Import("*","setImmediate")>] setImmediate: SetImmediate.IExports = jsNative
+let [<Import("*","NodeJS")>] nodeJS: NodeJS.IExports = jsNative
 let [<Import("*","buffer")>] buffer: Buffer.IExports = jsNative
 let [<Import("*","querystring")>] querystring: Querystring.IExports = jsNative
 let [<Import("*","events")>] events: Events.IExports = jsNative
@@ -48,7 +48,7 @@ let [<Import("*","domain")>] domain: Domain.IExports = jsNative
 let [<Import("*","constants")>] constants: Constants.IExports = jsNative
 let [<Import("*","v8")>] v8: V8.IExports = jsNative
 let [<Import("*","timers")>] timers: Timers.IExports = jsNative
-// let [<Import("*","_debugger")>] _debugger: _debugger.IExports = jsNative
+let [<Import("*","_debugger")>] _debugger: _debugger.IExports = jsNative
 let [<Import("*","async_hooks")>] async_hooks: Async_hooks.IExports = jsNative
 let [<Import("*","http2")>] http2: Http2.IExports = jsNative
 
@@ -1162,7 +1162,7 @@ module Cluster =
         [<Emit "$0.prependOnceListener('setup',$1)">] abstract prependOnceListener_setup: listener: (obj option -> unit) -> Cluster
 
 module Zlib =
-    // let constants: Constants.IExports = jsNative
+    let [<Import("constants","zlib")>] constants: Constants.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract createGzip: ?options: ZlibOptions -> Gzip
@@ -1615,8 +1615,8 @@ module Vm =
         [<Emit "new $0($1...)">] abstract Create: code: string * ?options: ScriptOptions -> Script
 
 module Child_process =
-    // let exec: Exec.IExports = jsNative
-    // let execFile: ExecFile.IExports = jsNative
+    let [<Import("exec","child_process")>] exec: Exec.IExports = jsNative
+    let [<Import("execFile","child_process")>] execFile: ExecFile.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract spawn: command: string * ?args: ResizeArray<string> * ?options: SpawnOptions -> ChildProcess
@@ -1955,10 +1955,10 @@ module Url =
         [<Emit "new $0($1...)">] abstract Create: input: string * ?``base``: U2<string, URL> -> URL
 
 module Dns =
-    // let lookup: Lookup.IExports = jsNative
-    // let resolve: Resolve.IExports = jsNative
-    // let resolve4: Resolve4.IExports = jsNative
-    // let resolve6: Resolve6.IExports = jsNative
+    let [<Import("lookup","dns")>] lookup: Lookup.IExports = jsNative
+    let [<Import("resolve","dns")>] resolve: Resolve.IExports = jsNative
+    let [<Import("resolve4","dns")>] resolve4: Resolve4.IExports = jsNative
+    let [<Import("resolve6","dns")>] resolve6: Resolve6.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract ADDRCONFIG: float
@@ -2455,42 +2455,42 @@ module Dgram =
 
 module Fs =
     type URL = Url.URL
-    // let rename: Rename.IExports = jsNative
-    // let truncate: Truncate.IExports = jsNative
-    // let ftruncate: Ftruncate.IExports = jsNative
-    // let chown: Chown.IExports = jsNative
-    // let fchown: Fchown.IExports = jsNative
-    // let lchown: Lchown.IExports = jsNative
-    // let chmod: Chmod.IExports = jsNative
-    // let fchmod: Fchmod.IExports = jsNative
-    // let lchmod: Lchmod.IExports = jsNative
-    // let stat: Stat.IExports = jsNative
-    // let fstat: Fstat.IExports = jsNative
-    // let lstat: Lstat.IExports = jsNative
-    // let link: Link.IExports = jsNative
-    // let symlink: Symlink.IExports = jsNative
-    // let readlink: Readlink.IExports = jsNative
-    // let realpath: Realpath.IExports = jsNative
-    // let unlink: Unlink.IExports = jsNative
-    // let rmdir: Rmdir.IExports = jsNative
-    // let mkdir: Mkdir.IExports = jsNative
-    // let mkdtemp: Mkdtemp.IExports = jsNative
-    // let readdir: Readdir.IExports = jsNative
-    // let close: Close.IExports = jsNative
-    // let ``open``: Open_.IExports = jsNative
-    // let utimes: Utimes.IExports = jsNative
-    // let futimes: Futimes.IExports = jsNative
-    // let fsync: Fsync.IExports = jsNative
-    // let write: Write.IExports = jsNative
-    // let read: Read.IExports = jsNative
-    // let readFile: ReadFile.IExports = jsNative
-    // let writeFile: WriteFile.IExports = jsNative
-    // let appendFile: AppendFile.IExports = jsNative
-    // let exists: Exists.IExports = jsNative
+    let [<Import("rename","fs")>] rename: Rename.IExports = jsNative
+    let [<Import("truncate","fs")>] truncate: Truncate.IExports = jsNative
+    let [<Import("ftruncate","fs")>] ftruncate: Ftruncate.IExports = jsNative
+    let [<Import("chown","fs")>] chown: Chown.IExports = jsNative
+    let [<Import("fchown","fs")>] fchown: Fchown.IExports = jsNative
+    let [<Import("lchown","fs")>] lchown: Lchown.IExports = jsNative
+    let [<Import("chmod","fs")>] chmod: Chmod.IExports = jsNative
+    let [<Import("fchmod","fs")>] fchmod: Fchmod.IExports = jsNative
+    let [<Import("lchmod","fs")>] lchmod: Lchmod.IExports = jsNative
+    let [<Import("stat","fs")>] stat: Stat.IExports = jsNative
+    let [<Import("fstat","fs")>] fstat: Fstat.IExports = jsNative
+    let [<Import("lstat","fs")>] lstat: Lstat.IExports = jsNative
+    let [<Import("link","fs")>] link: Link.IExports = jsNative
+    let [<Import("symlink","fs")>] symlink: Symlink.IExports = jsNative
+    let [<Import("readlink","fs")>] readlink: Readlink.IExports = jsNative
+    let [<Import("realpath","fs")>] realpath: Realpath.IExports = jsNative
+    let [<Import("unlink","fs")>] unlink: Unlink.IExports = jsNative
+    let [<Import("rmdir","fs")>] rmdir: Rmdir.IExports = jsNative
+    let [<Import("mkdir","fs")>] mkdir: Mkdir.IExports = jsNative
+    let [<Import("mkdtemp","fs")>] mkdtemp: Mkdtemp.IExports = jsNative
+    let [<Import("readdir","fs")>] readdir: Readdir.IExports = jsNative
+    let [<Import("close","fs")>] close: Close.IExports = jsNative
+    let [<Import("open","fs")>] ``open``: Open_.IExports = jsNative
+    let [<Import("utimes","fs")>] utimes: Utimes.IExports = jsNative
+    let [<Import("futimes","fs")>] futimes: Futimes.IExports = jsNative
+    let [<Import("fsync","fs")>] fsync: Fsync.IExports = jsNative
+    let [<Import("write","fs")>] write: Write.IExports = jsNative
+    let [<Import("read","fs")>] read: Read.IExports = jsNative
+    let [<Import("readFile","fs")>] readFile: ReadFile.IExports = jsNative
+    let [<Import("writeFile","fs")>] writeFile: WriteFile.IExports = jsNative
+    let [<Import("appendFile","fs")>] appendFile: AppendFile.IExports = jsNative
+    let [<Import("exists","fs")>] exists: Exists.IExports = jsNative
     let [<Import("constants","fs")>] constants: Constants.IExports = jsNative
-    // let access: Access.IExports = jsNative
-    // let fdatasync: Fdatasync.IExports = jsNative
-    // let copyFile: CopyFile.IExports = jsNative
+    let [<Import("access","fs")>] access: Access.IExports = jsNative
+    let [<Import("fdatasync","fs")>] fdatasync: Fdatasync.IExports = jsNative
+    let [<Import("copyFile","fs")>] copyFile: CopyFile.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract Stats: StatsStatic
@@ -3154,8 +3154,8 @@ module Fs =
             abstract __promisify__: src: PathLike * dst: PathLike * ?flags: float -> Promise<unit>
 
 module Path =
-    // let posix: Posix.IExports = jsNative
-    // let win32: Win32.IExports = jsNative
+    let [<Import("posix","path")>] posix: Posix.IExports = jsNative
+    let [<Import("win32","path")>] win32: Win32.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         /// Normalize a string path, reducing '..' and '.' parts.
@@ -3959,7 +3959,7 @@ module Stream =
         [<Emit "new $0($1...)">] abstract Create: unit -> PassThrough
 
 module Util =
-    // let promisify: Promisify.IExports = jsNative
+    let [<Import("promisify","util")>] promisify: Promisify.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract format: format: obj option * [<ParamArray>] param: ResizeArray<obj option> -> string
@@ -4419,8 +4419,8 @@ module V8 =
         abstract does_zap_garbage: DoesZapCodeSpaceFlag with get, set
 
 module Timers =
-    // let setTimeout: SetTimeout.IExports = jsNative
-    // let setImmediate: SetImmediate.IExports = jsNative
+    let [<Import("setTimeout","timers")>] setTimeout: SetTimeout.IExports = jsNative
+    let [<Import("setImmediate","timers")>] setImmediate: SetImmediate.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract setTimeout: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> NodeJS.Timer

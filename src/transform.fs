@@ -190,7 +190,8 @@ let mergeModulesInFile (f: FsFile): FsFile =
             |> List.choose asModule
     }
 
-let rec createIExportsModule (fileModuleName: string) (md: FsModule): FsModule * FsVariable list =
+let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVariable list =
+    // printfn "createIExportsModule %A, %s" ns md.Name
     let typesInIExports = ResizeArray<FsType>()
     let typesGlobal = ResizeArray<FsType>()
     let typesChild = ResizeArray<FsType>()
@@ -201,7 +202,8 @@ let rec createIExportsModule (fileModuleName: string) (md: FsModule): FsModule *
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
-            let smd, vars = createIExportsModule fileModuleName smd
+            let ns = if md.Name = "" then ns else ns @ [md.Name]
+            let smd, vars = createIExportsModule ns smd
             for v in vars do
                 if v.Export.IsSome then v |> FsType.Variable |> typesChildExport.Add
                 else v |> FsType.Variable |> typesChild.Add
@@ -211,7 +213,7 @@ let rec createIExportsModule (fileModuleName: string) (md: FsModule): FsModule *
                 // addExportAssigments
                 if md.Name = "" then
                     { vb with
-                        Export = { IsGlobal = fileModuleName = "node"; Selector = "*"; Path = fileModuleName } |> Some
+                        Export = { IsGlobal = ns.[0] = "node"; Selector = "*"; Path = ns.[0] } |> Some
                     }
                     |> FsType.Variable
                     |> typesGlobal.Add
@@ -242,21 +244,28 @@ let rec createIExportsModule (fileModuleName: string) (md: FsModule): FsModule *
     )
 
     if typesInIExports.Count > 0 then
+        let ns = if ns.[0] = "node" then ns.[1..] else ns
+        let selector =
+            if ns.Length = 0 then "*"
+            else md.Name
+        let path =
+            if ns.Length = 0 then 
+                md.Name
+            else ns |> String.concat "/"
         if md.HasDeclare then
-            let path = if fileModuleName = "node" then md.Name else fileModuleName
             {
                 Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                 HasDeclare = true
-                Name = md.Name
+                Name = md.Name |> lowerFirst
                 Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
                 IsConst = true
             }
             |> variablesForParent.Add
         else
             {
-                Export = None
+                Export = { IsGlobal = false; Selector = selector; Path = path } |> Some
                 HasDeclare = true
-                Name = md.Name
+                Name = md.Name |> lowerFirst
                 Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
                 IsConst = true
             }
@@ -298,7 +307,7 @@ let createIExports (f: FsFile): FsFile =
             f.Modules
             |> List.ofSeq
             |> List.map (fun md ->
-                let md, _ = createIExportsModule f.ModuleName md
+                let md, _ = createIExportsModule [f.ModuleName] md
                 md
             )
     }

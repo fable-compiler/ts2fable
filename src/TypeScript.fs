@@ -11,7 +11,7 @@ type [<AllowNullLiteral>] IExports =
     abstract clearTimeout: handle: obj option -> unit
 
 module Ts =
-    let ScriptSnapshot: ScriptSnapshot.IExports = jsNative
+    let [<Import("ScriptSnapshot","typescript/ts")>] scriptSnapshot: ScriptSnapshot.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract OperationCanceledException: OperationCanceledExceptionStatic
