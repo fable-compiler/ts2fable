@@ -2,9 +2,24 @@ module rec ts2fable.Write
 open ts2fable.Naming
 open ts2fable.Print
 
-let printComments (lines: ResizeArray<string>) (indent: string) (comments: string list): unit =
-    for comment in comments do
-        sprintf "%s/// %s" indent comment |> lines.Add
+let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsComment list): unit =
+
+    if comments |> List.exists FsComment.isParam then
+        let summaryLines = comments |> List.choose FsComment.asSummaryLine
+        summaryLines |> List.iteri (fun i comment ->
+            sprintf "%s/// %s%s%s" indent 
+                (if i = 0 then "<summary>" else "")
+                comment
+                (if i = summaryLines.Length - 1 then "</summary>" else "")
+            |> lines.Add
+        )
+        comments |> List.choose FsComment.asParam |> List.iter (fun comment ->
+            sprintf "%s/// <param name=\"%s\">%s</param>" indent comment.Name comment.Description |> lines.Add
+        )
+    else
+        comments |> List.choose FsComment.asSummaryLine |> List.iter (fun comment ->
+            sprintf "%s/// %s" indent comment |> lines.Add
+        )
 
 let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
     let lineCountStart = lines.Count
@@ -57,7 +72,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                 match mbr with
                 | FsType.Function f ->
                     let indent = sprintf "%s    " indent
-                    printComments lines indent f.Comments
+                    printComments lines indent f.AllComments
                     sprintf "%s%s" indent (printFunction f) |> lines.Add
                     incr nLines
                 | FsType.Property p ->

@@ -7,7 +7,7 @@ module rec ts2fable.Syntax
 
 type FsInterface =
     {
-        Comments: string list
+        Comments: FsComment list
         IsStatic: bool // contains only static functions
         IsClass: bool
         Name: string
@@ -16,6 +16,12 @@ type FsInterface =
         Inherits: FsType list
         Members: FsType list
     }
+with
+    member x.HasStaticMembers = x.Members |> List.exists isStatic
+    member x.StaticMembers = x.Members |> List.filter isStatic
+    member x.NonStaticMembers = x.Members |> List.filter (not << isStatic)
+    member x.HasConstructor = x.Members |> List.exists isConstructor
+    member x.Constructors = x.Members |> List.filter isConstructor
 
 type FsTypeLiteral =
     {
@@ -40,14 +46,48 @@ type FsEnum =
         Name: string
         Cases: FsEnumCase list
     }
+with
+    member x.Type =
+        if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
+            FsEnumCaseType.Unknown
+        else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
+            FsEnumCaseType.String
+        else
+            FsEnumCaseType.Numeric
+
+type FsParamComment =
+    {
+        Name: string
+        Description: string
+    }
+
+[<RequireQualifiedAccess>]
+type FsComment =
+    | SummaryLine of string
+    | Param of FsParamComment
+    | Unknown of string option
+
+[<RequireQualifiedAccess>]
+module FsComment =
+    let isSummaryLine v = match v with | FsComment.SummaryLine _ -> true | _ -> false
+    let asSummaryLine v = match v with | FsComment.SummaryLine o -> Some o | _ -> None
+    let isParam v = match v with | FsComment.Param _ -> true | _ -> false
+    let asParam v = match v with | FsComment.Param o -> Some o | _ -> None
 
 type FsParam =
     {
+        Comment: FsComment option
         Name: string
         Optional: bool
         ParamArray: bool
         Type: FsType
     }
+
+[<RequireQualifiedAccess>]
+module FsParam =
+    let isStringLiteral (p: FsParam): bool = FsType.isStringLiteral p.Type
+    let hasComment (p: FsParam): bool = p.Comment.IsSome
+    let getComment (p: FsParam) = p.Comment
 
 [<RequireQualifiedAccess>]
 type FsFunctionKind =
@@ -58,7 +98,7 @@ type FsFunctionKind =
 
 type FsFunction =
     {
-        Comments: string list
+        Comments: FsComment list
         Kind: FsFunctionKind
         IsStatic: bool
         Name: string option // declarations have them, signatures do not
@@ -66,6 +106,16 @@ type FsFunction =
         Params: FsParam list
         ReturnType: FsType
     }
+with
+    member x.HasStringLiteralParams = x.Params |> List.exists FsParam.isStringLiteral
+    member x.StringLiteralParams = x.Params |> List.filter FsParam.isStringLiteral
+    member x.NonStringLiteralParams = x.Params |> List.filter (not << FsParam.isStringLiteral)
+    member x.HasSummaryComments = x.Comments.Length > 0
+    member x.HasParamComments = x.Params |> List.exists FsParam.hasComment
+    member x.HasComments = x.HasSummaryComments || x.HasParamComments
+    member x.SummaryLineComments = x.Comments |> List.choose FsComment.asSummaryLine
+    member x.ParamComments = x.Params |> List.map FsParam.getComment |> List.choose id
+    member x.AllComments = x.Comments @ x.ParamComments
 
 [<RequireQualifiedAccess>]
 type FsPropertyKind =
@@ -74,7 +124,7 @@ type FsPropertyKind =
 
 type FsProperty =
     {
-        Comments: string list
+        Comments: FsComment list
         Kind: FsPropertyKind
         Index: FsParam option
         Name: string
@@ -141,6 +191,8 @@ type FsVariable =
         Type: FsType
         IsConst: bool
     }
+with
+    member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal
 
 type FsMapped =
     {
@@ -182,6 +234,21 @@ type FsType =
     | Import of FsImport
     | TypeLiteral of FsTypeLiteral
 
+[<RequireQualifiedAccess>]
+module FsType =
+    let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
+    let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
+    let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
+    let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
+
+    let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
+    let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
+    let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
+    let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
+    let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
+    let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
+    let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
+
 type FsModule =
     {
         HasDeclare: bool
@@ -190,6 +257,9 @@ type FsModule =
         HelperLines: string list
         Attributes: string list
     }
+with
+    member x.IsHelper = x.HelperLines.Length > 0
+    member x.HasAttributes = x.Attributes.Length > 0
 
 type FsFile =
     {
@@ -205,31 +275,6 @@ type FsFileOut =
         Files: FsFile list
     }
 
-let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
-let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
-let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
-let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
-
-let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
-let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
-let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
-let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
-let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
-let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
-let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
-
-// type FsModule with
-    // member x.Modules = x.Types |> List.filter isModule
-    // member x.NonModules = x.Types |> List.filter (not << isModule)
-    // member x.Variables = x.Types |> List.choose asVariable
-
-let isStringLiteralParam (p: FsParam): bool = isStringLiteral p.Type
-
-type FsFunction with
-    member x.HasStringLiteralParams = x.Params |> List.exists isStringLiteralParam
-    member x.StringLiteralParams = x.Params |> List.filter isStringLiteralParam
-    member x.NonStringLiteralParams = x.Params |> List.filter (not << isStringLiteralParam)
-
 let isStatic (tp: FsType) =
     match tp with
     | FsType.Function fn -> fn.IsStatic
@@ -240,22 +285,6 @@ let isConstructor (tp: FsType) =
     match tp with
     | FsType.Function fn -> fn.Kind = FsFunctionKind.Constructor
     | _ -> false
-
-type FsInterface with
-    member x.HasStaticMembers = x.Members |> List.exists isStatic
-    member x.StaticMembers = x.Members |> List.filter isStatic
-    member x.NonStaticMembers = x.Members |> List.filter (not << isStatic)
-    member x.HasConstructor = x.Members |> List.exists isConstructor
-    member x.Constructors = x.Members |> List.filter isConstructor
-
-type FsEnum with
-    member x.Type =
-        if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
-            FsEnumCaseType.Unknown
-        else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
-            FsEnumCaseType.String
-        else
-            FsEnumCaseType.Numeric
 
 let rec getName (tp: FsType) =
     match tp with
@@ -282,10 +311,3 @@ let rec getFullName (tp: FsType) =
     | FsType.Generic gn -> getFullName gn.Type
     | FsType.File fl -> fl.FileName
     | _ -> getName tp
-
-type FsVariable with
-    member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal
-
-type FsModule with
-    member x.IsHelper = x.HelperLines.Length > 0
-    member x.HasAttributes = x.Attributes.Length > 0

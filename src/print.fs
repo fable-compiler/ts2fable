@@ -50,10 +50,10 @@ let printType (tp: FsType): string =
         printfn "unsupported printType %A" tp
         "obj"
 
-let printFunction (f: FsFunction): string =
+let printFunction (fn: FsFunction): string =
     let line = ResizeArray()
 
-    match f.Kind with
+    match fn.Kind with
     | FsFunctionKind.Regular -> ()
     | FsFunctionKind.Constructor ->
         "[<Emit \"new $0($1...)\">] " |> line.Add
@@ -62,16 +62,16 @@ let printFunction (f: FsFunction): string =
     | FsFunctionKind.StringParam emit ->
         sprintf  "[<Emit \"%s\">] " emit |> line.Add
 
-    sprintf "abstract %s" f.Name.Value |> line.Add
+    sprintf "abstract %s" fn.Name.Value |> line.Add
     let prms = 
-        f.Params |> List.map(fun p ->
+        fn.Params |> List.map(fun p ->
             if p.ParamArray then
                 sprintf "[<ParamArray>] %s%s: %s" (if p.Optional then "?" else "") p.Name
                     (   match p.Type with
                         | FsType.Array _ -> printType p.Type
                         | _ -> 
                             // failwithf "function with unsupported param array type: %s" f.Name.Value
-                            printfn "ParamArray function is not an array type: %s" (getName(FsType.Function f))
+                            printfn "ParamArray function is not an array type: %s" (getName(FsType.Function fn))
                             printType p.Type
                     )
             else
@@ -81,8 +81,9 @@ let printFunction (f: FsFunction): string =
         sprintf ": unit" |> line.Add
     else
         sprintf ": %s" (prms |> String.concat " * ") |> line.Add
-    sprintf " -> %s" (printType f.ReturnType) |> line.Add
+    sprintf " -> %s" (printType fn.ReturnType) |> line.Add
     line |> String.concat ""
+
 let printProperty (pr: FsProperty): string =
     sprintf "%sabstract %s: %s%s%s%s"
         (   match pr.Kind with
