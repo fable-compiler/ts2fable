@@ -75,13 +75,18 @@ module Ts =
         abstract validateLocaleAndSetLanguage: locale: string * sys: ValidateLocaleAndSetLanguageSys * ?errors: Push<Diagnostic> -> unit
         abstract getOriginalNode: node: Node -> Node
         abstract getOriginalNode: node: Node * nodeTest: (Node -> bool) -> 'T
-        /// Gets a value indicating whether a node originated in the parse tree.
+        /// <summary>Gets a value indicating whether a node originated in the parse tree.</summary>
+        /// <param name="node">The node to test.</param>
         abstract isParseTreeNode: node: Node -> bool
-        /// Gets the original parse tree node for a node.
+        /// <summary>Gets the original parse tree node for a node.</summary>
+        /// <param name="node">The original node.</param>
         abstract getParseTreeNode: node: Node -> Node
-        /// Gets the original parse tree node for a node.
+        /// <summary>Gets the original parse tree node for a node.</summary>
+        /// <param name="node">The original node.</param>
+        /// <param name="nodeTest">A callback used to ensure the correct type of parse tree node is returned.</param>
         abstract getParseTreeNode: node: Node * ?nodeTest: (Node -> bool) -> 'T
-        /// Remove extra underscore from escaped identifier text content.
+        /// <summary>Remove extra underscore from escaped identifier text content.</summary>
+        /// <param name="identifier">The escaped identifier text.</param>
         abstract unescapeLeadingUnderscores: identifier: __String -> string
         abstract idText: identifier: Identifier -> string
         abstract symbolName: symbol: Symbol -> string
@@ -298,18 +303,26 @@ module Ts =
         abstract isSetAccessor: node: Node -> bool
         abstract isGetAccessor: node: Node -> bool
         abstract createNode: kind: SyntaxKind * ?pos: float * ?``end``: float -> Node
-        /// Invokes a callback for each child of the given node. The 'cbNode' callback is invoked for all child nodes
+        /// <summary>Invokes a callback for each child of the given node. The 'cbNode' callback is invoked for all child nodes
         /// stored in properties. If a 'cbNodes' callback is specified, it is invoked for embedded arrays; otherwise,
         /// embedded arrays are flattened and the 'cbNode' callback is invoked for each element. If a callback returns
-        /// a truthy value, iteration stops and that value is returned. Otherwise, undefined is returned.
+        /// a truthy value, iteration stops and that value is returned. Otherwise, undefined is returned.</summary>
+        /// <param name="node">a given node to visit its children</param>
+        /// <param name="cbNode">a callback to be invoked for all child nodes</param>
+        /// <param name="cbNodes">a callback to be invoked for embedded array</param>
         abstract forEachChild: node: Node * cbNode: (Node -> 'T option) * ?cbNodes: (ResizeArray<Node> -> 'T option) -> 'T option
         abstract createSourceFile: fileName: string * sourceText: string * languageVersion: ScriptTarget * ?setParentNodes: bool * ?scriptKind: ScriptKind -> SourceFile
         abstract parseIsolatedEntityName: text: string * languageVersion: ScriptTarget -> EntityName
-        /// Parse json text into SyntaxTree and return node and parse errors if any
+        /// <summary>Parse json text into SyntaxTree and return node and parse errors if any</summary>
+        /// <param name="fileName"></param>
+        /// <param name="sourceText"></param>
         abstract parseJsonText: fileName: string * sourceText: string -> JsonSourceFile
         abstract isExternalModule: file: SourceFile -> bool
         abstract updateSourceFile: sourceFile: SourceFile * newText: string * textChangeRange: TextChangeRange * ?aggressiveChecks: bool -> SourceFile
         abstract getEffectiveTypeRoots: options: CompilerOptions * host: GetEffectiveTypeRootsHost -> ResizeArray<string> option
+        /// <param name="containingFile">- file that contains type reference directive, can be undefined if containing file is unknown.
+        /// This is possible in case if resolution is performed for directives specified via 'types' parameter. In this case initial path for secondary lookups
+        /// is assumed to be the same as root directory of the project.</param>
         abstract resolveTypeReferenceDirective: typeReferenceDirectiveName: string * containingFile: string option * options: CompilerOptions * host: ModuleResolutionHost -> ResolvedTypeReferenceDirectiveWithFailedLookupLocations
         /// Given a set of options, returns the set of type directive names
         ///    that should be included for this program automatically.
@@ -596,11 +609,14 @@ module Ts =
         abstract updateSourceFileNode: node: SourceFile * statements: ResizeArray<Statement> -> SourceFile
         /// Creates a shallow, memberwise clone of a node for mutation.
         abstract getMutableClone: node: 'T -> 'T
-        /// Creates a synthetic statement to act as a placeholder for a not-emitted statement in
-        /// order to preserve comments.
+        /// <summary>Creates a synthetic statement to act as a placeholder for a not-emitted statement in
+        /// order to preserve comments.</summary>
+        /// <param name="original">The original statement.</param>
         abstract createNotEmittedStatement: original: Node -> NotEmittedStatement
-        /// Creates a synthetic expression to act as a placeholder for a not-emitted expression in
-        /// order to preserve comments or sourcemap positions.
+        /// <summary>Creates a synthetic expression to act as a placeholder for a not-emitted expression in
+        /// order to preserve comments or sourcemap positions.</summary>
+        /// <param name="expression">The inner expression to emit.</param>
+        /// <param name="original">The original outer expression.</param>
         abstract createPartiallyEmittedExpression: expression: Expression * ?original: Node -> PartiallyEmittedExpression
         abstract updatePartiallyEmittedExpression: node: PartiallyEmittedExpression * expression: Expression -> PartiallyEmittedExpression
         abstract createCommaList: elements: ResizeArray<Expression> -> CommaListExpression
@@ -626,7 +642,8 @@ module Ts =
         abstract createVoidZero: unit -> VoidExpression
         abstract createExportDefault: expression: Expression -> ExportAssignment
         abstract createExternalModuleExport: exportName: Identifier -> ExportDeclaration
-        /// Clears any EmitNode entries from parse-tree nodes.
+        /// <summary>Clears any EmitNode entries from parse-tree nodes.</summary>
+        /// <param name="sourceFile">A source file.</param>
         abstract disposeEmitNodes: sourceFile: SourceFile -> unit
         abstract setTextRange: range: 'T * location: TextRange option -> 'T
         /// Sets flags that control emit behavior of a node.
@@ -666,13 +683,31 @@ module Ts =
         /// Moves matching emit helpers from a source node to a target node.
         abstract moveEmitHelpers: source: Node * target: Node * predicate: (EmitHelper -> bool) -> unit
         abstract setOriginalNode: node: 'T * original: Node option -> 'T
-        /// Visits a Node using the supplied visitor, possibly returning a new Node in its place.
+        /// <summary>Visits a Node using the supplied visitor, possibly returning a new Node in its place.</summary>
+        /// <param name="node">The Node to visit.</param>
+        /// <param name="visitor">The callback used to visit the Node.</param>
+        /// <param name="test">A callback to execute to verify the Node is valid.</param>
+        /// <param name="lift">An optional callback to execute to lift a NodeArray into a valid Node.</param>
         abstract visitNode: node: 'T * visitor: Visitor * ?test: (Node -> bool) * ?lift: (ResizeArray<Node> -> 'T) -> 'T
-        /// Visits a Node using the supplied visitor, possibly returning a new Node in its place.
+        /// <summary>Visits a Node using the supplied visitor, possibly returning a new Node in its place.</summary>
+        /// <param name="node">The Node to visit.</param>
+        /// <param name="visitor">The callback used to visit the Node.</param>
+        /// <param name="test">A callback to execute to verify the Node is valid.</param>
+        /// <param name="lift">An optional callback to execute to lift a NodeArray into a valid Node.</param>
         abstract visitNode: node: 'T option * visitor: Visitor * ?test: (Node -> bool) * ?lift: (ResizeArray<Node> -> 'T) -> 'T option
-        /// Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.
+        /// <summary>Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.</summary>
+        /// <param name="nodes">The NodeArray to visit.</param>
+        /// <param name="visitor">The callback used to visit a Node.</param>
+        /// <param name="test">A node test to execute for each node.</param>
+        /// <param name="start">An optional value indicating the starting offset at which to start visiting.</param>
+        /// <param name="count">An optional value indicating the maximum number of nodes to visit.</param>
         abstract visitNodes: nodes: ResizeArray<'T> * visitor: Visitor * ?test: (Node -> bool) * ?start: float * ?count: float -> ResizeArray<'T>
-        /// Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.
+        /// <summary>Visits a NodeArray using the supplied visitor, possibly returning a new NodeArray in its place.</summary>
+        /// <param name="nodes">The NodeArray to visit.</param>
+        /// <param name="visitor">The callback used to visit a Node.</param>
+        /// <param name="test">A node test to execute for each node.</param>
+        /// <param name="start">An optional value indicating the starting offset at which to start visiting.</param>
+        /// <param name="count">An optional value indicating the maximum number of nodes to visit.</param>
         abstract visitNodes: nodes: ResizeArray<'T> option * visitor: Visitor * ?test: (Node -> bool) * ?start: float * ?count: float -> ResizeArray<'T> option
         /// Starts a new lexical environment and visits a statement list, ending the lexical environment
         /// and merging hoisted declarations upon completion.
@@ -689,9 +724,15 @@ module Ts =
         /// Resumes a suspended lexical environment and visits a concise body, ending the lexical
         /// environment and merging hoisted declarations upon completion.
         abstract visitFunctionBody: node: ConciseBody * visitor: Visitor * context: TransformationContext -> ConciseBody
-        /// Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.
+        /// <summary>Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.</summary>
+        /// <param name="node">The Node whose children will be visited.</param>
+        /// <param name="visitor">The callback used to visit each child.</param>
+        /// <param name="context">A lexical environment context for the visitor.</param>
         abstract visitEachChild: node: 'T * visitor: Visitor * context: TransformationContext -> 'T
-        /// Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.
+        /// <summary>Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.</summary>
+        /// <param name="node">The Node whose children will be visited.</param>
+        /// <param name="visitor">The callback used to visit each child.</param>
+        /// <param name="context">A lexical environment context for the visitor.</param>
         abstract visitEachChild: node: 'T option * visitor: Visitor * context: TransformationContext * ?nodesVisitor: obj * ?tokenVisitor: Visitor -> 'T option
         abstract createPrinter: ?printerOptions: PrinterOptions * ?handlers: PrintHandlers -> Printer
         abstract findConfigFile: searchPath: string * fileExists: (string -> bool) * ?configName: string -> string
@@ -702,24 +743,39 @@ module Ts =
         abstract formatDiagnostic: diagnostic: Diagnostic * host: FormatDiagnosticsHost -> string
         abstract formatDiagnosticsWithColorAndContext: diagnostics: ResizeArray<Diagnostic> * host: FormatDiagnosticsHost -> string
         abstract flattenDiagnosticMessageText: messageText: U2<string, DiagnosticMessageChain> * newLine: string -> string
-        /// Create a new 'Program' instance. A Program is an immutable collection of 'SourceFile's and a 'CompilerOptions'
+        /// <summary>Create a new 'Program' instance. A Program is an immutable collection of 'SourceFile's and a 'CompilerOptions'
         /// that represent a compilation unit.
         /// 
         /// Creating a program proceeds from a set of root files, expanding the set of inputs by following imports and
-        /// triple-slash-reference-path directives transitively. '@types' and triple-slash-reference-types are also pulled in.
+        /// triple-slash-reference-path directives transitively. '@types' and triple-slash-reference-types are also pulled in.</summary>
+        /// <param name="rootNames">- A set of root files.</param>
+        /// <param name="options">- The compiler options which should be used.</param>
+        /// <param name="host">- The host interacts with the underlying file system.</param>
+        /// <param name="oldProgram">- Reuses an old program structure.</param>
         abstract createProgram: rootNames: ResizeArray<string> * options: CompilerOptions * ?host: CompilerHost * ?oldProgram: Program -> Program
         abstract parseCommandLine: commandLine: ResizeArray<string> * ?readFile: (string -> string option) -> ParsedCommandLine
-        /// Read tsconfig.json file
+        /// <summary>Read tsconfig.json file</summary>
+        /// <param name="fileName">The path to the config file</param>
         abstract readConfigFile: fileName: string * readFile: (string -> string option) -> obj
-        /// Parse the text of the tsconfig.json file
+        /// <summary>Parse the text of the tsconfig.json file</summary>
+        /// <param name="fileName">The path to the config file</param>
+        /// <param name="jsonText">The text of the config file</param>
         abstract parseConfigFileTextToJson: fileName: string * jsonText: string -> obj
-        /// Read tsconfig.json file
+        /// <summary>Read tsconfig.json file</summary>
+        /// <param name="fileName">The path to the config file</param>
         abstract readJsonConfigFile: fileName: string * readFile: (string -> string option) -> JsonSourceFile
         /// Convert the json syntax tree into the json value
         abstract convertToObject: sourceFile: JsonSourceFile * errors: Push<Diagnostic> -> obj option
-        /// Parse the contents of a config file (tsconfig.json).
+        /// <summary>Parse the contents of a config file (tsconfig.json).</summary>
+        /// <param name="json">The contents of the config file to parse</param>
+        /// <param name="host">Instance of ParseConfigHost used to enumerate files in folder.</param>
+        /// <param name="basePath">A root directory to resolve relative path entries in the config
+        /// file to. e.g. outDir</param>
         abstract parseJsonConfigFileContent: json: obj option * host: ParseConfigHost * basePath: string * ?existingOptions: CompilerOptions * ?configFileName: string * ?resolutionStack: ResizeArray<Path> * ?extraFileExtensions: ResizeArray<JsFileExtensionInfo> -> ParsedCommandLine
-        /// Parse the contents of a config file (tsconfig.json).
+        /// <summary>Parse the contents of a config file (tsconfig.json).</summary>
+        /// <param name="host">Instance of ParseConfigHost used to enumerate files in folder.</param>
+        /// <param name="basePath">A root directory to resolve relative path entries in the config
+        /// file to. e.g. outDir</param>
         abstract parseJsonSourceFileConfigFileContent: sourceFile: JsonSourceFile * host: ParseConfigHost * basePath: string * ?existingOptions: CompilerOptions * ?configFileName: string * ?resolutionStack: ResizeArray<Path> * ?extraFileExtensions: ResizeArray<JsFileExtensionInfo> -> ParsedCommandLine
         abstract convertCompilerOptionsFromJson: jsonOptions: obj option * basePath: string * ?configFileName: string -> obj
         abstract convertTypeAcquisitionFromJson: jsonOptions: obj option * basePath: string * ?configFileName: string -> obj
@@ -742,7 +798,10 @@ module Ts =
         /// node package.
         /// The functionality is not supported if the ts module is consumed outside of a node module.
         abstract getDefaultLibFilePath: options: CompilerOptions -> string
-        /// Transform one or more nodes using the supplied transformers.
+        /// <summary>Transform one or more nodes using the supplied transformers.</summary>
+        /// <param name="source">A single `Node` or an array of `Node` objects.</param>
+        /// <param name="transformers">An array of `TransformerFactory` callbacks used to process the transformation.</param>
+        /// <param name="compilerOptions">Optional compiler options.</param>
         abstract transform: source: U2<'T, ResizeArray<'T>> * transformers: ResizeArray<TransformerFactory<'T>> * ?compilerOptions: CompilerOptions -> TransformationResult<'T>
 
     type [<AllowNullLiteral>] ValidateLocaleAndSetLanguageSys =
@@ -3435,7 +3494,8 @@ module Ts =
     type [<AllowNullLiteral>] ParseConfigHost =
         abstract useCaseSensitiveFileNames: bool with get, set
         abstract readDirectory: rootDir: string * extensions: ResizeArray<string> * excludes: ResizeArray<string> * includes: ResizeArray<string> * depth: float -> ResizeArray<string>
-        /// Gets a value indicating whether the specified path exists and is a file.
+        /// <summary>Gets a value indicating whether the specified path exists and is a file.</summary>
+        /// <param name="path">The path to test.</param>
         abstract fileExists: path: string -> bool
         abstract readFile: path: string -> string option
 
@@ -3562,7 +3622,8 @@ module Ts =
         abstract getAugmentedPropertiesOfType: ``type``: Type -> ResizeArray<Symbol>
         abstract getRootSymbols: symbol: Symbol -> ResizeArray<Symbol>
         abstract getContextualType: node: Expression -> Type option
-        /// returns unknownSignature in the case of an error.
+        /// <summary>returns unknownSignature in the case of an error.</summary>
+        /// <param name="argumentCount">Apparent number of arguments, passed in case of a possibly incomplete call. This should come from an ArgumentListInfo. See `signatureHelp.ts`.</param>
         abstract getResolvedSignature: node: CallLikeExpression * ?candidatesOutArray: ResizeArray<Signature> * ?argumentCount: float -> Signature
         abstract getSignatureFromDeclaration: declaration: SignatureDeclaration -> Signature option
         abstract isImplementationOfOverload: node: FunctionLike -> bool option
@@ -4469,9 +4530,14 @@ module Ts =
         abstract transformed: ResizeArray<'T> with get, set
         /// Gets diagnostics for the transformation. 
         abstract diagnostics: ResizeArray<Diagnostic> option with get, set
-        /// Gets a substitute for a node, if one is available; otherwise, returns the original node.
+        /// <summary>Gets a substitute for a node, if one is available; otherwise, returns the original node.</summary>
+        /// <param name="hint">A hint as to the intended usage of the node.</param>
+        /// <param name="node">The node to substitute.</param>
         abstract substituteNode: hint: EmitHint * node: Node -> Node
-        /// Emits a node with possible notification.
+        /// <summary>Emits a node with possible notification.</summary>
+        /// <param name="hint">A hint as to the intended usage of the node.</param>
+        /// <param name="node">The node to emit.</param>
+        /// <param name="emitCallback">A callback used to emit the node.</param>
         abstract emitNodeWithNotification: hint: EmitHint * node: Node * emitCallback: (EmitHint -> Node -> unit) -> unit
         /// Clean up EmitNode entries on any parse-tree nodes.
         abstract dispose: unit -> unit
@@ -4500,7 +4566,17 @@ module Ts =
         let asTArray (v: VisitResult<'T>) = match v with None -> None | Some o -> match o with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] Printer =
-        /// Print a node and its subtree as-is, without any emit transformations.
+        /// <summary>Print a node and its subtree as-is, without any emit transformations.</summary>
+        /// <param name="hint">A value indicating the purpose of a node. This is primarily used to
+        /// distinguish between an `Identifier` used in an expression position, versus an
+        /// `Identifier` used as an `IdentifierName` as part of a declaration. For most nodes you
+        /// should just pass `Unspecified`.</param>
+        /// <param name="node">The node to print. The node and its subtree are printed as-is, without any
+        /// emit transformations.</param>
+        /// <param name="sourceFile">A source file that provides context for the node. The source text of
+        /// the file is used to emit the original source content for literals and identifiers, while
+        /// the identifiers of the source file are used when generating unique names to avoid
+        /// collisions.</param>
         abstract printNode: hint: EmitHint * node: Node * sourceFile: SourceFile -> string
         /// Prints a source file as-is, without any emit transformations.
         abstract printFile: sourceFile: SourceFile -> string
@@ -4511,13 +4587,18 @@ module Ts =
         /// A hook used by the Printer when generating unique names to avoid collisions with
         /// globally defined names that exist outside of the current source file.
         abstract hasGlobalName: name: string -> bool
-        /// A hook used by the Printer to provide notifications prior to emitting a node. A
+        /// <summary>A hook used by the Printer to provide notifications prior to emitting a node. A
         /// compatible implementation **must** invoke `emitCallback` with the provided `hint` and
-        /// `node` values.
+        /// `node` values.</summary>
+        /// <param name="hint">A hint indicating the intended purpose of the node.</param>
+        /// <param name="node">The node to emit.</param>
+        /// <param name="emitCallback">A callback that, when invoked, will emit the node.</param>
         abstract onEmitNode: hint: EmitHint * node: Node * emitCallback: (EmitHint -> Node -> unit) -> unit
-        /// A hook used by the Printer to perform just-in-time substitution of a node. This is
+        /// <summary>A hook used by the Printer to perform just-in-time substitution of a node. This is
         /// primarily used by node transformations that need to substitute one node for another,
-        /// such as replacing `myExportedVar` with `exports.myExportedVar`.
+        /// such as replacing `myExportedVar` with `exports.myExportedVar`.</summary>
+        /// <param name="hint">A hint indicating the intended purpose of the node.</param>
+        /// <param name="node">The node to emit.</param>
         abstract substituteNode: hint: EmitHint * node: Node -> Node
 
     type [<AllowNullLiteral>] PrinterOptions =
@@ -5149,13 +5230,22 @@ module Ts =
         abstract classification: TokenClass with get, set
 
     type [<AllowNullLiteral>] Classifier =
-        /// Gives lexical classifications of tokens on a line without any syntactic context.
+        /// <summary>Gives lexical classifications of tokens on a line without any syntactic context.
         /// For instance, a token consisting of the text 'string' can be either an identifier
         /// named 'string' or the keyword 'string', however, because this classifier is not aware,
         /// it relies on certain heuristics to give acceptable results. For classifications where
         /// speed trumps accuracy, this function is preferable; however, for true accuracy, the
         /// syntactic classifier is ideal. In fact, in certain editing scenarios, combining the
-        /// lexical, syntactic, and semantic classifiers may issue the best user experience.
+        /// lexical, syntactic, and semantic classifiers may issue the best user experience.</summary>
+        /// <param name="text">The text of a line to classify.</param>
+        /// <param name="lexState">The state of the lexical classifier at the end of the previous line.</param>
+        /// <param name="syntacticClassifierAbsent">Whether the client is *not* using a syntactic classifier.
+        /// If there is no syntactic classifier (syntacticClassifierAbsent=true),
+        /// certain heuristics may be used in its place; however, if there is a
+        /// syntactic classifier (syntacticClassifierAbsent=false), certain
+        /// classifications which may be incorrectly categorized will be given
+        /// back as Identifiers in order to allow the syntactic classifier to
+        /// subsume the classification.</param>
         abstract getClassificationsForLine: text: string * lexState: EndOfLineState * syntacticClassifierAbsent: bool -> ClassificationResult
         abstract getEncodedLexicalClassifications: text: string * endOfLineState: EndOfLineState * syntacticClassifierAbsent: bool -> Classifications
 
@@ -5269,21 +5359,33 @@ module Ts =
     /// To create a default DocumentRegistry, use createDocumentRegistry to create one, and pass it
     /// to all subsequent createLanguageService calls.
     type [<AllowNullLiteral>] DocumentRegistry =
-        /// Request a stored SourceFile with a given fileName and compilationSettings.
+        /// <summary>Request a stored SourceFile with a given fileName and compilationSettings.
         /// The first call to acquire will call createLanguageServiceSourceFile to generate
-        /// the SourceFile if was not found in the registry.
+        /// the SourceFile if was not found in the registry.</summary>
+        /// <param name="fileName">The name of the file requested</param>
+        /// <param name="compilationSettings">Some compilation settings like target affects the
+        /// shape of a the resulting SourceFile. This allows the DocumentRegistry to store
+        /// multiple copies of the same file for different compilation settings.</param>
         abstract acquireDocument: fileName: string * compilationSettings: CompilerOptions * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
         abstract acquireDocumentWithKey: fileName: string * path: Path * compilationSettings: CompilerOptions * key: DocumentRegistryBucketKey * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
-        /// Request an updated version of an already existing SourceFile with a given fileName
+        /// <summary>Request an updated version of an already existing SourceFile with a given fileName
         /// and compilationSettings. The update will in-turn call updateLanguageServiceSourceFile
-        /// to get an updated SourceFile.
+        /// to get an updated SourceFile.</summary>
+        /// <param name="fileName">The name of the file requested</param>
+        /// <param name="compilationSettings">Some compilation settings like target affects the
+        /// shape of a the resulting SourceFile. This allows the DocumentRegistry to store
+        /// multiple copies of the same file for different compilation settings.</param>
+        /// <param name="scriptSnapshot">Text of the file.</param>
+        /// <param name="version">Current version of the file.</param>
         abstract updateDocument: fileName: string * compilationSettings: CompilerOptions * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
         abstract updateDocumentWithKey: fileName: string * path: Path * compilationSettings: CompilerOptions * key: DocumentRegistryBucketKey * scriptSnapshot: IScriptSnapshot * version: string * ?scriptKind: ScriptKind -> SourceFile
         abstract getKeyForCompilationSettings: settings: CompilerOptions -> DocumentRegistryBucketKey
-        /// Informs the DocumentRegistry that a file is not needed any longer.
+        /// <summary>Informs the DocumentRegistry that a file is not needed any longer.
         /// 
         /// Note: It is not allowed to call release on a SourceFile that was not acquired from
-        /// this registry originally.
+        /// this registry originally.</summary>
+        /// <param name="fileName">The name of the file to be released</param>
+        /// <param name="compilationSettings">The compilation settings used to acquire the file</param>
         abstract releaseDocument: fileName: string * compilationSettings: CompilerOptions -> unit
         abstract releaseDocumentWithKey: path: Path * key: DocumentRegistryBucketKey -> unit
         abstract reportStats: unit -> string
