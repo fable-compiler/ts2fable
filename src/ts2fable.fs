@@ -35,7 +35,7 @@ let transform (file: FsFile): FsFile =
     |> fixNamespace
     |> addTicForGenericFunctions // must be after fixEscapeWords
     |> addTicForGenericTypes
-    |> removeTodoMembers
+    // |> removeTodoMembers
     |> removeTypeParamsFromStatic
     |> removeDuplicateFunctions
     |> extractTypeLiterals // after fixEscapeWords

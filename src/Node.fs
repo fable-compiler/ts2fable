@@ -400,6 +400,7 @@ module NodeJS =
         abstract cwd: unit -> string
         abstract emitWarning: warning: U2<string, Error> * ?name: string * ?ctor: Function -> unit
         abstract env: ProcessEnv with get, set
+        abstract exit: ?code: float -> obj
         abstract exitCode: float with get, set
         abstract getgid: unit -> float
         abstract setgid: id: U2<float, string> -> unit
@@ -2496,259 +2497,554 @@ module Fs =
         abstract Stats: StatsStatic
         abstract ReadStream: ReadStreamStatic
         abstract WriteStream: WriteStreamStatic
-        /// Asynchronous rename(2) - Change the name or location of a file or directory.
+        /// <summary>Asynchronous rename(2) - Change the name or location of a file or directory.</summary>
+        /// <param name="oldPath">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
+        /// <param name="newPath">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract rename: oldPath: PathLike * newPath: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous rename(2) - Change the name or location of a file or directory.
+        /// <summary>Synchronous rename(2) - Change the name or location of a file or directory.</summary>
+        /// <param name="oldPath">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
+        /// <param name="newPath">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract renameSync: oldPath: PathLike * newPath: PathLike -> unit
-        /// Asynchronous truncate(2) - Truncate a file to a specified length.
+        /// <summary>Asynchronous truncate(2) - Truncate a file to a specified length.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="len">If not specified, defaults to `0`.</param>
         abstract truncate: path: PathLike * len: float option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Asynchronous truncate(2) - Truncate a file to a specified length.
+        /// <summary>Asynchronous truncate(2) - Truncate a file to a specified length.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract truncate: path: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous truncate(2) - Truncate a file to a specified length.
+        /// <summary>Synchronous truncate(2) - Truncate a file to a specified length.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="len">If not specified, defaults to `0`.</param>
         abstract truncateSync: path: PathLike * ?len: float option -> unit
-        /// Asynchronous ftruncate(2) - Truncate a file to a specified length.
+        /// <summary>Asynchronous ftruncate(2) - Truncate a file to a specified length.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="len">If not specified, defaults to `0`.</param>
         abstract ftruncate: fd: float * len: float option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Asynchronous ftruncate(2) - Truncate a file to a specified length.
+        /// <summary>Asynchronous ftruncate(2) - Truncate a file to a specified length.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract ftruncate: fd: float * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous ftruncate(2) - Truncate a file to a specified length.
+        /// <summary>Synchronous ftruncate(2) - Truncate a file to a specified length.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="len">If not specified, defaults to `0`.</param>
         abstract ftruncateSync: fd: float * ?len: float option -> unit
-        /// Asynchronous chown(2) - Change ownership of a file.
+        /// <summary>Asynchronous chown(2) - Change ownership of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract chown: path: PathLike * uid: float * gid: float * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous chown(2) - Change ownership of a file.
+        /// <summary>Synchronous chown(2) - Change ownership of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract chownSync: path: PathLike * uid: float * gid: float -> unit
-        /// Asynchronous fchown(2) - Change ownership of a file.
+        /// <summary>Asynchronous fchown(2) - Change ownership of a file.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract fchown: fd: float * uid: float * gid: float * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous fchown(2) - Change ownership of a file.
+        /// <summary>Synchronous fchown(2) - Change ownership of a file.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract fchownSync: fd: float * uid: float * gid: float -> unit
-        /// Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
+        /// <summary>Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract lchown: path: PathLike * uid: float * gid: float * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
+        /// <summary>Synchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract lchownSync: path: PathLike * uid: float * gid: float -> unit
-        /// Asynchronous chmod(2) - Change permissions of a file.
+        /// <summary>Asynchronous chmod(2) - Change permissions of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
         abstract chmod: path: PathLike * mode: U2<string, float> * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous chmod(2) - Change permissions of a file.
+        /// <summary>Synchronous chmod(2) - Change permissions of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
         abstract chmodSync: path: PathLike * mode: U2<string, float> -> unit
-        /// Asynchronous fchmod(2) - Change permissions of a file.
+        /// <summary>Asynchronous fchmod(2) - Change permissions of a file.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
         abstract fchmod: fd: float * mode: U2<string, float> * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous fchmod(2) - Change permissions of a file.
+        /// <summary>Synchronous fchmod(2) - Change permissions of a file.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
         abstract fchmodSync: fd: float * mode: U2<string, float> -> unit
-        /// Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
+        /// <summary>Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
         abstract lchmod: path: PathLike * mode: U2<string, float> * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
+        /// <summary>Synchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
         abstract lchmodSync: path: PathLike * mode: U2<string, float> -> unit
-        /// Asynchronous stat(2) - Get file status.
+        /// <summary>Asynchronous stat(2) - Get file status.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract stat: path: PathLike * callback: (NodeJS.ErrnoException -> Stats -> unit) -> unit
-        /// Synchronous stat(2) - Get file status.
+        /// <summary>Synchronous stat(2) - Get file status.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract statSync: path: PathLike -> Stats
-        /// Asynchronous fstat(2) - Get file status.
+        /// <summary>Asynchronous fstat(2) - Get file status.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract fstat: fd: float * callback: (NodeJS.ErrnoException -> Stats -> unit) -> unit
-        /// Synchronous fstat(2) - Get file status.
+        /// <summary>Synchronous fstat(2) - Get file status.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract fstatSync: fd: float -> Stats
-        /// Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
+        /// <summary>Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract lstat: path: PathLike * callback: (NodeJS.ErrnoException -> Stats -> unit) -> unit
-        /// Synchronous lstat(2) - Get file status. Does not dereference symbolic links.
+        /// <summary>Synchronous lstat(2) - Get file status. Does not dereference symbolic links.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract lstatSync: path: PathLike -> Stats
-        /// Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
+        /// <summary>Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.</summary>
+        /// <param name="existingPath">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="newPath">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract link: existingPath: PathLike * newPath: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous link(2) - Create a new link (also known as a hard link) to an existing file.
+        /// <summary>Synchronous link(2) - Create a new link (also known as a hard link) to an existing file.</summary>
+        /// <param name="existingPath">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="newPath">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract linkSync: existingPath: PathLike * newPath: PathLike -> unit
-        /// Asynchronous symlink(2) - Create a new symbolic link to an existing file.
+        /// <summary>Asynchronous symlink(2) - Create a new symbolic link to an existing file.</summary>
+        /// <param name="target">A path to an existing file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="path">A path to the new symlink. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="type">May be set to `'dir'`, `'file'`, or `'junction'` (default is `'file'`) and is only available on Windows (ignored on other platforms).
+        /// When using `'junction'`, the `target` argument will automatically be normalized to an absolute path.</param>
         abstract symlink: target: PathLike * path: PathLike * ``type``: string option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Asynchronous symlink(2) - Create a new symbolic link to an existing file.
+        /// <summary>Asynchronous symlink(2) - Create a new symbolic link to an existing file.</summary>
+        /// <param name="target">A path to an existing file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="path">A path to the new symlink. If a URL is provided, it must use the `file:` protocol.</param>
         abstract symlink: target: PathLike * path: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous symlink(2) - Create a new symbolic link to an existing file.
+        /// <summary>Synchronous symlink(2) - Create a new symbolic link to an existing file.</summary>
+        /// <param name="target">A path to an existing file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="path">A path to the new symlink. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="type">May be set to `'dir'`, `'file'`, or `'junction'` (default is `'file'`) and is only available on Windows (ignored on other platforms).
+        /// When using `'junction'`, the `target` argument will automatically be normalized to an absolute path.</param>
         abstract symlinkSync: target: PathLike * path: PathLike * ?``type``: string option -> unit
-        /// Asynchronous readlink(2) - read value of a symbolic link.
+        /// <summary>Asynchronous readlink(2) - read value of a symbolic link.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readlink: path: PathLike * options: U2<obj, BufferEncoding> option * callback: (NodeJS.ErrnoException -> string -> unit) -> unit
-        /// Asynchronous readlink(2) - read value of a symbolic link.
+        /// <summary>Asynchronous readlink(2) - read value of a symbolic link.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readlink: path: PathLike * options: U2<obj, string> * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
-        /// Asynchronous readlink(2) - read value of a symbolic link.
+        /// <summary>Asynchronous readlink(2) - read value of a symbolic link.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readlink: path: PathLike * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> U2<string, Buffer> -> unit) -> unit
-        /// Asynchronous readlink(2) - read value of a symbolic link.
+        /// <summary>Asynchronous readlink(2) - read value of a symbolic link.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract readlink: path: PathLike * callback: (NodeJS.ErrnoException -> string -> unit) -> unit
-        /// Synchronous readlink(2) - read value of a symbolic link.
+        /// <summary>Synchronous readlink(2) - read value of a symbolic link.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readlinkSync: path: PathLike * ?options: U2<obj, BufferEncoding> option -> string
-        /// Synchronous readlink(2) - read value of a symbolic link.
+        /// <summary>Synchronous readlink(2) - read value of a symbolic link.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readlinkSync: path: PathLike * options: U2<obj, string> -> Buffer
-        /// Synchronous readlink(2) - read value of a symbolic link.
+        /// <summary>Synchronous readlink(2) - read value of a symbolic link.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readlinkSync: path: PathLike * ?options: U2<obj, string> option -> U2<string, Buffer>
-        /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
+        /// <summary>Asynchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract realpath: path: PathLike * options: U2<obj, BufferEncoding> option * callback: (NodeJS.ErrnoException -> string -> unit) -> unit
-        /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
+        /// <summary>Asynchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract realpath: path: PathLike * options: U2<obj, string> * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
-        /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
+        /// <summary>Asynchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract realpath: path: PathLike * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> U2<string, Buffer> -> unit) -> unit
-        /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
+        /// <summary>Asynchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract realpath: path: PathLike * callback: (NodeJS.ErrnoException -> string -> unit) -> unit
-        /// Synchronous realpath(3) - return the canonicalized absolute pathname.
+        /// <summary>Synchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract realpathSync: path: PathLike * ?options: U2<obj, BufferEncoding> option -> string
-        /// Synchronous realpath(3) - return the canonicalized absolute pathname.
+        /// <summary>Synchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract realpathSync: path: PathLike * options: U2<obj, string> -> Buffer
-        /// Synchronous realpath(3) - return the canonicalized absolute pathname.
+        /// <summary>Synchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract realpathSync: path: PathLike * ?options: U2<obj, string> option -> U2<string, Buffer>
-        /// Asynchronous unlink(2) - delete a name and possibly the file it refers to.
+        /// <summary>Asynchronous unlink(2) - delete a name and possibly the file it refers to.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract unlink: path: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous unlink(2) - delete a name and possibly the file it refers to.
+        /// <summary>Synchronous unlink(2) - delete a name and possibly the file it refers to.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract unlinkSync: path: PathLike -> unit
-        /// Asynchronous rmdir(2) - delete a directory.
+        /// <summary>Asynchronous rmdir(2) - delete a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract rmdir: path: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous rmdir(2) - delete a directory.
+        /// <summary>Synchronous rmdir(2) - delete a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract rmdirSync: path: PathLike -> unit
-        /// Asynchronous mkdir(2) - create a directory.
+        /// <summary>Asynchronous mkdir(2) - create a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer. If not specified, defaults to `0o777`.</param>
         abstract mkdir: path: PathLike * mode: U2<float, string> option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Asynchronous mkdir(2) - create a directory with a mode of `0o777`.
+        /// <summary>Asynchronous mkdir(2) - create a directory with a mode of `0o777`.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract mkdir: path: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous mkdir(2) - create a directory.
+        /// <summary>Synchronous mkdir(2) - create a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer. If not specified, defaults to `0o777`.</param>
         abstract mkdirSync: path: PathLike * ?mode: U2<float, string> option -> unit
-        /// Asynchronously creates a unique temporary directory.
-        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+        /// <summary>Asynchronously creates a unique temporary directory.
+        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract mkdtemp: prefix: string * options: U2<obj, BufferEncoding> option * callback: (NodeJS.ErrnoException -> string -> unit) -> unit
-        /// Asynchronously creates a unique temporary directory.
-        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+        /// <summary>Asynchronously creates a unique temporary directory.
+        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract mkdtemp: prefix: string * options: U2<string, obj> * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
-        /// Asynchronously creates a unique temporary directory.
-        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+        /// <summary>Asynchronously creates a unique temporary directory.
+        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract mkdtemp: prefix: string * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> U2<string, Buffer> -> unit) -> unit
         /// Asynchronously creates a unique temporary directory.
         /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
         abstract mkdtemp: prefix: string * callback: (NodeJS.ErrnoException -> string -> unit) -> unit
-        /// Synchronously creates a unique temporary directory.
-        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+        /// <summary>Synchronously creates a unique temporary directory.
+        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract mkdtempSync: prefix: string * ?options: U2<obj, BufferEncoding> option -> string
-        /// Synchronously creates a unique temporary directory.
-        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+        /// <summary>Synchronously creates a unique temporary directory.
+        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract mkdtempSync: prefix: string * options: U2<obj, string> -> Buffer
-        /// Synchronously creates a unique temporary directory.
-        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+        /// <summary>Synchronously creates a unique temporary directory.
+        /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract mkdtempSync: prefix: string * ?options: U2<obj, string> option -> U2<string, Buffer>
-        /// Asynchronous readdir(3) - read a directory.
+        /// <summary>Asynchronous readdir(3) - read a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readdir: path: PathLike * options: U2<obj, BufferEncoding> option * callback: (NodeJS.ErrnoException -> ResizeArray<string> -> unit) -> unit
-        /// Asynchronous readdir(3) - read a directory.
+        /// <summary>Asynchronous readdir(3) - read a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readdir: path: PathLike * options: U2<obj, string> * callback: (NodeJS.ErrnoException -> ResizeArray<Buffer> -> unit) -> unit
-        /// Asynchronous readdir(3) - read a directory.
+        /// <summary>Asynchronous readdir(3) - read a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readdir: path: PathLike * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> Array<U2<string, Buffer>> -> unit) -> unit
-        /// Asynchronous readdir(3) - read a directory.
+        /// <summary>Asynchronous readdir(3) - read a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract readdir: path: PathLike * callback: (NodeJS.ErrnoException -> ResizeArray<string> -> unit) -> unit
-        /// Synchronous readdir(3) - read a directory.
+        /// <summary>Synchronous readdir(3) - read a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readdirSync: path: PathLike * ?options: U2<obj, BufferEncoding> option -> ResizeArray<string>
-        /// Synchronous readdir(3) - read a directory.
+        /// <summary>Synchronous readdir(3) - read a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readdirSync: path: PathLike * options: U2<obj, string> -> ResizeArray<Buffer>
-        /// Synchronous readdir(3) - read a directory.
+        /// <summary>Synchronous readdir(3) - read a directory.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
         abstract readdirSync: path: PathLike * ?options: U2<obj, string> option -> Array<U2<string, Buffer>>
-        /// Asynchronous close(2) - close a file descriptor.
+        /// <summary>Asynchronous close(2) - close a file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract close: fd: float * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous close(2) - close a file descriptor.
+        /// <summary>Synchronous close(2) - close a file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract closeSync: fd: float -> unit
-        /// Asynchronous open(2) - open and possibly create a file.
+        /// <summary>Asynchronous open(2) - open and possibly create a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to `0o666`.</param>
         abstract ``open``: path: PathLike * flags: U2<string, float> * mode: U2<string, float> option * callback: (NodeJS.ErrnoException -> float -> unit) -> unit
-        /// Asynchronous open(2) - open and possibly create a file. If the file is created, its mode will be `0o666`.
+        /// <summary>Asynchronous open(2) - open and possibly create a file. If the file is created, its mode will be `0o666`.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
         abstract ``open``: path: PathLike * flags: U2<string, float> * callback: (NodeJS.ErrnoException -> float -> unit) -> unit
-        /// Synchronous open(2) - open and possibly create a file, returning a file descriptor..
+        /// <summary>Synchronous open(2) - open and possibly create a file, returning a file descriptor..</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to `0o666`.</param>
         abstract openSync: path: PathLike * flags: U2<string, float> * ?mode: U2<string, float> option -> float
-        /// Asynchronously change file timestamps of the file referenced by the supplied path.
+        /// <summary>Asynchronously change file timestamps of the file referenced by the supplied path.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="atime">The last access time. If a string is provided, it will be coerced to number.</param>
+        /// <param name="mtime">The last modified time. If a string is provided, it will be coerced to number.</param>
         abstract utimes: path: PathLike * atime: U3<string, float, DateTime> * mtime: U3<string, float, DateTime> * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronously change file timestamps of the file referenced by the supplied path.
+        /// <summary>Synchronously change file timestamps of the file referenced by the supplied path.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+        /// <param name="atime">The last access time. If a string is provided, it will be coerced to number.</param>
+        /// <param name="mtime">The last modified time. If a string is provided, it will be coerced to number.</param>
         abstract utimesSync: path: PathLike * atime: U3<string, float, DateTime> * mtime: U3<string, float, DateTime> -> unit
-        /// Asynchronously change file timestamps of the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously change file timestamps of the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="atime">The last access time. If a string is provided, it will be coerced to number.</param>
+        /// <param name="mtime">The last modified time. If a string is provided, it will be coerced to number.</param>
         abstract futimes: fd: float * atime: U3<string, float, DateTime> * mtime: U3<string, float, DateTime> * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronously change file timestamps of the file referenced by the supplied file descriptor.
+        /// <summary>Synchronously change file timestamps of the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="atime">The last access time. If a string is provided, it will be coerced to number.</param>
+        /// <param name="mtime">The last modified time. If a string is provided, it will be coerced to number.</param>
         abstract futimesSync: fd: float * atime: U3<string, float, DateTime> * mtime: U3<string, float, DateTime> -> unit
-        /// Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
+        /// <summary>Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract fsync: fd: float * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
+        /// <summary>Synchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract fsyncSync: fd: float -> unit
-        /// Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="offset">The part of the buffer to be written. If not supplied, defaults to `0`.</param>
+        /// <param name="length">The number of bytes to write. If not supplied, defaults to `buffer.length - offset`.</param>
+        /// <param name="position">The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.</param>
         abstract write: fd: float * buffer: 'TBuffer * offset: float option * length: float option * position: float option * callback: (NodeJS.ErrnoException -> float -> 'TBuffer -> unit) -> unit
-        /// Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="offset">The part of the buffer to be written. If not supplied, defaults to `0`.</param>
+        /// <param name="length">The number of bytes to write. If not supplied, defaults to `buffer.length - offset`.</param>
         abstract write: fd: float * buffer: 'TBuffer * offset: float option * length: float option * callback: (NodeJS.ErrnoException -> float -> 'TBuffer -> unit) -> unit
-        /// Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="offset">The part of the buffer to be written. If not supplied, defaults to `0`.</param>
         abstract write: fd: float * buffer: 'TBuffer * offset: float option * callback: (NodeJS.ErrnoException -> float -> 'TBuffer -> unit) -> unit
-        /// Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract write: fd: float * buffer: 'TBuffer * callback: (NodeJS.ErrnoException -> float -> 'TBuffer -> unit) -> unit
-        /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously writes `string` to the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="string">A string to write. If something other than a string is supplied it will be coerced to a string.</param>
+        /// <param name="position">The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.</param>
+        /// <param name="encoding">The expected string encoding.</param>
         abstract write: fd: float * string: obj option * position: float option * encoding: string option * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
-        /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously writes `string` to the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="string">A string to write. If something other than a string is supplied it will be coerced to a string.</param>
+        /// <param name="position">The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.</param>
         abstract write: fd: float * string: obj option * position: float option * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
-        /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously writes `string` to the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="string">A string to write. If something other than a string is supplied it will be coerced to a string.</param>
         abstract write: fd: float * string: obj option * callback: (NodeJS.ErrnoException -> float -> string -> unit) -> unit
-        /// Synchronously writes `buffer` to the file referenced by the supplied file descriptor, returning the number of bytes written.
+        /// <summary>Synchronously writes `buffer` to the file referenced by the supplied file descriptor, returning the number of bytes written.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="offset">The part of the buffer to be written. If not supplied, defaults to `0`.</param>
+        /// <param name="length">The number of bytes to write. If not supplied, defaults to `buffer.length - offset`.</param>
+        /// <param name="position">The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.</param>
         abstract writeSync: fd: float * buffer: U2<Buffer, Uint8Array> * ?offset: float option * ?length: float option * ?position: float option -> float
-        /// Synchronously writes `string` to the file referenced by the supplied file descriptor, returning the number of bytes written.
+        /// <summary>Synchronously writes `string` to the file referenced by the supplied file descriptor, returning the number of bytes written.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="string">A string to write. If something other than a string is supplied it will be coerced to a string.</param>
+        /// <param name="position">The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.</param>
+        /// <param name="encoding">The expected string encoding.</param>
         abstract writeSync: fd: float * string: obj option * ?position: float option * ?encoding: string option -> float
-        /// Asynchronously reads data from the file referenced by the supplied file descriptor.
+        /// <summary>Asynchronously reads data from the file referenced by the supplied file descriptor.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="buffer">The buffer that the data will be written to.</param>
+        /// <param name="offset">The offset in the buffer at which to start writing.</param>
+        /// <param name="length">The number of bytes to read.</param>
+        /// <param name="position">The offset from the beginning of the file from which data should be read. If `null`, data will be read from the current position.</param>
         abstract read: fd: float * buffer: 'TBuffer * offset: float * length: float * position: float option * ?callback: (NodeJS.ErrnoException -> float -> 'TBuffer -> unit) -> unit
-        /// Synchronously reads data from the file referenced by the supplied file descriptor, returning the number of bytes read.
+        /// <summary>Synchronously reads data from the file referenced by the supplied file descriptor, returning the number of bytes read.</summary>
+        /// <param name="fd">A file descriptor.</param>
+        /// <param name="buffer">The buffer that the data will be written to.</param>
+        /// <param name="offset">The offset in the buffer at which to start writing.</param>
+        /// <param name="length">The number of bytes to read.</param>
+        /// <param name="position">The offset from the beginning of the file from which data should be read. If `null`, data will be read from the current position.</param>
         abstract readSync: fd: float * buffer: U2<Buffer, Uint8Array> * offset: float * length: float * position: float option -> float
-        /// Asynchronously reads the entire contents of a file.
+        /// <summary>Asynchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="options">An object that may contain an optional flag.
+        /// If a flag is not provided, it defaults to `'r'`.</param>
+        abstract readFile: path: U2<PathLike, float> * options: obj option * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
+        /// <summary>Asynchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="options">Either the encoding for the result, or an object that contains the encoding and an optional flag.
+        /// If a flag is not provided, it defaults to `'r'`.</param>
         abstract readFile: path: U2<PathLike, float> * options: U2<obj, string> * callback: (NodeJS.ErrnoException -> string -> unit) -> unit
-        /// Asynchronously reads the entire contents of a file.
+        /// <summary>Asynchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="options">Either the encoding for the result, or an object that contains the encoding and an optional flag.
+        /// If a flag is not provided, it defaults to `'r'`.</param>
         abstract readFile: path: U2<PathLike, float> * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> U2<string, Buffer> -> unit) -> unit
-        /// Asynchronously reads the entire contents of a file.
+        /// <summary>Asynchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
         abstract readFile: path: U2<PathLike, float> * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
-        /// Synchronously reads the entire contents of a file.
+        /// <summary>Synchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="options">An object that may contain an optional flag. If a flag is not provided, it defaults to `'r'`.</param>
+        abstract readFileSync: path: U2<PathLike, float> * ?options: obj option -> Buffer
+        /// <summary>Synchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="options">Either the encoding for the result, or an object that contains the encoding and an optional flag.
+        /// If a flag is not provided, it defaults to `'r'`.</param>
         abstract readFileSync: path: U2<PathLike, float> * options: U2<obj, string> -> string
-        /// Synchronously reads the entire contents of a file.
+        /// <summary>Synchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="options">Either the encoding for the result, or an object that contains the encoding and an optional flag.
+        /// If a flag is not provided, it defaults to `'r'`.</param>
         abstract readFileSync: path: U2<PathLike, float> * ?options: U2<obj, string> option -> U2<string, Buffer>
-        /// Asynchronously writes data to a file, replacing the file if it already exists.
+        /// <summary>Asynchronously writes data to a file, replacing the file if it already exists.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="data">The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.</param>
+        /// <param name="options">Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+        /// If `encoding` is not supplied, the default of `'utf8'` is used.
+        /// If `mode` is not supplied, the default of `0o666` is used.
+        /// If `mode` is a string, it is parsed as an octal integer.
+        /// If `flag` is not supplied, the default of `'w'` is used.</param>
         abstract writeFile: path: U2<PathLike, float> * data: obj option * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Asynchronously writes data to a file, replacing the file if it already exists.
+        /// <summary>Asynchronously writes data to a file, replacing the file if it already exists.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="data">The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.</param>
         abstract writeFile: path: U2<PathLike, float> * data: obj option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronously writes data to a file, replacing the file if it already exists.
+        /// <summary>Synchronously writes data to a file, replacing the file if it already exists.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="data">The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.</param>
+        /// <param name="options">Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+        /// If `encoding` is not supplied, the default of `'utf8'` is used.
+        /// If `mode` is not supplied, the default of `0o666` is used.
+        /// If `mode` is a string, it is parsed as an octal integer.
+        /// If `flag` is not supplied, the default of `'w'` is used.</param>
         abstract writeFileSync: path: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> unit
-        /// Asynchronously append data to a file, creating the file if it does not exist.
+        /// <summary>Asynchronously append data to a file, creating the file if it does not exist.</summary>
+        /// <param name="file">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="data">The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.</param>
+        /// <param name="options">Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+        /// If `encoding` is not supplied, the default of `'utf8'` is used.
+        /// If `mode` is not supplied, the default of `0o666` is used.
+        /// If `mode` is a string, it is parsed as an octal integer.
+        /// If `flag` is not supplied, the default of `'a'` is used.</param>
         abstract appendFile: file: U2<PathLike, float> * data: obj option * options: U2<obj, string> option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Asynchronously append data to a file, creating the file if it does not exist.
+        /// <summary>Asynchronously append data to a file, creating the file if it does not exist.</summary>
+        /// <param name="file">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="data">The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.</param>
         abstract appendFile: file: U2<PathLike, float> * data: obj option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronously append data to a file, creating the file if it does not exist.
+        /// <summary>Synchronously append data to a file, creating the file if it does not exist.</summary>
+        /// <param name="file">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="data">The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.</param>
+        /// <param name="options">Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+        /// If `encoding` is not supplied, the default of `'utf8'` is used.
+        /// If `mode` is not supplied, the default of `0o666` is used.
+        /// If `mode` is a string, it is parsed as an octal integer.
+        /// If `flag` is not supplied, the default of `'a'` is used.</param>
         abstract appendFileSync: file: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> unit
         /// Watch for changes on `filename`. The callback `listener` will be called each time the file is accessed.
         abstract watchFile: filename: PathLike * options: obj option * listener: (Stats -> Stats -> unit) -> unit
-        /// Watch for changes on `filename`. The callback `listener` will be called each time the file is accessed.
+        /// <summary>Watch for changes on `filename`. The callback `listener` will be called each time the file is accessed.</summary>
+        /// <param name="filename">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract watchFile: filename: PathLike * listener: (Stats -> Stats -> unit) -> unit
-        /// Stop watching for changes on `filename`.
+        /// <summary>Stop watching for changes on `filename`.</summary>
+        /// <param name="filename">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract unwatchFile: filename: PathLike * ?listener: (Stats -> Stats -> unit) -> unit
-        /// Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.
+        /// <summary>Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.</summary>
+        /// <param name="filename">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
+        /// <param name="options">Either the encoding for the filename provided to the listener, or an object optionally specifying encoding, persistent, and recursive options.
+        /// If `encoding` is not supplied, the default of `'utf8'` is used.
+        /// If `persistent` is not supplied, the default of `true` is used.
+        /// If `recursive` is not supplied, the default of `false` is used.</param>
         abstract watch: filename: PathLike * options: U2<obj, BufferEncoding> option * ?listener: (string -> string -> unit) -> FSWatcher
-        /// Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.
+        /// <summary>Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.</summary>
+        /// <param name="filename">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
+        /// <param name="options">Either the encoding for the filename provided to the listener, or an object optionally specifying encoding, persistent, and recursive options.
+        /// If `encoding` is not supplied, the default of `'utf8'` is used.
+        /// If `persistent` is not supplied, the default of `true` is used.
+        /// If `recursive` is not supplied, the default of `false` is used.</param>
         abstract watch: filename: PathLike * options: U2<obj, string> * ?listener: (string -> Buffer -> unit) -> FSWatcher
-        /// Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.
+        /// <summary>Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.</summary>
+        /// <param name="filename">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
+        /// <param name="options">Either the encoding for the filename provided to the listener, or an object optionally specifying encoding, persistent, and recursive options.
+        /// If `encoding` is not supplied, the default of `'utf8'` is used.
+        /// If `persistent` is not supplied, the default of `true` is used.
+        /// If `recursive` is not supplied, the default of `false` is used.</param>
         abstract watch: filename: PathLike * options: U2<obj, string> option * ?listener: (string -> U2<string, Buffer> -> unit) -> FSWatcher
-        /// Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.
+        /// <summary>Watch for changes on `filename`, where `filename` is either a file or a directory, returning an `FSWatcher`.</summary>
+        /// <param name="filename">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract watch: filename: PathLike * ?listener: (string -> string -> obj option) -> FSWatcher
-        /// Asynchronously tests whether or not the given path exists by checking with the file system.
+        /// <summary>Asynchronously tests whether or not the given path exists by checking with the file system.</summary>
+        /// <param name="path">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract exists: path: PathLike * callback: (bool -> unit) -> unit
-        /// Synchronously tests whether or not the given path exists by checking with the file system.
+        /// <summary>Synchronously tests whether or not the given path exists by checking with the file system.</summary>
+        /// <param name="path">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract existsSync: path: PathLike -> bool
-        /// Asynchronously tests a user's permissions for the file specified by path.
+        /// <summary>Asynchronously tests a user's permissions for the file specified by path.</summary>
+        /// <param name="path">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract access: path: PathLike * mode: float option * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Asynchronously tests a user's permissions for the file specified by path.
+        /// <summary>Asynchronously tests a user's permissions for the file specified by path.</summary>
+        /// <param name="path">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract access: path: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronously tests a user's permissions for the file specified by path.
+        /// <summary>Synchronously tests a user's permissions for the file specified by path.</summary>
+        /// <param name="path">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract accessSync: path: PathLike * ?mode: float -> unit
-        /// Returns a new `ReadStream` object.
+        /// <summary>Returns a new `ReadStream` object.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract createReadStream: path: PathLike * ?options: U2<string, obj> -> ReadStream
-        /// Returns a new `WriteStream` object.
+        /// <summary>Returns a new `WriteStream` object.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.</param>
         abstract createWriteStream: path: PathLike * ?options: U2<string, obj> -> WriteStream
-        /// Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
+        /// <summary>Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract fdatasync: fd: float * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronous fdatasync(2) - synchronize a file's in-core state with storage device.
+        /// <summary>Synchronous fdatasync(2) - synchronize a file's in-core state with storage device.</summary>
+        /// <param name="fd">A file descriptor.</param>
         abstract fdatasyncSync: fd: float -> unit
-        /// Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
+        /// <summary>Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
         /// No arguments other than a possible exception are given to the callback function.
         /// Node.js makes no guarantees about the atomicity of the copy operation.
         /// If an error occurs after the destination file has been opened for writing, Node.js will attempt
-        /// to remove the destination.
+        /// to remove the destination.</summary>
+        /// <param name="src">A path to the source file.</param>
+        /// <param name="dest">A path to the destination file.</param>
         abstract copyFile: src: PathLike * dest: PathLike * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
+        /// <summary>Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
         /// No arguments other than a possible exception are given to the callback function.
         /// Node.js makes no guarantees about the atomicity of the copy operation.
         /// If an error occurs after the destination file has been opened for writing, Node.js will attempt
-        /// to remove the destination.
+        /// to remove the destination.</summary>
+        /// <param name="src">A path to the source file.</param>
+        /// <param name="dest">A path to the destination file.</param>
+        /// <param name="flags">An integer that specifies the behavior of the copy operation. The only supported flag is fs.constants.COPYFILE_EXCL, which causes the copy operation to fail if dest already exists.</param>
         abstract copyFile: src: PathLike * dest: PathLike * flags: float * callback: (NodeJS.ErrnoException -> unit) -> unit
-        /// Synchronously copies src to dest. By default, dest is overwritten if it already exists.
+        /// <summary>Synchronously copies src to dest. By default, dest is overwritten if it already exists.
         /// Node.js makes no guarantees about the atomicity of the copy operation.
         /// If an error occurs after the destination file has been opened for writing, Node.js will attempt
-        /// to remove the destination.
+        /// to remove the destination.</summary>
+        /// <param name="src">A path to the source file.</param>
+        /// <param name="dest">A path to the destination file.</param>
+        /// <param name="flags">An optional integer that specifies the behavior of the copy operation. The only supported flag is fs.constants.COPYFILE_EXCL, which causes the copy operation to fail if dest already exists.</param>
         abstract copyFileSync: src: PathLike * dest: PathLike * ?flags: float -> unit
 
     type PathLike =
@@ -2876,214 +3172,324 @@ module Fs =
     module Rename =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous rename(2) - Change the name or location of a file or directory.
+            /// <summary>Asynchronous rename(2) - Change the name or location of a file or directory.</summary>
+            /// <param name="oldPath">A path to a file. If a URL is provided, it must use the `file:` protocol.
+            /// URL support is _experimental_.</param>
+            /// <param name="newPath">A path to a file. If a URL is provided, it must use the `file:` protocol.
+            /// URL support is _experimental_.</param>
             abstract __promisify__: oldPath: PathLike * newPath: PathLike -> Promise<unit>
 
     module Truncate =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous truncate(2) - Truncate a file to a specified length.
+            /// <summary>Asynchronous truncate(2) - Truncate a file to a specified length.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="len">If not specified, defaults to `0`.</param>
             abstract __promisify__: path: PathLike * ?len: float option -> Promise<unit>
 
     module Ftruncate =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous ftruncate(2) - Truncate a file to a specified length.
+            /// <summary>Asynchronous ftruncate(2) - Truncate a file to a specified length.</summary>
+            /// <param name="fd">A file descriptor.</param>
+            /// <param name="len">If not specified, defaults to `0`.</param>
             abstract __promisify__: fd: float * ?len: float option -> Promise<unit>
 
     module Chown =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous chown(2) - Change ownership of a file.
+            /// <summary>Asynchronous chown(2) - Change ownership of a file.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
             abstract __promisify__: path: PathLike * uid: float * gid: float -> Promise<unit>
 
     module Fchown =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous fchown(2) - Change ownership of a file.
+            /// <summary>Asynchronous fchown(2) - Change ownership of a file.</summary>
+            /// <param name="fd">A file descriptor.</param>
             abstract __promisify__: fd: float * uid: float * gid: float -> Promise<unit>
 
     module Lchown =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
+            /// <summary>Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
             abstract __promisify__: path: PathLike * uid: float * gid: float -> Promise<unit>
 
     module Chmod =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous chmod(2) - Change permissions of a file.
+            /// <summary>Asynchronous chmod(2) - Change permissions of a file.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
             abstract __promisify__: path: PathLike * mode: U2<string, float> -> Promise<unit>
 
     module Fchmod =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous fchmod(2) - Change permissions of a file.
+            /// <summary>Asynchronous fchmod(2) - Change permissions of a file.</summary>
+            /// <param name="fd">A file descriptor.</param>
+            /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
             abstract __promisify__: fd: float * mode: U2<string, float> -> Promise<unit>
 
     module Lchmod =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
+            /// <summary>Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer.</param>
             abstract __promisify__: path: PathLike * mode: U2<string, float> -> Promise<unit>
 
     module Stat =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous stat(2) - Get file status.
+            /// <summary>Asynchronous stat(2) - Get file status.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
             abstract __promisify__: path: PathLike -> Promise<Stats>
 
     module Fstat =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous fstat(2) - Get file status.
+            /// <summary>Asynchronous fstat(2) - Get file status.</summary>
+            /// <param name="fd">A file descriptor.</param>
             abstract __promisify__: fd: float -> Promise<Stats>
 
     module Lstat =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
+            /// <summary>Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
             abstract __promisify__: path: PathLike -> Promise<Stats>
 
     module Link =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
+            /// <summary>Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.</summary>
+            /// <param name="existingPath">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="newPath">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
             abstract link: existingPath: PathLike * newPath: PathLike -> Promise<unit>
 
     module Symlink =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous symlink(2) - Create a new symbolic link to an existing file.
+            /// <summary>Asynchronous symlink(2) - Create a new symbolic link to an existing file.</summary>
+            /// <param name="target">A path to an existing file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="path">A path to the new symlink. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="type">May be set to `'dir'`, `'file'`, or `'junction'` (default is `'file'`) and is only available on Windows (ignored on other platforms).
+            /// When using `'junction'`, the `target` argument will automatically be normalized to an absolute path.</param>
             abstract __promisify__: target: PathLike * path: PathLike * ?``type``: string option -> Promise<unit>
 
     module Readlink =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous readlink(2) - read value of a symbolic link.
+            /// <summary>Asynchronous readlink(2) - read value of a symbolic link.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * ?options: U2<obj, BufferEncoding> option -> Promise<string>
-            /// Asynchronous readlink(2) - read value of a symbolic link.
+            /// <summary>Asynchronous readlink(2) - read value of a symbolic link.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * options: U2<obj, string> -> Promise<Buffer>
-            /// Asynchronous readlink(2) - read value of a symbolic link.
+            /// <summary>Asynchronous readlink(2) - read value of a symbolic link.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
 
     module Realpath =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
+            /// <summary>Asynchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * ?options: U2<obj, BufferEncoding> option -> Promise<string>
-            /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
+            /// <summary>Asynchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * options: U2<obj, string> -> Promise<Buffer>
-            /// Asynchronous realpath(3) - return the canonicalized absolute pathname.
+            /// <summary>Asynchronous realpath(3) - return the canonicalized absolute pathname.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
 
     module Unlink =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous unlink(2) - delete a name and possibly the file it refers to.
+            /// <summary>Asynchronous unlink(2) - delete a name and possibly the file it refers to.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
             abstract __promisify__: path: PathLike -> Promise<unit>
 
     module Rmdir =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous rmdir(2) - delete a directory.
+            /// <summary>Asynchronous rmdir(2) - delete a directory.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
             abstract __promisify__: path: PathLike -> Promise<unit>
 
     module Mkdir =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous mkdir(2) - create a directory.
+            /// <summary>Asynchronous mkdir(2) - create a directory.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer. If not specified, defaults to `0o777`.</param>
             abstract __promisify__: path: PathLike * ?mode: U2<float, string> option -> Promise<unit>
 
     module Mkdtemp =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously creates a unique temporary directory.
-            /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+            /// <summary>Asynchronously creates a unique temporary directory.
+            /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: prefix: string * ?options: U2<obj, BufferEncoding> option -> Promise<string>
-            /// Asynchronously creates a unique temporary directory.
-            /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+            /// <summary>Asynchronously creates a unique temporary directory.
+            /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: prefix: string * options: U2<obj, string> -> Promise<Buffer>
-            /// Asynchronously creates a unique temporary directory.
-            /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+            /// <summary>Asynchronously creates a unique temporary directory.
+            /// Generates six random characters to be appended behind a required prefix to create a unique temporary directory.</summary>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: prefix: string * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
 
     module Readdir =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous readdir(3) - read a directory.
+            /// <summary>Asynchronous readdir(3) - read a directory.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * ?options: U2<obj, BufferEncoding> option -> Promise<ResizeArray<string>>
-            /// Asynchronous readdir(3) - read a directory.
+            /// <summary>Asynchronous readdir(3) - read a directory.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * options: U2<string, obj> -> Promise<ResizeArray<Buffer>>
-            /// Asynchronous readdir(3) - read a directory.
+            /// <summary>Asynchronous readdir(3) - read a directory.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="options">The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, `'utf8'` is used.</param>
             abstract __promisify__: path: PathLike * ?options: U2<obj, string> option -> Promise<Array<U2<string, Buffer>>>
 
     module Close =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous close(2) - close a file descriptor.
+            /// <summary>Asynchronous close(2) - close a file descriptor.</summary>
+            /// <param name="fd">A file descriptor.</param>
             abstract __promisify__: fd: float -> Promise<unit>
 
     module Open =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous open(2) - open and possibly create a file.
+            /// <summary>Asynchronous open(2) - open and possibly create a file.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="mode">A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to `0o666`.</param>
             abstract __promisify__: path: PathLike * flags: U2<string, float> * ?mode: U2<string, float> option -> Promise<float>
 
     module Utimes =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously change file timestamps of the file referenced by the supplied path.
+            /// <summary>Asynchronously change file timestamps of the file referenced by the supplied path.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.</param>
+            /// <param name="atime">The last access time. If a string is provided, it will be coerced to number.</param>
+            /// <param name="mtime">The last modified time. If a string is provided, it will be coerced to number.</param>
             abstract __promisify__: path: PathLike * atime: U3<string, float, DateTime> * mtime: U3<string, float, DateTime> -> Promise<unit>
 
     module Futimes =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously change file timestamps of the file referenced by the supplied file descriptor.
+            /// <summary>Asynchronously change file timestamps of the file referenced by the supplied file descriptor.</summary>
+            /// <param name="fd">A file descriptor.</param>
+            /// <param name="atime">The last access time. If a string is provided, it will be coerced to number.</param>
+            /// <param name="mtime">The last modified time. If a string is provided, it will be coerced to number.</param>
             abstract __promisify__: fd: float * atime: U3<string, float, DateTime> * mtime: U3<string, float, DateTime> -> Promise<unit>
 
     module Fsync =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
+            /// <summary>Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.</summary>
+            /// <param name="fd">A file descriptor.</param>
             abstract __promisify__: fd: float -> Promise<unit>
 
     module Write =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.
+            /// <summary>Asynchronously writes `buffer` to the file referenced by the supplied file descriptor.</summary>
+            /// <param name="fd">A file descriptor.</param>
+            /// <param name="offset">The part of the buffer to be written. If not supplied, defaults to `0`.</param>
+            /// <param name="length">The number of bytes to write. If not supplied, defaults to `buffer.length - offset`.</param>
+            /// <param name="position">The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.</param>
             abstract __promisify__: fd: float * ?buffer: 'TBuffer * ?offset: float * ?length: float * ?position: float option -> Promise<obj>
-            /// Asynchronously writes `string` to the file referenced by the supplied file descriptor.
+            /// <summary>Asynchronously writes `string` to the file referenced by the supplied file descriptor.</summary>
+            /// <param name="fd">A file descriptor.</param>
+            /// <param name="string">A string to write. If something other than a string is supplied it will be coerced to a string.</param>
+            /// <param name="position">The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.</param>
+            /// <param name="encoding">The expected string encoding.</param>
             abstract __promisify__: fd: float * string: obj option * ?position: float option * ?encoding: string option -> Promise<obj>
 
     module Read =
 
         type [<AllowNullLiteral>] IExports =
+            /// <param name="fd">A file descriptor.</param>
+            /// <param name="buffer">The buffer that the data will be written to.</param>
+            /// <param name="offset">The offset in the buffer at which to start writing.</param>
+            /// <param name="length">The number of bytes to read.</param>
+            /// <param name="position">The offset from the beginning of the file from which data should be read. If `null`, data will be read from the current position.</param>
             abstract __promisify__: fd: float * buffer: 'TBuffer * offset: float * length: float * position: float option -> Promise<obj>
 
     module ReadFile =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously reads the entire contents of a file.
+            /// <summary>Asynchronously reads the entire contents of a file.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+            /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+            /// <param name="options">An object that may contain an optional flag.
+            /// If a flag is not provided, it defaults to `'r'`.</param>
+            abstract __promisify__: path: U2<PathLike, float> * ?options: obj option -> Promise<Buffer>
+            /// <summary>Asynchronously reads the entire contents of a file.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+            /// URL support is _experimental_.
+            /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+            /// <param name="options">Either the encoding for the result, or an object that contains the encoding and an optional flag.
+            /// If a flag is not provided, it defaults to `'r'`.</param>
             abstract __promisify__: path: U2<PathLike, float> * options: U2<obj, string> -> Promise<string>
-            /// Asynchronously reads the entire contents of a file.
+            /// <summary>Asynchronously reads the entire contents of a file.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+            /// URL support is _experimental_.
+            /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+            /// <param name="options">Either the encoding for the result, or an object that contains the encoding and an optional flag.
+            /// If a flag is not provided, it defaults to `'r'`.</param>
             abstract __promisify__: path: U2<PathLike, float> * ?options: U2<obj, string> option -> Promise<U2<string, Buffer>>
 
     module WriteFile =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously writes data to a file, replacing the file if it already exists.
+            /// <summary>Asynchronously writes data to a file, replacing the file if it already exists.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+            /// URL support is _experimental_.
+            /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+            /// <param name="data">The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.</param>
+            /// <param name="options">Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+            /// If `encoding` is not supplied, the default of `'utf8'` is used.
+            /// If `mode` is not supplied, the default of `0o666` is used.
+            /// If `mode` is a string, it is parsed as an octal integer.
+            /// If `flag` is not supplied, the default of `'w'` is used.</param>
             abstract __promisify__: path: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> Promise<unit>
 
     module AppendFile =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously append data to a file, creating the file if it does not exist.
+            /// <summary>Asynchronously append data to a file, creating the file if it does not exist.</summary>
+            /// <param name="file">A path to a file. If a URL is provided, it must use the `file:` protocol.
+            /// URL support is _experimental_.
+            /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+            /// <param name="data">The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.</param>
+            /// <param name="options">Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+            /// If `encoding` is not supplied, the default of `'utf8'` is used.
+            /// If `mode` is not supplied, the default of `0o666` is used.
+            /// If `mode` is a string, it is parsed as an octal integer.
+            /// If `flag` is not supplied, the default of `'a'` is used.</param>
             abstract __promisify__: file: U2<PathLike, float> * data: obj option * ?options: U2<obj, string> option -> Promise<unit>
 
     module Exists =
 
         type [<AllowNullLiteral>] IExports =
+            /// <param name="path">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+            /// URL support is _experimental_.</param>
             abstract __promisify__: path: PathLike -> Promise<bool>
 
     module Constants =
@@ -3134,23 +3540,28 @@ module Fs =
     module Access =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously tests a user's permissions for the file specified by path.
+            /// <summary>Asynchronously tests a user's permissions for the file specified by path.</summary>
+            /// <param name="path">A path to a file or directory. If a URL is provided, it must use the `file:` protocol.
+            /// URL support is _experimental_.</param>
             abstract __promisify__: path: PathLike * ?mode: float -> Promise<unit>
 
     module Fdatasync =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
+            /// <summary>Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.</summary>
+            /// <param name="fd">A file descriptor.</param>
             abstract __promisify__: fd: float -> Promise<unit>
 
     module CopyFile =
 
         type [<AllowNullLiteral>] IExports =
-            /// Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
+            /// <summary>Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
             /// No arguments other than a possible exception are given to the callback function.
             /// Node.js makes no guarantees about the atomicity of the copy operation.
             /// If an error occurs after the destination file has been opened for writing, Node.js will attempt
-            /// to remove the destination.
+            /// to remove the destination.</summary>
+            /// <param name="src">A path to the source file.</param>
+            /// <param name="flags">An optional integer that specifies the behavior of the copy operation. The only supported flag is fs.constants.COPYFILE_EXCL, which causes the copy operation to fail if dest already exists.</param>
             abstract __promisify__: src: PathLike * dst: PathLike * ?flags: float -> Promise<unit>
 
 module Path =
@@ -3158,34 +3569,43 @@ module Path =
     let [<Import("win32","path")>] win32: Win32.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
-        /// Normalize a string path, reducing '..' and '.' parts.
-        /// When multiple slashes are found, they're replaced by a single one; when the path contains a trailing slash, it is preserved. On Windows backslashes are used.
+        /// <summary>Normalize a string path, reducing '..' and '.' parts.
+        /// When multiple slashes are found, they're replaced by a single one; when the path contains a trailing slash, it is preserved. On Windows backslashes are used.</summary>
+        /// <param name="p">string path to normalize.</param>
         abstract normalize: p: string -> string
-        /// Join all arguments together and normalize the resulting path.
-        /// Arguments must be strings. In v0.8, non-string arguments were silently ignored. In v0.10 and up, an exception is thrown.
+        /// <summary>Join all arguments together and normalize the resulting path.
+        /// Arguments must be strings. In v0.8, non-string arguments were silently ignored. In v0.10 and up, an exception is thrown.</summary>
+        /// <param name="paths">paths to join.</param>
         abstract join: [<ParamArray>] paths: ResizeArray<string> -> string
-        /// The right-most parameter is considered {to}.  Other parameters are considered an array of {from}.
+        /// <summary>The right-most parameter is considered {to}.  Other parameters are considered an array of {from}.
         /// 
         /// Starting from leftmost {from} paramter, resolves {to} to an absolute path.
         /// 
-        /// If {to} isn't already absolute, {from} arguments are prepended in right to left order, until an absolute path is found. If after using all {from} paths still no absolute path is found, the current working directory is used as well. The resulting path is normalized, and trailing slashes are removed unless the path gets resolved to the root directory.
+        /// If {to} isn't already absolute, {from} arguments are prepended in right to left order, until an absolute path is found. If after using all {from} paths still no absolute path is found, the current working directory is used as well. The resulting path is normalized, and trailing slashes are removed unless the path gets resolved to the root directory.</summary>
+        /// <param name="pathSegments">string paths to join.  Non-string arguments are ignored.</param>
         abstract resolve: [<ParamArray>] pathSegments: ResizeArray<obj option> -> string
-        /// Determines whether {path} is an absolute path. An absolute path will always resolve to the same location, regardless of the working directory.
+        /// <summary>Determines whether {path} is an absolute path. An absolute path will always resolve to the same location, regardless of the working directory.</summary>
+        /// <param name="path">path to test.</param>
         abstract isAbsolute: path: string -> bool
         /// Solve the relative path from {from} to {to}.
         /// At times we have two absolute paths, and we need to derive the relative path from one to the other. This is actually the reverse transform of path.resolve.
         abstract relative: from: string * ``to``: string -> string
-        /// Return the directory name of a path. Similar to the Unix dirname command.
+        /// <summary>Return the directory name of a path. Similar to the Unix dirname command.</summary>
+        /// <param name="p">the path to evaluate.</param>
         abstract dirname: p: string -> string
-        /// Return the last portion of a path. Similar to the Unix basename command.
-        /// Often used to extract the file name from a fully qualified path.
+        /// <summary>Return the last portion of a path. Similar to the Unix basename command.
+        /// Often used to extract the file name from a fully qualified path.</summary>
+        /// <param name="p">the path to evaluate.</param>
+        /// <param name="ext">optionally, an extension to remove from the result.</param>
         abstract basename: p: string * ?ext: string -> string
-        /// Return the extension of the path, from the last '.' to end of string in the last portion of the path.
-        /// If there is no '.' in the last portion of the path or the first character of it is '.', then it returns an empty string
+        /// <summary>Return the extension of the path, from the last '.' to end of string in the last portion of the path.
+        /// If there is no '.' in the last portion of the path or the first character of it is '.', then it returns an empty string</summary>
+        /// <param name="p">the path to evaluate.</param>
         abstract extname: p: string -> string
         abstract sep: string
         abstract delimiter: string
-        /// Returns an object from a path string - the opposite of format().
+        /// <summary>Returns an object from a path string - the opposite of format().</summary>
+        /// <param name="pathString">path to evaluate.</param>
         abstract parse: pathString: string -> ParsedPath
         /// Returns a path string from an object - the opposite of parse().
         abstract format: pathObject: FormatInputPathObject -> string
@@ -3322,11 +3742,12 @@ module Tls =
         abstract encrypted: bool with get, set
         /// Returns an object representing the cipher name and the SSL/TLS protocol version of the current connection.
         abstract getCipher: unit -> CipherNameAndProtocol
-        /// Returns an object representing the peer's certificate.
+        /// <summary>Returns an object representing the peer's certificate.
         /// The returned object has some properties corresponding to the field of the certificate.
         /// If detailed argument is true the full chain with issuer property will be returned,
         /// if false only the top certificate without issuer property.
-        /// If the peer does not provide a certificate, it returns null or an empty object.
+        /// If the peer does not provide a certificate, it returns null or an empty object.</summary>
+        /// <param name="detailed">- If true; the full chain with issuer property will be returned.</param>
         abstract getPeerCertificate: detailed: obj -> DetailedPeerCertificate
         abstract getPeerCertificate: ?detailed: obj -> PeerCertificate
         abstract getPeerCertificate: ?detailed: bool -> U2<PeerCertificate, DetailedPeerCertificate>
@@ -3335,17 +3756,22 @@ module Tls =
         /// NOTE: Works only with client TLS sockets.
         /// Useful only for debugging, for session reuse provide session option to tls.connect().
         abstract getTLSTicket: unit -> obj option
-        /// Initiate TLS renegotiation process.
+        /// <summary>Initiate TLS renegotiation process.
         /// 
         /// NOTE: Can be used to request peer's certificate after the secure connection has been established.
-        /// ANOTHER NOTE: When running as the server, socket will be destroyed with an error after handshakeTimeout timeout.
+        /// ANOTHER NOTE: When running as the server, socket will be destroyed with an error after handshakeTimeout timeout.</summary>
+        /// <param name="options">- The options may contain the following fields: rejectUnauthorized,
+        /// requestCert (See tls.createServer() for details).</param>
+        /// <param name="callback">- callback(err) will be executed with null as err, once the renegotiation
+        /// is successfully completed.</param>
         abstract renegotiate: options: TlsOptions * callback: (Error option -> unit) -> obj option
-        /// Set maximum TLS fragment size (default and maximum value is: 16384, minimum is: 512).
+        /// <summary>Set maximum TLS fragment size (default and maximum value is: 16384, minimum is: 512).
         /// Smaller fragment size decreases buffering latency on the client: large fragments are buffered by
         /// the TLS layer until the entire fragment is received and its integrity is verified;
         /// large fragments can span multiple roundtrips, and their processing can be delayed due to packet
         /// loss or reordering. However, smaller fragments add extra TLS framing bytes and CPU overhead,
-        /// which may decrease overall server throughput.
+        /// which may decrease overall server throughput.</summary>
+        /// <param name="size">- TLS fragment size (default and maximum value is: 16384, minimum is: 512).</param>
         abstract setMaxSendFragment: size: float -> bool
         /// events.EventEmitter
         /// 1. OCSPResponse
@@ -4564,22 +4990,31 @@ module Async_hooks =
         /// Returns the ID of the resource responsible for calling the callback that is currently being executed.
         abstract triggerAsyncId: unit -> float
         abstract triggerId: unit -> float
-        /// Registers functions to be called for different lifetime events of each async operation.
+        /// <summary>Registers functions to be called for different lifetime events of each async operation.</summary>
+        /// <param name="options">the callbacks to register</param>
         abstract createHook: options: HookCallbacks -> AsyncHook
         abstract AsyncResource: AsyncResourceStatic
 
     type [<AllowNullLiteral>] HookCallbacks =
-        /// Called when a class is constructed that has the possibility to emit an asynchronous event.
+        /// <summary>Called when a class is constructed that has the possibility to emit an asynchronous event.</summary>
+        /// <param name="asyncId">a unique ID for the async resource</param>
+        /// <param name="type">the type of the async resource</param>
+        /// <param name="triggerAsyncId">the unique ID of the async resource in whose execution context this async resource was created</param>
+        /// <param name="resource">reference to the resource representing the async operation, needs to be released during destroy</param>
         abstract init: asyncId: float * ``type``: string * triggerAsyncId: float * resource: Object -> unit
-        /// When an asynchronous operation is initiated or completes a callback is called to notify the user.
-        /// The before callback is called just before said callback is executed.
+        /// <summary>When an asynchronous operation is initiated or completes a callback is called to notify the user.
+        /// The before callback is called just before said callback is executed.</summary>
+        /// <param name="asyncId">the unique identifier assigned to the resource about to execute the callback.</param>
         abstract before: asyncId: float -> unit
-        /// Called immediately after the callback specified in before is completed.
+        /// <summary>Called immediately after the callback specified in before is completed.</summary>
+        /// <param name="asyncId">the unique identifier assigned to the resource which has executed the callback.</param>
         abstract after: asyncId: float -> unit
-        /// Called when a promise has resolve() called. This may not be in the same execution id
-        /// as the promise itself.
+        /// <summary>Called when a promise has resolve() called. This may not be in the same execution id
+        /// as the promise itself.</summary>
+        /// <param name="asyncId">the unique id for the promise that was resolve()d.</param>
         abstract promiseResolve: asyncId: float -> unit
-        /// Called after the resource corresponding to asyncId is destroyed
+        /// <summary>Called after the resource corresponding to asyncId is destroyed</summary>
+        /// <param name="asyncId">a unique ID for the async resource</param>
         abstract destroy: asyncId: float -> unit
 
     type [<AllowNullLiteral>] AsyncHook =
@@ -4603,9 +5038,11 @@ module Async_hooks =
     /// The class AsyncResource was designed to be extended by the embedder's async resources.
     /// Using this users can easily trigger the lifetime events of their own resources.
     type [<AllowNullLiteral>] AsyncResourceStatic =
-        /// AsyncResource() is meant to be extended. Instantiating a
+        /// <summary>AsyncResource() is meant to be extended. Instantiating a
         /// new AsyncResource() also triggers init. If triggerAsyncId is omitted then
-        /// async_hook.executionAsyncId() is used.
+        /// async_hook.executionAsyncId() is used.</summary>
+        /// <param name="type">the name of this async resource type</param>
+        /// <param name="triggerAsyncId">the unique ID of the async resource in whose execution context this async resource was created</param>
         [<Emit "new $0($1...)">] abstract Create: ``type``: string * ?triggerAsyncId: float -> AsyncResource
 
 module Http2 =
