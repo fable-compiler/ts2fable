@@ -12,7 +12,8 @@
   "scripts": {
     "build": "fable-splitter -c splitter.config.js",
     "watch": "fable-splitter -c splitter.config.js -w",
-    "test": "fable-splitter -c splitter.test.config.js"
+    "test": "fable-splitter -c splitter.test.config.js",
+    "postinstall": "cross-env npm_package_engines_vscode=1.8.1 node ./node_modules/vscode/bin/install"
   },
   "repository": {
     "type": "git",
@@ -48,7 +49,7 @@
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "chai": "^4.1.2",
     "chalk": "^2.3.0",
-    "cross-env": "^4.0.0",
+    "cross-env": "^5.1.1",
     "electron": "^1.7.9",
     "fable-splitter": "0.1.20",
     "fable-utils": "1.0.6",

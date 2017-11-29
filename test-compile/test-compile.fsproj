@@ -7,7 +7,7 @@
     <Compile Include="Node.fs" />
     <Compile Include="Yargs.fs" />
 
-    <!-- <Compile Include="VSCode.fs" /> -->
+    <Compile Include="VSCode.fs" />
     <Compile Include="IziToast.fs" />
     <!-- <Compile Include="Electron.fs" /> -->
     <!-- <Compile Include="React.fs" /> -->
