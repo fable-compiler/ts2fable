@@ -400,6 +400,7 @@ module NodeJS =
         abstract cwd: unit -> string
         abstract emitWarning: warning: U2<string, Error> * ?name: string * ?ctor: Function -> unit
         abstract env: ProcessEnv with get, set
+        abstract exit: ?code: float -> obj
         abstract exitCode: float with get, set
         abstract getgid: unit -> float
         abstract setgid: id: U2<float, string> -> unit
@@ -2850,6 +2851,12 @@ module Fs =
         abstract readSync: fd: float * buffer: U2<Buffer, Uint8Array> * offset: float * length: float * position: float option -> float
         /// <summary>Asynchronously reads the entire contents of a file.</summary>
         /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="options">An object that may contain an optional flag.
+        /// If a flag is not provided, it defaults to `'r'`.</param>
+        abstract readFile: path: U2<PathLike, float> * options: obj option * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
+        /// <summary>Asynchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
         /// URL support is _experimental_.
         /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
         /// <param name="options">Either the encoding for the result, or an object that contains the encoding and an optional flag.
@@ -2866,6 +2873,12 @@ module Fs =
         /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
         /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
         abstract readFile: path: U2<PathLike, float> * callback: (NodeJS.ErrnoException -> Buffer -> unit) -> unit
+        /// <summary>Synchronously reads the entire contents of a file.</summary>
+        /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+        /// URL support is _experimental_.
+        /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+        /// <param name="options">An object that may contain an optional flag. If a flag is not provided, it defaults to `'r'`.</param>
+        abstract readFileSync: path: U2<PathLike, float> * ?options: obj option -> Buffer
         /// <summary>Synchronously reads the entire contents of a file.</summary>
         /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
         /// URL support is _experimental_.
@@ -3421,6 +3434,12 @@ module Fs =
     module ReadFile =
 
         type [<AllowNullLiteral>] IExports =
+            /// <summary>Asynchronously reads the entire contents of a file.</summary>
+            /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
+            /// If a file descriptor is provided, the underlying file will _not_ be closed automatically.</param>
+            /// <param name="options">An object that may contain an optional flag.
+            /// If a flag is not provided, it defaults to `'r'`.</param>
+            abstract __promisify__: path: U2<PathLike, float> * ?options: obj option -> Promise<Buffer>
             /// <summary>Asynchronously reads the entire contents of a file.</summary>
             /// <param name="path">A path to a file. If a URL is provided, it must use the `file:` protocol.
             /// URL support is _experimental_.

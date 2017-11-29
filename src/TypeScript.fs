@@ -835,7 +835,7 @@ module Ts =
 
     /// ES6 Iterator type. 
     type [<AllowNullLiteral>] Iterator<'T> =
-        interface end
+        abstract next: unit -> U2<obj, obj>
 
     /// Array that is only intended to be pushed to, never read. 
     type [<AllowNullLiteral>] Push<'T> =
