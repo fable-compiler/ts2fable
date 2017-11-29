@@ -37,5 +37,8 @@ yarn global add babel-cli
 babel --plugins shebang $js -o $js
 
 # yarn pack is packing too many files
+if ($env:appveyor){
+    node build-update-package.js
+}
 npm pack
 tar tf ts2fable-$v.tgz
