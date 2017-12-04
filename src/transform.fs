@@ -255,14 +255,15 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 md.Name.Replace("'","")
             else ns |> String.concat "/"
         if md.HasDeclare then
-            {
-                Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
-                HasDeclare = true
-                Name = md.Name |> lowerFirst
-                Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
-                IsConst = true
-            }
-            |> variablesForParent.Add
+            if not <| md.IsNamespace then
+                {
+                    Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
+                    HasDeclare = true
+                    Name = md.Name |> lowerFirst
+                    Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
+                    IsConst = true
+                }
+                |> variablesForParent.Add
         else
             {
                 Export = { IsGlobal = false; Selector = selector; Path = path } |> Some
@@ -804,6 +805,7 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                                         {
                                             Attributes = ["RequireQualifiedAccess"; "CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix"]
                                             HasDeclare = false
+                                            IsNamespace = false
                                             Name = al.Name
                                             Types = []
                                             HelperLines =

@@ -180,6 +180,9 @@ let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
 let isConst (nd: Node): bool =
     (int nd.flags) ||| (int NodeFlags.Const) <> 0
 
+let isNamespace (nd: Node): bool =
+    nd.getChildren() |> Seq.exists (fun nd -> nd.kind = SyntaxKind.NamespaceKeyword)
+
 let readVariable (checker: TypeChecker) (vb: VariableStatement) =
     vb.declarationList.declarations |> List.ofSeq |> List.map (fun vd ->
         {
@@ -646,6 +649,7 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
     )
     {
         HasDeclare = hasModifier SyntaxKind.DeclareKeyword md.modifiers
+        IsNamespace = isNamespace md
         Name = readModuleName md.name
         Types = types |> List.ofSeq
         HelperLines = []
@@ -658,6 +662,7 @@ let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile):
     let gbl: FsModule =
         {
             HasDeclare = false
+            IsNamespace = false
             Name = ""
             Types =
                 sfs
