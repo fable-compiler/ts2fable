@@ -11,7 +11,7 @@ type [<AllowNullLiteral>] IExports =
     abstract clearTimeout: handle: obj option -> unit
 
 module Ts =
-    // let [<Import("ScriptSnapshot","typescript/ts")>] scriptSnapshot: ScriptSnapshot.IExports = jsNative
+    let [<Import("ScriptSnapshot","typescript/ts")>] scriptSnapshot: ScriptSnapshot.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
         abstract OperationCanceledException: OperationCanceledExceptionStatic
@@ -4558,8 +4558,8 @@ module Ts =
     module VisitResult =
         let ofTOption v: VisitResult<'T> = v |> Option.map U2.Case1
         let ofT v: VisitResult<'T> = v |> U2.Case1 |> Some
-        // let isT (v: VisitResult<'T>) = match v with None -> false | Some o -> match o with U2.Case1 _ -> true | _ -> false
-        // let asT (v: VisitResult<'T>) = match v with None -> None | Some o -> match o with U2.Case1 o -> Some o | _ -> None
+        let isT (v: VisitResult<'T>) = match v with None -> false | Some o -> match o with U2.Case1 _ -> true | _ -> false
+        let asT (v: VisitResult<'T>) = match v with None -> None | Some o -> match o with U2.Case1 o -> Some o | _ -> None
         let ofTArrayOption v: VisitResult<'T> = v |> Option.map U2.Case2
         let ofTArray v: VisitResult<'T> = v |> U2.Case2 |> Some
         let isTArray (v: VisitResult<'T>) = match v with None -> false | Some o -> match o with U2.Case2 _ -> true | _ -> false

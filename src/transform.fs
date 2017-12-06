@@ -8,6 +8,7 @@ open TypeScript.Ts
 open System.Collections.Generic
 open System
 open ts2fable.Naming
+open System.Collections
 
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
@@ -200,6 +201,14 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     let typesChildExport = ResizeArray<FsType>()
     let typesOther = ResizeArray<FsType>()
     let variablesForParent = ResizeArray<FsVariable>()
+    
+    let exportAssignments = HashSet<string>()
+    md.Types |> List.iter(fun tp ->
+        match tp with
+        | FsType.ExportAssignment ea ->
+            exportAssignments.Add ea |> ignore
+        | _ -> ()
+    )
 
     md.Types |> List.iter(fun tp ->
         match tp with
@@ -212,7 +221,6 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
             smd |> FsType.Module |> typesOther.Add
         | FsType.Variable vb ->
             if vb.HasDeclare then
-                // addExportAssigments
                 if md.Name = "" then
                     { vb with
                         Export = { IsGlobal = engines.Contains ns.[0]; Selector = "*"; Path = ns.[0] } |> Some
@@ -245,15 +253,16 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         | _ -> typesOther.Add tp
     )
 
+    let ns = if engines.Contains ns.[0] then ns.[1..] else ns
+    let selector =
+        if ns.Length = 0 then "*"
+        else md.Name.Replace("'","")
+    let path =
+        if ns.Length = 0 then 
+            md.Name.Replace("'","")
+        else ns |> String.concat "/"
+
     if typesInIExports.Count > 0 then
-        let ns = if engines.Contains ns.[0] then ns.[1..] else ns
-        let selector =
-            if ns.Length = 0 then "*"
-            else md.Name.Replace("'","")
-        let path =
-            if ns.Length = 0 then 
-                md.Name.Replace("'","")
-            else ns |> String.concat "/"
         if md.HasDeclare then
             if not <| md.IsNamespace then
                 {
@@ -291,6 +300,25 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 }
                 |> FsType.Interface
             ]
+
+    // add exports assignments
+    // make sure there are no conflicting globals already
+    let globalNames = typesGlobal |> Seq.map getName |> Set.ofSeq
+    md.Types |> List.iter(fun tp ->
+        match tp with
+        | FsType.Module smd ->
+            if not <| globalNames.Contains smd.Name && exportAssignments.Contains smd.Name then
+                {
+                    Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
+                    HasDeclare = true
+                    Name = smd.Name |> lowerFirst
+                    Type = sprintf "%s.IExports" (fixModuleName smd.Name) |> simpleType
+                    IsConst = true
+                }
+                |> FsType.Variable
+                |> typesGlobal.Add
+        | _ -> ()
+    )
 
     let newMd =
         { md with
