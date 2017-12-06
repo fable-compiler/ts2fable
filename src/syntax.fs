@@ -252,6 +252,7 @@ module FsType =
 type FsModule =
     {
         HasDeclare: bool
+        IsNamespace: bool
         Name: string
         Types: FsType list
         HelperLines: string list
