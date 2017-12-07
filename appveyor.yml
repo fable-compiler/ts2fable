@@ -4,6 +4,9 @@ install:
   - ps: Install-Product node 8 x64
   - yarn global add mocha
 
+environment:
+  NODE_NO_WARNINGS: 1
+
 build_script:
   - ps: |
       .\build.ps1
