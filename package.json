@@ -41,7 +41,7 @@
     "@types/google-protobuf": "^3.2.7",
     "@types/jquery": "^3.2.16",
     "@types/mocha": "^2.2.44",
-    "@types/node": "^8.0.53",
+    "@types/node": "^8.0.56",
     "@types/react": "^15.0.20",
     "@types/yargs": "^8.0.2",
     "babel-core": "6.26.0",

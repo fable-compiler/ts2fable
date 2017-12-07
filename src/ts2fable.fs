@@ -42,10 +42,7 @@ let transform (file: FsFile): FsFile =
     |> addAliasUnionHelpers
     
 let writeFile (tsPaths: string list) (fsPath: string): unit =
-
-    // TODO ensure the files exist
-    // for tsPath in tsPaths do
-    //     path.existsSync(tsPath)
+    // printfn "writeFile %A %s" tsPaths fsPath
 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
@@ -99,6 +96,7 @@ let argv = ``process``.argv |> List.ofSeq
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
     printfn "Node O_RDWR %A" Node.Fs.constants.O_RDWR // read/write should be 2
+    printfn "NGHTTP2_STREAM_CLOSED %A" Node.Http2.constants.NGHTTP2_STREAM_CLOSED
 
     // used by ts2fable
     writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/TypeScript.fs"
@@ -108,6 +106,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     // for test-compile
     writeFile ["node_modules/vscode/vscode.d.ts"] "test-compile/VSCode.fs"
     writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
+    // writeFile ["node_modules/izitoast/types/index.d.ts"] "test-compile/IziToast.fs"
     writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Electron.fs"
     writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/React.fs"
     writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
