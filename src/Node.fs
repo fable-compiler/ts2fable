@@ -103,6 +103,13 @@ type [<AllowNullLiteral>] SymbolConstructor =
     /// for-of statement.
     abstract iterator: Symbol
 
+/// Allows manipulation and formatting of text strings and determination and location of substrings within strings.
+type [<AllowNullLiteral>] String =
+    /// Removes whitespace from the left end of a string. 
+    abstract trimLeft: unit -> string
+    /// Removes whitespace from the right end of a string. 
+    abstract trimRight: unit -> string
+
 module SetTimeout =
 
     type [<AllowNullLiteral>] IExports =
@@ -673,7 +680,7 @@ module Querystring =
 
     type [<AllowNullLiteral>] IExports =
         abstract stringify: obj: 'T * ?sep: string * ?eq: string * ?options: StringifyOptions -> string
-        abstract parse: str: string * ?sep: string * ?eq: string * ?options: ParseOptions -> obj
+        abstract parse: str: string * ?sep: string * ?eq: string * ?options: ParseOptions -> ParsedUrlQuery
         abstract parse: str: string * ?sep: string * ?eq: string * ?options: ParseOptions -> 'T
         abstract escape: str: string -> string
         abstract unescape: str: string -> string
@@ -684,6 +691,9 @@ module Querystring =
     type [<AllowNullLiteral>] ParseOptions =
         abstract maxKeys: float option with get, set
         abstract decodeURIComponent: Function option with get, set
+
+    type [<AllowNullLiteral>] ParsedUrlQuery =
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> U2<string, ResizeArray<string>> with get, set
 
 module Events =
 
@@ -1377,15 +1387,8 @@ module Https =
 
     type [<AllowNullLiteral>] AgentOptions =
         inherit Http.AgentOptions
-        abstract pfx: obj option option with get, set
-        abstract key: obj option option with get, set
-        abstract passphrase: string option with get, set
-        abstract cert: obj option option with get, set
-        abstract ca: obj option option with get, set
-        abstract ciphers: string option with get, set
+        inherit Tls.ConnectionOptions
         abstract rejectUnauthorized: bool option with get, set
-        abstract serverName: string option with get, set
-        abstract secureProtocol: string option with get, set
         abstract maxCachedSessions: float option with get, set
 
     type [<AllowNullLiteral>] Agent =
@@ -1880,6 +1883,7 @@ module Child_process =
         abstract encoding: string with get, set
 
 module Url =
+    type ParsedUrlQuery = Querystring.ParsedUrlQuery
 
     type [<AllowNullLiteral>] IExports =
         abstract parse: urlStr: string * ?parseQueryString: bool * ?slashesDenoteHost: bool -> Url
@@ -1889,7 +1893,7 @@ module Url =
         abstract URLSearchParams: URLSearchParamsStatic
         abstract URL: URLStatic
 
-    type [<AllowNullLiteral>] UrlObject =
+    type [<AllowNullLiteral>] UrlObjectCommon =
         abstract auth: string option with get, set
         abstract hash: string option with get, set
         abstract host: string option with get, set
@@ -1897,16 +1901,19 @@ module Url =
         abstract href: string option with get, set
         abstract path: string option with get, set
         abstract pathname: string option with get, set
-        abstract port: U2<string, float> option with get, set
         abstract protocol: string option with get, set
-        abstract query: U2<string, obj> option option with get, set
         abstract search: string option with get, set
         abstract slashes: bool option with get, set
 
+    type [<AllowNullLiteral>] UrlObject =
+        inherit UrlObjectCommon
+        abstract port: U2<string, float> option with get, set
+        abstract query: U2<string, obj> option option with get, set
+
     type [<AllowNullLiteral>] Url =
-        inherit UrlObject
+        inherit UrlObjectCommon
         abstract port: string option with get, set
-        abstract query: obj option option with get, set
+        abstract query: U2<string, ParsedUrlQuery> option option with get, set
 
     type [<AllowNullLiteral>] URLFormatOptions =
         abstract auth: bool option with get, set
@@ -3680,6 +3687,7 @@ module Tls =
         abstract CLIENT_RENEG_WINDOW: float
         abstract TLSSocket: TLSSocketStatic
         abstract Server: ServerStatic
+        abstract checkServerIdentity: host: string * cert: PeerCertificate -> Error option
         abstract createServer: options: TlsOptions * ?secureConnectionListener: (TLSSocket -> unit) -> Server
         abstract connect: options: ConnectionOptions * ?secureConnectionListener: (unit -> unit) -> TLSSocket
         abstract connect: port: float * ?host: string * ?options: ConnectionOptions * ?secureConnectListener: (unit -> unit) -> TLSSocket
@@ -3862,24 +3870,19 @@ module Tls =
         abstract secureOptions: float option with get, set
 
     type [<AllowNullLiteral>] ConnectionOptions =
+        inherit SecureContextOptions
         abstract host: string option with get, set
         abstract port: float option with get, set
+        abstract path: string option with get, set
         abstract socket: Net.Socket option with get, set
-        abstract pfx: U2<string, Buffer> option with get, set
-        abstract key: U4<string, ResizeArray<string>, Buffer, ResizeArray<Buffer>> option with get, set
-        abstract passphrase: string option with get, set
-        abstract cert: U4<string, ResizeArray<string>, Buffer, ResizeArray<Buffer>> option with get, set
-        abstract ca: U3<string, Buffer, Array<U2<string, Buffer>>> option with get, set
         abstract rejectUnauthorized: bool option with get, set
         abstract NPNProtocols: Array<U2<string, Buffer>> option with get, set
-        abstract servername: string option with get, set
-        abstract path: string option with get, set
         abstract ALPNProtocols: Array<U2<string, Buffer>> option with get, set
-        abstract checkServerIdentity: (string -> U3<string, Buffer, Array<U2<string, Buffer>>> -> obj option) option with get, set
-        abstract secureProtocol: string option with get, set
-        abstract secureContext: Object option with get, set
+        abstract checkServerIdentity: obj option with get, set
+        abstract servername: string option with get, set
         abstract session: Buffer option with get, set
         abstract minDHSize: float option with get, set
+        abstract secureContext: SecureContext option with get, set
         abstract lookup: Net.LookupFunction option with get, set
 
     type [<AllowNullLiteral>] Server =
@@ -3951,14 +3954,19 @@ module Tls =
         abstract cleartext: obj option with get, set
 
     type [<AllowNullLiteral>] SecureContextOptions =
-        abstract pfx: U2<string, Buffer> option with get, set
-        abstract key: U2<string, Buffer> option with get, set
+        abstract pfx: U3<string, Buffer, Array<U3<string, Buffer, Object>>> option with get, set
+        abstract key: U3<string, Buffer, Array<U2<Buffer, Object>>> option with get, set
         abstract passphrase: string option with get, set
-        abstract cert: U2<string, Buffer> option with get, set
-        abstract ca: U2<string, Buffer> option with get, set
-        abstract crl: U2<string, ResizeArray<string>> option with get, set
+        abstract cert: U3<string, Buffer, Array<U2<string, Buffer>>> option with get, set
+        abstract ca: U3<string, Buffer, Array<U2<string, Buffer>>> option with get, set
         abstract ciphers: string option with get, set
         abstract honorCipherOrder: bool option with get, set
+        abstract ecdhCurve: string option with get, set
+        abstract crl: U3<string, Buffer, Array<U2<string, Buffer>>> option with get, set
+        abstract dhparam: U2<string, Buffer> option with get, set
+        abstract secureOptions: float option with get, set
+        abstract secureProtocol: string option with get, set
+        abstract sessionIdContext: string option with get, set
 
     type [<AllowNullLiteral>] SecureContext =
         abstract context: obj option with get, set
@@ -5045,9 +5053,9 @@ module Async_hooks =
 module Http2 =
     type IncomingHttpHeaders = Http.IncomingHttpHeaders
     type OutgoingHttpHeaders = Http.OutgoingHttpHeaders
+    let [<Import("constants","http2")>] constants: Constants.IExports = jsNative
 
     type [<AllowNullLiteral>] IExports =
-        abstract constants: obj
         abstract getDefaultSettings: unit -> Settings
         abstract getPackedSettings: settings: Settings -> Settings
         abstract getUnpackedSettings: buf: U2<Buffer, Uint8Array> -> Settings
@@ -5578,3 +5586,215 @@ module Http2 =
         [<Emit "$0.prependOnceListener('drain',$1)">] abstract prependOnceListener_drain: listener: (unit -> unit) -> Http2ServerResponse
         [<Emit "$0.prependOnceListener('error',$1)">] abstract prependOnceListener_error: listener: (Error -> unit) -> Http2ServerResponse
         [<Emit "$0.prependOnceListener('finish',$1)">] abstract prependOnceListener_finish: listener: (unit -> unit) -> Http2ServerResponse
+
+    module Constants =
+
+        type [<AllowNullLiteral>] IExports =
+            abstract NGHTTP2_SESSION_SERVER: float
+            abstract NGHTTP2_SESSION_CLIENT: float
+            abstract NGHTTP2_STREAM_STATE_IDLE: float
+            abstract NGHTTP2_STREAM_STATE_OPEN: float
+            abstract NGHTTP2_STREAM_STATE_RESERVED_LOCAL: float
+            abstract NGHTTP2_STREAM_STATE_RESERVED_REMOTE: float
+            abstract NGHTTP2_STREAM_STATE_HALF_CLOSED_LOCAL: float
+            abstract NGHTTP2_STREAM_STATE_HALF_CLOSED_REMOTE: float
+            abstract NGHTTP2_STREAM_STATE_CLOSED: float
+            abstract NGHTTP2_NO_ERROR: float
+            abstract NGHTTP2_PROTOCOL_ERROR: float
+            abstract NGHTTP2_INTERNAL_ERROR: float
+            abstract NGHTTP2_FLOW_CONTROL_ERROR: float
+            abstract NGHTTP2_SETTINGS_TIMEOUT: float
+            abstract NGHTTP2_STREAM_CLOSED: float
+            abstract NGHTTP2_FRAME_SIZE_ERROR: float
+            abstract NGHTTP2_REFUSED_STREAM: float
+            abstract NGHTTP2_CANCEL: float
+            abstract NGHTTP2_COMPRESSION_ERROR: float
+            abstract NGHTTP2_CONNECT_ERROR: float
+            abstract NGHTTP2_ENHANCE_YOUR_CALM: float
+            abstract NGHTTP2_INADEQUATE_SECURITY: float
+            abstract NGHTTP2_HTTP_1_1_REQUIRED: float
+            abstract NGHTTP2_ERR_FRAME_SIZE_ERROR: float
+            abstract NGHTTP2_FLAG_NONE: float
+            abstract NGHTTP2_FLAG_END_STREAM: float
+            abstract NGHTTP2_FLAG_END_HEADERS: float
+            abstract NGHTTP2_FLAG_ACK: float
+            abstract NGHTTP2_FLAG_PADDED: float
+            abstract NGHTTP2_FLAG_PRIORITY: float
+            abstract DEFAULT_SETTINGS_HEADER_TABLE_SIZE: float
+            abstract DEFAULT_SETTINGS_ENABLE_PUSH: float
+            abstract DEFAULT_SETTINGS_INITIAL_WINDOW_SIZE: float
+            abstract DEFAULT_SETTINGS_MAX_FRAME_SIZE: float
+            abstract MAX_MAX_FRAME_SIZE: float
+            abstract MIN_MAX_FRAME_SIZE: float
+            abstract MAX_INITIAL_WINDOW_SIZE: float
+            abstract NGHTTP2_DEFAULT_WEIGHT: float
+            abstract NGHTTP2_SETTINGS_HEADER_TABLE_SIZE: float
+            abstract NGHTTP2_SETTINGS_ENABLE_PUSH: float
+            abstract NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS: float
+            abstract NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE: float
+            abstract NGHTTP2_SETTINGS_MAX_FRAME_SIZE: float
+            abstract NGHTTP2_SETTINGS_MAX_HEADER_LIST_SIZE: float
+            abstract PADDING_STRATEGY_NONE: float
+            abstract PADDING_STRATEGY_MAX: float
+            abstract PADDING_STRATEGY_CALLBACK: float
+            abstract HTTP2_HEADER_STATUS: string
+            abstract HTTP2_HEADER_METHOD: string
+            abstract HTTP2_HEADER_AUTHORITY: string
+            abstract HTTP2_HEADER_SCHEME: string
+            abstract HTTP2_HEADER_PATH: string
+            abstract HTTP2_HEADER_ACCEPT_CHARSET: string
+            abstract HTTP2_HEADER_ACCEPT_ENCODING: string
+            abstract HTTP2_HEADER_ACCEPT_LANGUAGE: string
+            abstract HTTP2_HEADER_ACCEPT_RANGES: string
+            abstract HTTP2_HEADER_ACCEPT: string
+            abstract HTTP2_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN: string
+            abstract HTTP2_HEADER_AGE: string
+            abstract HTTP2_HEADER_ALLOW: string
+            abstract HTTP2_HEADER_AUTHORIZATION: string
+            abstract HTTP2_HEADER_CACHE_CONTROL: string
+            abstract HTTP2_HEADER_CONNECTION: string
+            abstract HTTP2_HEADER_CONTENT_DISPOSITION: string
+            abstract HTTP2_HEADER_CONTENT_ENCODING: string
+            abstract HTTP2_HEADER_CONTENT_LANGUAGE: string
+            abstract HTTP2_HEADER_CONTENT_LENGTH: string
+            abstract HTTP2_HEADER_CONTENT_LOCATION: string
+            abstract HTTP2_HEADER_CONTENT_MD5: string
+            abstract HTTP2_HEADER_CONTENT_RANGE: string
+            abstract HTTP2_HEADER_CONTENT_TYPE: string
+            abstract HTTP2_HEADER_COOKIE: string
+            abstract HTTP2_HEADER_DATE: string
+            abstract HTTP2_HEADER_ETAG: string
+            abstract HTTP2_HEADER_EXPECT: string
+            abstract HTTP2_HEADER_EXPIRES: string
+            abstract HTTP2_HEADER_FROM: string
+            abstract HTTP2_HEADER_HOST: string
+            abstract HTTP2_HEADER_IF_MATCH: string
+            abstract HTTP2_HEADER_IF_MODIFIED_SINCE: string
+            abstract HTTP2_HEADER_IF_NONE_MATCH: string
+            abstract HTTP2_HEADER_IF_RANGE: string
+            abstract HTTP2_HEADER_IF_UNMODIFIED_SINCE: string
+            abstract HTTP2_HEADER_LAST_MODIFIED: string
+            abstract HTTP2_HEADER_LINK: string
+            abstract HTTP2_HEADER_LOCATION: string
+            abstract HTTP2_HEADER_MAX_FORWARDS: string
+            abstract HTTP2_HEADER_PREFER: string
+            abstract HTTP2_HEADER_PROXY_AUTHENTICATE: string
+            abstract HTTP2_HEADER_PROXY_AUTHORIZATION: string
+            abstract HTTP2_HEADER_RANGE: string
+            abstract HTTP2_HEADER_REFERER: string
+            abstract HTTP2_HEADER_REFRESH: string
+            abstract HTTP2_HEADER_RETRY_AFTER: string
+            abstract HTTP2_HEADER_SERVER: string
+            abstract HTTP2_HEADER_SET_COOKIE: string
+            abstract HTTP2_HEADER_STRICT_TRANSPORT_SECURITY: string
+            abstract HTTP2_HEADER_TRANSFER_ENCODING: string
+            abstract HTTP2_HEADER_TE: string
+            abstract HTTP2_HEADER_UPGRADE: string
+            abstract HTTP2_HEADER_USER_AGENT: string
+            abstract HTTP2_HEADER_VARY: string
+            abstract HTTP2_HEADER_VIA: string
+            abstract HTTP2_HEADER_WWW_AUTHENTICATE: string
+            abstract HTTP2_HEADER_HTTP2_SETTINGS: string
+            abstract HTTP2_HEADER_KEEP_ALIVE: string
+            abstract HTTP2_HEADER_PROXY_CONNECTION: string
+            abstract HTTP2_METHOD_ACL: string
+            abstract HTTP2_METHOD_BASELINE_CONTROL: string
+            abstract HTTP2_METHOD_BIND: string
+            abstract HTTP2_METHOD_CHECKIN: string
+            abstract HTTP2_METHOD_CHECKOUT: string
+            abstract HTTP2_METHOD_CONNECT: string
+            abstract HTTP2_METHOD_COPY: string
+            abstract HTTP2_METHOD_DELETE: string
+            abstract HTTP2_METHOD_GET: string
+            abstract HTTP2_METHOD_HEAD: string
+            abstract HTTP2_METHOD_LABEL: string
+            abstract HTTP2_METHOD_LINK: string
+            abstract HTTP2_METHOD_LOCK: string
+            abstract HTTP2_METHOD_MERGE: string
+            abstract HTTP2_METHOD_MKACTIVITY: string
+            abstract HTTP2_METHOD_MKCALENDAR: string
+            abstract HTTP2_METHOD_MKCOL: string
+            abstract HTTP2_METHOD_MKREDIRECTREF: string
+            abstract HTTP2_METHOD_MKWORKSPACE: string
+            abstract HTTP2_METHOD_MOVE: string
+            abstract HTTP2_METHOD_OPTIONS: string
+            abstract HTTP2_METHOD_ORDERPATCH: string
+            abstract HTTP2_METHOD_PATCH: string
+            abstract HTTP2_METHOD_POST: string
+            abstract HTTP2_METHOD_PRI: string
+            abstract HTTP2_METHOD_PROPFIND: string
+            abstract HTTP2_METHOD_PROPPATCH: string
+            abstract HTTP2_METHOD_PUT: string
+            abstract HTTP2_METHOD_REBIND: string
+            abstract HTTP2_METHOD_REPORT: string
+            abstract HTTP2_METHOD_SEARCH: string
+            abstract HTTP2_METHOD_TRACE: string
+            abstract HTTP2_METHOD_UNBIND: string
+            abstract HTTP2_METHOD_UNCHECKOUT: string
+            abstract HTTP2_METHOD_UNLINK: string
+            abstract HTTP2_METHOD_UNLOCK: string
+            abstract HTTP2_METHOD_UPDATE: string
+            abstract HTTP2_METHOD_UPDATEREDIRECTREF: string
+            abstract HTTP2_METHOD_VERSION_CONTROL: string
+            abstract HTTP_STATUS_CONTINUE: float
+            abstract HTTP_STATUS_SWITCHING_PROTOCOLS: float
+            abstract HTTP_STATUS_PROCESSING: float
+            abstract HTTP_STATUS_OK: float
+            abstract HTTP_STATUS_CREATED: float
+            abstract HTTP_STATUS_ACCEPTED: float
+            abstract HTTP_STATUS_NON_AUTHORITATIVE_INFORMATION: float
+            abstract HTTP_STATUS_NO_CONTENT: float
+            abstract HTTP_STATUS_RESET_CONTENT: float
+            abstract HTTP_STATUS_PARTIAL_CONTENT: float
+            abstract HTTP_STATUS_MULTI_STATUS: float
+            abstract HTTP_STATUS_ALREADY_REPORTED: float
+            abstract HTTP_STATUS_IM_USED: float
+            abstract HTTP_STATUS_MULTIPLE_CHOICES: float
+            abstract HTTP_STATUS_MOVED_PERMANENTLY: float
+            abstract HTTP_STATUS_FOUND: float
+            abstract HTTP_STATUS_SEE_OTHER: float
+            abstract HTTP_STATUS_NOT_MODIFIED: float
+            abstract HTTP_STATUS_USE_PROXY: float
+            abstract HTTP_STATUS_TEMPORARY_REDIRECT: float
+            abstract HTTP_STATUS_PERMANENT_REDIRECT: float
+            abstract HTTP_STATUS_BAD_REQUEST: float
+            abstract HTTP_STATUS_UNAUTHORIZED: float
+            abstract HTTP_STATUS_PAYMENT_REQUIRED: float
+            abstract HTTP_STATUS_FORBIDDEN: float
+            abstract HTTP_STATUS_NOT_FOUND: float
+            abstract HTTP_STATUS_METHOD_NOT_ALLOWED: float
+            abstract HTTP_STATUS_NOT_ACCEPTABLE: float
+            abstract HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED: float
+            abstract HTTP_STATUS_REQUEST_TIMEOUT: float
+            abstract HTTP_STATUS_CONFLICT: float
+            abstract HTTP_STATUS_GONE: float
+            abstract HTTP_STATUS_LENGTH_REQUIRED: float
+            abstract HTTP_STATUS_PRECONDITION_FAILED: float
+            abstract HTTP_STATUS_PAYLOAD_TOO_LARGE: float
+            abstract HTTP_STATUS_URI_TOO_LONG: float
+            abstract HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE: float
+            abstract HTTP_STATUS_RANGE_NOT_SATISFIABLE: float
+            abstract HTTP_STATUS_EXPECTATION_FAILED: float
+            abstract HTTP_STATUS_TEAPOT: float
+            abstract HTTP_STATUS_MISDIRECTED_REQUEST: float
+            abstract HTTP_STATUS_UNPROCESSABLE_ENTITY: float
+            abstract HTTP_STATUS_LOCKED: float
+            abstract HTTP_STATUS_FAILED_DEPENDENCY: float
+            abstract HTTP_STATUS_UNORDERED_COLLECTION: float
+            abstract HTTP_STATUS_UPGRADE_REQUIRED: float
+            abstract HTTP_STATUS_PRECONDITION_REQUIRED: float
+            abstract HTTP_STATUS_TOO_MANY_REQUESTS: float
+            abstract HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE: float
+            abstract HTTP_STATUS_UNAVAILABLE_FOR_LEGAL_REASONS: float
+            abstract HTTP_STATUS_INTERNAL_SERVER_ERROR: float
+            abstract HTTP_STATUS_NOT_IMPLEMENTED: float
+            abstract HTTP_STATUS_BAD_GATEWAY: float
+            abstract HTTP_STATUS_SERVICE_UNAVAILABLE: float
+            abstract HTTP_STATUS_GATEWAY_TIMEOUT: float
+            abstract HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED: float
+            abstract HTTP_STATUS_VARIANT_ALSO_NEGOTIATES: float
+            abstract HTTP_STATUS_INSUFFICIENT_STORAGE: float
+            abstract HTTP_STATUS_LOOP_DETECTED: float
+            abstract HTTP_STATUS_BANDWIDTH_LIMIT_EXCEEDED: float
+            abstract HTTP_STATUS_NOT_EXTENDED: float
+            abstract HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED: float
