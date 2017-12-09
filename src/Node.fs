@@ -45,7 +45,6 @@ let [<Import("*","domain")>] domain: Domain.IExports = jsNative
 let [<Import("*","constants")>] constants: Constants.IExports = jsNative
 let [<Import("*","v8")>] v8: V8.IExports = jsNative
 let [<Import("*","timers")>] timers: Timers.IExports = jsNative
-let [<Import("*","_debugger")>] _debugger: _debugger.IExports = jsNative
 let [<Import("*","async_hooks")>] async_hooks: Async_hooks.IExports = jsNative
 let [<Import("*","http2")>] http2: Http2.IExports = jsNative
 
@@ -4872,119 +4871,6 @@ module Timers =
         type [<AllowNullLiteral>] IExports =
             abstract __promisify__: unit -> Promise<unit>
             abstract __promisify__: value: 'T -> Promise<'T>
-
-module _debugger =
-
-    type [<AllowNullLiteral>] IExports =
-        abstract Protocol: ProtocolStatic
-        abstract NO_FRAME: float
-        abstract port: float
-        abstract SourceInfo: body: BreakResponse -> string
-        abstract Client: obj
-
-    type [<AllowNullLiteral>] Packet =
-        abstract raw: string with get, set
-        abstract headers: ResizeArray<string> with get, set
-        abstract body: Message with get, set
-
-    type [<AllowNullLiteral>] Message =
-        abstract seq: float with get, set
-        abstract ``type``: string with get, set
-
-    type [<AllowNullLiteral>] RequestInfo =
-        abstract command: string with get, set
-        abstract arguments: obj option with get, set
-
-    type [<AllowNullLiteral>] Request =
-        inherit Message
-        inherit RequestInfo
-
-    type [<AllowNullLiteral>] Event =
-        inherit Message
-        abstract ``event``: string with get, set
-        abstract body: obj option option with get, set
-
-    type [<AllowNullLiteral>] Response =
-        inherit Message
-        abstract request_seq: float with get, set
-        abstract success: bool with get, set
-        /// Contains error message if success === false. 
-        abstract message: string option with get, set
-        /// Contains message body if success === true. 
-        abstract body: obj option option with get, set
-
-    type [<AllowNullLiteral>] BreakpointMessageBody =
-        abstract ``type``: string with get, set
-        abstract target: float with get, set
-        abstract line: float with get, set
-
-    type [<AllowNullLiteral>] Protocol =
-        abstract res: Packet with get, set
-        abstract state: string with get, set
-        abstract execute: data: string -> unit
-        abstract serialize: rq: Request -> string
-        abstract onResponse: (Packet -> unit) with get, set
-
-    type [<AllowNullLiteral>] ProtocolStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> Protocol
-
-    type [<AllowNullLiteral>] ScriptDesc =
-        abstract name: string with get, set
-        abstract id: float with get, set
-        abstract isNative: bool option with get, set
-        abstract handle: float option with get, set
-        abstract ``type``: string with get, set
-        abstract lineOffset: float option with get, set
-        abstract columnOffset: float option with get, set
-        abstract lineCount: float option with get, set
-
-    type [<AllowNullLiteral>] Breakpoint =
-        abstract id: float with get, set
-        abstract scriptId: float with get, set
-        abstract script: ScriptDesc with get, set
-        abstract line: float with get, set
-        abstract condition: string option with get, set
-        abstract scriptReq: string option with get, set
-
-    type [<AllowNullLiteral>] RequestHandler =
-        [<Emit "$0($1...)">] abstract Invoke: err: bool * body: Message * res: Packet -> unit
-        abstract request_seq: float option with get, set
-
-    type [<AllowNullLiteral>] ResponseBodyHandler =
-        [<Emit "$0($1...)">] abstract Invoke: err: bool * ?body: obj option -> unit
-        abstract request_seq: float option with get, set
-
-    type [<AllowNullLiteral>] ExceptionInfo =
-        abstract text: string with get, set
-
-    type [<AllowNullLiteral>] BreakResponse =
-        abstract script: ScriptDesc option with get, set
-        abstract ``exception``: ExceptionInfo option with get, set
-        abstract sourceLine: float with get, set
-        abstract sourceLineText: string with get, set
-        abstract sourceColumn: float with get, set
-
-    type [<AllowNullLiteral>] ClientInstance =
-        inherit NodeJS.EventEmitter
-        abstract protocol: Protocol with get, set
-        abstract scripts: ResizeArray<ScriptDesc> with get, set
-        abstract handles: ResizeArray<ScriptDesc> with get, set
-        abstract breakpoints: ResizeArray<Breakpoint> with get, set
-        abstract currentSourceLine: float with get, set
-        abstract currentSourceColumn: float with get, set
-        abstract currentSourceLineText: string with get, set
-        abstract currentFrame: float with get, set
-        abstract currentScript: string with get, set
-        abstract connect: port: float * host: string -> unit
-        abstract req: req: obj option * cb: RequestHandler -> unit
-        abstract reqFrameEval: code: string * frame: float * cb: RequestHandler -> unit
-        abstract mirrorObject: obj: obj option * depth: float * cb: ResponseBodyHandler -> unit
-        abstract setBreakpoint: rq: BreakpointMessageBody * cb: RequestHandler -> unit
-        abstract clearBreakpoint: rq: Request * cb: RequestHandler -> unit
-        abstract listbreakpoints: cb: RequestHandler -> unit
-        abstract reqSource: from: float * ``to``: float * cb: RequestHandler -> unit
-        abstract reqScripts: cb: obj option -> unit
-        abstract reqContinue: cb: RequestHandler -> unit
 
 module Async_hooks =
 
