@@ -105,8 +105,8 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
 
     // for test-compile
     writeFile ["node_modules/vscode/vscode.d.ts"] "test-compile/VSCode.fs"
-    writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
-    // writeFile ["node_modules/izitoast/types/index.d.ts"] "test-compile/IziToast.fs"
+    // writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
+    writeFile ["node_modules/izitoast/types/index.d.ts"] "test-compile/IziToast.fs"
     writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Electron.fs"
     writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/React.fs"
     writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
