@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/fable-compiler/ts2fable#readme",
   "dependencies": {
+    "http2": "^3.3.7",
     "typescript": "2.6.1",
     "yargs": "^10.0.3"
   },
@@ -56,8 +57,8 @@
     "izitoast": "^1.1.5",
     "mocha": "^4.0.1",
     "mocha-appveyor-reporter": "^0.4.0",
-    "vscode": "^1.1.8",
-    "reactxp": "^0.46.5"
+    "reactxp": "^0.46.5",
+    "vscode": "^1.1.8"
   },
   "engines": {
     "vscode": "^1.18.1"

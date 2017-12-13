@@ -11,7 +11,9 @@
       "protocol": "inspector",
       "program": "${workspaceRoot}/dist/ts2fable.js",
       "args":[
-        "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts"
+        "${workspaceRoot}/node_modules/reactxp/dist/web/ReactXP.d.ts",
+        "${workspaceRoot}/test-compile/ReactXP.fs",
+        "-d dist"
       ],
       "sourceMaps": true,
       "preLaunchTask": "build",
