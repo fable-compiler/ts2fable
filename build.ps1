@@ -16,10 +16,10 @@ if ($env:appveyor){
     }
     Update-AppveyorBuild -Version "$version$versionSuffix"
 }
-
 $v = "$version$versionSuffix"
-
+$ErrorActionPreference = "SilentlyContinue"
 yarn install --ignore-engines
+$ErrorActionPreference = "Stop"
 
 Set-Location $psscriptroot\src
 dotnet restore
