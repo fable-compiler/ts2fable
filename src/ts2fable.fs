@@ -11,6 +11,7 @@ open ts2fable.Naming
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
+open Yargs.Yargs
 
 // This app has 3 main functions.
 // 1. Read a TypeScript file into a syntax tree.
@@ -125,14 +126,19 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     printfn "done writing test-compile files"
 
 else
+    let dOption=createEmpty<Options>
+    dOption.alias <- Some (U2.Case1 "dependent")
+    dOption.description <- Some "Fix module name when TypeScript files are interdepent"
+    dOption.``default`` <- None
     let argv =
         yargs
             .usage("Usage: ts2fable some.d.ts src/Some.fs")
             .command(U2.Case1 "$0 [files..]", "")
             .demandOption(U2.Case1 "files", "")
             .help()
+            .option("d",dOption)
             .argv
-
+            
     let files = argv.["files"].Value :?> string array |> List.ofArray
     let tsfiles = files |> List.filter (fun s -> s.EndsWith ".ts")
     let fsfile = files |> List.tryFind (fun s -> s.EndsWith ".fs")
