@@ -1,7 +1,7 @@
 module ts2fable.Naming
 
 open System
-
+open Node
 let (|Capital|_|) (letter: string)= 
     let capitals = [ 'A' .. 'Z' ] |> Seq.map string
     match Seq.contains letter capitals with
@@ -139,3 +139,23 @@ let fixNamespaceString (name: string): string =
             let parts = parts |> List.ofArray |> List.rev
             let parts = [parts.Head] @ parts.Tail |> List.map fixModuleName
             parts |> List.rev |> String.concat "."
+let automaticNamespace (fileName: string) (subPath: string) (moduleName: string)  : string =
+    let subPath = subPath.Trim()
+
+    let directoryName = path.dirname fileName
+    
+    let inm = directoryName.LastIndexOf "node_modules"
+
+    let path =
+        if inm = -1 then directoryName
+        else directoryName.Substring(inm+13)
+
+    let parts = path.Split '/'
+              |> List.ofArray
+              |> List.skip 1
+              |> fun l->
+                 if l.Head.Equals subPath then l.Tail
+                 else l
+              |> List.map (capitalize >> fixModuleName) 
+                
+    parts @ [moduleName] |> String.concat "."            

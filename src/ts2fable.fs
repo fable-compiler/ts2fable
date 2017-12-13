@@ -42,8 +42,8 @@ let transform (file: FsFile): FsFile =
     |> extractTypeLiterals // after fixEscapeWords
     |> addAliasUnionHelpers
     
-let writeFile (tsPaths: string list) (fsPath: string): unit =
-    // printfn "writeFile %A %s" tsPaths fsPath
+let inline writeFileInternal (tsPaths: string list) (fsPath: string) (dependent:string Option): unit =
+    // printfn "writeFile %A %s" tsPaths fsPath 
 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
@@ -71,10 +71,18 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     )
 
     let fsFileOut: FsFileOut =
+        let nameSpace =
+            match dependent with 
+            | Some subPath -> 
+                let fileName = fsFiles.[0].FileName
+                let moduleName = fsFiles.[0].ModuleName
+                automaticNamespace fileName subPath moduleName
+            | None -> path.basename(fsPath, path.extname(fsPath))
         {
             // use the F# file name as the module namespace
             // TODO ensure valid name
-            Namespace = path.basename(fsPath, path.extname(fsPath))
+            // Namespace = path.basename(fsPath, path.extname(fsPath))
+            Namespace = nameSpace
             Opens =
                 [
                     "System"
@@ -89,7 +97,10 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     for line in printFsFile fsFileOut do
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``()
-
+let writeFile (tsPaths: string list) (fsPath: string) :unit=
+    writeFileInternal tsPaths fsPath None
+let writeFile2 (tsPaths: string list) (fsPath: string) (subPath:string):unit=
+    writeFileInternal tsPaths fsPath  (Some subPath)
 let argv = ``process``.argv |> List.ofSeq
 
 // if run via `dotnet fable npm-build` or `dotnet fable npm-start`
@@ -128,7 +139,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
 else
     let dOption=createEmpty<Options>
     dOption.alias <- Some (U2.Case1 "dependent")
-    dOption.description <- Some "Fix module name when TypeScript files are interdepent"
+    dOption.description <- Some "Fix module name when TypeScript files interdepent"
     dOption.``default`` <- None
     let argv =
         yargs
@@ -138,20 +149,19 @@ else
             .help()
             .option("d",dOption)
             .argv
-            
     let files = argv.["files"].Value :?> string array |> List.ofArray
     let tsfiles = files |> List.filter (fun s -> s.EndsWith ".ts")
     let fsfile = files |> List.tryFind (fun s -> s.EndsWith ".fs")
-    
     match tsfiles.Length, fsfile with
     | 0, _ -> failwithf "Please provide the path to a TypeScript file"
     | _, None -> failwithf "Please provide the path to the F# file to be written "
     | _, Some fsf ->
         printfn "ts2fable %s" Version.version
-
         // validate ts files exist
         for ts in tsfiles do
             if not <| fs.existsSync(!^ts) then
                 failwithf "TypeScript file not found: %s" ts
 
-        writeFile tsfiles fsf
+        match argv.["d"] with
+        |Some s ->writeFile2 tsfiles fsf (string s)
+        |None-> writeFile tsfiles fsf     
