@@ -11,7 +11,7 @@
       "protocol": "inspector",
       "program": "${workspaceRoot}/dist/ts2fable.js",
       "args":[
-        "${workspaceRoot}/node_modules/reactxp/dist/web/ReactXP.d.ts",
+        "${workspaceRoot}/test-compile/ReactXP.d.ts",
         "${workspaceRoot}/test-compile/ReactXP.fs",
         "-d dist"
       ],
