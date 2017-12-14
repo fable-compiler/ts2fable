@@ -144,3 +144,10 @@ describe "fixModuleName tests" <| fun _ ->
     it "assert" <| fun _ ->
         fixModuleName "assert"
         |> equal "Assert"
+
+
+describe "automaticNamespace tests" <| fun _ ->
+
+    it "reactXP fullPath" <| fun _ ->
+        automaticNamespace "D:/VsCode/Github/ts2fable/node_modules/reactxp/dist/web/ReactXP.d.ts" "dist" "ReactXP"
+        |> equal "Web.ReactXP"        
