@@ -91,17 +91,22 @@ let escapeWord (s: string) =
             s
 
 let fixModuleName (s: string) =
-    let s = s.Replace("'","") // remove single quotes
+    let s = s.Replace("'","").Replace("require(","").Replace(")","") // remove single quotes
     let s = capitalize s
     let s =
-        let parts = s |> createModuleNameParts
-        parts |> String.concat "_"
+        // let parts = s |> createModuleNameParts
+        let parts = s |> createModuleNameParts |> Seq.map capitalize |> Seq.skipWhile (fun s -> s ="")
+        parts |> String.concat "."
     let s =
         if Keywords.reserved.Contains s || Keywords.keywords.Contains s then
             sprintf "%s_" s
         else s
     s
 
+let fixTypeName (s:string) =
+    let ias = s.LastIndexOf "as"
+    if ias = -1 then failwithf "Import type should have as keyword"
+    else s.Substring(0,ias-1),s.Substring(ias+3)
 let removeQuotes (s:string): string =
     if isNull s then ""
     else s.Replace("\"","").Replace("'","")

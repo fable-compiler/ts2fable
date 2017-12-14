@@ -600,8 +600,8 @@ let readImportEqualsDeclaration(im: ImportEqualsDeclaration): FsType list =
         | U2.Case1 entityName ->
               match entityName with
               | U2.Case1 id -> 
-                { Type = im.name.getText(); SpecifiedModule = id.getText(); ResolvedModule = None }
-                |> FsImport.Type |> FsType.Import |> fun c -> [c]
+                { Module = im.name.getText(); SpecifiedModule = id.getText(); ResolvedModule = None }
+                |> FsImport.Module |> FsType.Import |> fun c -> [c]
               | U2.Case2 _ -> failwithf "Not Implemented"
         | U2.Case2 _ -> failwith "Not Implemented"
    
