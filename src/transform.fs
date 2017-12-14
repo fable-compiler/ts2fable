@@ -886,8 +886,10 @@ let fixNamespace (f: FsFile): FsFile =
                 }
                 |> FsImport.Module
             | FsImport.Type imtp ->
+                let typeName,typeNameImp =  fixTypeName imtp.Type
                 { imtp with 
-                    SpecifiedModule = fixModuleName imtp.SpecifiedModule
+                    Type = typeNameImp
+                    SpecifiedModule = sprintf "%s.%s" (fixModuleName imtp.SpecifiedModule) typeName
                 }
                 |> FsImport.Type
             |> FsType.Import
