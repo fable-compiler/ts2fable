@@ -7,6 +7,7 @@
     <Compile Include="Mkdirp.fs" />
     <Compile Include="Yargs.fs" />
     <Compile Include="TypeScript.fs" />
+    <Compile Include="fileSystem.fs" />
     <Compile Include="keywords.fs" />
     <Compile Include="naming.fs" />
     <Compile Include="syntax.fs" />

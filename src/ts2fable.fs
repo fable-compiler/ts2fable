@@ -17,6 +17,7 @@ open Mkdirp
 open Fable.PowerPack
 open Node.Fs
 open Node.Fs
+open fileSystem
 // This app has 3 main functions.
 // 1. Read a TypeScript file into a syntax tree.
 // 2. Fix the syntax tree.
@@ -188,71 +189,49 @@ else
             match argv.["d"] with
             |Some s ->writeFile2 tsfiles fsf (string s)
             |None-> writeFile tsfiles fsf     
-    | TsDirectory2FsDirectory (tsdir,fsdir)->
-        let enumerateFiles dir=
-            promise {
-                let rec loop (array:ResizeArray<string>) dir = 
-                    let enumerateFileSystemEntries dir =
-                        let encoding = BufferEncoding.Utf8 |> U2.Case2 |> Some
-                        let t= dir |> PathLike.ofString
-                        fs.readdirSync (t,encoding) |> Seq.map(fun str -> path.join(ResizeArray<string> [dir;str]))       
-                    let isFile path=  
-                        let stats=
-                            path |> PathLike.ofString |> fs.lstatSync
-                        stats.isFile()
-                    let isDirectory path=  
-                        let stats=
-                            path |> PathLike.ofString |> fs.lstatSync
-                        stats.isDirectory()            
+    
+    | TsDirectory2FsDirectory (tsDir,fsDir)->
+        let tsDir = path.normalize tsDir
+        let fsDir = path.normalize fsDir
 
-                    promise {
-                        let paths = enumerateFileSystemEntries dir
-                        let files = paths |> Seq.filter isFile
-                        array.AddRange files
-                        let dirs = paths |> Seq.filter isDirectory 
-                        printfn "%A" dirs
-                        for dir in dirs do
-                            return! loop array dir
-                    }
-                let resizeArray = ResizeArray<string>()    
-                do! loop resizeArray dir 
-                return resizeArray |> Seq.toList
-            }
-        
         let handle (files:string list)= 
             let maxSpawnNumber = 8
           
             let tsFiles = files |>List.filter (fun s -> s.EndsWith ".ts")
             let fsFiles = tsFiles |> List.map (fun s ->
-                let tsdir = path.normalize tsdir
-                let fsdir = path.normalize fsdir
-                s.Replace(tsdir,fsdir).Replace(".d.ts",".fs").Replace(".ts",".fs"))
+                s.Replace(tsDir,fsDir).Replace(".d.ts",".fs").Replace(".ts",".fs"))
             
+            //use multiple child_process to write files asynchronously
             let run (files: (string * string) list) = 
                 let rec loop (files: (string * string) list) (spawnNum:int ref) = 
                     promise {
                         while !spawnNum = maxSpawnNumber do do! Promise.sleep(500)
-                        
-                        let tsFile,fsFile = files.Head
-                        let fsDir = fsFile |> path.dirname
-                        mkdirp.sync(dir = fsDir) |> ignore
-                        
-                        let spawn = child_process.spawn ("node", ResizeArray<string> [__filename ;tsFile;fsFile])
-                        
-                        spawn.addListener_close(fun _ _ -> 
-                            decr spawnNum
-                            printfn "decr spawn number,current spawn number is %d" !spawnNum) |> ignore
-                        incr spawnNum
-                        printfn "incr spawn number,current spawn number is %d" !spawnNum
-                        
-                        return! loop files.Tail spawnNum 
+                        match files with 
+                        | h::t ->
+                            let tsFile,fsFile = h
+                            let fsDir = fsFile |> path.dirname
+                            mkdirp.sync(dir = fsDir) |> ignore
+
+                            let spawn = child_process.spawn ("node", ResizeArray<string> [__filename ;tsFile;fsFile])
+
+                            spawn.addListener_close(fun _ _ -> 
+                                decr spawnNum
+                                printfn "decr spawn number,current spawn number is %d" !spawnNum) |> ignore
+                            incr spawnNum
+                            printfn "incr spawn number,current spawn number is %d" !spawnNum
+
+                            return! loop t spawnNum 
+                        | [] -> ()    
                     }
                 loop files (ref 0)
 
             List.zip tsFiles fsFiles
             |> run
-            |> Promise.map (fun _ -> printfn "done writing test-compile files")
+            |> Promise.map (fun _ -> 
+                enumerateFiles fsDir
+                |> Promise.map (printFsprojFile fsDir)
+                |> ignore)
 
-        enumerateFiles tsdir
+        enumerateFiles tsDir
         |> Promise.map handle
         |> ignore
