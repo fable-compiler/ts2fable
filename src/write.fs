@@ -1,7 +1,8 @@
 module rec ts2fable.Write
 open ts2fable.Naming
 open ts2fable.Print
-
+open Node
+open Fable.Core.JsInterop
 let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsComment list): unit =
     if comments |> List.exists FsComment.isParam then
         let summaryLines = comments |> List.choose FsComment.asSummaryLine
@@ -164,3 +165,26 @@ let printFsFile (file: FsFileOut): ResizeArray<string> =
             |> List.filter (fun md -> md.Types.Length > 0)
             |> List.iter (printModule lines "")
     lines
+
+let printFsprojFile fsDir (lines:string list) =
+    let lines = lines |> List.map(fun line -> sprintf "<Compile Include=\"%s\" />" <| line.Replace(fsDir,""))
+    let fsProj = path.join(ResizeArray<string> [fsDir;sprintf "%s.fsproj" (fsDir |> path.basename)])
+    let initlines = [
+        "<Project Sdk=\"Microsoft.NET.Sdk\">"
+        "<PropertyGroup>"
+        "<TargetFramework>netstandard2.0</TargetFramework>"
+        "</PropertyGroup>"
+        "<ItemGroup>"        
+    ]
+    let endlines = [
+        "</ItemGroup>"        
+        "</Project>"
+    ]
+    let lines = initlines @ lines @ endlines
+    let file = fs.createWriteStream (!^fsProj)
+    for line in lines do
+        file.write(sprintf "%s%c" line '\n') |> ignore
+        
+    file.``end``()           
+
+    printfn "done writing test-compile files"
