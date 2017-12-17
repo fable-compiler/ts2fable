@@ -307,7 +307,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
-            if not (globalNames.Contains smd.Name || exportAssignments.Contains smd.Name) then
+            if not <| globalNames.Contains smd.Name && exportAssignments.Contains smd.Name then
                 {
                     Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                     HasDeclare = true
@@ -329,7 +329,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 @ iexports
                 @ (typesOther |> List.ofSeq)
         }
-    
+
     newMd, variablesForParent |> List.ofSeq
 
 let createIExports (f: FsFile): FsFile =
