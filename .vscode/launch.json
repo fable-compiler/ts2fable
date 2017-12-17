@@ -11,9 +11,9 @@
       "protocol": "inspector",
       "program": "${workspaceRoot}/dist/ts2fable.js",
       "args":[
-        "${workspaceRoot}/test-compile/ReactXP.d.ts",
-        "${workspaceRoot}/test-compile/ReactXP.fs",
-        "-d dist"
+        // "splitter.config.js"
+        "${workspaceRoot}/node_modules/reactxp/dist",
+        "${workspaceRoot}/test-compile/ReactXP/"
       ],
       "sourceMaps": true,
       "preLaunchTask": "build",
