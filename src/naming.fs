@@ -105,7 +105,7 @@ let fixModuleName (s: string) =
 
 let fixTypeName (s:string) =
     let ias = s.LastIndexOf "as"
-    if ias = -1 then failwithf "Import type should have as keyword"
+    if ias = -1 then s,s
     else s.Substring(0,ias-1),s.Substring(ias+3)
 let removeQuotes (s:string): string =
     if isNull s then ""

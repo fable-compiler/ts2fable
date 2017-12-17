@@ -12,7 +12,11 @@ open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
 open Yargs.Yargs
-
+open Node.Fs
+open Mkdirp
+open Fable.PowerPack
+open Node.Fs
+open Node.Fs
 // This app has 3 main functions.
 // 1. Read a TypeScript file into a syntax tree.
 // 2. Fix the syntax tree.
@@ -42,8 +46,7 @@ let transform (file: FsFile): FsFile =
     |> extractTypeLiterals // after fixEscapeWords
     |> addAliasUnionHelpers
     
-let inline writeFileInternal (tsPaths: string list) (fsPath: string) (dependent:string Option): unit =
-    // printfn "writeFile %A %s" tsPaths fsPath 
+let inline writeFileInternal (tsPaths: string list) (fsPath: string) (dependent:string Option): unit =    // printfn "writeFile %A %s" tsPaths fsPath 
 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
@@ -97,10 +100,27 @@ let inline writeFileInternal (tsPaths: string list) (fsPath: string) (dependent:
     for line in printFsFile fsFileOut do
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``()
+
 let writeFile (tsPaths: string list) (fsPath: string) :unit=
     writeFileInternal tsPaths fsPath None
 let writeFile2 (tsPaths: string list) (fsPath: string) (subPath:string):unit=
     writeFileInternal tsPaths fsPath  (Some subPath)
+let (|TsFile2FsFile|TsDirectory2FsDirectory|) (files:string list)=
+    let isfile (s:string) = s.EndsWith ".ts" ||  s.EndsWith ".fs"
+    let isDirectory (s:string) = path.extname s = ""
+    let dir2Dir (files:string list)=
+        if (files |> Seq.forall isDirectory) && files.Length = 2 
+            then Some (files.Head,files.[1])
+        else None
+    files 
+    |> Seq.forall isfile
+    |> function 
+       | true -> TsFile2FsFile
+       | false -> files 
+                |> dir2Dir
+                |> function
+                   | Some dirs -> TsDirectory2FsDirectory dirs
+                   | None -> failwith "incorrent input files"
 let argv = ``process``.argv |> List.ofSeq
 
 // if run via `dotnet fable npm-build` or `dotnet fable npm-start`
@@ -108,7 +128,7 @@ let argv = ``process``.argv |> List.ofSeq
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
     printfn "Node O_RDWR %A" Node.Fs.constants.O_RDWR // read/write should be 2
-    printfn "NGHTTP2_STREAM_CLOSED %A" Node.Http2.constants.NGHTTP2_STREAM_CLOSED
+    // printfn "NGHTTP2_STREAM_CLOSED %A" Node.Http2.constants.NGHTTP2_STREAM_CLOSED
 
     // used by ts2fable
     writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/TypeScript.fs"
@@ -124,6 +144,7 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
     writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Chai.fs"
     writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Chalk.fs"
+    writeFile ["node_modules/@types/mkdirp/index.d.ts"] "test-compile/Mkdirp.fs"
     writeFile
         [   "node_modules/@types/google-protobuf/index.d.ts"
             "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
@@ -150,18 +171,88 @@ else
             .option("d",dOption)
             .argv
     let files = argv.["files"].Value :?> string array |> List.ofArray
-    let tsfiles = files |> List.filter (fun s -> s.EndsWith ".ts")
-    let fsfile = files |> List.tryFind (fun s -> s.EndsWith ".fs")
-    match tsfiles.Length, fsfile with
-    | 0, _ -> failwithf "Please provide the path to a TypeScript file"
-    | _, None -> failwithf "Please provide the path to the F# file to be written "
-    | _, Some fsf ->
-        printfn "ts2fable %s" Version.version
-        // validate ts files exist
-        for ts in tsfiles do
-            if not <| fs.existsSync(!^ts) then
-                failwithf "TypeScript file not found: %s" ts
+    match files with
+    | TsFile2FsFile -> 
+        let tsfiles = files |> List.filter (fun s -> s.EndsWith ".ts")
+        let fsfile = files |> List.tryFind (fun s -> s.EndsWith ".fs")
+        match tsfiles.Length, fsfile with
+        | 0, _ -> failwithf "Please provide the path to a TypeScript file"
+        | _, None -> failwithf "Please provide the path to the F# file to be written "
+        | _, Some fsf ->
+            printfn "ts2fable %s" Version.version
+            // validate ts files exist
+            for ts in tsfiles do
+                if not <| fs.existsSync(!^ts) then
+                    failwithf "TypeScript file not found: %s" ts
 
-        match argv.["d"] with
-        |Some s ->writeFile2 tsfiles fsf (string s)
-        |None-> writeFile tsfiles fsf     
+            match argv.["d"] with
+            |Some s ->writeFile2 tsfiles fsf (string s)
+            |None-> writeFile tsfiles fsf     
+    | TsDirectory2FsDirectory (tsdir,fsdir)->
+        let enumerateFiles dir=
+            promise {
+                let rec loop (array:ResizeArray<string>) dir = 
+                    let enumerateFileSystemEntries dir =
+                        let encoding = BufferEncoding.Utf8 |> U2.Case2 |> Some
+                        let t= dir |> PathLike.ofString
+                        fs.readdirSync (t,encoding) |> Seq.map(fun str -> path.join(ResizeArray<string> [dir;str]))       
+                    let isFile path=  
+                        let stats=
+                            path |> PathLike.ofString |> fs.lstatSync
+                        stats.isFile()
+                    let isDirectory path=  
+                        let stats=
+                            path |> PathLike.ofString |> fs.lstatSync
+                        stats.isDirectory()            
+
+                    promise {
+                        let paths = enumerateFileSystemEntries dir
+                        let files = paths |> Seq.filter isFile
+                        array.AddRange files
+                        let dirs = paths |> Seq.filter isDirectory 
+                        printfn "%A" dirs
+                        for dir in dirs do
+                            return! loop array dir
+                    }
+                let resizeArray = ResizeArray<string>()    
+                do! loop resizeArray dir 
+                return resizeArray |> Seq.toList
+            }
+        
+        let handle (files:string list)= 
+            let maxSpawnNumber = 8
+          
+            let tsFiles = files |>List.filter (fun s -> s.EndsWith ".ts")
+            let fsFiles = tsFiles |> List.map (fun s ->
+                let tsdir = path.normalize tsdir
+                let fsdir = path.normalize fsdir
+                s.Replace(tsdir,fsdir).Replace(".d.ts",".fs").Replace(".ts",".fs"))
+            
+            let run (files: (string * string) list) = 
+                let rec loop (files: (string * string) list) (spawnNum:int ref) = 
+                    promise {
+                        while !spawnNum = maxSpawnNumber do do! Promise.sleep(500)
+                        
+                        let tsFile,fsFile = files.Head
+                        let fsDir = fsFile |> path.dirname
+                        mkdirp.sync(dir = fsDir) |> ignore
+                        
+                        let spawn = child_process.spawn ("node", ResizeArray<string> [__filename ;tsFile;fsFile])
+                        
+                        spawn.addListener_close(fun _ _ -> 
+                            decr spawnNum
+                            printfn "decr spawn number,current spawn number is %d" !spawnNum) |> ignore
+                        incr spawnNum
+                        printfn "incr spawn number,current spawn number is %d" !spawnNum
+                        
+                        return! loop files.Tail spawnNum 
+                    }
+                loop files (ref 0)
+
+            List.zip tsFiles fsFiles
+            |> run
+            |> Promise.map (fun _ -> printfn "done writing test-compile files")
+
+        enumerateFiles tsdir
+        |> Promise.map handle
+        |> ignore
