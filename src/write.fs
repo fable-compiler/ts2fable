@@ -167,7 +167,11 @@ let printFsFile (file: FsFileOut): ResizeArray<string> =
     lines
 
 let printFsprojFile fsDir (lines:string list) =
-    let lines = lines |> List.map(fun line -> sprintf "<Compile Include=\"%s\" />" <| line.Replace(fsDir,""))
+
+    let lines = 
+        lines
+        |> List.filter (fun s -> s.EndsWith ".fs")
+        |> List.map(fun line -> sprintf "<Compile Include=\"%s\" />" <| line.Replace(fsDir,""))
     let fsProj = path.join(ResizeArray<string> [fsDir;sprintf "%s.fsproj" (fsDir |> path.basename)])
     let initlines = [
         "<Project Sdk=\"Microsoft.NET.Sdk\">"
@@ -178,6 +182,7 @@ let printFsprojFile fsDir (lines:string list) =
     ]
     let endlines = [
         "</ItemGroup>"        
+        "<Import Project=\"..\\..\\.paket\\Paket.Restore.targets\" />"
         "</Project>"
     ]
     let lines = initlines @ lines @ endlines

@@ -159,6 +159,9 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     printfn "done writing test-compile files"
 
 else
+
+    //dOption is used to support automaticNamespace
+    //see automaticNamespace test
     let dOption=createEmpty<Options>
     dOption.alias <- Some (U2.Case1 "dependent")
     dOption.description <- Some "Fix module name when TypeScript files interdepent"
@@ -194,16 +197,21 @@ else
         let tsDir = path.normalize tsDir
         let fsDir = path.normalize fsDir
 
-        let handle (files:string list)= 
+        let handle (files: string list)= 
+            //default process number is 8
             let maxSpawnNumber = 8
           
             let tsFiles = files |>List.filter (fun s -> s.EndsWith ".ts")
             let fsFiles = tsFiles |> List.map (fun s ->
                 s.Replace(tsDir,fsDir).Replace(".d.ts",".fs").Replace(".ts",".fs"))
             
+            let subPath = tsDir.Split('\\')|>Seq.last
+
             //use multiple child_process to write files asynchronously
+            //for async work,multiple threads will throw exceptions, so here use multiple processs
             let run (files: (string * string) list) = 
-                let rec loop (files: (string * string) list) (spawnNum:int ref) = 
+                let isComplete = ref false
+                let rec loop (files: (string * string) list) (spawnNum: int ref) = 
                     promise {
                         while !spawnNum = maxSpawnNumber do do! Promise.sleep(500)
                         match files with 
@@ -212,16 +220,21 @@ else
                             let fsDir = fsFile |> path.dirname
                             mkdirp.sync(dir = fsDir) |> ignore
 
-                            let spawn = child_process.spawn ("node", ResizeArray<string> [__filename ;tsFile;fsFile])
+                            //reactxp/dist
+                            //spawn "node ts2fable tsfile fsfile -d subPath"
+                            let spawn = child_process.spawn ("node", ResizeArray<string> [__filename ;tsFile;fsFile;"-d";subPath])
 
                             spawn.addListener_close(fun _ _ -> 
                                 decr spawnNum
-                                printfn "decr spawn number,current spawn number is %d" !spawnNum) |> ignore
+                                printfn "decr Process number,current Process number is %d" !spawnNum
+                                if !spawnNum = 0 then isComplete:= true) |> ignore
                             incr spawnNum
-                            printfn "incr spawn number,current spawn number is %d" !spawnNum
+                            printfn "incr Process number,current Process number is %d" !spawnNum
 
                             return! loop t spawnNum 
-                        | [] -> ()    
+                        | [] -> 
+                            while not !isComplete do do! Promise.sleep(500)
+                            ()    
                     }
                 loop files (ref 0)
 
