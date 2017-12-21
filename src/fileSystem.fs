@@ -36,3 +36,14 @@ let enumerateFiles dir=
         do! loop resizeArray dir 
         return resizeArray |> Seq.toList
     }
+
+let readLines file = 
+    let path: U2<PathLike, float> =U2.Case1 (file |> PathLike.ofString)
+    let encoding:U2<obj, string> = U2.Case2 "utf-8"
+    let file =  fs.readFileSync (path,encoding)
+    file.Split('\n') |> Seq.toList
+let readLine num file = 
+    let path: U2<PathLike, float> =U2.Case1 (file |> PathLike.ofString)
+    let encoding:U2<obj, string> = U2.Case2 "utf-8"
+    let file =  fs.readFileSync (path,encoding)
+    file.Split('\n').[num - 1]
