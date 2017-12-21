@@ -12,8 +12,13 @@
       "program": "${workspaceRoot}/dist/ts2fable.js",
       "args":[
         // "splitter.config.js"
+
         "${workspaceRoot}/node_modules/reactxp/dist",
         "${workspaceRoot}/test-compile/ReactXP/"
+
+        // "${workspaceRoot}/node_modules/reactxp/dist/android/ReactXP.d.ts",
+        // "${workspaceRoot}/test-compile/ReactXP.fs",
+        // "-d dist"
       ],
       "sourceMaps": true,
       "preLaunchTask": "build",

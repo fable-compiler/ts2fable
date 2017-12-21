@@ -151,45 +151,41 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             lines.RemoveAt (lines.Count-1)
 
 let printFsFile (file: FsFileOut): ResizeArray<string> =
-    let lines = ResizeArray<string>()
-
-    sprintf "// ts2fable %s" Version.version |> lines.Add
-    sprintf "module rec %s" file.Namespace |> lines.Add
-
-    for opn in file.Opens do
-        sprintf "open %s" opn |> lines.Add
-
-    sprintf "" |> lines.Add
+    let moduleLines = ResizeArray<string>()
+   
     for f in file.Files do
         f.Modules
             |> List.filter (fun md -> md.Types.Length > 0)
-            |> List.iter (printModule lines "")
-    lines
+            |> List.iter (printModule moduleLines "")
+    
 
-let printFsprojFile fsDir (lines:string list) =
+    let lines = ResizeArray<string>()
 
-    let lines = 
-        lines
-        |> List.filter (fun s -> s.EndsWith ".fs")
-        |> List.map(fun line -> sprintf "<Compile Include=\"%s\" />" <| line.Replace(fsDir,""))
-    let fsProj = path.join(ResizeArray<string> [fsDir;sprintf "%s.fsproj" (fsDir |> path.basename)])
-    let initlines = [
-        "<Project Sdk=\"Microsoft.NET.Sdk\">"
-        "<PropertyGroup>"
-        "<TargetFramework>netstandard2.0</TargetFramework>"
-        "</PropertyGroup>"
-        "<ItemGroup>"        
-    ]
-    let endlines = [
-        "</ItemGroup>"        
-        "<Import Project=\"..\\..\\.paket\\Paket.Restore.targets\" />"
-        "</Project>"
-    ]
-    let lines = initlines @ lines @ endlines
-    let file = fs.createWriteStream (!^fsProj)
-    for line in lines do
-        file.write(sprintf "%s%c" line '\n') |> ignore
+    sprintf "// ts2fable %s" Version.version |> lines.Add
+   
+    match file.Namespace with 
+    | Some namespace' -> 
+        sprintf "namespace rec %s" namespace' |> lines.Add
+        sprintf "module %s = " file.ModuleName |> lines.Add
         
-    file.``end``()           
+        for opn in file.Opens do
+            sprintf "    open %s" opn |> lines.Add
+        sprintf "" |> lines.Add   
+        
+        let  moduleLine = moduleLines |> Seq.map(sprintf "    %s")
+        
+        lines.AddRange(moduleLine)
+        
+        lines    
+    | None -> 
+        sprintf "module rec %s" file.ModuleName |> lines.Add
+       
+        for opn in file.Opens do
+            sprintf "open %s" opn |> lines.Add
+        
+        sprintf "" |> lines.Add    
+        
+        lines.AddRange(moduleLines)
+        
+        lines
 
-    printfn "done writing test-compile files"

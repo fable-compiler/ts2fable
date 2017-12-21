@@ -15,8 +15,6 @@ open Yargs.Yargs
 open Node.Fs
 open Mkdirp
 open Fable.PowerPack
-open Node.Fs
-open Node.Fs
 open fileSystem
 // This app has 3 main functions.
 // 1. Read a TypeScript file into a syntax tree.
@@ -47,7 +45,7 @@ let transform (file: FsFile): FsFile =
     |> extractTypeLiterals // after fixEscapeWords
     |> addAliasUnionHelpers
     
-let inline writeFileInternal (tsPaths: string list) (fsPath: string) (dependent:string Option): unit =    // printfn "writeFile %A %s" tsPaths fsPath 
+let inline writeFile (tsPaths: string list) (fsPath: string) (dependent:string Option): unit =    // printfn "writeFile %A %s" tsPaths fsPath 
 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
@@ -75,18 +73,20 @@ let inline writeFileInternal (tsPaths: string list) (fsPath: string) (dependent:
     )
 
     let fsFileOut: FsFileOut =
-        let nameSpace =
+        let moduleName = path.basename(fsPath, path.extname(fsPath))
+        let namespace' =
             match dependent with 
             | Some subPath -> 
                 let fileName = fsFiles.[0].FileName
-                let moduleName = fsFiles.[0].ModuleName
-                automaticNamespace fileName subPath moduleName
-            | None -> path.basename(fsPath, path.extname(fsPath))
+                let namespace' = automaticNamespace fileName subPath
+                Some namespace'
+            | None -> None
         {
             // use the F# file name as the module namespace
             // TODO ensure valid name
             // Namespace = path.basename(fsPath, path.extname(fsPath))
-            Namespace = nameSpace
+            Namespace = namespace'
+            ModuleName = moduleName
             Opens =
                 [
                     "System"
@@ -102,10 +102,7 @@ let inline writeFileInternal (tsPaths: string list) (fsPath: string) (dependent:
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``()
 
-let writeFile (tsPaths: string list) (fsPath: string) :unit=
-    writeFileInternal tsPaths fsPath None
-let writeFile2 (tsPaths: string list) (fsPath: string) (subPath:string):unit=
-    writeFileInternal tsPaths fsPath  (Some subPath)
+
 let (|TsFile2FsFile|TsDirectory2FsDirectory|) (files:string list)=
     let isfile (s:string) = s.EndsWith ".ts" ||  s.EndsWith ".fs"
     let isDirectory (s:string) = path.extname s = ""
@@ -129,28 +126,28 @@ let argv = ``process``.argv |> List.ofSeq
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
     printfn "ts.version: %s" ts.version
     printfn "Node O_RDWR %A" Node.Fs.constants.O_RDWR // read/write should be 2
-    // printfn "NGHTTP2_STREAM_CLOSED %A" Node.Http2.constants.NGHTTP2_STREAM_CLOSED
+    printfn "NGHTTP2_STREAM_CLOSED %A" Node.Http2.constants.NGHTTP2_STREAM_CLOSED
 
     // used by ts2fable
-    writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/TypeScript.fs"
-    writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Node.fs"
-    writeFile ["node_modules/@types/yargs/index.d.ts"] "test-compile/Yargs.fs"
+    writeFile ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/TypeScript.fs" None
+    writeFile ["node_modules/@types/node/index.d.ts"] "test-compile/Node.fs" None
+    writeFile ["node_modules/@types/yargs/index.d.ts"] "test-compile/Yargs.fs" None
 
     // for test-compile
-    writeFile ["node_modules/vscode/vscode.d.ts"] "test-compile/VSCode.fs"
+    writeFile ["node_modules/vscode/vscode.d.ts"] "test-compile/VSCode.fs" None
     // writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
-    writeFile ["node_modules/izitoast/types/index.d.ts"] "test-compile/IziToast.fs"
-    writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Electron.fs"
-    writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/React.fs"
-    writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
-    writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Chai.fs"
-    writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Chalk.fs"
-    writeFile ["node_modules/@types/mkdirp/index.d.ts"] "test-compile/Mkdirp.fs"
+    writeFile ["node_modules/izitoast/types/index.d.ts"] "test-compile/IziToast.fs" None
+    writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Electron.fs" None
+    writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/React.fs" None
+    writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs" None
+    writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Chai.fs" None
+    writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Chalk.fs" None
+    writeFile ["node_modules/@types/mkdirp/index.d.ts"] "test-compile/Mkdirp.fs" None
     writeFile
         [   "node_modules/@types/google-protobuf/index.d.ts"
             "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
         ]
-        "test-compile/Protobuf.fs"
+        "test-compile/Protobuf.fs" None
 
     // files that have too many TODOs
     // writeFile ["node_modules/@types/jquery/index.d.ts"] "test-compile/JQuery.fs"
@@ -161,7 +158,6 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
 else
 
     //dOption is used to support automaticNamespace
-    //see automaticNamespace test
     let dOption=createEmpty<Options>
     dOption.alias <- Some (U2.Case1 "dependent")
     dOption.description <- Some "Fix module name when TypeScript files interdepent"
@@ -190,10 +186,11 @@ else
                     failwithf "TypeScript file not found: %s" ts
 
             match argv.["d"] with
-            |Some s ->writeFile2 tsfiles fsf (string s)
-            |None-> writeFile tsfiles fsf     
+            |Some s ->writeFile tsfiles fsf (s |> string |> Some)
+            |None-> writeFile tsfiles fsf None     
     
     | TsDirectory2FsDirectory (tsDir,fsDir)->
+
         let tsDir = path.normalize tsDir
         let fsDir = path.normalize fsDir
 
@@ -210,7 +207,7 @@ else
             //use multiple child_process to write files asynchronously
             //for async work,multiple threads will throw exceptions, so here use multiple processs
             let run (files: (string * string) list) = 
-                let isComplete = ref false
+                let isCompleted = ref false
                 let rec loop (files: (string * string) list) (spawnNum: int ref) = 
                     promise {
                         while !spawnNum = maxSpawnNumber do do! Promise.sleep(500)
@@ -220,20 +217,19 @@ else
                             let fsDir = fsFile |> path.dirname
                             mkdirp.sync(dir = fsDir) |> ignore
 
-                            //reactxp/dist
                             //spawn "node ts2fable tsfile fsfile -d subPath"
                             let spawn = child_process.spawn ("node", ResizeArray<string> [__filename ;tsFile;fsFile;"-d";subPath])
 
                             spawn.addListener_close(fun _ _ -> 
                                 decr spawnNum
                                 printfn "decr Process number,current Process number is %d" !spawnNum
-                                if !spawnNum = 0 then isComplete:= true) |> ignore
+                                if !spawnNum = 0 then isCompleted := true) |> ignore
                             incr spawnNum
                             printfn "incr Process number,current Process number is %d" !spawnNum
 
                             return! loop t spawnNum 
                         | [] -> 
-                            while not !isComplete do do! Promise.sleep(500)
+                            while not !isCompleted do do! Promise.sleep(500)
                             ()    
                     }
                 loop files (ref 0)
@@ -242,7 +238,8 @@ else
             |> run
             |> Promise.map (fun _ -> 
                 enumerateFiles fsDir
-                |> Promise.map (printFsprojFile fsDir)
+                //bundle will be impleted
+                |> Promise.map (ignore)
                 |> ignore)
 
         enumerateFiles tsDir
