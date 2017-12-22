@@ -162,8 +162,10 @@ let automaticNamespace (fileName: string) (subPath: string)   : string =
         if inm = -1 then directoryName
         else directoryName.Substring(inm+13)
     
-    let parts = path.Split '/' |> List.ofArray |> List.filter (fun s -> s <> subPath)
+    let parts = 
+        path.Split '/' 
+        |> List.ofArray 
+        |> List.filter (fun s -> s <> subPath) 
+        |> List.map (capitalize >> fixModuleName) 
 
-    let parts = parts |> List.map (capitalize >> fixModuleName) 
-    
     parts |> String.concat "."            

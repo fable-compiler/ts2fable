@@ -16,6 +16,7 @@ open Node.Fs
 open Mkdirp
 open Fable.PowerPack
 open fileSystem
+open System
 // This app has 3 main functions.
 // 1. Read a TypeScript file into a syntax tree.
 // 2. Fix the syntax tree.
@@ -106,7 +107,7 @@ let inline writeFile (tsPaths: string list) (fsPath: string) (dependent:string O
 let (|TsFile2FsFile|TsDirectory2FsDirectory|) (files:string list)=
     let isfile (s:string) = s.EndsWith ".ts" ||  s.EndsWith ".fs"
     let isDirectory (s:string) = path.extname s = ""
-    let dir2Dir (files:string list)=
+    let dir2dir (files:string list)=
         if (files |> Seq.forall isDirectory) && files.Length = 2 
             then Some (files.Head,files.[1])
         else None
@@ -115,7 +116,7 @@ let (|TsFile2FsFile|TsDirectory2FsDirectory|) (files:string list)=
     |> function 
        | true -> TsFile2FsFile
        | false -> files 
-                |> dir2Dir
+                |> dir2dir
                 |> function
                    | Some dirs -> TsDirectory2FsDirectory dirs
                    | None -> failwith "incorrent input files"
@@ -156,19 +157,12 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     printfn "done writing test-compile files"
 
 else
-
-    //dOption is used to support automaticNamespace
-    let dOption=createEmpty<Options>
-    dOption.alias <- Some (U2.Case1 "dependent")
-    dOption.description <- Some "Fix module name when TypeScript files interdepent"
-    dOption.``default`` <- None
     let argv =
         yargs
             .usage("Usage: ts2fable some.d.ts src/Some.fs")
             .command(U2.Case1 "$0 [files..]", "")
             .demandOption(U2.Case1 "files", "")
             .help()
-            .option("d",dOption)
             .argv
     let files = argv.["files"].Value :?> string array |> List.ofArray
     match files with
@@ -193,55 +187,16 @@ else
 
         let tsDir = path.normalize tsDir
         let fsDir = path.normalize fsDir
-
-        let handle (files: string list)= 
-            //default process number is 8
-            let maxSpawnNumber = 8
-          
-            let tsFiles = files |>List.filter (fun s -> s.EndsWith ".ts")
-            let fsFiles = tsFiles |> List.map (fun s ->
-                s.Replace(tsDir,fsDir).Replace(".d.ts",".fs").Replace(".ts",".fs"))
-            
-            let subPath = tsDir.Split('\\')|>Seq.last
-
-            //use multiple child_process to write files asynchronously
-            //for async work,multiple threads will throw exceptions, so here use multiple processs
-            let run (files: (string * string) list) = 
-                let isCompleted = ref false
-                let rec loop (files: (string * string) list) (spawnNum: int ref) = 
-                    promise {
-                        while !spawnNum = maxSpawnNumber do do! Promise.sleep(500)
-                        match files with 
-                        | h::t ->
-                            let tsFile,fsFile = h
-                            let fsDir = fsFile |> path.dirname
-                            mkdirp.sync(dir = fsDir) |> ignore
-
-                            //spawn "node ts2fable tsfile fsfile -d subPath"
-                            let spawn = child_process.spawn ("node", ResizeArray<string> [__filename ;tsFile;fsFile;"-d";subPath])
-
-                            spawn.addListener_close(fun _ _ -> 
-                                decr spawnNum
-                                printfn "decr Process number,current Process number is %d" !spawnNum
-                                if !spawnNum = 0 then isCompleted := true) |> ignore
-                            incr spawnNum
-                            printfn "incr Process number,current Process number is %d" !spawnNum
-
-                            return! loop t spawnNum 
-                        | [] -> 
-                            while not !isCompleted do do! Promise.sleep(500)
-                            ()    
-                    }
-                loop files (ref 0)
-
-            List.zip tsFiles fsFiles
-            |> run
-            |> Promise.map (fun _ -> 
-                enumerateFiles fsDir
-                //bundle will be impleted
-                |> Promise.map (ignore)
-                |> ignore)
-
-        enumerateFiles tsDir
-        |> Promise.map handle
+        let time = DateTime.Now
+        enumerateFiles [tsDir]
+        |> Seq.filter (fun file -> file.EndsWith ".ts")
+        |> Seq.map (fun tsFile -> 
+            let fsFile = tsFile.Replace(tsDir,fsDir).Replace(".d.ts",".fs").Replace(".ts",".fs")
+            let dir = fsFile |> path.dirname
+            mkdirp.sync(dir = dir) |> ignore
+            promise {
+                return writeFile [tsFile] fsFile <| Some "dist"
+            })
+        |> Promise.Parallel 
+        |> Promise.map (fun _ -> printf "time elapsed %s" <| string (DateTime.Now - time))
         |> ignore
