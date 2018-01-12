@@ -595,6 +595,16 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
                     )
             | U2.Case2 namedImports -> []
 
+let readImportEqualsDeclaration(im: ImportEqualsDeclaration): FsType list =
+    match im.moduleReference with
+        | U2.Case1 entityName ->
+              match entityName with
+              | U2.Case1 id -> 
+                { Module = im.name.getText(); SpecifiedModule = id.getText(); ResolvedModule = None }
+                |> FsImport.Module |> FsType.Import |> fun c -> [c]
+              | U2.Case2 _ -> failwithf "Not Implemented"
+        | U2.Case2 _ -> failwith "Not Implemented"
+   
 let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
@@ -622,9 +632,7 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
         // printfn "TODO export statements"
         []
     | SyntaxKind.ImportEqualsDeclaration ->
-        let ime = sd :?> ImportEqualsDeclaration
-        // printfn "import equals decl %s" (ime.getText())
-        []
+        readImportEqualsDeclaration(sd :?> ImportEqualsDeclaration)
     | _ -> printfn "unsupported Statement kind: %A" sd.kind; []
 
 let readModuleName(mn: ModuleName): string =

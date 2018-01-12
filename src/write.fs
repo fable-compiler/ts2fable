@@ -1,7 +1,8 @@
 module rec ts2fable.Write
 open ts2fable.Naming
 open ts2fable.Print
-
+open Node
+open Fable.Core.JsInterop
 let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsComment list): unit =
     if comments |> List.exists FsComment.isParam then
         let summaryLines = comments |> List.choose FsComment.asSummaryLine
@@ -58,7 +59,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         | FsType.Import imp ->
             match imp with
             | FsImport.Type imptp ->
-                sprintf "%stype %s = %s.%s" indent imptp.Type imptp.SpecifiedModule imptp.Type |> lines.Add
+                sprintf "%stype %s = %s" indent imptp.Type imptp.SpecifiedModule |> lines.Add
             | _ -> ()
         | _ -> ()
 
@@ -150,17 +151,41 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             lines.RemoveAt (lines.Count-1)
 
 let printFsFile (file: FsFileOut): ResizeArray<string> =
-    let lines = ResizeArray<string>()
-
-    sprintf "// ts2fable %s" Version.version |> lines.Add
-    sprintf "module rec %s" file.Namespace |> lines.Add
-
-    for opn in file.Opens do
-        sprintf "open %s" opn |> lines.Add
-
-    sprintf "" |> lines.Add
+    let moduleLines = ResizeArray<string>()
+   
     for f in file.Files do
         f.Modules
             |> List.filter (fun md -> md.Types.Length > 0)
-            |> List.iter (printModule lines "")
-    lines
+            |> List.iter (printModule moduleLines "")
+    
+
+    let lines = ResizeArray<string>()
+
+    sprintf "// ts2fable %s" Version.version |> lines.Add
+   
+    match file.Namespace with 
+    | Some namespace' -> 
+        sprintf "namespace rec %s" namespace' |> lines.Add
+        sprintf "module %s = " file.ModuleName |> lines.Add
+        
+        for opn in file.Opens do
+            sprintf "    open %s" opn |> lines.Add
+        sprintf "" |> lines.Add   
+        
+        let  moduleLine = moduleLines |> Seq.map(sprintf "    %s")
+        
+        lines.AddRange(moduleLine)
+        
+        lines    
+    | None -> 
+        sprintf "module rec %s" file.ModuleName |> lines.Add
+       
+        for opn in file.Opens do
+            sprintf "open %s" opn |> lines.Add
+        
+        sprintf "" |> lines.Add    
+        
+        lines.AddRange(moduleLines)
+        
+        lines
+

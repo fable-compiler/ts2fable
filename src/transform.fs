@@ -329,7 +329,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 @ iexports
                 @ (typesOther |> List.ofSeq)
         }
-    
+
     newMd, variablesForParent |> List.ofSeq
 
 let createIExports (f: FsFile): FsFile =
@@ -886,8 +886,11 @@ let fixNamespace (f: FsFile): FsFile =
                 }
                 |> FsImport.Module
             | FsImport.Type imtp ->
+                let typeName,typeNameImp =  fixImportTypeName imtp.Type
+
                 { imtp with 
-                    SpecifiedModule = fixModuleName imtp.SpecifiedModule
+                    Type = typeNameImp
+                    SpecifiedModule = sprintf "%s.%s" (fixModuleName imtp.SpecifiedModule) typeName
                 }
                 |> FsImport.Type
             |> FsType.Import

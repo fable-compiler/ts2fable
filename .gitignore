@@ -80,7 +80,6 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
-
 # Chutzpah Test files
 _Chutzpah*
 
@@ -261,4 +260,4 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
-
+test-compile/*/

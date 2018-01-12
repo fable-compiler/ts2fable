@@ -271,7 +271,8 @@ type FsFile =
 
 type FsFileOut =
     {
-        Namespace: string
+        Namespace: string option
+        ModuleName: string
         Opens: string list
         Files: FsFile list
     }

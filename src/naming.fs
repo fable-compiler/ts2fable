@@ -1,7 +1,8 @@
 module ts2fable.Naming
 
 open System
-
+open Node
+open System.Text.RegularExpressions
 let (|Capital|_|) (letter: string)= 
     let capitals = [ 'A' .. 'Z' ] |> Seq.map string
     match Seq.contains letter capitals with
@@ -89,19 +90,30 @@ let escapeWord (s: string) =
             sprintf "``%s``" s
         else
             s
+let fixImportEqualModuleName (s:string) = 
+    s.Replace("'","").Replace("require(","").Replace(")","")
 
 let fixModuleName (s: string) =
-    let s = s.Replace("'","") // remove single quotes
+    let s =  s |> fixImportEqualModuleName // remove single quotes
     let s = capitalize s
     let s =
-        let parts = s |> createModuleNameParts
-        parts |> String.concat "_"
+        // let parts = s |> createModuleNameParts
+        let parts = s |> createModuleNameParts |> Seq.map capitalize |> Seq.skipWhile (fun s -> s ="")
+        parts |> String.concat "."
     let s =
         if Keywords.reserved.Contains s || Keywords.keywords.Contains s then
             sprintf "%s_" s
         else s
     s
 
+let fixImportTypeName (s:string) =
+    let (|Regex|_|) pattern input =
+        let m = Regex.Match(input, pattern)
+        if m.Success then Some(m.Index)
+        else None
+    match s with 
+    | Regex "\\bas\\b" ias-> s.Substring(0,ias-1),s.Substring(ias+3)
+    | _ -> s,s
 let removeQuotes (s:string): string =
     if isNull s then ""
     else s.Replace("\"","").Replace("'","")
@@ -150,3 +162,21 @@ let fixNamespaceString (name: string): string =
             let parts = parts |> List.ofArray |> List.rev
             let parts = [parts.Head] @ parts.Tail |> List.map fixModuleName
             parts |> List.rev |> String.concat "."
+let automaticNamespace (fileName: string) (subPath: string)   : string =
+    let subPath = subPath.Trim()
+
+    let directoryName = path.dirname fileName
+    
+    let inm = directoryName.LastIndexOf "node_modules"
+
+    let path =
+        if inm = -1 then directoryName
+        else directoryName.Substring(inm+13)
+    
+    let parts = 
+        path.Split '/' 
+        |> List.ofArray 
+        |> List.filter (fun s -> s <> subPath) 
+        |> List.map (capitalize >> fixModuleName) 
+
+    parts |> String.concat "."            

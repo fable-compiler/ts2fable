@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/fable-compiler/ts2fable#readme",
   "dependencies": {
+    "http2": "^3.3.7",
     "typescript": "2.6.1",
     "yargs": "^10.0.3"
   },
@@ -44,6 +45,7 @@
     "@types/node": "^8.0.56",
     "@types/react": "^15.0.20",
     "@types/yargs": "^8.0.2",
+    "@types/mkdirp": "^0.5.2",    
     "babel-core": "6.26.0",
     "babel-plugin-shebang": "^0.0.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
@@ -56,6 +58,8 @@
     "izitoast": "^1.1.5",
     "mocha": "^4.0.1",
     "mocha-appveyor-reporter": "^0.4.0",
+    "reactxp": "^0.46.5",
+    "mkdirp": "^0.5.1",
     "vscode": "^1.1.8"
   },
   "engines": {
