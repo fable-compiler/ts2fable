@@ -334,7 +334,6 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 @ (typesOther |> List.ofSeq)
         }
     
-    printf "Hello"
     newMd, variablesForParent |> List.ofSeq
 
 let createIExports (f: FsFile): FsFile =
