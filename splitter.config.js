@@ -26,7 +26,8 @@ module.exports = {
   entry: resolve("src/ts2fable.fsproj"),
   outDir: path.dirname(outFile),
   babel: fableUtils.resolveBabelOptions({
-    plugins: ["transform-es2015-modules-commonjs"]
+    plugins: ["transform-es2015-modules-commonjs"],
+    sourceMaps: true
   }),
   fable: { define: ["DEBUG"] },
   postbuild() { runScript(outFile) }
