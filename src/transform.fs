@@ -304,14 +304,18 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     // add exports assignments
     // make sure there are no conflicting globals already
     let globalNames = typesGlobal |> Seq.map getName |> Set.ofSeq
+    let childNames = typesChildExport |> Seq.map getName |> Set.ofSeq
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
-            if not <| globalNames.Contains smd.Name && exportAssignments.Contains smd.Name then
+            let name = smd.Name |> lowerFirst
+            if not <| childNames.Contains name
+            && not <| globalNames.Contains smd.Name 
+            && exportAssignments.Contains smd.Name then
                 {
                     Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                     HasDeclare = true
-                    Name = smd.Name |> lowerFirst
+                    Name = name
                     Type = sprintf "%s.IExports" (fixModuleName smd.Name) |> simpleType
                     IsConst = true
                 }
@@ -330,6 +334,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 @ (typesOther |> List.ofSeq)
         }
     
+    printf "Hello"
     newMd, variablesForParent |> List.ofSeq
 
 let createIExports (f: FsFile): FsFile =
