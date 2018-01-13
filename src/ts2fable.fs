@@ -19,7 +19,6 @@ let argv = ``process``.argv |> List.ofSeq
 // if run via `dotnet fable npm-build` or `dotnet fable npm-start`
 // TODO `dotnet fable npm-build` doesn't wait for the test files to finish writing
 if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from build
-    failwith "Save Debug Time"
     printfn "ts.version: %s" ts.version
     printfn "Node O_RDWR %A" Node.Fs.constants.O_RDWR // read/write should be 2
     printfn "NGHTTP2_STREAM_CLOSED %A" Node.Http2.constants.NGHTTP2_STREAM_CLOSED

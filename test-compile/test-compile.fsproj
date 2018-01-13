@@ -14,7 +14,7 @@
     <Compile Include="Mocha.fs" />
     <!-- <Compile Include="Chai.fs" /> -->
     <Compile Include="Chalk.fs" />
-    <Compile Include="ReactXP.fs" />
+    <!-- <Compile Include="ReactXP.fs" /> -->
     <!-- <Compile Include="Protobuf.fs" /> -->
 
     <!-- <Compile Include="JQuery.fs" /> -->
