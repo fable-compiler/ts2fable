@@ -11,9 +11,7 @@
       "protocol": "inspector",
       "program": "${workspaceRoot}/dist/ts2fable.js",
       "args":[
-        // "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts",
-        "${workspaceRoot}/node_modules/reactxp/dist/web/ReactXP.d.ts",
-        "${workspaceRoot}/test-compile/ReactXP.fs"
+        "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts",
       ],
       "sourceMaps": true,
       "preLaunchTask": "build",
@@ -26,7 +24,6 @@
       "protocol": "inspector",
       "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
       "args":[
-        // "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts",
         "${workspaceRoot}/test/bin/test.js"
       ],
       "sourceMaps": true,
