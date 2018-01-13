@@ -21,6 +21,20 @@
     },
     {
       "type": "node",
+      "request": "launch",
+      "name": "Launch Test",
+      "protocol": "inspector",
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "args":[
+        // "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts",
+        "${workspaceRoot}/test/bin/test.js"
+      ],
+      "sourceMaps": true,
+      "preLaunchTask": "test",
+      "outFiles": []
+    },
+    {
+      "type": "node",
       "request": "attach",
       "name": "Attach to Port",
       "address": "localhost",
