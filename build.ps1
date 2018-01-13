@@ -18,9 +18,9 @@ if ($env:appveyor){
 }
 
 $v = "$version$versionSuffix"
-
+$ErrorActionPreference = "SilentlyContinue"
 yarn install --ignore-engines
-
+$ErrorActionPreference = "Stop"
 Set-Location $psscriptroot\src
 dotnet restore
 dotnet fable yarn-build

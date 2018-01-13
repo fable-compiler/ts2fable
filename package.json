@@ -13,6 +13,7 @@
     "build": "fable-splitter -c splitter.config.js",
     "watch": "fable-splitter -c splitter.config.js -w",
     "test": "fable-splitter -c splitter.test.config.js",
+    "watchtest": "fable-splitter -c splitter.test.config.js -w",
     "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "repository": {
@@ -55,6 +56,7 @@
     "fable-utils": "1.0.6",
     "izitoast": "^1.1.5",
     "mocha": "^4.0.1",
+    "reactxp": "^0.46.6",
     "mocha-appveyor-reporter": "^0.4.0",
     "vscode": "^1.1.8"
   },

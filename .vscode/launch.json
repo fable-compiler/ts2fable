@@ -11,10 +11,23 @@
       "protocol": "inspector",
       "program": "${workspaceRoot}/dist/ts2fable.js",
       "args":[
-        "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts"
+        "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts",
       ],
       "sourceMaps": true,
       "preLaunchTask": "build",
+      "outFiles": []
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Test",
+      "protocol": "inspector",
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "args":[
+        "${workspaceRoot}/test/bin/test.js"
+      ],
+      "sourceMaps": true,
+      "preLaunchTask": "test",
       "outFiles": []
     },
     {
