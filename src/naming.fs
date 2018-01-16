@@ -123,7 +123,7 @@ let getJsModuleName (path: string): string =
             |> fun x ->
                 x.Split '/'
                     |> List.ofArray
-                    |> List.filter (fun s -> s <> "index.d.ts")
+                    |> List.filter (fun s -> s <> "index.d.ts" && s <> "types")
 
     let out = 
         match parts with 
@@ -132,9 +132,8 @@ let getJsModuleName (path: string): string =
                 String.Join("/", xs')
             | x::xs when x.StartsWith "@" -> 
                 String.Join("/", x :: xs)
-            | xs -> List.last xs
-
-    out.Replace(".ts","").Replace(".d","")
+            | xs -> List.head xs
+    out
 
 let primatives = ["string"; "obj"; "unit"; "float"; "bool"] |> Set.ofList
 
