@@ -182,7 +182,7 @@ type FsExport =
         Selector: string
         Path: string
     }
-
+[<CustomEquality;CustomComparison>]
 type FsVariable =
     {
         Export: FsExport option
@@ -191,8 +191,19 @@ type FsVariable =
         Type: FsType
         IsConst: bool
     }
+    
 with
     member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal
+    override x.Equals(y) = 
+        match y with 
+        | :? FsVariable as other -> x.Name = other.Name
+        | _ -> false
+    override x.GetHashCode() = hash x.Name
+    interface System.IComparable with 
+        member x.CompareTo y = 
+            match y with 
+            | :? FsVariable as vb -> compare x.Name vb.Name
+            | _ -> invalidArg "y" "cannot compare values of different types"
 
 type FsMapped =
     {
