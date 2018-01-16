@@ -133,7 +133,7 @@ let getJsModuleName (path: string): string =
             | x::xs when x.StartsWith "@" -> 
                 String.Join("/", x :: xs)
             | xs -> List.head xs
-    out
+    out.Replace(".ts","").Replace(".d","")
 
 let primatives = ["string"; "obj"; "unit"; "float"; "bool"] |> Set.ofList
 
