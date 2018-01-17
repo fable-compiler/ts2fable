@@ -9,6 +9,7 @@ open System.Collections.Generic
 open System
 open ts2fable.Naming
 open System.Collections
+open System.Collections.Generic
 
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
@@ -202,6 +203,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     let typesOther = ResizeArray<FsType>()
     let variablesForParent = ResizeArray<FsVariable>()
     
+    let variables = HashSet<FsVariable>()
     let exportAssignments = HashSet<string>()
     md.Types |> List.iter(fun tp ->
         match tp with
@@ -216,7 +218,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
             let ns = if md.Name = "" then ns else ns @ [md.Name.Replace("'","")]
             let smd, vars = createIExportsModule ns smd
             for v in vars do
-                if v.Export.IsSome then v |> FsType.Variable |> typesChildExport.Add
+                if v.Export.IsSome then v |> variables.Add |> ignore
                 else v |> FsType.Variable |> typesChild.Add
             smd |> FsType.Module |> typesOther.Add
         | FsType.Variable vb ->
@@ -304,36 +306,33 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     // add exports assignments
     // make sure there are no conflicting globals already
     let globalNames = typesGlobal |> Seq.map getName |> Set.ofSeq
-    let childNames = typesChildExport |> Seq.map getName |> Set.ofSeq
+    
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
-            let name = smd.Name |> lowerFirst
-            if not <| childNames.Contains name
-            && not <| globalNames.Contains smd.Name 
-            && exportAssignments.Contains smd.Name then
+            if not <| globalNames.Contains smd.Name && exportAssignments.Contains smd.Name then
                 {
                     Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                     HasDeclare = true
-                    Name = name
+                    Name = smd.Name |> lowerFirst
                     Type = sprintf "%s.IExports" (fixModuleName smd.Name) |> simpleType
                     IsConst = true
                 }
-                |> FsType.Variable
-                |> typesGlobal.Add
+                |> variables.Add |> ignore
         | _ -> ()
     )
 
     let newMd =
         { md with
             Types =
-                (typesGlobal |> List.ofSeq)
+                (variables |> List.ofSeq |> List.map FsType.Variable)
+                @ (typesGlobal |> List.ofSeq)
                 @ (typesChildExport |> List.ofSeq)
                 @ (typesChild |> List.ofSeq)
                 @ iexports
                 @ (typesOther |> List.ofSeq)
         }
-    
+
     newMd, variablesForParent |> List.ofSeq
 
 let createIExports (f: FsFile): FsFile =

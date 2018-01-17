@@ -113,6 +113,14 @@ describe "getJsModuleName tests" <| fun _ ->
     it "chai full path" <| fun _ ->
         getJsModuleName "C:/Users/camer/fs/ts2fable/node_modules/@types/chai/index.d.ts"
         |> equal "chai"
+    
+    it "chalk relative path" <| fun _ ->
+        getJsModuleName "node_modules/chalk/types/index.d.ts"
+        |> equal "chalk"       
+        
+    it "reactxp relative path" <| fun _ ->
+        getJsModuleName "node_modules/reactxp/dist/web/ReactXP.d.ts"
+        |> equal "reactxp"            
 
     it "node relative path" <| fun _ ->
         getJsModuleName "node_modules/@types/node/index.d.ts"
