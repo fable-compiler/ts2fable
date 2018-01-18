@@ -688,3 +688,38 @@ let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFil
     { file with
         Modules = modules |> List.ofSeq
     }
+
+//recursively get all resolveModuleNames
+let readAllResolveModuleNames tsPath = 
+    let accum = HashSet<string>()
+   
+    let rec readResolveModuleNames (program:Program) tsPath :string list = 
+        let tsFile = tsPath |> program.getSourceFile
+        tsFile.resolvedModules 
+        |> List.ofSeq 
+        |> List.map(|KeyValue|)
+        |> List.iter (fun (k,v) ->
+            let name = v.resolvedFileName
+            if not <| accum.Contains name 
+            then
+                accum.Add name |> ignore
+                if k.Contains "./" 
+                then 
+                    name 
+                    |> readResolveModuleNames program
+                    |> ignore
+        )
+
+        accum |> List.ofSeq
+    
+    let workSpaceRoot = ``process``.cwd()
+    let tsPath = path.join(ResizeArray [workSpaceRoot; tsPath])
+    let options = jsOptions<Ts.CompilerOptions>(fun o ->
+        o.target <- Some ScriptTarget.ES2015
+        o.``module`` <- Some ModuleKind.CommonJS
+    )
+    let setParentNodes = true
+    let host = ts.createCompilerHost(options, setParentNodes)
+    let program = ts.createProgram(ResizeArray [tsPath], options, host)
+    
+    readResolveModuleNames (program:Program) tsPath    

@@ -3474,7 +3474,8 @@ module Ts =
         abstract getLineStarts: unit -> ResizeArray<float>
         abstract getPositionOfLineAndCharacter: line: float * character: float -> float
         abstract update: newText: string * textChangeRange: TextChangeRange -> SourceFile
-
+        // added for ts2fable
+        abstract resolvedModules: System.Collections.Generic.IDictionary<string,ResolvedModule>
     type [<AllowNullLiteral>] Bundle =
         inherit Node
         abstract kind: SyntaxKind with get, set
