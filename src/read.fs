@@ -690,9 +690,9 @@ let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFil
     }
 
 //recursively get all resolveModuleNames
-let readAllResolveModuleNames tsPath = 
+let readAllResolvedModuleNames tsPath = 
     let accum = HashSet<string>()
-   
+       
     let rec readResolveModuleNames (program:Program) tsPath :string list = 
         let tsFile = tsPath |> program.getSourceFile
         tsFile.resolvedModules 
@@ -714,6 +714,8 @@ let readAllResolveModuleNames tsPath =
     
     let workSpaceRoot = ``process``.cwd()
     let tsPath = path.join(ResizeArray [workSpaceRoot; tsPath])
+    accum.Add tsPath |> ignore
+
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
         o.``module`` <- Some ModuleKind.CommonJS
