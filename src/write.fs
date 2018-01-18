@@ -71,9 +71,9 @@ let transform (file: FsFile): FsFile =
         |> extractTypeLiterals // after fixEscapeWords
         |> addAliasUnionHelpers
 
-let getFsFiles tsPaths = 
-    let workSpaceRoot = ``process``.cwd()
-    let tsPaths = tsPaths |> List.map (fun tsPath -> path.join(ResizeArray [workSpaceRoot; tsPath]))
+let getFsFiles (tsPaths: string list) = 
+    // let workSpaceRoot = ``process``.cwd()
+    // let tsPaths = tsPaths |> List.map (fun tsPath -> path.join(ResizeArray [workSpaceRoot; tsPath]))
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
         o.``module`` <- Some ModuleKind.CommonJS
