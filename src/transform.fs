@@ -910,58 +910,22 @@ let wrappedWithModule (f: FsFile): FsFile =
                     | FsType.Variable vb -> { vb with HasDeclare = false } |> FsType.Variable
                     | tp -> tp 
                 )
-                let remain = types |> List.filter isFsImport
-                let drop = types |> List.filter (not << isFsImport) 
+                // let remain = types |> List.filter isFsImport
+                // let drop = types |> List.filter (not << isFsImport) 
                 [
                     {
                         HasDeclare = false
                         IsNamespace = false
-                        Name = (path.basename f.FileName).Replace(".ts","").Replace(".d","")
-                        Types = drop
+                        Name = 
+                            let masterDir = path.dirname f.MasterFileName
+                            path.relative(masterDir,f.FileName).Replace(".d.ts","").Replace(".ts","") |> fixModuleName 
+                        Types = types
                         HelperLines = [] 
                         Attributes = []                           
                     } 
                     |> FsType.Module
-                ] |> List.append remain
+                ] 
         }
     )}
 
 
-// This app has 3 main functions.
-// 1. Read a TypeScript file into a syntax tree.
-// 2. Fix the syntax tree.
-// 3. Print the syntax tree to a F# file.
-
-let transform (file: FsFile): FsFile =
-
-    let transformMaster file = 
-        file   
-        |> removeInternalModules
-        |> mergeModulesInFile
-        |> addConstructors
-        |> fixThis
-        |> fixNodeArray
-        |> fixReadonlyArray
-        |> fixDateTime
-        |> fixStatic
-        |> createIExports
-        |> fixOverloadingOnStringParameters // fixEscapeWords must be after
-        |> fixEnumReferences
-        |> fixDuplicatesInUnion
-        |> fixEscapeWords
-        |> fixNamespace
-        |> addTicForGenericFunctions // must be after fixEscapeWords
-        |> addTicForGenericTypes
-        // |> removeTodoMembers
-        |> removeTypeParamsFromStatic
-        |> removeDuplicateFunctions
-        |> extractTypeLiterals // after fixEscapeWords
-        |> addAliasUnionHelpers
-     
-
-    let transformServent file= 
-        file
-        |> wrappedWithModule
-
-    if file.IsMaster then transformMaster file
-    else transformServent file    
