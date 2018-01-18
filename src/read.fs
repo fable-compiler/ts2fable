@@ -710,7 +710,7 @@ let readAllResolvedModuleNames tsPath =
                     |> ignore
         )
 
-        accum |> List.ofSeq
+        accum |> List.ofSeq |> List.map(fun s -> s.Replace("\\","/"))
     
     let workSpaceRoot = ``process``.cwd()
     let tsPath = path.join(ResizeArray [workSpaceRoot; tsPath])

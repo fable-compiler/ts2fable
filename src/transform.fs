@@ -918,7 +918,11 @@ let wrappedWithModule (f: FsFile): FsFile =
                         IsNamespace = false
                         Name = 
                             let masterDir = path.dirname f.MasterFileName
-                            path.relative(masterDir,f.FileName).Replace(".d.ts","").Replace(".ts","") |> fixModuleName 
+                            let path' = path.relative(masterDir,f.FileName).Replace("\\","/").Replace(".d.ts","").Replace(".ts","")
+                            let path' = 
+                                if path'.Contains "./" then path'
+                                else "./" + path' 
+                            path' |> fixModuleName
                         Types = types
                         HelperLines = [] 
                         Attributes = []                           

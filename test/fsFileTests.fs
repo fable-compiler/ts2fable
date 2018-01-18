@@ -64,13 +64,3 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test-compile/ReactXP.fs"
         testFsFiles tsPaths fsPath  <| fun _ ->
             equal true true   
-
-    // it "multiple linked files protobuf" <| fun _ ->
-    //     let tsPaths = 
-    //         [   
-    //             "node_modules/@types/google-protobuf/index.d.ts"
-    //             "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
-    //         ]
-    //     let fsPath = "test-compile/Protobuf.fs"
-    //     testFsFiles tsPaths fsPath  <| fun _ ->
-    //         equal true true               

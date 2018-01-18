@@ -68,7 +68,6 @@ let createModuleNameParts (name: string) =
         | "-" :: rest -> splitParts "" (part :: parts) rest
         | "/" :: rest -> splitParts "" (part :: parts) rest
         | "." :: rest -> splitParts "" (part :: parts) rest
-        | "\\" :: rest -> splitParts "" (part :: parts) rest
         | token :: rest ->  splitParts (part + token) parts rest
     tokens 
     |> List.ofSeq
