@@ -92,14 +92,9 @@ let escapeWord (s: string) =
 
 let fixModuleName (s: string) =
     let s = s.Replace("'","") // remove single quotes
-    let s = capitalize s
     let s =
-        let parts = s |> createModuleNameParts
-        parts |> String.concat "_"
-    let s =
-        if Keywords.reserved.Contains s || Keywords.keywords.Contains s then
-            sprintf "%s_" s
-        else s
+        let parts = s |> createModuleNameParts |> List.map capitalize |> List.filter (fun s -> s <> "")
+        parts |> String.concat "."
     s
 
 let removeQuotes (s:string): string =
