@@ -275,6 +275,7 @@ with
 
 type FsFile =
     {
+        MasterFileName: string
         FileName: string
         ModuleName: string
         Modules: FsModule list
