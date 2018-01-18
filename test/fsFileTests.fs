@@ -16,10 +16,10 @@ let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
     Testing.Assert.AreEqual(expected, actual)
 
-let testFsFiles tsPath fsPath (f: FsFile list -> unit) =
-    let getFsFiles tsPath = 
+let testFsFiles tsPaths fsPath (f: FsFile list -> unit) =
+    let getFsFiles tsPaths = 
         let workSpaceRoot = ``process``.cwd()
-        let tsPaths = [path.join(ResizeArray [workSpaceRoot; tsPath])]
+        let tsPaths = tsPaths |> List.map (fun tsPath -> path.join(ResizeArray [workSpaceRoot; tsPath]))
         let options = jsOptions<Ts.CompilerOptions>(fun o ->
             o.target <- Some ScriptTarget.ES2015
             o.``module`` <- Some ModuleKind.CommonJS
@@ -29,19 +29,20 @@ let testFsFiles tsPath fsPath (f: FsFile list -> unit) =
         let program = ts.createProgram(ResizeArray tsPaths, options, host)
         let tsFiles = tsPaths |> List.map program.getSourceFile
         let checker = program.getTypeChecker()
-
+       
         let moduleNameMap =
             program.getSourceFiles()
             |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
             |> dict
 
-        tsFiles |> List.map (fun tsFile ->
+        tsFiles |> List.mapi (fun i tsFile ->
             {
                 FileName = tsFile.fileName
                 ModuleName = moduleNameMap.[tsFile.fileName]
                 Modules = []
+                IsMaster = i = 0
             }
-            |> readSourceFile checker tsFiles
+            |> readSourceFile checker tsFile
             |> transform
         )
 
@@ -67,7 +68,7 @@ let testFsFiles tsPath fsPath (f: FsFile list -> unit) =
             file.write(sprintf "%s%c" line '\n') |> ignore
         file.``end``() 
 
-    let fsFiles = getFsFiles tsPath 
+    let fsFiles = getFsFiles tsPaths 
     emitFsFiles fsPath fsFiles
     f fsFiles
 
@@ -85,13 +86,28 @@ describe "transform tests" <| fun _ ->
         |> getTopTypes
         |> List.choose FsType.asVariable 
 
+    it "sample" <| fun _ ->
+        let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
+        let fsPath = "test-compile/ReactXP.fs"
+        testFsFiles tsPaths fsPath  <| fun _ ->
+            equal true true     
+
     //https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
-        let tsPath = "node_modules/reactxp/dist/web/ReactXP.d.ts"
+        let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
         let fsPath = "test-compile/ReactXP.fs"
-        testFsFiles tsPath fsPath  <| fun fsFiles ->
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
                 fsFiles
                 |> getTopVarialbles 
                 |> List.countBy(fun vb -> vb.Name)
                 |> List.forall(fun (_,l) -> l = 1)
                 |> equal true
+
+    //https://github.com/fable-compiler/ts2fable/issues/128
+    it "multiple linked files" <| fun _ ->
+        let tsPaths = 
+            ["node_modules/reactxp/dist/web/ReactXP.d.ts"
+             "node_modules/reactxp/dist/common/Interfaces.d.ts"]
+        let fsPath = "test-compile/ReactXP.fs"
+        testFsFiles tsPaths fsPath  <| fun _ ->
+            equal true true   
