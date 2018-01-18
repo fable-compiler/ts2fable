@@ -896,3 +896,32 @@ let fixNamespace (f: FsFile): FsFile =
             |> FsType.Import
         | _ -> tp
     )
+
+// This app has 3 main functions.
+// 1. Read a TypeScript file into a syntax tree.
+// 2. Fix the syntax tree.
+// 3. Print the syntax tree to a F# file.
+
+let transform (file: FsFile): FsFile =
+    file
+    |> removeInternalModules
+    |> mergeModulesInFile
+    |> addConstructors
+    |> fixThis
+    |> fixNodeArray
+    |> fixReadonlyArray
+    |> fixDateTime
+    |> fixStatic
+    |> createIExports
+    |> fixOverloadingOnStringParameters // fixEscapeWords must be after
+    |> fixEnumReferences
+    |> fixDuplicatesInUnion
+    |> fixEscapeWords
+    |> fixNamespace
+    |> addTicForGenericFunctions // must be after fixEscapeWords
+    |> addTicForGenericTypes
+    // |> removeTodoMembers
+    |> removeTypeParamsFromStatic
+    |> removeDuplicateFunctions
+    |> extractTypeLiterals // after fixEscapeWords
+    |> addAliasUnionHelpers    

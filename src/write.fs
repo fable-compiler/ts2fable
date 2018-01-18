@@ -14,34 +14,7 @@ open ts2fable.Naming
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
-// This app has 3 main functions.
-// 1. Read a TypeScript file into a syntax tree.
-// 2. Fix the syntax tree.
-// 3. Print the syntax tree to a F# file.
 
-let transform (file: FsFile): FsFile =
-    file
-    |> removeInternalModules
-    |> mergeModulesInFile
-    |> addConstructors
-    |> fixThis
-    |> fixNodeArray
-    |> fixReadonlyArray
-    |> fixDateTime
-    |> fixStatic
-    |> createIExports
-    |> fixOverloadingOnStringParameters // fixEscapeWords must be after
-    |> fixEnumReferences
-    |> fixDuplicatesInUnion
-    |> fixEscapeWords
-    |> fixNamespace
-    |> addTicForGenericFunctions // must be after fixEscapeWords
-    |> addTicForGenericTypes
-    // |> removeTodoMembers
-    |> removeTypeParamsFromStatic
-    |> removeDuplicateFunctions
-    |> extractTypeLiterals // after fixEscapeWords
-    |> addAliasUnionHelpers
     
 let writeFile (tsPaths: string list) (fsPath: string): unit =
     // printfn "writeFile %A %s" tsPaths fsPath
