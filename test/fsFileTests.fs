@@ -52,11 +52,20 @@ describe "transform tests" <| fun _ ->
                 |> List.forall(fun (_,l) -> l = 1)
                 |> equal true
 
-    //https://github.com/fable-compiler/ts2fable/issues/128
-    it "multiple linked files" <| fun _ ->
+    it "multiple linked files reactxp" <| fun _ ->
         let tsPaths = 
             ["node_modules/reactxp/dist/web/ReactXP.d.ts"
              "node_modules/reactxp/dist/common/Interfaces.d.ts"]
         let fsPath = "test-compile/ReactXP.fs"
         testFsFiles tsPaths fsPath  <| fun _ ->
             equal true true   
+
+    // it "multiple linked files protobuf" <| fun _ ->
+    //     let tsPaths = 
+    //         [   
+    //             "node_modules/@types/google-protobuf/index.d.ts"
+    //             "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
+    //         ]
+    //     let fsPath = "test-compile/Protobuf.fs"
+    //     testFsFiles tsPaths fsPath  <| fun _ ->
+    //         equal true true               
