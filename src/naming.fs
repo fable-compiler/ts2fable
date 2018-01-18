@@ -68,6 +68,7 @@ let createModuleNameParts (name: string) =
         | "-" :: rest -> splitParts "" (part :: parts) rest
         | "/" :: rest -> splitParts "" (part :: parts) rest
         | "." :: rest -> splitParts "" (part :: parts) rest
+        | "\\" :: rest -> splitParts "" (part :: parts) rest
         | token :: rest ->  splitParts (part + token) parts rest
     tokens 
     |> List.ofSeq
@@ -92,9 +93,14 @@ let escapeWord (s: string) =
 
 let fixModuleName (s: string) =
     let s = s.Replace("'","") // remove single quotes
+    let s = capitalize s
     let s =
-        let parts = s |> createModuleNameParts |> List.map capitalize |> List.filter (fun s -> s <> "")
-        parts |> String.concat "."
+        let parts = s |> createModuleNameParts
+        parts |> String.concat "_"
+    let s =
+        if Keywords.reserved.Contains s || Keywords.keywords.Contains s then
+            sprintf "%s_" s
+        else s
     s
 
 let removeQuotes (s:string): string =
