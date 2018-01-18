@@ -21,8 +21,8 @@ open ts2fable.Write
 // 3. Print the syntax tree to a F# file.
 
 let transform (file: FsFile): FsFile =
-
-    let transformMaster file = 
+    if file.IsMaster 
+    then 
         file   
         |> removeInternalModules
         |> mergeModulesInFile
@@ -45,9 +45,8 @@ let transform (file: FsFile): FsFile =
         |> removeDuplicateFunctions
         |> extractTypeLiterals // after fixEscapeWords
         |> addAliasUnionHelpers
-     
-
-    let transformServent file= 
+    
+    else       
         file
         |> wrappedWithModule
         |> removeInternalModules
@@ -71,9 +70,7 @@ let transform (file: FsFile): FsFile =
         |> removeDuplicateFunctions
         |> extractTypeLiterals // after fixEscapeWords
         |> addAliasUnionHelpers
-    
-    if file.IsMaster then transformMaster file
-    else transformServent file   
+
 let getFsFiles tsPaths = 
     let workSpaceRoot = ``process``.cwd()
     let tsPaths = tsPaths |> List.map (fun tsPath -> path.join(ResizeArray [workSpaceRoot; tsPath]))
