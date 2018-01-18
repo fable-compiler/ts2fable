@@ -14,10 +14,9 @@ open ts2fable.Naming
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
-
-let writeFile (tsPaths: string list) (fsPath: string): unit =
-    // printfn "writeFile %A %s" tsPaths fsPath
-
+let getFsFiles tsPaths = 
+    let workSpaceRoot = ``process``.cwd()
+    let tsPaths = tsPaths |> List.map (fun tsPath -> path.join(ResizeArray [workSpaceRoot; tsPath]))
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
         o.``module`` <- Some ModuleKind.CommonJS
@@ -27,13 +26,13 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     let program = ts.createProgram(ResizeArray tsPaths, options, host)
     let tsFiles = tsPaths |> List.map program.getSourceFile
     let checker = program.getTypeChecker()
-
+   
     let moduleNameMap =
         program.getSourceFiles()
         |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
         |> dict
 
-    let fsFiles = tsFiles |> List.mapi (fun i tsFile ->
+    tsFiles |> List.mapi (fun i tsFile ->
         {
             FileName = tsFile.fileName
             ModuleName = moduleNameMap.[tsFile.fileName]
@@ -43,6 +42,9 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
         |> readSourceFile checker tsFile
         |> transform
     )
+
+
+let emitFsFiles fsPath (fsFiles: FsFile list) = 
 
     let fsFileOut: FsFileOut =
         {
@@ -62,4 +64,9 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     let file = fs.createWriteStream (!^fsPath)
     for line in printFsFile fsFileOut do
         file.write(sprintf "%s%c" line '\n') |> ignore
-    file.``end``()    
+    file.``end``()     
+let writeFile (tsPaths: string list) (fsPath: string): unit =
+    // printfn "writeFile %A %s" tsPaths fsPath
+
+    let fsFiles = getFsFiles tsPaths 
+    emitFsFiles fsPath fsFiles
