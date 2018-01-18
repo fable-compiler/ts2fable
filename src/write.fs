@@ -15,7 +15,6 @@ open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
 
-    
 let writeFile (tsPaths: string list) (fsPath: string): unit =
     // printfn "writeFile %A %s" tsPaths fsPath
 
@@ -34,13 +33,14 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
         |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
         |> dict
 
-    let fsFiles = tsFiles |> List.map (fun tsFile ->
+    let fsFiles = tsFiles |> List.mapi (fun i tsFile ->
         {
             FileName = tsFile.fileName
             ModuleName = moduleNameMap.[tsFile.fileName]
             Modules = []
+            IsMaster = i = 0
         }
-        |> readSourceFile checker tsFiles
+        |> readSourceFile checker tsFile
         |> transform
     )
 

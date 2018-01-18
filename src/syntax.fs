@@ -278,6 +278,7 @@ type FsFile =
         FileName: string
         ModuleName: string
         Modules: FsModule list
+        IsMaster: bool
     }
 
 type FsFileOut =
