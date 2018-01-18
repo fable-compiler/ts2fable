@@ -14,6 +14,66 @@ open ts2fable.Naming
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
+
+ // This app has 3 main functions.
+// 1. Read a TypeScript file into a syntax tree.
+// 2. Fix the syntax tree.
+// 3. Print the syntax tree to a F# file.
+
+let transform (file: FsFile): FsFile =
+
+    let transformMaster file = 
+        file   
+        |> removeInternalModules
+        |> mergeModulesInFile
+        |> addConstructors
+        |> fixThis
+        |> fixNodeArray
+        |> fixReadonlyArray
+        |> fixDateTime
+        |> fixStatic
+        |> createIExports
+        |> fixOverloadingOnStringParameters // fixEscapeWords must be after
+        |> fixEnumReferences
+        |> fixDuplicatesInUnion
+        |> fixEscapeWords
+        |> fixNamespace
+        |> addTicForGenericFunctions // must be after fixEscapeWords
+        |> addTicForGenericTypes
+        // |> removeTodoMembers
+        |> removeTypeParamsFromStatic
+        |> removeDuplicateFunctions
+        |> extractTypeLiterals // after fixEscapeWords
+        |> addAliasUnionHelpers
+     
+
+    let transformServent file= 
+        file
+        |> wrappedWithModule
+        |> removeInternalModules
+        |> mergeModulesInFile
+        |> addConstructors
+        |> fixThis
+        |> fixNodeArray
+        |> fixReadonlyArray
+        |> fixDateTime
+        |> fixStatic
+        // |> createIExports
+        |> fixOverloadingOnStringParameters // fixEscapeWords must be after
+        |> fixEnumReferences
+        |> fixDuplicatesInUnion
+        |> fixEscapeWords
+        |> fixNamespace
+        |> addTicForGenericFunctions // must be after fixEscapeWords
+        |> addTicForGenericTypes
+        // |> removeTodoMembers
+        |> removeTypeParamsFromStatic
+        |> removeDuplicateFunctions
+        |> extractTypeLiterals // after fixEscapeWords
+        |> addAliasUnionHelpers
+    
+    if file.IsMaster then transformMaster file
+    else transformServent file   
 let getFsFiles tsPaths = 
     let workSpaceRoot = ``process``.cwd()
     let tsPaths = tsPaths |> List.map (fun tsPath -> path.join(ResizeArray [workSpaceRoot; tsPath]))
@@ -34,6 +94,7 @@ let getFsFiles tsPaths =
 
     tsFiles |> List.mapi (fun i tsFile ->
         {
+            MasterFileName = tsFiles.[0].fileName
             FileName = tsFile.fileName
             ModuleName = moduleNameMap.[tsFile.fileName]
             Modules = []
