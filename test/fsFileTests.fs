@@ -11,6 +11,8 @@ open ts2fable.Read
 open ts2fable.Write
 open ts2fable.Transform
 open ts2fable.Print
+open System.Collections.Generic
+open System
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
@@ -53,9 +55,12 @@ describe "transform tests" <| fun _ ->
                 |> equal true
 
     it "multiple linked files reactxp" <| fun _ ->
-        let tsPaths = 
-            ["node_modules/reactxp/dist/web/ReactXP.d.ts"
-             "node_modules/reactxp/dist/common/Interfaces.d.ts"]
+        let getTsPaths tsPath= 
+            tsPath 
+            |> readAllResolvedModuleNames 
+            |> List.filter(fun s -> getJsModuleName s =  getJsModuleName tsPath)
+        
+        let tsPaths = getTsPaths "node_modules/reactxp/dist/web/ReactXP.d.ts"
         let fsPath = "test-compile/ReactXP.fs"
         testFsFiles tsPaths fsPath  <| fun _ ->
             equal true true   
