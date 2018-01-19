@@ -1,5 +1,6 @@
 [<AutoOpen>]
 module rec ts2fable.Syntax
+open Fable
 
 // our simplified syntax tree
 // some names inspired by the actual F# AST:
@@ -164,12 +165,59 @@ type TypeImport =
         ResolvedModule: string option
     }
 
+[<RequireQualifiedAccess>]
+type FsModuleImportRole = 
+    | Alias
+    | NodePackage
+    | CurrentPackage
+
+[<RequireQualifiedAccess>]
+module FsModuleImportRole =
+    
+    ///  react = FsModuleImportRole.NodePackage
+    ///  ./Animated = FsModuleImportRole.CurrentPackage
+    /// RXTypes.Stateless = FsModuleImportRole.
+    let getRoleFromSpecifiedName (text: string) = 
+        match  text.Contains("./") with 
+        | true -> FsModuleImportRole.CurrentPackage
+        | false -> 
+            match text.Contains(".") with 
+            | true -> FsModuleImportRole.Alias
+            | false -> FsModuleImportRole.NodePackage       
+    let isAlias (role: FsModuleImportRole) = 
+        match role with 
+        | FsModuleImportRole.Alias -> true
+        | _ -> false
+    let isNodePackage  (role: FsModuleImportRole) = 
+        match role with 
+        | FsModuleImportRole.NodePackage -> true
+        | _ -> false   
+    let isCurrentPackage  (role: FsModuleImportRole) = 
+        match role with 
+        | FsModuleImportRole.CurrentPackage -> true
+        | _ -> false       
+    
+    let asAlias (role: FsModuleImportRole) = 
+        match role with 
+        | FsModuleImportRole.Alias -> true
+        | _ -> false
+    let asNodePackage  (role: FsModuleImportRole) = 
+        match role with 
+        | FsModuleImportRole.NodePackage -> Some role 
+        | _ -> None   
+    let asCurrentPackage  (role: FsModuleImportRole) = 
+        match role with 
+        | FsModuleImportRole.CurrentPackage -> Some role 
+        | _ -> None           
+                  
 type ModuleImport =
     {
         Module: string
         SpecifiedModule: string
         ResolvedModule: string option
+        Role: FsModuleImportRole
     }
+
 
 [<RequireQualifiedAccess>]
 type FsImport =
@@ -279,8 +327,9 @@ type FsFile =
         FileName: string
         ModuleName: string
         Modules: FsModule list
-        IsMaster: bool
     }
+with 
+    member x.IsMaster = x.FileName = x.MasterFileName    
 
 type FsFileOut =
     {

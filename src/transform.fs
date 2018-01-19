@@ -883,11 +883,14 @@ let fixNamespace (f: FsFile): FsFile =
         | FsType.Import im ->
             match im with
             | FsImport.Module immd ->
-                { immd with
-                    Module = fixModuleName immd.Module
-                    SpecifiedModule = fixModuleName immd.SpecifiedModule
-                }
-                |> FsImport.Module
+                match immd.Role with 
+                | FsModuleImportRole.Alias -> im
+                | _ -> 
+                    { immd with
+                        Module = fixModuleName immd.Module
+                        SpecifiedModule = fixModuleName immd.SpecifiedModule
+                    }
+                    |> FsImport.Module
             | FsImport.Type imtp ->
                 { imtp with 
                     SpecifiedModule = fixModuleName imtp.SpecifiedModule
@@ -933,3 +936,23 @@ let wrappedWithModule (f: FsFile): FsFile =
     )}
 
 
+let fixServentImportedModuleName (f: FsFile): FsFile =
+    let relativePath = path.relative(path.dirname f.MasterFileName,path.dirname f.FileName)
+    
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Import im ->
+            match im with
+            | FsImport.Module immd ->
+                match immd.Role with 
+                | FsModuleImportRole.Alias -> tp
+                | _ ->
+                    let name = path.join(ResizeArray [relativePath;immd.SpecifiedModule]).Replace("\\","/")
+                    
+                    { immd with
+                        SpecifiedModule = name
+                    }
+                    |> FsImport.Module |> FsType.Import
+            | _ -> tp
+        | _ -> tp
+    )

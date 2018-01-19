@@ -49,6 +49,7 @@ let transform (file: FsFile): FsFile =
     else       
         file
         |> wrappedWithModule
+        |> fixServentImportedModuleName
         |> removeInternalModules
         |> mergeModulesInFile
         |> addConstructors
@@ -95,7 +96,6 @@ let getFsFiles (tsPaths: string list) =
             FileName = tsFile.fileName
             ModuleName = moduleNameMap.[tsFile.fileName]
             Modules = []
-            IsMaster = i = 0
         }
         |> readSourceFile checker tsFile
         |> transform

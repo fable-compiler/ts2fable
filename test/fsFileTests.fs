@@ -37,30 +37,38 @@ describe "transform tests" <| fun _ ->
         |> getTopTypes
         |> List.choose FsType.asVariable 
 
-    it "sample" <| fun _ ->
-        let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
-        let fsPath = "test-compile/ReactXP.fs"
-        testFsFiles tsPaths fsPath  <| fun _ ->
-            equal true true     
+    // it "sample" <| fun _ ->
+    //     let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
+    //     let fsPath = "test-compile/ReactXP.fs"
+    //     testFsFiles tsPaths fsPath  <| fun _ ->
+    //         equal true true     
 
-    //https://github.com/fable-compiler/ts2fable/issues/154
-    it "duplicated variable exports" <| fun _ ->
-        let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
-        let fsPath = "test-compile/ReactXP.fs"
-        testFsFiles tsPaths fsPath  <| fun fsFiles ->
-                fsFiles
-                |> getTopVarialbles 
-                |> List.countBy(fun vb -> vb.Name)
-                |> List.forall(fun (_,l) -> l = 1)
-                |> equal true
+    // //https://github.com/fable-compiler/ts2fable/issues/154
+    // it "duplicated variable exports" <| fun _ ->
+    //     let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
+    //     let fsPath = "test-compile/ReactXP.fs"
+    //     testFsFiles tsPaths fsPath  <| fun fsFiles ->
+    //             fsFiles
+    //             |> getTopVarialbles 
+    //             |> List.countBy(fun vb -> vb.Name)
+    //             |> List.forall(fun (_,l) -> l = 1)
+    //             |> equal true
 
     it "multiple linked files reactxp" <| fun _ ->
-        let getTsPaths tsPath= 
-            tsPath 
-            |> readAllResolvedModuleNames 
-            |> List.filter(fun s -> getJsModuleName s =  getJsModuleName tsPath)
+        let rec loop tsPath fsDir = 
+
+            let nodePaths,tsPaths= 
+                tsPath
+                |> readAllResolvedModuleNames 
+            
+            let fsBasename = tsPath |> getJsModuleName |> capitalize |> sprintf "%s.fs" 
+            let fsPath = path.join(ResizeArray [fsDir; fsBasename])
+            testFsFiles tsPaths fsPath  <| fun _ ->
+                equal true true   
+
+            for nodePath in nodePaths do
+                loop nodePath fsDir    
         
-        let tsPaths = getTsPaths "node_modules/reactxp/dist/web/ReactXP.d.ts"
-        let fsPath = "test-compile/ReactXP.fs"
-        testFsFiles tsPaths fsPath  <| fun _ ->
-            equal true true   
+        let tsPath = "node_modules/reactxp/dist/web/ReactXP.d.ts"
+        let fsDir = "test-compile"        
+        loop tsPath fsDir

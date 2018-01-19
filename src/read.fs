@@ -8,6 +8,9 @@ open TypeScript.Ts
 open System.Collections.Generic
 open System
 open ts2fable.Naming
+open System.Collections.Generic
+open ts2fable.Syntax
+open System.Collections.Generic
 
 type Node with
     member x.ForEachChild (cbNode: Node -> unit) =
@@ -575,7 +578,7 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
             | U2.Case1 namespaceImport ->
                 if isNull namespaceImport.name = false then
                     [
-                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
+                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None; Role = FsModuleImportRole.CurrentPackage }
                         |> FsImport.Module |> FsType.Import
                     ]
                 else
@@ -601,8 +604,9 @@ let readImportEqualsDeclaration(im: ImportEqualsDeclaration): FsType list =
               match entityName with
               | U2.Case1 id -> 
                     { Module = im.name.getText()
-                      SpecifiedModule = id.getText().Replace("require","") |> removeParentheses
-                      ResolvedModule = None }
+                      SpecifiedModule = id.getText().Replace("require","") |> removeParentheses |> removeQuotes
+                      ResolvedModule = None
+                      Role = id.getText()|> FsModuleImportRole.getRoleFromSpecifiedName}
                     |> FsImport.Module |> FsType.Import |> List.singleton
               | U2.Case2 _ -> []
         | U2.Case2 _ -> []
@@ -691,30 +695,36 @@ let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFil
 
 //recursively get all resolveModuleNames
 let readAllResolvedModuleNames tsPath = 
-    let accum = HashSet<string>()
+    let accum = Dictionary<string,FsModuleImportRole>()
        
-    let rec readResolveModuleNames (program:Program) tsPath :string list = 
+    let rec readResolveModuleNames (program:Program) tsPath = 
         let tsFile = tsPath |> program.getSourceFile
         tsFile.resolvedModules 
-        |> List.ofSeq 
-        |> List.map(|KeyValue|)
-        |> List.iter (fun (k,v) ->
-            let name = v.resolvedFileName
-            if not <| accum.Contains name 
-            then
-                accum.Add name |> ignore
-                if k.Contains "./" 
-                then 
-                    name 
-                    |> readResolveModuleNames program
-                    |> ignore
-        )
-
-        accum |> List.ofSeq |> List.map(fun s -> s.Replace("\\","/"))
+        |> 
+            function 
+            | Some v ->
+                v
+                |> List.ofSeq 
+                |> List.map(|KeyValue|)
+                |> List.iter (fun (k,v) ->
+                    let name = v.resolvedFileName.Replace("\\","/")
+                    if not <| accum.ContainsKey name 
+                    then
+                        if k.Contains "./" 
+                        then 
+                            accum.Add (name,FsModuleImportRole.CurrentPackage)
+                            name 
+                            |> readResolveModuleNames program
+                            |> ignore
+                        else     
+                            accum.Add (name,FsModuleImportRole.NodePackage)
+                )
+            | None -> () 
+        accum
     
-    let workSpaceRoot = ``process``.cwd()
-    let tsPath = path.join(ResizeArray [workSpaceRoot; tsPath])
-    accum.Add tsPath |> ignore
+    // let workSpaceRoot = ``process``.cwd()
+    // let tsPath = path.join(ResizeArray [workSpaceRoot; tsPath])
+    accum.Add (tsPath,FsModuleImportRole.CurrentPackage)
 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
@@ -724,4 +734,8 @@ let readAllResolvedModuleNames tsPath =
     let host = ts.createCompilerHost(options, setParentNodes)
     let program = ts.createProgram(ResizeArray [tsPath], options, host)
     
-    readResolveModuleNames (program:Program) tsPath    
+    readResolveModuleNames (program:Program) tsPath 
+    |> Seq.map(|KeyValue|) 
+    |> List.ofSeq 
+    |> List.partition (fun (_,v) -> FsModuleImportRole.isNodePackage v)
+    |> fun (f,s) -> f |> List.map fst, s |> List.map fst  

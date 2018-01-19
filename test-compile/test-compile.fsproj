@@ -13,7 +13,10 @@
     <!-- <Compile Include="React.fs" /> -->
     <Compile Include="Mocha.fs" />
     <!-- <Compile Include="Chai.fs" /> -->
-    <!-- <Compile Include="ReactXP.fs" /> -->
+    <!-- <Compile Include="Synctasks.fs" />
+    <Compile Include="React.fs" />
+    <Compile Include="Subscribableevent.fs" />
+    <Compile Include="Reactxp.fs" /> -->
     <Compile Include="Chalk.fs" />
     <Compile Include="Protobuf.fs" />
 
