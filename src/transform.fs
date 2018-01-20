@@ -901,38 +901,32 @@ let fixNamespace (f: FsFile): FsFile =
     )
 
 let wrappedWithModule (f: FsFile): FsFile =
-    let isFsImport =
-        function
-        | FsType.Import _ -> true
-        | _ -> false
-    
-    { f with Modules = f.Modules |> List.map (fun md -> 
-        { md with 
-            Types =
-                let types = md.Types |> List.map(function
-                    | FsType.Variable vb -> { vb with HasDeclare = false } |> FsType.Variable
-                    | tp -> tp 
-                )
-                // let remain = types |> List.filter isFsImport
-                // let drop = types |> List.filter (not << isFsImport) 
-                [
-                    {
-                        HasDeclare = false
-                        IsNamespace = false
-                        Name = 
-                            let masterDir = path.dirname f.MasterFileName
-                            let path' = path.relative(masterDir,f.FileName).Replace("\\","/").Replace(".d.ts","").Replace(".ts","")
-                            let path' = 
-                                if path'.Contains "./" then path'
-                                else "./" + path' 
-                            path' |> fixModuleName
-                        Types = types
-                        HelperLines = [] 
-                        Attributes = []                           
-                    } 
-                    |> FsType.Module
-                ] 
-        }
+    { f with 
+        Modules = f.Modules |> List.map (fun md -> 
+            { md with 
+                Types =
+                    let types = md.Types |> List.map(function
+                        | FsType.Variable vb -> { vb with HasDeclare = false } |> FsType.Variable
+                        | tp -> tp 
+                    )
+                    [
+                        {
+                            HasDeclare = false
+                            IsNamespace = false
+                            Name = 
+                                let masterDir = path.dirname f.MasterFileName
+                                let path' = path.relative(masterDir,f.FileName).Replace("\\","/").Replace(".d.ts","").Replace(".ts","")
+                                let path' = 
+                                    if path'.Contains "./" then path'
+                                    else "./" + path' 
+                                path' |> fixModuleName
+                            Types = types
+                            HelperLines = [] 
+                            Attributes = []                           
+                        } 
+                        |> FsType.Module
+                    ] 
+            }
     )}
 
 
