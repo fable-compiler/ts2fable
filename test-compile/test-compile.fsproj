@@ -18,7 +18,7 @@
     <Compile Include="Subscribableevent.fs" />
     <Compile Include="Reactxp.fs" /> -->
     <Compile Include="Chalk.fs" />
-    <Compile Include="Protobuf.fs" />
+    <!-- <Compile Include="Protobuf.fs" /> -->
 
     <!-- <Compile Include="JQuery.fs" /> -->
     <!-- <Compile Include="Promise.fs" /> -->
