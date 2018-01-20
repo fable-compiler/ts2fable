@@ -15,6 +15,7 @@ open System.Collections.Generic
 open System
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
+let [<Emit("this.timeout($0)")>] timeout (duration: int): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
     Testing.Assert.AreEqual(expected, actual)
 
@@ -43,18 +44,19 @@ describe "transform tests" <| fun _ ->
     //     testFsFiles tsPaths fsPath  <| fun _ ->
     //         equal true true     
 
-    // //https://github.com/fable-compiler/ts2fable/issues/154
-    // it "duplicated variable exports" <| fun _ ->
-    //     let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
-    //     let fsPath = "test-compile/ReactXP.fs"
-    //     testFsFiles tsPaths fsPath  <| fun fsFiles ->
-    //             fsFiles
-    //             |> getTopVarialbles 
-    //             |> List.countBy(fun vb -> vb.Name)
-    //             |> List.forall(fun (_,l) -> l = 1)
-    //             |> equal true
+    //https://github.com/fable-compiler/ts2fable/issues/154
+    it "duplicated variable exports" <| fun _ ->
+        let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
+        let fsPath = "test-compile/ReactXP.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+                fsFiles
+                |> getTopVarialbles 
+                |> List.countBy(fun vb -> vb.Name)
+                |> List.forall(fun (_,l) -> l = 1)
+                |> equal true
 
     it "multiple linked files reactxp" <| fun _ ->
+        timeout 10000
         let rec loop tsPath fsDir = 
 
             let nodePaths,tsPaths= 
