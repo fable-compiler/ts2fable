@@ -156,6 +156,8 @@ type FsAlias =
 type FsTuple =
     {
         Types: FsType list
+        IsIntersection: bool
+        IsMapped: bool
     }
 
 type TypeImport =
@@ -164,7 +166,7 @@ type TypeImport =
         SpecifiedModule: string
         ResolvedModule: string option
     }
-
+    
 [<RequireQualifiedAccess>]
 type FsModuleImportRole = 
     | Alias
@@ -295,12 +297,15 @@ type FsType =
 
 [<RequireQualifiedAccess>]
 module FsType =
+    let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
+    let isGeneric tp = match tp with | FsType.Generic _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
 
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
+    let asProperty (tp: FsType) = match tp with | FsType.Property v -> Some v | _ -> None
     let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
     let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
     let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
@@ -329,7 +334,9 @@ type FsFile =
         Modules: FsModule list
     }
 with 
-    member x.IsMaster = x.FileName = x.MasterFileName    
+    member x.IsMaster = 
+        x.FileName = x.MasterFileName
+        || Node.path.basename x.FileName = "global.d.ts"
 
 type FsFileOut =
     {

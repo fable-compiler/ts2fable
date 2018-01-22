@@ -32,6 +32,7 @@ let transform (file: FsFile): FsFile =
         |> fixReadonlyArray
         |> fixDateTime
         |> fixStatic
+        |> fixEsTypes
         |> createIExports
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
         |> fixEnumReferences
@@ -58,6 +59,7 @@ let transform (file: FsFile): FsFile =
         |> fixReadonlyArray
         |> fixDateTime
         |> fixStatic
+        |> fixEsTypes
         // |> createIExports
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
         |> fixEnumReferences
@@ -90,7 +92,7 @@ let getFsFiles (tsPaths: string list) =
         |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
         |> dict
 
-    tsFiles |> List.mapi (fun i tsFile ->
+    tsFiles |> List.map (fun tsFile ->
         {
             MasterFileName = tsFiles.[0].fileName
             FileName = tsFile.fileName

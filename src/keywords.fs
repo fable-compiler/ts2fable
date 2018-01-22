@@ -108,3 +108,11 @@ let keywords =
         "yield"
     ]
     |> Set.ofList
+
+let esKeyWords =
+    [
+        "Readonly"
+        "Partial"
+        "Pick"
+    ]
+    |> Set.ofList

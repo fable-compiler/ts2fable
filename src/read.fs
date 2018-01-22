@@ -11,6 +11,7 @@ open ts2fable.Naming
 open System.Collections.Generic
 open ts2fable.Syntax
 open System.Collections.Generic
+open Fable
 
 type Node with
     member x.ForEachChild (cbNode: Node -> unit) =
@@ -131,17 +132,48 @@ let readCommentsAtLocation (checker: TypeChecker) (nd: Node): FsComment list =
     | Some symbol ->
         symbol.getDocumentationComment() |> readComments
 
-let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface =
-    {
-        Comments = readCommentsAtLocation checker id.name
-        IsStatic = false
-        IsClass = false
-        Name = id.name.getText()
-        FullName = getFullNodeName checker id
-        Inherits = readInherits checker id.heritageClauses
-        Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
-        TypeParameters = readTypeParameters checker id.typeParameters
-    }
+let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsType list=
+    let name = id.name.getText()
+    let typeParameters = readTypeParameters checker id.typeParameters
+    
+    // typescript optional generic type 
+    let ops =
+        match id.typeParameters with 
+        | Some tps -> 
+            let als = List<FsAlias>()
+            tps 
+            |> List.ofSeq
+            |> List.iteri(fun i tp ->
+                match tp.``default`` with 
+                | Some _ -> 
+                    { Name = name
+                      Type = 
+                        { 
+                            Type = simpleType name
+                            TypeParameters = 
+                                (typeParameters.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
+                                @ typeParameters.[i+1 ..]
+                        } |> FsType.Generic
+                      TypeParameters = typeParameters.[i+1 ..]
+                    } 
+                    |> als.Add
+                | None -> ()
+            )
+            als |> List.ofSeq |> List.map FsType.Alias  
+        | None -> []
+
+    let current = 
+        {
+            Comments = readCommentsAtLocation checker id.name
+            IsStatic = false
+            IsClass = false
+            Name = name
+            FullName = getFullNodeName checker id
+            Inherits = readInherits checker id.heritageClauses
+            Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
+            TypeParameters = readTypeParameters checker id.typeParameters
+        } |> FsType.Interface
+    current :: ops     
 
 let readTypeLiteral (checker: TypeChecker) (tl: TypeLiteralNode): FsTypeLiteral =
     {
@@ -281,6 +313,8 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         let tp = t :?> TupleTypeNode
         {
             Types = tp.elementTypes |> List.ofSeq |> List.map (readTypeNode checker)
+            IsIntersection = false
+            IsMapped = false
         }
         |> FsType.Tuple
     | SyntaxKind.SymbolKeyword -> simpleType "Symbol"
@@ -289,10 +323,20 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.TypeLiteral ->
         let tl = t :?> TypeLiteralNode
         readTypeLiteral checker tl |> FsType.TypeLiteral
-    | SyntaxKind.IntersectionType -> simpleType "obj"
+    | SyntaxKind.IntersectionType -> 
+        let itp = t :?> IntersectionTypeNode
+        {
+            Types = itp.types |> List.ofSeq |> List.map (readTypeNode checker)
+            IsIntersection = true
+            IsMapped = false
+        }
+        |> FsType.Tuple        
+        // simpleType "obj"
     | SyntaxKind.IndexedAccessType ->
+        let ia = t :?> IndexedAccessTypeNode
+        readTypeNode checker ia.objectType
         // function createKeywordTypeNode(kind: KeywordTypeNode["kind"]): KeywordTypeNode;
-        simpleType "obj" // TODO?
+        // simpleType "obj" // TODO?
     | SyntaxKind.TypeQuery ->
         // let tq = t :?> TypeQueryNode
         simpleType "obj"
@@ -321,9 +365,15 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         readTypeNode checker pt.``type``
     | SyntaxKind.MappedType ->
         let mt = t :?> MappedTypeNode
+        {
+            Types = []
+            IsIntersection = false
+            IsMapped = true
+        }
+        |> FsType.Tuple   
         // TODO map mapped types https://github.com/fable-compiler/ts2fable/issues/44
         // printfn "TODO mapped types %s" (mt.getText())
-        simpleType "obj"
+        // simpleType "obj"
     | SyntaxKind.NeverKeyword ->
         // printfn "unsupported TypeNode NeverKeyword: %A" t
         // simpleType "obj"
@@ -518,16 +568,33 @@ let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =
         readMethodDeclaration checker (te :?> MethodDeclaration) |> FsType.Function
     | _ -> printfn "unsupported NamedDeclaration kind: %A" te.kind; FsType.TODO
 
-let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsType =
+let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsType list =
     let tp = d.``type`` |> (readTypeNode checker)
     let name = d.name.getText()
     let asAlias() =
-        {
-            Name = name
-            Type = tp
-            TypeParameters = readTypeParameters checker d.typeParameters
-        }
-        |> FsType.Alias
+        let current = 
+            {
+                Name = name
+                Type = tp
+                TypeParameters = readTypeParameters checker d.typeParameters
+            }
+            |> FsType.Alias
+        
+        //typescript optional generic type
+        let op =
+            match d.typeParameters with 
+            | Some tps -> 
+                match tps.[0].``default`` with 
+                | Some _ -> 
+                    {
+                        Name = name
+                        Type = simpleType "obj"
+                        TypeParameters = []
+                    } |> FsType.Alias |> List.singleton               
+                | _ -> []
+            | None -> []
+        current :: op    
+               
     match tp with
     | FsType.Union un ->
         let sls = un.Types |> List.choose FsType.asStringLiteral
@@ -543,8 +610,61 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
                     }
                 )
             }
-            |> FsType.Enum
+            |> FsType.Enum |> List.singleton
         else asAlias()
+    | FsType.Function f ->
+        let f = { f with Name = Some "invoke" }
+        {
+            Comments = f.Comments
+            IsStatic = false
+            IsClass = false
+            Name = name
+            FullName = name
+            Inherits = []
+            Members = f |> FsType.Function |> List.singleton
+            TypeParameters = readTypeParameters checker d.typeParameters
+        } |> FsType.Interface |> List.singleton
+   
+    | FsType.Tuple tl when tl.IsIntersection ->  
+        {
+            Comments = []
+            IsStatic = false
+            IsClass = false
+            Name = name
+            FullName = name
+            Inherits = tl.Types |> List.ofSeq |> List.filter FsType.isGeneric
+            Members = []
+            TypeParameters = readTypeParameters checker d.typeParameters
+        } |> FsType.Interface |> List.singleton  
+    
+    | FsType.Tuple tl when tl.IsMapped -> 
+        {
+            Comments = []
+            IsStatic = false
+            IsClass = false
+            Name = name
+            FullName = name
+            Inherits = tl.Types |> List.ofSeq |> List.filter FsType.isGeneric
+            Members = []
+            TypeParameters = readTypeParameters checker d.typeParameters
+        } |> FsType.Interface |> List.singleton      
+    | FsType.TypeLiteral lt -> 
+        if lt.Members.Length = 1 then
+            match lt.Members.[0] with 
+            | FsType.Function f -> 
+                let f ={ f with Name = Some "invoke" }
+                {
+                    Comments = f.Comments
+                    IsStatic = false
+                    IsClass = false
+                    Name = name
+                    FullName = name
+                    Inherits = []
+                    Members = f |> FsType.Function |> List.singleton
+                    TypeParameters = readTypeParameters checker d.typeParameters
+                } |> FsType.Interface |> List.singleton      
+            | _ -> asAlias()
+        else asAlias()    
     | _ -> asAlias()
 
 let readExpressionText(ep: Expression): string =
@@ -613,11 +733,11 @@ let readImportEqualsDeclaration(im: ImportEqualsDeclaration): FsType list =
 let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
-        [readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface]
+        readInterface checker (sd :?> InterfaceDeclaration)
     | SyntaxKind.EnumDeclaration ->
         [readEnum (sd :?> EnumDeclaration) |> FsType.Enum]
     | SyntaxKind.TypeAliasDeclaration ->
-        [readAliasDeclaration checker (sd :?> TypeAliasDeclaration)]
+        readAliasDeclaration checker (sd :?> TypeAliasDeclaration)
     | SyntaxKind.ClassDeclaration ->
         [readClass checker (sd :?> ClassDeclaration) |> FsType.Interface]
     | SyntaxKind.VariableStatement ->
@@ -674,7 +794,7 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
 
 let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFile =
     let modules = List()
-
+    
     let gbl: FsModule =
         {
             HasDeclare = false
@@ -719,9 +839,10 @@ let readAllResolvedModuleNames tsPath =
                         else     
                             accum.Add (name,FsModuleImportRole.NodePackage)
                 )
-            | None -> () 
+            | None -> ()
+         
         accum
-    
+
     // let workSpaceRoot = ``process``.cwd()
     // let tsPath = path.join(ResizeArray [workSpaceRoot; tsPath])
     accum.Add (tsPath,FsModuleImportRole.CurrentPackage)
@@ -733,7 +854,15 @@ let readAllResolvedModuleNames tsPath =
     let setParentNodes = true
     let host = ts.createCompilerHost(options, setParentNodes)
     let program = ts.createProgram(ResizeArray [tsPath], options, host)
-    
+
+    let tsFile = program.getSourceFile tsPath
+    let tsDir = path.dirname tsPath    
+    tsFile.referencedFiles 
+    |> List.ofSeq
+    |> List.iter(fun f -> 
+        let name = path.join(ResizeArray [tsDir;f.fileName]).Replace("\\","/")
+        accum.Add (name,FsModuleImportRole.CurrentPackage) )  
+
     readResolveModuleNames (program:Program) tsPath 
     |> Seq.map(|KeyValue|) 
     |> List.ofSeq 

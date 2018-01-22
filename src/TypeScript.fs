@@ -2642,7 +2642,9 @@ module Ts =
     type [<AllowNullLiteral>] Statement =
         inherit Node
         abstract _statementBrand: obj option with get, set
-
+        //added for ts2fable
+        abstract nextContainer: Statement option
+        abstract symbol: Statement option
     type [<AllowNullLiteral>] NotEmittedStatement =
         inherit Statement
         abstract kind: SyntaxKind with get, set
@@ -3457,7 +3459,7 @@ module Ts =
         abstract text: string with get, set
         abstract amdDependencies: ReadonlyArray<AmdDependency> with get, set
         abstract moduleName: string with get, set
-        abstract referencedFiles: ReadonlyArray<FileReference> with get, set
+        abstract referencedFiles: ResizeArray<FileReference> with get, set
         abstract typeReferenceDirectives: ReadonlyArray<FileReference> with get, set
         abstract languageVariant: LanguageVariant with get, set
         abstract isDeclarationFile: bool with get, set

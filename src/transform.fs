@@ -10,6 +10,7 @@ open System
 open ts2fable.Naming
 open System.Collections
 open System.Collections.Generic
+open ts2fable.Keywords
 
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
@@ -851,7 +852,7 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                                                     let aliasNameWithTypes = sprintf "%s%s" al.Name (Print.printTypeParameters al.TypeParameters)
                                                     if un.Option then
                                                         [
-                                                            sprintf "let of%sOption v: %s = v |> Option.map U%d.Case%d" name aliasNameWithTypes n i
+                                                            sprintf "let of%sOption v: %s = v |> Microsoft.FSharp.Core.Option.map U%d.Case%d" name aliasNameWithTypes n i
                                                             sprintf "let of%s v: %s = v |> U%d.Case%d |> Some" name aliasNameWithTypes n i
                                                             sprintf "let is%s (v: %s) = match v with None -> false | Some o -> match o with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
                                                             sprintf "let as%s (v: %s) = match v with None -> None | Some o -> match o with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
@@ -948,5 +949,18 @@ let fixServentImportedModuleName (f: FsFile): FsFile =
                     }
                     |> FsImport.Module |> FsType.Import
             | _ -> tp
+        | _ -> tp
+    )
+
+let fixEsTypes (f: FsFile): FsFile =
+    
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Generic gn ->
+            esKeyWords 
+            |> Set.contains (getName tp)
+            |> function 
+                | true -> { gn with Type = simpleType "obj"; TypeParameters = []} |> FsType.Generic
+                | _ -> tp
         | _ -> tp
     )
