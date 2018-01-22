@@ -171,17 +171,17 @@ describe "react tests" <| fun _ ->
             )
             |> equal false
 
-    it "export declare" <| fun _ ->
-        let tsPaths = ["test/fragments/SyncTasks/f1.d.ts"]
-        let fsPath = "test/fragments/SyncTasks/f1.fs"
-        testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
-            |> getAllTypes
-            |> List.filter FsType.isGeneric
-            |> List.exists(fun f ->
-                esKeyWords 
-                |> List.ofSeq
-                |> List.contains (getName f)
-            )
-            |> equal false
+    // it "export declare" <| fun _ ->
+    //     let tsPaths = ["test/fragments/SyncTasks/f1.d.ts"]
+    //     let fsPath = "test/fragments/SyncTasks/f1.fs"
+    //     testFsFiles tsPaths fsPath  <| fun fsFiles ->
+    //         fsFiles 
+    //         |> getAllTypes
+    //         |> List.filter FsType.isGeneric
+    //         |> List.exists(fun f ->
+    //             esKeyWords 
+    //             |> List.ofSeq
+    //             |> List.contains (getName f)
+    //         )
+    //         |> equal false
 
