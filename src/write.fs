@@ -32,7 +32,7 @@ let transform (file: FsFile): FsFile =
         |> fixReadonlyArray
         |> fixDateTime
         |> fixStatic
-        |> fixEsTypes
+        |> fixTypesHasESKeyWords 
         |> createIExports
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
         |> fixEnumReferences
@@ -59,8 +59,8 @@ let transform (file: FsFile): FsFile =
         |> fixReadonlyArray
         |> fixDateTime
         |> fixStatic
-        |> fixEsTypes
-        // |> createIExports
+        |> fixTypesHasESKeyWords 
+         // |> createIExports
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
         |> fixEnumReferences
         |> fixDuplicatesInUnion

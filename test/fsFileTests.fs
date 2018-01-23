@@ -41,6 +41,11 @@ describe "react tests" <| fun _ ->
             ) |> ignore
         )
         tps |> List.ofSeq
+    
+    let getTypeByName name fsFiles =
+        getAllTypes fsFiles
+        |> List.filter(fun tp -> getName tp = name)
+        
     let getTopTypes fsFiles = 
         fsFiles
         |> List.head
@@ -171,17 +176,26 @@ describe "react tests" <| fun _ ->
             )
             |> equal false
 
-    // it "export declare" <| fun _ ->
-    //     let tsPaths = ["test/fragments/SyncTasks/f1.d.ts"]
-    //     let fsPath = "test/fragments/SyncTasks/f1.fs"
-    //     testFsFiles tsPaths fsPath  <| fun fsFiles ->
-    //         fsFiles 
-    //         |> getAllTypes
-    //         |> List.filter FsType.isGeneric
-    //         |> List.exists(fun f ->
-    //             esKeyWords 
-    //             |> List.ofSeq
-    //             |> List.contains (getName f)
-    //         )
-    //         |> equal false
+    it "extract type literal from export declare const fragment" <| fun _ ->
+        let tsPaths = ["test/fragments/SyncTasks/f1.d.ts"]
+        let fsPath = "test/fragments/SyncTasks/f1.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            (
+            fsFiles 
+            |> getTypeByName "config"
+            |> (List.exactlyOne >> FsType.isVariable)
+            &&
+                fsFiles 
+                |> getTypeByName "Config"
+                |> (List.exactlyOne >> FsType.isInterface)
+            )
+            |> equal true
 
+    only "extract type literal from export declare type fragment -> [TypeAlias]" <| fun _ ->
+        let tsPaths = ["test/fragments/SyncTasks/f2.d.ts"]
+        let fsPath = "test/fragments/SyncTasks/f2.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> getTypeByName "RaceTimerResponse"
+            |> (List.exactlyOne >> FsType.isInterface)
+            |> equal true

@@ -596,6 +596,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
         current :: op    
                
     match tp with
+  
     | FsType.Union un ->
         let sls = un.Types |> List.choose FsType.asStringLiteral
         if un.Types.Length = sls.Length then
@@ -612,6 +613,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
             }
             |> FsType.Enum |> List.singleton
         else asAlias()
+    
     | FsType.Function f ->
         let f = { f with Name = Some "invoke" }
         {
@@ -648,6 +650,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
             Members = []
             TypeParameters = readTypeParameters checker d.typeParameters
         } |> FsType.Interface |> List.singleton      
+   
     | FsType.TypeLiteral lt -> 
         if lt.Members.Length = 1 then
             match lt.Members.[0] with 

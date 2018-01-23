@@ -812,14 +812,53 @@ let extractTypeLiterals(f: FsFile): FsFile =
                             |> FsType.Interface
 
                         [it2] @ (List.ofSeq newTypes) // append new types
+                    
+                    | FsType.Variable vb when vb.HasDeclare && vb.IsConst ->
+                        match vb.Type with 
+                        | FsType.TypeLiteral tl -> 
+                            if not tl.Members.IsEmpty then 
+                                let name = capitalize vb.Name 
+                                let it = 
+                                    {
+                                        Comments = []
+                                        IsStatic = false
+                                        IsClass = false
+                                        Name = name
+                                        FullName = name
+                                        Inherits = []
+                                        Members = tl.Members
+                                        TypeParameters = []
+                                    } |> FsType.Interface
+                                
+                                let vb = { vb with Export = Some { IsGlobal = true; Selector = ""; Path = ""}; Type = simpleType name }
+                                
+                                [vb |> FsType.Variable; it] 
 
+                            else [tp]
+                        | _ -> [tp]    
+                    | FsType.Alias al -> 
+                        match al.Type with 
+                        | FsType.TypeLiteral tl ->  
+                            {
+                                Comments = []
+                                IsStatic = false
+                                IsClass = false
+                                Name = al.Name
+                                FullName = al.Name
+                                Inherits = []
+                                Members = tl.Members
+                                TypeParameters = []
+                            } |> FsType.Interface |> List.singleton
+                        | _ -> [tp]
+
+                    
                     | _ -> [tp]
-                )
+                )   
             }
             |> FsType.Module
         | _ -> tp
     )
-
+    
 let addAliasUnionHelpers(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
@@ -952,7 +991,7 @@ let fixServentImportedModuleName (f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixEsTypes (f: FsFile): FsFile =
+let fixTypesHasESKeyWords  (f: FsFile): FsFile =
     
     f |> fixFile (fun tp ->
         match tp with
