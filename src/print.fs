@@ -46,7 +46,6 @@ let printType (tp: FsType): string =
         | FsType.TypeLiteral _ ->
             // printfn "TypeLiteral %A" tp
             "obj"
-            
         | _ ->
             printfn "unsupported printType %A" tp
             "obj"

@@ -28,6 +28,8 @@ let transform (file: FsFile): FsFile =
         |> mergeModulesInFile
         |> addConstructors
         |> fixThis
+        |> fixGenericDefaultParameters
+        |> fixTypeParameters // must be after fixGenericDefaultParameters          
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
@@ -55,11 +57,13 @@ let transform (file: FsFile): FsFile =
         |> mergeModulesInFile
         |> addConstructors
         |> fixThis
+        |> fixGenericDefaultParameters
+        |> fixTypeParameters // // must be after fixGenericDefaultParameters           
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
         |> fixStatic
-        |> fixTypesHasESKeyWords 
+        |> fixTypesHasESKeyWords      
          // |> createIExports
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
         |> fixEnumReferences

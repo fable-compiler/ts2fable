@@ -131,7 +131,7 @@ describe "react tests" <| fun _ ->
             |> List.exists (fun tp -> getName tp = "DOMFactory" && FsType.isInterface tp)
             |> equal true
 
-    it "compile interface has optional generic type to multiple interfaces" <| fun _ ->
+    it "fix generic default parameters" <| fun _ ->
         let tsPaths = ["test/fragments/react/f2.d.ts"]
         let fsPath = "test/fragments/react/f2.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
@@ -188,7 +188,7 @@ describe "react tests" <| fun _ ->
         let fsPath = "test/fragments/react/f7.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existone "Ref" FsType.isInterface
+            |> existone "Ref" FsType.isAlias
             |> equal true        
 
     it "extract type literal from variable" <| fun _ ->

@@ -29,6 +29,13 @@ type FsTypeLiteral =
         Members: FsType list
     }
 
+type FsTypeParameter = 
+    {
+        Default: FsType option
+        Name: string
+        FullName: string
+    }    
+
 [<RequireQualifiedAccess>]
 type FsEnumCaseType =
     | Numeric
@@ -133,7 +140,7 @@ type FsProperty =
         Type: FsType
         IsReadonly: bool
     }
-
+    
 type FsGenericType =
     {
         Type: FsType
@@ -294,6 +301,7 @@ type FsType =
     | This
     | Import of FsImport
     | TypeLiteral of FsTypeLiteral
+    | TypeParameter of FsTypeParameter
 
 [<RequireQualifiedAccess>]
 module FsType =
@@ -303,6 +311,7 @@ module FsType =
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
+    let isAlias tp = match tp with | FsType.Alias _ -> true | _ -> false
 
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
     let asProperty (tp: FsType) = match tp with | FsType.Property v -> Some v | _ -> None

@@ -11,6 +11,7 @@ open ts2fable.Naming
 open System.Collections
 open System.Collections.Generic
 open ts2fable.Keywords
+open Fable.AST.Babel
 
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
@@ -116,7 +117,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
     | FsType.Import _ -> tp
-
+    | FsType.TypeParameter _ -> tp
     |> fix // current type
 
 /// recursively fix all the FsType childen for the given FsFile
@@ -836,6 +837,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
 
                             else [tp]
                         | _ -> [tp]    
+
                     | FsType.Alias al -> 
                         match al.Type with 
                         | FsType.Union un -> 
@@ -863,7 +865,6 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                 TypeParameters = []
                             } |> FsType.Interface |> List.singleton
                         | _ -> [tp]
-
                     
                     | _ -> [tp]
                 )   
@@ -1015,4 +1016,56 @@ let fixTypesHasESKeyWords  (f: FsFile): FsFile =
                 | true -> { gn with Type = simpleType "obj"; TypeParameters = []} |> FsType.Generic
                 | _ -> tp
         | _ -> tp
+    )
+
+let fixGenericDefaultParameters (f: FsFile): FsFile =
+    f |> fixFile(fun tp ->
+        match tp with 
+        | FsType.Module md ->
+            { md with 
+                Types = 
+                    let tps = List<FsType>()
+
+                    md.Types |> List.iter(fun tp ->
+                        match tp with 
+                        | FsType.Interface it -> 
+                            it.TypeParameters |> List.choose(fun tp ->
+                                match tp with 
+                                | FsType.TypeParameter tpr -> tpr.Default
+                                | _ -> None
+                            )
+                            |> List.iteri(fun i _ ->
+                                {
+                                    Name = it.Name
+                                    Type = 
+                                        {
+                                            Type = simpleType it.Name
+                                            TypeParameters = 
+                                                (it.TypeParameters.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
+                                                @ it.TypeParameters.[i+1 ..]
+                                        } |> FsType.Generic
+                                    TypeParameters = it.TypeParameters.[i+1 ..]    
+                                } |> FsType.Alias |> tps.Add
+                                ) 
+                            
+                            tp |> tps.Add
+                        | _ -> tp |> tps.Add
+                    )
+
+                    tps |> List.ofSeq
+                    
+            } |> FsType.Module
+        | _ -> tp    
+    )
+
+let fixTypeParameters (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.TypeParameter tpr ->
+            {
+                Name = tpr.Name
+                FullName =tpr.FullName
+            }
+            |> FsType.Mapped
+        | _ -> tp     
     )

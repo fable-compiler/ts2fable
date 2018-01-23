@@ -66,12 +66,21 @@ let readTypeParameters (checker: TypeChecker) (tps: List<TypeParameterDeclaratio
     | None -> []
     | Some tps ->
         tps |> List.ofSeq |> List.map (fun tp ->
-            {
-                Name = tp.name.getText()
-                FullName = getFullNodeName checker tp
-            }
-            |> FsType.Mapped
-        )
+            match tp.``default`` with 
+            | Some df ->
+                {
+                    Default = readTypeNode checker df |> Some
+                    Name = tp.name.getText()
+                    FullName = getFullNodeName checker tp
+                }
+                |> FsType.TypeParameter                
+            | None ->
+                {
+                    Name = tp.name.getText()
+                    FullName = getFullNodeName checker tp
+                }
+                |> FsType.Mapped
+        )        
 
 let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsType list =
     match hcs with
@@ -132,48 +141,17 @@ let readCommentsAtLocation (checker: TypeChecker) (nd: Node): FsComment list =
     | Some symbol ->
         symbol.getDocumentationComment() |> readComments
 
-let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsType list=
-    let name = id.name.getText()
-    let typeParameters = readTypeParameters checker id.typeParameters
-    
-    // typescript optional generic type 
-    let ops =
-        match id.typeParameters with 
-        | Some tps -> 
-            let als = List<FsAlias>()
-            tps 
-            |> List.ofSeq
-            |> List.iteri(fun i tp ->
-                match tp.``default`` with 
-                | Some _ -> 
-                    { Name = name
-                      Type = 
-                        { 
-                            Type = simpleType name
-                            TypeParameters = 
-                                (typeParameters.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
-                                @ typeParameters.[i+1 ..]
-                        } |> FsType.Generic
-                      TypeParameters = typeParameters.[i+1 ..]
-                    } 
-                    |> als.Add
-                | None -> ()
-            )
-            als |> List.ofSeq |> List.map FsType.Alias  
-        | None -> []
-
-    let current = 
-        {
-            Comments = readCommentsAtLocation checker id.name
-            IsStatic = false
-            IsClass = false
-            Name = name
-            FullName = getFullNodeName checker id
-            Inherits = readInherits checker id.heritageClauses
-            Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
-            TypeParameters = readTypeParameters checker id.typeParameters
-        } |> FsType.Interface
-    current :: ops     
+let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface =
+    {
+        Comments = readCommentsAtLocation checker id.name
+        IsStatic = false
+        IsClass = false
+        Name = id.name.getText()
+        FullName = getFullNodeName checker id
+        Inherits = readInherits checker id.heritageClauses
+        Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
+        TypeParameters = readTypeParameters checker id.typeParameters
+    } 
 
 let readTypeLiteral (checker: TypeChecker) (tl: TypeLiteralNode): FsTypeLiteral =
     {
@@ -736,7 +714,7 @@ let readImportEqualsDeclaration(im: ImportEqualsDeclaration): FsType list =
 let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
-        readInterface checker (sd :?> InterfaceDeclaration)
+        [readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface]
     | SyntaxKind.EnumDeclaration ->
         [readEnum (sd :?> EnumDeclaration) |> FsType.Enum]
     | SyntaxKind.TypeAliasDeclaration ->
