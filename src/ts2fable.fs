@@ -33,7 +33,12 @@ if argv |> List.exists (fun s -> s = "splitter.config.js") then // run from buil
     // writeFile ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
     writeFile ["node_modules/izitoast/types/index.d.ts"] "test-compile/IziToast.fs"
     writeFile ["node_modules/electron/electron.d.ts"] "test-compile/Electron.fs"
-    writeFile ["node_modules/@types/react/index.d.ts"] "test-compile/React.fs"
+    writeFile 
+        [
+            "node_modules/@types/react/index.d.ts"
+            "node_modules/@types/react/global.d.ts"
+        ]
+        "test-compile/React.fs"
     writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
     writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Chai.fs"
     writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Chalk.fs"

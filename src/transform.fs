@@ -862,7 +862,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                 FullName = al.Name
                                 Inherits = []
                                 Members = tl.Members
-                                TypeParameters = []
+                                TypeParameters = al.TypeParameters
                             } |> FsType.Interface |> List.singleton
                         | _ -> [tp]
                     
@@ -937,8 +937,8 @@ let fixNamespace (f: FsFile): FsFile =
         | FsType.Import im ->
             match im with
             | FsImport.Module immd ->
-                match immd.Role with 
-                | FsModuleImportRole.Alias -> im
+                match immd.Kind with 
+                | FsModuleImportKind.Alias -> im
                 | _ -> 
                     { immd with
                         Module = fixModuleName immd.Module
@@ -992,8 +992,8 @@ let fixServentImportedModuleName (f: FsFile): FsFile =
         | FsType.Import im ->
             match im with
             | FsImport.Module immd ->
-                match immd.Role with 
-                | FsModuleImportRole.Alias -> tp
+                match immd.Kind with 
+                | FsModuleImportKind.Alias -> tp
                 | _ ->
                     let name = path.join(ResizeArray [relativePath;immd.SpecifiedModule]).Replace("\\","/")
                     
@@ -1019,35 +1019,48 @@ let fixTypesHasESKeyWords  (f: FsFile): FsFile =
     )
 
 let fixGenericDefaultParameters (f: FsFile): FsFile =
+    let extractAliasesFromTypeParameters name tps = 
+        let aliases = List<FsAlias>()
+
+        tps |> List.choose(fun tp ->
+            match tp with 
+            | FsType.TypeParameter tpr -> tpr.Default
+            | _ -> None
+            )
+            |> List.iteri(fun i _ ->
+                {
+                    Name = name
+                    Type = 
+                        {
+                            Type = simpleType name
+                            TypeParameters = 
+                                (tps.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
+                                @ tps.[i+1 ..]
+                        } |> FsType.Generic
+                    TypeParameters = tps.[i+1 ..]    
+                } |> aliases.Add
+            )    
+        aliases |> List.ofSeq |> List.map FsType.Alias
+
     f |> fixFile(fun tp ->
         match tp with 
         | FsType.Module md ->
             { md with 
                 Types = 
                     let tps = List<FsType>()
-
                     md.Types |> List.iter(fun tp ->
                         match tp with 
                         | FsType.Interface it -> 
-                            it.TypeParameters |> List.choose(fun tp ->
-                                match tp with 
-                                | FsType.TypeParameter tpr -> tpr.Default
-                                | _ -> None
-                            )
-                            |> List.iteri(fun i _ ->
-                                {
-                                    Name = it.Name
-                                    Type = 
-                                        {
-                                            Type = simpleType it.Name
-                                            TypeParameters = 
-                                                (it.TypeParameters.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
-                                                @ it.TypeParameters.[i+1 ..]
-                                        } |> FsType.Generic
-                                    TypeParameters = it.TypeParameters.[i+1 ..]    
-                                } |> FsType.Alias |> tps.Add
-                                ) 
+                            it.TypeParameters
+                            |> extractAliasesFromTypeParameters it.Name
+                            |> tps.AddRange
                             
+                            tp |> tps.Add
+                        | FsType.Alias al ->
+                            al.TypeParameters
+                            |> extractAliasesFromTypeParameters al.Name
+                            |> tps.AddRange
+
                             tp |> tps.Add
                         | _ -> tp |> tps.Add
                     )
@@ -1069,3 +1082,48 @@ let fixTypeParameters (f: FsFile): FsFile =
             |> FsType.Mapped
         | _ -> tp     
     )
+
+let fixAlias (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Alias al ->
+            match al.Type with 
+            | FsType.Function f ->
+                {
+                    Comments = f.Comments
+                    IsStatic = false
+                    IsClass = false
+                    Name = al.Name
+                    FullName = al.Name
+                    Inherits = []
+                    Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
+                    TypeParameters = al.TypeParameters
+                } |> FsType.Interface
+            | FsType.Tuple tu-> 
+                match tu.Kind with 
+                | FsTupleKind.Mapped -> 
+                    {
+                        Comments = []
+                        IsStatic = false
+                        IsClass = false
+                        Name = al.Name
+                        FullName = al.Name
+                        Inherits = []
+                        Members = []
+                        TypeParameters = al.TypeParameters
+                    } |> FsType.Interface
+                | FsTupleKind.InterSection -> 
+                    {
+                        Comments = []
+                        IsStatic = false
+                        IsClass = false
+                        Name = al.Name
+                        FullName = al.Name
+                        Inherits = tu.Types |> List.filter FsType.isGeneric
+                        Members = []
+                        TypeParameters = al.TypeParameters
+                    } |> FsType.Interface
+                | _ -> tp
+            | _ -> tp    
+        | _ -> tp     
+    )    

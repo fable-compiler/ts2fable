@@ -30,7 +30,7 @@ let testFsFiles tsPaths fsPath (f: FsFile list -> unit) =
     emitFsFiles fsPath fsFiles
     f fsFiles
 
-describe "react tests" <| fun _ ->
+describe "tests" <| fun _ ->
     let getAllTypes fsFiles =
         let tps = List<FsType>()
         fsFiles
@@ -135,13 +135,21 @@ describe "react tests" <| fun _ ->
         let tsPaths = ["test/fragments/react/f2.d.ts"]
         let fsPath = "test/fragments/react/f2.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
-            |> getTopTypes
+            (
+            (fsFiles 
+            |> getAllTypes
             |> List.filter (fun tp -> getName tp = "Component")
-            |> List.length
-            |> equal 3
-
-    it "compile intersection type to interface" <| fun _ ->
+            |> List.filter FsType.isAlias
+            |> fun tps -> tps.Length = 2)
+            &&
+                (fsFiles 
+                |> getAllTypes
+                |> List.filter (fun tp -> getName tp = "ComponentType")
+                |> List.filter FsType.isAlias
+                |> fun tps -> tps.Length = 2)
+            )            
+            |> equal true
+    it "compile alias with intersection type to interface" <| fun _ ->
         let tsPaths = ["test/fragments/react/f3.d.ts"]
         let fsPath = "test/fragments/react/f3.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
@@ -151,7 +159,7 @@ describe "react tests" <| fun _ ->
             |> equal true                   
     
     // simplely fixed https://github.com/fable-compiler/ts2fable/issues/44 
-    it "compile mapped types to interface" <| fun _ ->
+    it "compile alias with mapped types to interface" <| fun _ ->
         let tsPaths = ["test/fragments/react/f4.d.ts"]
         let fsPath = "test/fragments/react/f4.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
@@ -160,7 +168,7 @@ describe "react tests" <| fun _ ->
             |> List.exists (fun tp -> getName tp = "ValidationMap" && FsType.isInterface tp)
             |> equal true      
 
-    it "compile type literal to interface" <| fun _ ->
+    it "compile alias with type literal to interface" <| fun _ ->
         let tsPaths = ["test/fragments/react/f5.d.ts"]
         let fsPath = "test/fragments/react/f5.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
@@ -202,7 +210,7 @@ describe "react tests" <| fun _ ->
             )
             |> equal true
 
-    it "extract type literal from export declare type alias" <| fun _ ->
+    it "extract type literal from alias" <| fun _ ->
         let tsPaths = ["test/fragments/SyncTasks/f2.d.ts"]
         let fsPath = "test/fragments/SyncTasks/f2.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->

@@ -43,12 +43,12 @@ let printType (tp: FsType): string =
         let vtp = vb.Type |> printType
         sprintf "abstract %s: %s%s" vb.Name vtp (if vb.IsConst then "" else " with get, set")
     | FsType.StringLiteral _ -> "string"
-        | FsType.TypeLiteral _ ->
-            // printfn "TypeLiteral %A" tp
-            "obj"
-        | _ ->
-            printfn "unsupported printType %A" tp
-            "obj"
+    | FsType.TypeLiteral _ ->
+        // printfn "TypeLiteral %A" tp
+        "obj"
+    | _ ->
+        printfn "unsupported printType %A" tp
+        "obj"
 
 let printFunction (fn: FsFunction): string =
     let line = ResizeArray()

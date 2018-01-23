@@ -1,6 +1,7 @@
 [<AutoOpen>]
 module rec ts2fable.Syntax
 open Fable
+open System
 
 // our simplified syntax tree
 // some names inspired by the actual F# AST:
@@ -159,12 +160,17 @@ type FsAlias =
         Type: FsType
         TypeParameters: FsType list
     }
+    
+[<RequireQualifiedAccess>]
+type FsTupleKind =
+    | Tuple
+    | InterSection
+    | Mapped
 
 type FsTuple =
     {
         Types: FsType list
-        IsIntersection: bool
-        IsMapped: bool
+        Kind: FsTupleKind
     }
 
 type TypeImport =
@@ -175,48 +181,42 @@ type TypeImport =
     }
     
 [<RequireQualifiedAccess>]
-type FsModuleImportRole = 
+type FsModuleImportKind = 
     | Alias
     | NodePackage
     | CurrentPackage
 
 [<RequireQualifiedAccess>]
-module FsModuleImportRole =
+module FsModuleImportKind =
     
-    ///  react = FsModuleImportRole.NodePackage
-    ///  ./Animated = FsModuleImportRole.CurrentPackage
-    /// RXTypes.Stateless = FsModuleImportRole.
-    let getRoleFromSpecifiedName (text: string) = 
-        match  text.Contains("./") with 
-        | true -> FsModuleImportRole.CurrentPackage
-        | false -> 
-            match text.Contains(".") with 
-            | true -> FsModuleImportRole.Alias
-            | false -> FsModuleImportRole.NodePackage       
-    let isAlias (role: FsModuleImportRole) = 
-        match role with 
-        | FsModuleImportRole.Alias -> true
+    ///  react = FsModuleImportKind.NodePackage
+    ///  ./Animated = FsModuleImportKind.CurrentPackage
+    /// RXTypes.Stateless = FsModuleImportKind.
+      
+    let isAlias (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.Alias -> true
         | _ -> false
-    let isNodePackage  (role: FsModuleImportRole) = 
-        match role with 
-        | FsModuleImportRole.NodePackage -> true
+    let isNodePackage  (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.NodePackage -> true
         | _ -> false   
-    let isCurrentPackage  (role: FsModuleImportRole) = 
-        match role with 
-        | FsModuleImportRole.CurrentPackage -> true
+    let isCurrentPackage  (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.CurrentPackage -> true
         | _ -> false       
     
-    let asAlias (role: FsModuleImportRole) = 
-        match role with 
-        | FsModuleImportRole.Alias -> true
+    let asAlias (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.Alias -> true
         | _ -> false
-    let asNodePackage  (role: FsModuleImportRole) = 
-        match role with 
-        | FsModuleImportRole.NodePackage -> Some role 
+    let asNodePackage  (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.NodePackage -> Some kind 
         | _ -> None   
-    let asCurrentPackage  (role: FsModuleImportRole) = 
-        match role with 
-        | FsModuleImportRole.CurrentPackage -> Some role 
+    let asCurrentPackage  (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.CurrentPackage -> Some kind 
         | _ -> None           
                   
 type ModuleImport =
@@ -224,7 +224,7 @@ type ModuleImport =
         Module: string
         SpecifiedModule: string
         ResolvedModule: string option
-        Role: FsModuleImportRole
+        Kind: FsModuleImportKind
     }
 
 

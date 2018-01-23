@@ -30,6 +30,7 @@ let transform (file: FsFile): FsFile =
         |> fixThis
         |> fixGenericDefaultParameters
         |> fixTypeParameters // must be after fixGenericDefaultParameters          
+        |> fixAlias  
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
@@ -58,7 +59,8 @@ let transform (file: FsFile): FsFile =
         |> addConstructors
         |> fixThis
         |> fixGenericDefaultParameters
-        |> fixTypeParameters // // must be after fixGenericDefaultParameters           
+        |> fixTypeParameters // must be after fixGenericDefaultParameters     
+        |> fixAlias  
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
