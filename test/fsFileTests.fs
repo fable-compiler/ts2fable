@@ -14,6 +14,7 @@ open ts2fable.Print
 open System.Collections.Generic
 open System
 open ts2fable.Keywords
+open TypeScript.Ts
 
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
@@ -45,6 +46,12 @@ describe "react tests" <| fun _ ->
     let getTypeByName name fsFiles =
         getAllTypes fsFiles
         |> List.filter(fun tp -> getName tp = name)
+
+    let existone name (isType:FsType -> bool) fsFiles= 
+        fsFiles
+        |> getTypeByName name
+        |> List.filter isType
+        |> fun tp -> tp.Length = 1
         
     let getTopTypes fsFiles = 
         fsFiles
@@ -176,26 +183,30 @@ describe "react tests" <| fun _ ->
             )
             |> equal false
 
-    it "extract type literal from export declare const fragment" <| fun _ ->
+    it "extract type literal from union" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f7.d.ts"]
+        let fsPath = "test/fragments/react/f7.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existone "Ref" FsType.isInterface
+            |> equal true        
+
+    it "extract type literal from variable" <| fun _ ->
         let tsPaths = ["test/fragments/SyncTasks/f1.d.ts"]
         let fsPath = "test/fragments/SyncTasks/f1.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             (
-            fsFiles 
-            |> getTypeByName "config"
-            |> (List.exactlyOne >> FsType.isVariable)
-            &&
-                fsFiles 
-                |> getTypeByName "Config"
-                |> (List.exactlyOne >> FsType.isInterface)
+                (existone "config" FsType.isVariable fsFiles) 
+                && 
+                (existone "Config" FsType.isInterface fsFiles)
             )
             |> equal true
 
-    only "extract type literal from export declare type fragment -> [TypeAlias]" <| fun _ ->
+    it "extract type literal from export declare type alias" <| fun _ ->
         let tsPaths = ["test/fragments/SyncTasks/f2.d.ts"]
         let fsPath = "test/fragments/SyncTasks/f2.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> getTypeByName "RaceTimerResponse"
-            |> (List.exactlyOne >> FsType.isInterface)
+            |> existone "RaceTimerResponse" FsType.isInterface
             |> equal true
+
