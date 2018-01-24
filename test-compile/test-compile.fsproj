@@ -10,11 +10,14 @@
     <Compile Include="VSCode.fs" />
     <Compile Include="IziToast.fs" />
     <!-- <Compile Include="Electron.fs" /> -->
-    <!-- <Compile Include="React.fs" /> -->
+    <Compile Include="React.fs" />
     <Compile Include="Mocha.fs" />
     <!-- <Compile Include="Chai.fs" /> -->
+    <!-- <Compile Include="Synctasks.fs" /> -->
+    <!-- <Compile Include="React.fs" /> -->
+    <!-- <Compile Include="Subscribableevent.fs" /> -->
+    <!-- <Compile Include="Reactxp.fs" /> -->
     <Compile Include="Chalk.fs" />
-    <!-- <Compile Include="ReactXP.fs" /> -->
     <!-- <Compile Include="Protobuf.fs" /> -->
 
     <!-- <Compile Include="JQuery.fs" /> -->

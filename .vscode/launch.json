@@ -24,7 +24,7 @@
       "protocol": "inspector",
       "program": "${workspaceRoot}/dist/ts2fable.js",
       "args":[
-        "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts",
+        "splitter.config.js",
       ],
       "sourceMaps": true,
       "preLaunchTask": "build",

@@ -31,8 +31,8 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.48.tgz#24bfdc0aa82e8f6dbd017159c58094a2e06d0abb"
 
 "@types/node@^8.0.56":
-  version "8.0.57"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.57.tgz#e5d8b4dc112763e35cfc51988f4f38da3c486d99"
+  version "8.5.9"
+  resolved "http://registry.npm.taobao.org/@types/node/download/@types/node-8.5.9.tgz#7155cfb4ae405bca4dd8df1a214c339e939109bf"
 
 "@types/react-dom@^16.0.0":
   version "16.0.3"
@@ -41,13 +41,9 @@
     "@types/node" "*"
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^16.0.0":
+"@types/react@*", "@types/react@^16.0.0", "@types/react@^16.0.34":
   version "16.0.34"
   resolved "http://registry.npm.taobao.org/@types/react/download/@types/react-16.0.34.tgz#7a8f795afd8a404a9c4af9539b24c75d3996914e"
-
-"@types/react@^15.0.20":
-  version "15.6.7"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-15.6.7.tgz#e910b6aace59d8d0b48dd679c2c03cffedafeec6"
 
 "@types/yargs@^8.0.2":
   version "8.0.3"

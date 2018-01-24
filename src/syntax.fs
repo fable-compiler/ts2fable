@@ -1,5 +1,7 @@
 [<AutoOpen>]
 module rec ts2fable.Syntax
+open Fable
+open System
 
 // our simplified syntax tree
 // some names inspired by the actual F# AST:
@@ -27,6 +29,13 @@ type FsTypeLiteral =
     {
         Members: FsType list
     }
+
+type FsTypeParameter = 
+    {
+        Default: FsType option
+        Name: string
+        FullName: string
+    }    
 
 [<RequireQualifiedAccess>]
 type FsEnumCaseType =
@@ -132,7 +141,7 @@ type FsProperty =
         Type: FsType
         IsReadonly: bool
     }
-
+    
 type FsGenericType =
     {
         Type: FsType
@@ -151,10 +160,17 @@ type FsAlias =
         Type: FsType
         TypeParameters: FsType list
     }
+    
+[<RequireQualifiedAccess>]
+type FsTupleKind =
+    | Tuple
+    | InterSection
+    | Mapped
 
 type FsTuple =
     {
         Types: FsType list
+        Kind: FsTupleKind
     }
 
 type TypeImport =
@@ -163,13 +179,54 @@ type TypeImport =
         SpecifiedModule: string
         ResolvedModule: string option
     }
+    
+[<RequireQualifiedAccess>]
+type FsModuleImportKind = 
+    | Alias
+    | NodePackage
+    | CurrentPackage
 
+[<RequireQualifiedAccess>]
+module FsModuleImportKind =
+    
+    ///  react = FsModuleImportKind.NodePackage
+    ///  ./Animated = FsModuleImportKind.CurrentPackage
+    /// RXTypes.Stateless = FsModuleImportKind.
+      
+    let isAlias (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.Alias -> true
+        | _ -> false
+    let isNodePackage  (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.NodePackage -> true
+        | _ -> false   
+    let isCurrentPackage  (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.CurrentPackage -> true
+        | _ -> false       
+    
+    let asAlias (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.Alias -> true
+        | _ -> false
+    let asNodePackage  (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.NodePackage -> Some kind 
+        | _ -> None   
+    let asCurrentPackage  (kind: FsModuleImportKind) = 
+        match kind with 
+        | FsModuleImportKind.CurrentPackage -> Some kind 
+        | _ -> None           
+                  
 type ModuleImport =
     {
         Module: string
         SpecifiedModule: string
         ResolvedModule: string option
+        Kind: FsModuleImportKind
     }
+
 
 [<RequireQualifiedAccess>]
 type FsImport =
@@ -244,21 +301,27 @@ type FsType =
     | This
     | Import of FsImport
     | TypeLiteral of FsTypeLiteral
+    | TypeParameter of FsTypeParameter
 
 [<RequireQualifiedAccess>]
 module FsType =
+    let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
+    let isGeneric tp = match tp with | FsType.Generic _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
+    let isAlias tp = match tp with | FsType.Alias _ -> true | _ -> false
 
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
+    let asProperty (tp: FsType) = match tp with | FsType.Property v -> Some v | _ -> None
     let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
     let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
     let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
     let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
     let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
     let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
+    let asTuple (tp: FsType) = match tp with | FsType.Tuple v -> Some v | _ -> None
 
 type FsModule =
     {
@@ -275,10 +338,15 @@ with
 
 type FsFile =
     {
+        MasterFileName: string
         FileName: string
         ModuleName: string
         Modules: FsModule list
     }
+with 
+    member x.IsMaster = 
+        x.FileName = x.MasterFileName
+        || Node.path.basename x.FileName = "global.d.ts"
 
 type FsFileOut =
     {
