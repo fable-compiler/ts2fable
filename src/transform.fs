@@ -818,7 +818,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                         match vb.Type with 
                         | FsType.TypeLiteral tl -> 
                             if not tl.Members.IsEmpty then 
-                                let name = capitalize vb.Name 
+                                let name = sprintf "%s'" <| capitalize vb.Name 
                                 let it = 
                                     {
                                         Comments = []
@@ -1083,6 +1083,14 @@ let fixTypeParameters (f: FsFile): FsFile =
         | _ -> tp     
     )
 
+let fixInterSection (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Tuple tu when tu.Kind = FsTupleKind.InterSection ->
+            simpleType "obj"
+        | _ -> tp     
+    )    
+
 let fixAlias (f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with 
@@ -1126,4 +1134,4 @@ let fixAlias (f: FsFile): FsFile =
                 | _ -> tp
             | _ -> tp    
         | _ -> tp     
-    )    
+    )        

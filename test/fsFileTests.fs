@@ -31,6 +31,8 @@ let testFsFiles tsPaths fsPath (f: FsFile list -> unit) =
     f fsFiles
 
 describe "tests" <| fun _ ->
+    timeout 10000
+
     let getAllTypes fsFiles =
         let tps = List<FsType>()
         fsFiles
@@ -83,7 +85,6 @@ describe "tests" <| fun _ ->
                 |> equal true
 
     it "multiple linked files reactxp" <| fun _ ->
-        timeout 10000
         let rec loop tsPath fsDir = 
 
             let nodePaths,tsPaths= 
@@ -104,7 +105,6 @@ describe "tests" <| fun _ ->
 
 
     it "multiple linked files react" <| fun _ ->
-        timeout 10000
         let rec loop tsPath fsDir = 
 
             let nodePaths,tsPaths= 
@@ -149,6 +149,7 @@ describe "tests" <| fun _ ->
                 |> fun tps -> tps.Length = 2)
             )            
             |> equal true
+            
     it "compile alias with intersection type to interface" <| fun _ ->
         let tsPaths = ["test/fragments/react/f3.d.ts"]
         let fsPath = "test/fragments/react/f3.fs"
@@ -206,7 +207,7 @@ describe "tests" <| fun _ ->
             (
                 (existone "config" FsType.isVariable fsFiles) 
                 && 
-                (existone "Config" FsType.isInterface fsFiles)
+                (existone "Config'" FsType.isInterface fsFiles)
             )
             |> equal true
 
@@ -218,3 +219,20 @@ describe "tests" <| fun _ ->
             |> existone "RaceTimerResponse" FsType.isInterface
             |> equal true
 
+    it "anonymous type should has single quotation mark" <| fun _ ->
+        let tsPaths = ["test/fragments/Node/f1.d.ts"]
+        let fsPath = "test/fragments/Node/f1.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existone "Buffer'" FsType.isInterface
+            |> equal true
+
+    it "fix interSection to simple obj" <| fun _ ->
+        let tsPaths = ["test/fragments/Node/f2.d.ts"]
+        let fsPath = "test/fragments/Node/f2.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> getAllTypes
+            |> List.choose FsType.asTuple
+            |> List.forall(fun tu -> tu.Types.Length = 2)      
+            |> equal true

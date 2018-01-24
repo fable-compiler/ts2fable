@@ -350,7 +350,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.MappedType ->
         // let mt = t :?> MappedTypeNode
         {
-            Types = []
+            Types = [simpleType "obj"]
             Kind = FsTupleKind.Mapped
         }
         |> FsType.Tuple   

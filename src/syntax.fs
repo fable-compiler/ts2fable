@@ -321,6 +321,7 @@ module FsType =
     let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
     let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
     let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
+    let asTuple (tp: FsType) = match tp with | FsType.Tuple v -> Some v | _ -> None
 
 type FsModule =
     {
