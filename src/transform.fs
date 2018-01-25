@@ -12,6 +12,7 @@ open System.Collections
 open System.Collections.Generic
 open ts2fable.Keywords
 open Fable.AST.Babel
+open ts2fable.Read
 
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
