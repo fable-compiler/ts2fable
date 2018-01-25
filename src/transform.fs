@@ -582,6 +582,12 @@ let fixStatic(f: FsFile): FsFile =
 
 let fixOpens(fo: FsFileOut): FsFileOut =
 
+    let nodeOpens = 
+        fo.Files.[0].FileName
+        |> readAllResolvedModuleNames 
+        |> fst
+        |> List.map (getJsModuleName >> capitalize)
+
     let isBrowser (name: string): bool =
         if isNull name then false
         else name.StartsWith "HTML"
@@ -600,8 +606,8 @@ let fixOpens(fo: FsFileOut): FsFileOut =
 
     { fo with
         Opens =
-            if hasBrowser then fo.Opens @ ["Fable.Import.Browser"]
-            else fo.Opens
+            if hasBrowser then fo.Opens @ ["Fable.Import.Browser"] @ nodeOpens
+            else fo.Opens @ nodeOpens
     }
 
 let hasTodo (tp: FsType) =
