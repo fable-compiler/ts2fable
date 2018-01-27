@@ -254,7 +254,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 }
                 |> FsType.Property
                 |> typesInIExports.Add
-            typesOther.Add tp
+            typesOther.Add tp       
         | _ -> typesOther.Add tp
     )
 
@@ -581,13 +581,8 @@ let fixStatic(f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixOpens(fo: FsFileOut): FsFileOut =
+let fixOpens nodeOpens (fo: FsFileOut): FsFileOut =
 
-    let nodeOpens = 
-        fo.Files.[0].FileName
-        |> readAllResolvedModuleNames 
-        |> fst
-        |> List.map (getJsModuleName >> capitalize)
 
     let isBrowser (name: string): bool =
         if isNull name then false
@@ -944,14 +939,11 @@ let fixNamespace (f: FsFile): FsFile =
         | FsType.Import im ->
             match im with
             | FsImport.Module immd ->
-                match immd.Kind with 
-                | FsModuleImportKind.Alias -> im
-                | _ -> 
-                    { immd with
-                        Module = fixModuleName immd.Module
-                        SpecifiedModule = fixModuleName immd.SpecifiedModule
-                    }
-                    |> FsImport.Module
+                { immd with
+                    Module = fixModuleName immd.Module
+                    SpecifiedModule = fixModuleName immd.SpecifiedModule
+                }
+                |> FsImport.Module
             | FsImport.Type imtp ->
                 { imtp with 
                     SpecifiedModule = fixModuleName imtp.SpecifiedModule
@@ -1025,7 +1017,7 @@ let fixTypesHasESKeyWords  (f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixGenericDefaultParameters (f: FsFile): FsFile =
+let extractGenericDefaultParameters (f: FsFile): FsFile =
     let extractAliasesFromTypeParameters name tps = 
         let aliases = List<FsAlias>()
 
@@ -1078,7 +1070,7 @@ let fixGenericDefaultParameters (f: FsFile): FsFile =
         | _ -> tp    
     )
 
-let fixTypeParameters (f: FsFile): FsFile =
+let typeParametersToObj (f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with 
         | FsType.TypeParameter tpr ->
@@ -1090,7 +1082,7 @@ let fixTypeParameters (f: FsFile): FsFile =
         | _ -> tp     
     )
 
-let fixInterSection (f: FsFile): FsFile =
+let interSectionToObj (f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with 
         | FsType.Tuple tu when tu.Kind = FsTupleKind.InterSection ->
@@ -1098,7 +1090,7 @@ let fixInterSection (f: FsFile): FsFile =
         | _ -> tp     
     )    
 
-let fixAlias (f: FsFile): FsFile =
+let aliasToInterfacePartly (f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with 
         | FsType.Alias al ->
@@ -1142,3 +1134,49 @@ let fixAlias (f: FsFile): FsFile =
             | _ -> tp    
         | _ -> tp     
     )        
+
+let removeServentNodeModuleImport (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Module md ->
+            { md with 
+                Types = 
+                    let tps = new List<_>()
+                    md.Types |> List.iter(fun tp ->
+                        match tp with 
+                        | FsType.Import im ->
+                            match im with 
+                            | FsImport.Module immd ->
+                                match immd.Kind with 
+                                | FsModuleImportKind.NodePackage -> ()
+                                | _ -> tp |> tps.Add
+                            | _ -> tp |> tps.Add
+                        | _ -> tp |> tps.Add        
+                    )
+                    tps |> List.ofSeq
+            } |> FsType.Module
+        | _ -> tp     
+    )            
+
+let removeExternalModuleAlias (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Module md ->
+            { md with 
+                Types = 
+                    let tps = new List<_>()
+                    md.Types |> List.iter(fun tp ->
+                        match tp with 
+                        | FsType.Import im ->
+                            match im with 
+                            | FsImport.Module immd ->
+                                match immd.Kind with 
+                                | FsModuleImportKind.ExternalAlias -> ()
+                                | _ -> tp |> tps.Add
+                            | _ -> tp |> tps.Add
+                        | _ -> tp |> tps.Add        
+                    )
+                    tps |> List.ofSeq
+            } |> FsType.Module
+        | _ -> tp     
+    )                

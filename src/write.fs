@@ -23,15 +23,16 @@ open ts2fable.Write
 let transform (file: FsFile): FsFile =
     if file.IsMaster 
     then 
-        file   
+        file      
         |> removeInternalModules
+        |> removeExternalModuleAlias
         |> mergeModulesInFile
+        |> aliasToInterfacePartly
+        |> interSectionToObj // after aliasToInterfacePartly          
+        |> extractGenericDefaultParameters
+        |> typeParametersToObj // must be after fixGenericDefaultParameters            
         |> addConstructors
         |> fixThis
-        |> fixGenericDefaultParameters
-        |> fixTypeParameters // must be after fixGenericDefaultParameters          
-        |> fixAlias 
-        |> fixInterSection // after fixAlias
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
@@ -51,18 +52,20 @@ let transform (file: FsFile): FsFile =
         |> extractTypeLiterals // after fixEscapeWords
         |> addAliasUnionHelpers
     
-    else       
+    else    
         file
         |> wrappedWithModule
+        |> removeServentNodeModuleImport
         |> fixServentImportedModuleName
         |> removeInternalModules
+        |> removeExternalModuleAlias
         |> mergeModulesInFile
+        |> aliasToInterfacePartly
+        |> interSectionToObj // after aliasToInterfacePartly          
+        |> extractGenericDefaultParameters
+        |> typeParametersToObj // must be after fixGenericDefaultParameters           
         |> addConstructors
         |> fixThis
-        |> fixGenericDefaultParameters
-        |> fixTypeParameters // must be after fixGenericDefaultParameters     
-        |> fixAlias  
-        |> fixInterSection // after fixAlias
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
@@ -82,9 +85,7 @@ let transform (file: FsFile): FsFile =
         |> extractTypeLiterals // after fixEscapeWords
         |> addAliasUnionHelpers
 
-let getFsFiles (tsPaths: string list) = 
-    // let workSpaceRoot = ``process``.cwd()
-    // let tsPaths = tsPaths |> List.map (fun tsPath -> path.join(ResizeArray [workSpaceRoot; tsPath]))
+let getFsFileOut (fsPath: string) (tsPaths: string list) = 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
         o.``module`` <- Some ModuleKind.CommonJS
@@ -100,7 +101,7 @@ let getFsFiles (tsPaths: string list) =
         |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
         |> dict
 
-    tsFiles |> List.map (fun tsFile ->
+    let fsFiles = tsFiles |> List.map (fun tsFile ->
         {
             MasterFileName = tsFiles.[0].fileName
             FileName = tsFile.fileName
@@ -111,23 +112,25 @@ let getFsFiles (tsPaths: string list) =
         |> transform
     )
 
+    let nodeOpens = tsFiles |> readNodeOpens
 
-let emitFsFiles fsPath (fsFiles: FsFile list) = 
+    {
+        // use the F# file name as the module namespace
+        // TODO ensure valid name
+        Namespace = path.basename(fsPath, path.extname(fsPath))
+        Opens =
+            [
+                "System"
+                "Fable.Core"
+                "Fable.Import.JS"
+            ]
+        Files = fsFiles
+    }
+    |> fixOpens nodeOpens
 
-    let fsFileOut: FsFileOut =
-        {
-            // use the F# file name as the module namespace
-            // TODO ensure valid name
-            Namespace = path.basename(fsPath, path.extname(fsPath))
-            Opens =
-                [
-                    "System"
-                    "Fable.Core"
-                    "Fable.Import.JS"
-                ]
-            Files = fsFiles
-        }
-        |> fixOpens
+
+let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
+
 
     let file = fs.createWriteStream (!^fsPath)
     for line in printFsFile fsFileOut do
@@ -136,5 +139,5 @@ let emitFsFiles fsPath (fsFiles: FsFile list) =
 let writeFile (tsPaths: string list) (fsPath: string): unit =
     // printfn "writeFile %A %s" tsPaths fsPath
 
-    let fsFiles = getFsFiles tsPaths 
-    emitFsFiles fsPath fsFiles
+    let fsFileOut = getFsFileOut fsPath tsPaths 
+    emitFsFileOut fsPath fsFileOut

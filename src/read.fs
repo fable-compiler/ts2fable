@@ -12,6 +12,7 @@ open System.Collections.Generic
 open ts2fable.Syntax
 open System.Collections.Generic
 open Fable
+open System.Collections.Generic
 
 type Node with
     member x.ForEachChild (cbNode: Node -> unit) =
@@ -36,8 +37,11 @@ let inline getKindFromSpecifiedModuleName (text: string) =
     match  text.Contains("./") with 
     | true -> FsModuleImportKind.CurrentPackage
     | false -> 
-        match text.Contains(".") with 
-        | true -> FsModuleImportKind.Alias
+        match not <| text.Contains("'") with 
+        | true -> 
+            if text.Contains(".") then  FsModuleImportKind.ExternalAlias
+            else FsModuleImportKind.Alias
+
         | false -> FsModuleImportKind.NodePackage 
 
 let readEnumCase(em: EnumMember): FsEnumCase =
@@ -726,40 +730,52 @@ let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFil
         Modules = modules |> List.ofSeq
     }
 
-//recursively get all resolveModuleNames
-let readAllResolvedModuleNames tsPath = 
-    let accum = Dictionary<string,FsModuleImportKind>()
-       
-    let rec readResolveModuleNames (program:Program) tsPath = 
-        let tsFile = tsPath |> program.getSourceFile
-        tsFile.resolvedModules 
-        |> 
-            function 
-            | Some v ->
-                v
-                |> List.ofSeq 
-                |> List.map(|KeyValue|)
-                |> List.iter (fun (k,v) ->
-                    let name = v.resolvedFileName.Replace("\\","/")
-                    if not <| accum.ContainsKey name 
+let readResolvedModules (tsFile: SourceFile) =
+    let accum = dict[]
+
+    tsFile.resolvedModules
+        |> function 
+        | Some v ->
+            v
+            |> List.ofSeq 
+            |> List.map(|KeyValue|)
+            |> List.iter (fun (k,v) ->
+                match v with 
+                | Some rsmd ->
+                    let path = rsmd.resolvedFileName.Replace("\\","/")
+                    if not <| accum.ContainsKey path 
                     then
                         if k.Contains "./" 
                         then 
-                            accum.Add (name,FsModuleImportKind.CurrentPackage)
-                            name 
-                            |> readResolveModuleNames program
-                            |> ignore
+                            accum.Add (path,FsModuleImportKind.CurrentPackage)
                         else     
-                            accum.Add (name,FsModuleImportKind.NodePackage)
-                )
-            | None -> ()
-         
-        accum
+                            accum.Add (path,FsModuleImportKind.NodePackage)
+                | None -> ()            
+            )
+        | None -> ()     
 
-    // let workSpaceRoot = ``process``.cwd()
-    // let tsPath = path.join(ResizeArray [workSpaceRoot; tsPath])
-    accum.Add (tsPath,FsModuleImportKind.CurrentPackage)
+    tsFile.referencedFiles 
+    |> List.ofSeq
+    |> List.iter(fun f -> 
+        let name = path.join(ResizeArray [path.dirname tsFile.fileName;f.fileName]).Replace("\\","/")
+        accum.Add (name,FsModuleImportKind.CurrentPackage) )  
 
+    accum 
+    |> Seq.map(|KeyValue|) 
+    |> List.ofSeq
+let readAllResolvedModules (tsFiles: SourceFile list) = 
+    tsFiles 
+    |> List.collect readResolvedModules 
+
+let readNodeOpens (tsFiles: SourceFile list) =
+    tsFiles
+    |> readAllResolvedModules
+    |> List.filter(fun (_,kind) -> kind = FsModuleImportKind.NodePackage)
+    |> List.map (fst >> getJsModuleName >> capitalize)
+
+//recursively get all resolveModules
+//be careful to use this as creating a ts program costs expensively
+let readAllResolvedModuleNames  (tsPath: string) = 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
         o.``module`` <- Some ModuleKind.CommonJS
@@ -768,16 +784,22 @@ let readAllResolvedModuleNames tsPath =
     let host = ts.createCompilerHost(options, setParentNodes)
     let program = ts.createProgram(ResizeArray [tsPath], options, host)
 
-    let tsFile = program.getSourceFile tsPath
-    let tsDir = path.dirname tsPath    
-    tsFile.referencedFiles 
-    |> List.ofSeq
-    |> List.iter(fun f -> 
-        let name = path.join(ResizeArray [tsDir;f.fileName]).Replace("\\","/")
-        accum.Add (name,FsModuleImportKind.CurrentPackage) )  
-
-    readResolveModuleNames (program:Program) tsPath 
-    |> Seq.map(|KeyValue|) 
-    |> List.ofSeq 
+    let tsFile = program.getSourceFile tsPath   
+    
+    let set = HashSet []
+    let rec loop accum tsFile: (string*FsModuleImportKind) list = 
+        tsFile 
+        |> readResolvedModules
+        |> List.collect(fun (tsPath,kind) ->
+            if not <| set.Contains tsPath then 
+                set.Add tsPath |> ignore
+                match kind with 
+                | FsModuleImportKind.CurrentPackage -> 
+                    loop [tsPath,kind] <| program.getSourceFile tsPath
+                | _ -> [tsPath,kind]
+            else []    
+        )
+        |> List.append accum
+    loop [tsPath,FsModuleImportKind.CurrentPackage] tsFile
     |> List.partition (fun (_,v) -> FsModuleImportKind.isNodePackage v)
     |> fun (f,s) -> f |> List.map fst, s |> List.map fst  

@@ -19,6 +19,8 @@ open TypeScript.Ts
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
+
+// use only to debug single test
 let [<Emit("it.only($0,$1)")>] only (msg: string) (f: unit->unit): unit = jsNative
 let [<Emit("this.timeout($0)")>] timeout (duration: int): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
@@ -26,9 +28,9 @@ let inline equal (expected: 'T) (actual: 'T): unit =
 
 let testFsFiles tsPaths fsPath (f: FsFile list -> unit) =
 
-    let fsFiles = getFsFiles tsPaths 
-    emitFsFiles fsPath fsFiles
-    f fsFiles
+    let fsFileOut = getFsFileOut fsPath tsPaths 
+    emitFsFileOut fsPath fsFileOut
+    f fsFileOut.Files
 
 describe "tests" <| fun _ ->
     timeout 10000
@@ -49,7 +51,7 @@ describe "tests" <| fun _ ->
         getAllTypes fsFiles
         |> List.filter(fun tp -> getName tp = name)
 
-    let existone name (isType:FsType -> bool) fsFiles= 
+    let existOnlyOne name (isType:FsType -> bool) fsFiles= 
         fsFiles
         |> getTypeByName name
         |> List.filter isType
@@ -84,13 +86,13 @@ describe "tests" <| fun _ ->
                 |> List.forall(fun (_,l) -> l = 1)
                 |> equal true
 
-    it "multiple linked files reactxp" <| fun _ ->
+    only "multiple linked files reactxp" <| fun _ ->
         let rec loop tsPath fsDir = 
 
             let nodePaths,tsPaths= 
                 tsPath
                 |> readAllResolvedModuleNames 
-            
+                
             let fsBasename = tsPath |> getJsModuleName |> capitalize |> sprintf "%s.fs" 
             let fsPath = path.join(ResizeArray [fsDir; fsBasename])
             testFsFiles tsPaths fsPath  <| fun _ ->
@@ -197,7 +199,7 @@ describe "tests" <| fun _ ->
         let fsPath = "test/fragments/react/f7.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existone "Ref" FsType.isAlias
+            |> existOnlyOne "Ref" FsType.isAlias
             |> equal true        
 
     it "extract type literal from variable" <| fun _ ->
@@ -205,9 +207,9 @@ describe "tests" <| fun _ ->
         let fsPath = "test/fragments/SyncTasks/f1.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             (
-                (existone "config" FsType.isVariable fsFiles) 
+                (existOnlyOne "config" FsType.isVariable fsFiles) 
                 && 
-                (existone "Config'" FsType.isInterface fsFiles)
+                (existOnlyOne "Config'" FsType.isInterface fsFiles)
             )
             |> equal true
 
@@ -216,7 +218,7 @@ describe "tests" <| fun _ ->
         let fsPath = "test/fragments/SyncTasks/f2.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existone "RaceTimerResponse" FsType.isInterface
+            |> existOnlyOne "RaceTimerResponse" FsType.isInterface
             |> equal true
 
     it "anonymous type should has single quotation mark" <| fun _ ->
@@ -224,7 +226,7 @@ describe "tests" <| fun _ ->
         let fsPath = "test/fragments/Node/f1.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existone "Buffer'" FsType.isInterface
+            |> existOnlyOne "Buffer'" FsType.isInterface
             |> equal true
 
     it "fix interSection to simple obj" <| fun _ ->
@@ -236,3 +238,25 @@ describe "tests" <| fun _ ->
             |> List.choose FsType.asTuple
             |> List.forall(fun tu -> tu.Types.Length = 2)      
             |> equal true
+
+    it "remove external module alias" <| fun _ ->
+        let tsPaths = ["test/fragments/reactxp/f1.d.ts"]
+        let fsPath = "test/fragments/reactxp/f1.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            existOnlyOne "CommonStyledProps" FsType.isImport fsFiles
+            |> not 
+            |> fun b -> b && existOnlyOne "Animated" FsType.isImport fsFiles
+            |> equal true
+
+    it "remove servent node module import" <| fun _ ->
+        let tsPaths = 
+            [
+                "test/fragments/reactxp/f2/f2_1.d.ts"
+                "test/fragments/reactxp/f2/dir/f2_2.d.ts"
+            ]
+        let fsPath = "test/fragments/reactxp/f2.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existOnlyOne "React" FsType.isImport
+            |> equal false
+      

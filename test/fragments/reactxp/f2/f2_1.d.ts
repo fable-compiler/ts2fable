@@ -1,0 +1,1 @@
+import RXTypes = require('./dir/f2_2');

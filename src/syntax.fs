@@ -182,6 +182,7 @@ type TypeImport =
     
 [<RequireQualifiedAccess>]
 type FsModuleImportKind = 
+    | ExternalAlias
     | Alias
     | NodePackage
     | CurrentPackage
@@ -189,10 +190,11 @@ type FsModuleImportKind =
 [<RequireQualifiedAccess>]
 module FsModuleImportKind =
     
-    ///  react = FsModuleImportKind.NodePackage
-    ///  ./Animated = FsModuleImportKind.CurrentPackage
-    /// RXTypes.Stateless = FsModuleImportKind.
-      
+    // reactxp.d.ts
+    //  react = FsModuleImportKind.NodePackage
+    //  ./Animated = FsModuleImportKind.CurrentPackage
+    // RXTypes.Stateless = FsModuleImportKind.ExternalAlias
+    // AnimatedImpl = FsModuleImportKind.Alias
     let isAlias (kind: FsModuleImportKind) = 
         match kind with 
         | FsModuleImportKind.Alias -> true
@@ -306,6 +308,8 @@ type FsType =
 [<RequireQualifiedAccess>]
 module FsType =
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
+    let isImport tp = match tp with | FsType.Import _ -> true | _ -> false
+    let isProperty tp = match tp with | FsType.Property _ -> true | _ -> false
     let isGeneric tp = match tp with | FsType.Generic _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
@@ -382,6 +386,10 @@ let rec getName (tp: FsType) =
     | FsType.Array ar ->
         let name = getName ar
         if name = "" then "" else sprintf "%sArray" name
+    | FsType.Import im ->
+        match im with 
+        | FsImport.Module immd -> immd.Module
+        | FsImport.Type imtp -> imtp.SpecifiedModule    
     | _ -> ""
 
 let rec getFullName (tp: FsType) =
