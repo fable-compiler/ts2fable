@@ -86,7 +86,7 @@ describe "tests" <| fun _ ->
                 |> List.forall(fun (_,l) -> l = 1)
                 |> equal true
 
-    only "multiple linked files reactxp" <| fun _ ->
+    it "multiple linked files reactxp" <| fun _ ->
         let rec loop tsPath fsDir = 
 
             let nodePaths,tsPaths= 
@@ -248,15 +248,29 @@ describe "tests" <| fun _ ->
             |> fun b -> b && existOnlyOne "Animated" FsType.isImport fsFiles
             |> equal true
 
-    it "remove servent node module import" <| fun _ ->
+    it "fix pointing to remote sub module alias" <| fun _ ->
         let tsPaths = 
             [
-                "test/fragments/reactxp/f2/f2_1.d.ts"
-                "test/fragments/reactxp/f2/dir/f2_2.d.ts"
+                "test/fragments/reactxp/f4Master.d.ts"
+                "test/fragments/reactxp/f4Interface.d.ts"
+                "test/fragments/reactxp/f4Types.d.ts"
             ]
-        let fsPath = "test/fragments/reactxp/f2.fs"
+        let fsPath = "test/fragments/reactxp/f4.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existOnlyOne "React" FsType.isImport
-            |> equal false
-      
+            |> existOnlyOne "__f4Types.SyntheticEvent" FsType.isMapped
+            |> equal true
+            
+    it "fix pointing to remote sub module alias 2" <| fun _ ->
+        let tsPaths = 
+            [
+                "test/fragments/reactxp/f5Master.d.ts"
+                "test/fragments/reactxp/f5Animated.d.ts"
+                "test/fragments/reactxp/f5Types.d.ts"
+            ]
+        let fsPath = "test/fragments/reactxp/f5.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existOnlyOne "Types.Animated.EndCallback" FsType.isMapped
+            |> equal true
+            

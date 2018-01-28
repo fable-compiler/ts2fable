@@ -13,6 +13,7 @@ open System.Collections.Generic
 open ts2fable.Keywords
 open Fable.AST.Babel
 open ts2fable.Read
+open System.Collections.Generic
 
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
@@ -955,32 +956,25 @@ let fixNamespace (f: FsFile): FsFile =
 
 let wrappedWithModule (f: FsFile): FsFile =
     { f with 
-        Modules = f.Modules |> List.map (fun md -> 
-            { md with 
-                Types =
-                    let types = md.Types |> List.map(function
-                        | FsType.Variable vb -> { vb with HasDeclare = false } |> FsType.Variable
-                        | tp -> tp 
-                    )
-                    [
-                        {
-                            HasDeclare = false
-                            IsNamespace = false
-                            Name = 
-                                let masterDir = path.dirname f.MasterFileName
-                                let path' = path.relative(masterDir,f.FileName).Replace("\\","/").Replace(".d.ts","").Replace(".ts","")
-                                let path' = 
-                                    if path'.Contains "./" then path'
-                                    else "./" + path' 
-                                path' |> fixModuleName
-                            Types = types
-                            HelperLines = [] 
-                            Attributes = []                           
-                        } 
-                        |> FsType.Module
-                    ] 
-            }
-    )}
+        Modules = 
+            [
+                {
+                    HasDeclare = false
+                    IsNamespace = false
+                    Name = 
+                        let masterDir = path.dirname f.MasterFileName
+                        let path' = path.relative(masterDir,f.FileName).Replace("\\","/").Replace(".d.ts","").Replace(".ts","")
+                        let path' = 
+                            if path'.Contains "./" then path'
+                            else "./" + path' 
+                        path' |> fixModuleName
+                    Types = f.Modules.[0].Types
+                    HelperLines = [] 
+                    Attributes = []                           
+                } 
+            ]
+    }
+    
 
 
 let fixServentImportedModuleName (f: FsFile): FsFile =
@@ -992,14 +986,13 @@ let fixServentImportedModuleName (f: FsFile): FsFile =
             match im with
             | FsImport.Module immd ->
                 match immd.Kind with 
-                | FsModuleImportKind.Alias -> tp
-                | _ ->
+                | FsModuleImportKind.Alias -> 
                     let name = path.join(ResizeArray [relativePath;immd.SpecifiedModule]).Replace("\\","/")
-                    
                     { immd with
-                        SpecifiedModule = name
+                        SpecifiedModule = if name.Contains("./") then name else sprintf "./%s" name
                     }
                     |> FsImport.Module |> FsType.Import
+                | _ -> tp
             | _ -> tp
         | _ -> tp
     )
@@ -1133,30 +1126,7 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                 | _ -> tp
             | _ -> tp    
         | _ -> tp     
-    )        
-
-let removeServentNodeModuleImport (f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
-        match tp with 
-        | FsType.Module md ->
-            { md with 
-                Types = 
-                    let tps = new List<_>()
-                    md.Types |> List.iter(fun tp ->
-                        match tp with 
-                        | FsType.Import im ->
-                            match im with 
-                            | FsImport.Module immd ->
-                                match immd.Kind with 
-                                | FsModuleImportKind.NodePackage -> ()
-                                | _ -> tp |> tps.Add
-                            | _ -> tp |> tps.Add
-                        | _ -> tp |> tps.Add        
-                    )
-                    tps |> List.ofSeq
-            } |> FsType.Module
-        | _ -> tp     
-    )            
+    )         
 
 let removeExternalModuleAlias (f: FsFile): FsFile =
     f |> fixFile (fun tp ->
@@ -1180,3 +1150,61 @@ let removeExternalModuleAlias (f: FsFile): FsFile =
             } |> FsType.Module
         | _ -> tp     
     )                
+
+let fixPointingToRemoteSubModuleAlias  (fo: FsFileOut): FsFileOut =
+    let asModuleImportedAlias tp = 
+        match tp with 
+        | FsType.Import im  -> 
+            match im with 
+            | FsImport.Module immd when immd.Kind = FsModuleImportKind.Alias -> 
+                if immd.Module = immd.SpecifiedModule then None
+                else Some immd
+            | _ -> None
+        | _ -> None  
+        
+    { fo with 
+        Files = fo.Files |> List.map(fun f ->
+            let moduleImportAliasMap = 
+                f.Modules 
+                |> List.collect(fun md -> md.Types) 
+                |> List.choose asModuleImportedAlias
+                |> List.map(fun immd -> immd.Module,immd.SpecifiedModule)
+                |> dict
+
+            f |> fixFile(fun tp -> 
+                match tp with 
+                | FsType.Mapped mp -> 
+                    let parts = mp.Name.Split('.') |> List.ofSeq
+                    if parts.Length = 3 then
+                        let specifiedModule = moduleImportAliasMap.[parts.[0]]
+                        let externalSpecifiedModule = 
+                            fo.Files
+                            |> List.collect(fun f -> f.Modules)
+                            |> List.find(fun md -> md.Name = specifiedModule)
+                            |> fun md -> 
+                                md.Types 
+                                |> List.choose asModuleImportedAlias
+                                |> List.tryFind (fun immd -> immd.Module = parts.[1])
+                                |> Option.map (fun immd -> immd.SpecifiedModule)
+                        
+                        match externalSpecifiedModule with 
+                        | Some newValue -> 
+                            let oldValue = parts.[0..1] |> String.concat(".") 
+                            let name = mp.Name.Replace(oldValue,newValue)
+                            simpleType name     
+                        | None -> tp    
+                    else tp
+                | _ -> tp
+            )
+        )
+    }
+let currentModuleImportToAlias (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Import im ->
+            match im with 
+            | FsImport.Module immd when immd.Kind = FsModuleImportKind.CurrentPackage -> 
+                { immd with Kind = FsModuleImportKind.Alias } |> FsImport.Module |> FsType.Import
+            | _ -> tp    
+        | _ -> tp     
+    )     

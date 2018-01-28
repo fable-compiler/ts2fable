@@ -21,24 +21,25 @@ open ts2fable.Write
 // 3. Print the syntax tree to a F# file.
 
 let transform (file: FsFile): FsFile =
-    if file.IsMaster 
-    then 
-        file      
+    let beforeIExports file =
+        file
         |> removeInternalModules
         |> removeExternalModuleAlias
         |> mergeModulesInFile
         |> aliasToInterfacePartly
         |> interSectionToObj // after aliasToInterfacePartly          
         |> extractGenericDefaultParameters
-        |> typeParametersToObj // must be after fixGenericDefaultParameters            
+        |> typeParametersToObj // must be after fixGenericDefaultParameters        
         |> addConstructors
         |> fixThis
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
         |> fixStatic
-        |> fixTypesHasESKeyWords 
-        |> createIExports
+        |> fixTypesHasESKeyWords
+
+    let afterIExports file =   
+        file
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
         |> fixEnumReferences
         |> fixDuplicatesInUnion
@@ -50,40 +51,23 @@ let transform (file: FsFile): FsFile =
         |> removeTypeParamsFromStatic
         |> removeDuplicateFunctions
         |> extractTypeLiterals // after fixEscapeWords
-        |> addAliasUnionHelpers
+        |> addAliasUnionHelpers  
+
+    if file.IsMaster 
+    then 
+        file      
+        |> beforeIExports
+        |> createIExports
+        |> afterIExports
     
     else    
         file
         |> wrappedWithModule
-        |> removeServentNodeModuleImport
+        // |> removeServentNodeModuleImport
+        |> currentModuleImportToAlias
         |> fixServentImportedModuleName
-        |> removeInternalModules
-        |> removeExternalModuleAlias
-        |> mergeModulesInFile
-        |> aliasToInterfacePartly
-        |> interSectionToObj // after aliasToInterfacePartly          
-        |> extractGenericDefaultParameters
-        |> typeParametersToObj // must be after fixGenericDefaultParameters           
-        |> addConstructors
-        |> fixThis
-        |> fixNodeArray
-        |> fixReadonlyArray
-        |> fixDateTime
-        |> fixStatic
-        |> fixTypesHasESKeyWords      
-         // |> createIExports
-        |> fixOverloadingOnStringParameters // fixEscapeWords must be after
-        |> fixEnumReferences
-        |> fixDuplicatesInUnion
-        |> fixEscapeWords
-        |> fixNamespace
-        |> addTicForGenericFunctions // must be after fixEscapeWords
-        |> addTicForGenericTypes
-        // |> removeTodoMembers
-        |> removeTypeParamsFromStatic
-        |> removeDuplicateFunctions
-        |> extractTypeLiterals // after fixEscapeWords
-        |> addAliasUnionHelpers
+        |> beforeIExports
+        |> afterIExports
 
 let getFsFileOut (fsPath: string) (tsPaths: string list) = 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
@@ -117,7 +101,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
     {
         // use the F# file name as the module namespace
         // TODO ensure valid name
-        Namespace = path.basename(fsPath, path.extname(fsPath))
+        Namespace = sprintf "%s'" <| path.basename(fsPath, path.extname(fsPath))
         Opens =
             [
                 "System"
@@ -127,7 +111,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
         Files = fsFiles
     }
     |> fixOpens nodeOpens
-
+    |> fixPointingToRemoteSubModuleAlias 
 
 let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
 

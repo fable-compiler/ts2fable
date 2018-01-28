@@ -614,8 +614,9 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
             match namedBindings with
             | U2.Case1 namespaceImport ->
                 if isNull namespaceImport.name = false then
+                    let kind = moduleSpecifier |> getKindFromSpecifiedModuleName
                     [
-                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None; Kind = FsModuleImportKind.CurrentPackage }
+                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None; Kind = kind }
                         |> FsImport.Module |> FsType.Import
                     ]
                 else
@@ -640,11 +641,15 @@ let readImportEqualsDeclaration(im: ImportEqualsDeclaration): FsType list =
         | U2.Case1 entityName ->
               match entityName with
               | U2.Case1 id -> 
-                    { Module = im.name.getText()
-                      SpecifiedModule = id.getText().Replace("require","") |> removeParentheses |> removeQuotes
-                      ResolvedModule = None
-                      Kind = id.getText()|> getKindFromSpecifiedModuleName}
-                    |> FsImport.Module |> FsType.Import |> List.singleton
+                    let module' = im.name.getText()
+                    let specifiedModule = id.getText().Replace("require","") |> removeParentheses |> removeQuotes
+                    if module' = specifiedModule then []
+                    else 
+                        { Module = module'
+                          SpecifiedModule = specifiedModule
+                          ResolvedModule = None
+                          Kind = id.getText() |> getKindFromSpecifiedModuleName}
+                        |> FsImport.Module |> FsType.Import |> List.singleton
               | U2.Case2 _ -> []
         | U2.Case2 _ -> []
 let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
@@ -771,7 +776,7 @@ let readNodeOpens (tsFiles: SourceFile list) =
     tsFiles
     |> readAllResolvedModules
     |> List.filter(fun (_,kind) -> kind = FsModuleImportKind.NodePackage)
-    |> List.map (fst >> getJsModuleName >> capitalize)
+    |> List.map (fst >> getJsModuleName >> capitalize >> sprintf "%s'")
 
 //recursively get all resolveModules
 //be careful to use this as creating a ts program costs expensively

@@ -1,5 +1,6 @@
 module rec ts2fable.Print
 open ts2fable.Naming
+open Fable
 
 let printType (tp: FsType): string =
     match tp with
@@ -154,7 +155,10 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             | FsImport.Module impmd ->
                 if impmd.Module <> impmd.SpecifiedModule then
                     // TODO used ResolvedModule rather than SpecifiedModule
-                    sprintf "%smodule %s = %s" indent impmd.Module impmd.SpecifiedModule |> lines.Add
+                    match impmd.Kind with
+                    | FsModuleImportKind.NodePackage ->  
+                        sprintf "%smodule %s = %s'" indent impmd.Module impmd.SpecifiedModule |> lines.Add
+                    | _ -> sprintf "%smodule %s = %s" indent impmd.Module impmd.SpecifiedModule |> lines.Add
             | _ -> ()
         | _ -> ()
 
