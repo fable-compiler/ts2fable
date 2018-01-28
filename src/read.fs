@@ -771,7 +771,7 @@ let readResolvedModules (tsFile: SourceFile) =
 let readAllResolvedModules (tsFiles: SourceFile list) = 
     tsFiles 
     |> List.collect readResolvedModules 
-
+    |> List.distinctBy (fun (s,_) -> s)
 let readNodeOpens (tsFiles: SourceFile list) =
     tsFiles
     |> readAllResolvedModules

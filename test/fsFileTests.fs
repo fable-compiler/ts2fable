@@ -86,7 +86,7 @@ describe "tests" <| fun _ ->
                 |> List.forall(fun (_,l) -> l = 1)
                 |> equal true
 
-    it "multiple linked files reactxp" <| fun _ ->
+    only "multiple linked files reactxp" <| fun _ ->
         let rec loop tsPath fsDir = 
 
             let nodePaths,tsPaths= 
