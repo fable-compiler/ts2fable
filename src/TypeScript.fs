@@ -2642,9 +2642,6 @@ module Ts =
     type [<AllowNullLiteral>] Statement =
         inherit Node
         abstract _statementBrand: obj option with get, set
-        //added for ts2fable
-        abstract nextContainer: Statement option
-        abstract symbol: Statement option
     type [<AllowNullLiteral>] NotEmittedStatement =
         inherit Statement
         abstract kind: SyntaxKind with get, set
