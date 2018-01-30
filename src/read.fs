@@ -8,11 +8,8 @@ open TypeScript.Ts
 open System.Collections.Generic
 open System
 open ts2fable.Naming
-open System.Collections.Generic
 open ts2fable.Syntax
-open System.Collections.Generic
 open Fable
-open System.Collections.Generic
 
 type Node with
     member x.ForEachChild (cbNode: Node -> unit) =
