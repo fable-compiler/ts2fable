@@ -106,6 +106,9 @@ let removeQuotes (s:string): string =
     if isNull s then ""
     else s.Replace("\"","").Replace("'","")
 
+let removeParentheses (s:string): string =
+    if isNull s then ""
+    else s.Replace("(","").Replace(")","")
 // gets the JavaScript module name
 // intended for use by SourceFile.fileName which has slashes normalized
 // TODO implement all of https://github.com/ajafff/tsutils/issues/14#issuecomment-345544684

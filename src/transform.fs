@@ -9,7 +9,9 @@ open System.Collections.Generic
 open System
 open ts2fable.Naming
 open System.Collections
-open System.Collections.Generic
+open ts2fable.Keywords
+open Fable.AST.Babel
+open ts2fable.Read
 
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
@@ -115,7 +117,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
     | FsType.Import _ -> tp
-
+    | FsType.TypeParameter _ -> tp
     |> fix // current type
 
 /// recursively fix all the FsType childen for the given FsFile
@@ -251,7 +253,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 }
                 |> FsType.Property
                 |> typesInIExports.Add
-            typesOther.Add tp
+            typesOther.Add tp       
         | _ -> typesOther.Add tp
     )
 
@@ -578,7 +580,8 @@ let fixStatic(f: FsFile): FsFile =
         | _ -> tp
     )
 
-let fixOpens(fo: FsFileOut): FsFileOut =
+let fixOpens nodeOpens (fo: FsFileOut): FsFileOut =
+
 
     let isBrowser (name: string): bool =
         if isNull name then false
@@ -598,8 +601,8 @@ let fixOpens(fo: FsFileOut): FsFileOut =
 
     { fo with
         Opens =
-            if hasBrowser then fo.Opens @ ["Fable.Import.Browser"]
-            else fo.Opens
+            if hasBrowser then fo.Opens @ ["Fable.Import.Browser"] @ nodeOpens
+            else fo.Opens @ nodeOpens
     }
 
 let hasTodo (tp: FsType) =
@@ -811,14 +814,75 @@ let extractTypeLiterals(f: FsFile): FsFile =
                             |> FsType.Interface
 
                         [it2] @ (List.ofSeq newTypes) // append new types
+                    
+                    // compile ts export declare const alias
+                    // to an global variable and a anonymous interface type suffixed with single quotation
+                    // test/fragments/synctasks/f1.d.ts
+                    | FsType.Variable vb when vb.HasDeclare && vb.IsConst ->
+                        match vb.Type with 
+                        | FsType.TypeLiteral tl -> 
+                            if not tl.Members.IsEmpty then 
+                                let name = sprintf "%s'" <| capitalize vb.Name 
+                                let it = 
+                                    {
+                                        Comments = []
+                                        IsStatic = false
+                                        IsClass = false
+                                        Name = name
+                                        FullName = name
+                                        Inherits = []
+                                        Members = tl.Members
+                                        TypeParameters = []
+                                    } |> FsType.Interface
+                                
+                                let vb = { vb with Export = Some { IsGlobal = true; Selector = ""; Path = ""}; Type = simpleType name }
+                                
+                                [vb |> FsType.Variable; it] 
 
+                            else [tp]
+                        | _ -> [tp]    
+
+                    | FsType.Alias al -> 
+                        // lift TypeLiteral in union type
+                        // test/fragments/react/f1.d.ts
+                        match al.Type with 
+                        | FsType.Union un -> 
+                            let un2 = 
+                                { un with 
+                                    Types = 
+                                        let tps = List<FsType>()
+                                        un.Types |> List.iter(fun tp -> 
+                                            match tp with 
+                                            | FsType.TypeLiteral tl -> tl.Members |> tps.AddRange
+                                            | _ -> tp |> tps.Add
+                                        )
+                                        tps |> List.ofSeq    
+                                }
+                            {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton
+                        
+                        // ts export declare type should be compild to interface type
+                        // as it has multiple property
+                        // test/fragments/synctasks/f2.d.ts
+                        | FsType.TypeLiteral tl ->  
+                            {
+                                Comments = []
+                                IsStatic = false
+                                IsClass = false
+                                Name = al.Name
+                                FullName = al.Name
+                                Inherits = []
+                                Members = tl.Members
+                                TypeParameters = al.TypeParameters
+                            } |> FsType.Interface |> List.singleton
+                        | _ -> [tp]
+                    
                     | _ -> [tp]
-                )
+                )   
             }
             |> FsType.Module
         | _ -> tp
     )
-
+    
 let addAliasUnionHelpers(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
@@ -851,7 +915,7 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                                                     let aliasNameWithTypes = sprintf "%s%s" al.Name (Print.printTypeParameters al.TypeParameters)
                                                     if un.Option then
                                                         [
-                                                            sprintf "let of%sOption v: %s = v |> Option.map U%d.Case%d" name aliasNameWithTypes n i
+                                                            sprintf "let of%sOption v: %s = v |> Microsoft.FSharp.Core.Option.map U%d.Case%d" name aliasNameWithTypes n i
                                                             sprintf "let of%s v: %s = v |> U%d.Case%d |> Some" name aliasNameWithTypes n i
                                                             sprintf "let is%s (v: %s) = match v with None -> false | Some o -> match o with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
                                                             sprintf "let as%s (v: %s) = match v with None -> None | Some o -> match o with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
@@ -896,3 +960,258 @@ let fixNamespace (f: FsFile): FsFile =
             |> FsType.Import
         | _ -> tp
     )
+
+let wrappedWithModule (f: FsFile): FsFile =
+    { f with 
+        Modules = 
+            [
+                {
+                    HasDeclare = false
+                    IsNamespace = false
+                    Name = 
+                        let masterDir = path.dirname f.MasterFileName
+                        let path' = path.relative(masterDir,f.FileName).Replace("\\","/").Replace(".d.ts","").Replace(".ts","")
+                        let path' = 
+                            if path'.Contains "./" then path'
+                            else "./" + path' 
+                        path' |> fixModuleName
+                    Types = f.Modules.[0].Types
+                    HelperLines = [] 
+                    Attributes = []                           
+                } 
+            ]
+    }
+    
+
+
+let fixServentImportedModuleName (f: FsFile): FsFile =
+    let relativePath = path.relative(path.dirname f.MasterFileName,path.dirname f.FileName)
+    
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Import im ->
+            match im with
+            | FsImport.Module immd ->
+                match immd.Kind with 
+                | FsModuleImportKind.Alias -> 
+                    let name = path.join(ResizeArray [relativePath;immd.SpecifiedModule]).Replace("\\","/")
+                    { immd with
+                        SpecifiedModule = if name.Contains("./") then name else sprintf "./%s" name
+                    }
+                    |> FsImport.Module |> FsType.Import
+                | _ -> tp
+            | _ -> tp
+        | _ -> tp
+    )
+
+let fixTypesHasESKeyWords  (f: FsFile): FsFile =
+    
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Generic gn ->
+            esKeyWords 
+            |> Set.contains (getName tp)
+            |> function 
+                | true -> { gn with Type = simpleType "obj"; TypeParameters = []} |> FsType.Generic
+                | _ -> tp
+        | _ -> tp
+    )
+
+let extractGenericDefaultParameters (f: FsFile): FsFile =
+    let extractAliasesFromTypeParameters name tps = 
+        let aliases = List<FsAlias>()
+
+        tps |> List.choose(fun tp ->
+            match tp with 
+            | FsType.TypeParameter tpr -> tpr.Default
+            | _ -> None
+            )
+            |> List.iteri(fun i _ ->
+                {
+                    Name = name
+                    Type = 
+                        {
+                            Type = simpleType name
+                            TypeParameters = 
+                                (tps.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
+                                @ tps.[i+1 ..]
+                        } |> FsType.Generic
+                    TypeParameters = tps.[i+1 ..]    
+                } |> aliases.Add
+            )    
+        aliases |> List.ofSeq |> List.map FsType.Alias
+
+    f |> fixFile(fun tp ->
+        match tp with 
+        | FsType.Module md ->
+            { md with 
+                Types = 
+                    let tps = List<FsType>()
+                    md.Types |> List.iter(fun tp ->
+                        match tp with 
+                        | FsType.Interface it -> 
+                            it.TypeParameters
+                            |> extractAliasesFromTypeParameters it.Name
+                            |> tps.AddRange
+                            
+                            tp |> tps.Add
+                        | FsType.Alias al ->
+                            al.TypeParameters
+                            |> extractAliasesFromTypeParameters al.Name
+                            |> tps.AddRange
+
+                            tp |> tps.Add
+                        | _ -> tp |> tps.Add
+                    )
+
+                    tps |> List.ofSeq
+                    
+            } |> FsType.Module
+        | _ -> tp    
+    )
+
+let typeParametersToObj (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.TypeParameter tpr ->
+            {
+                Name = tpr.Name
+                FullName =tpr.FullName
+            }
+            |> FsType.Mapped
+        | _ -> tp     
+    )
+
+let interSectionToObj (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Tuple tu when tu.Kind = FsTupleKind.InterSection ->
+            simpleType "obj"
+        | _ -> tp     
+    )    
+
+let aliasToInterfacePartly (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Alias al ->
+            match al.Type with 
+            | FsType.Function f ->
+                {
+                    Comments = f.Comments
+                    IsStatic = false
+                    IsClass = false
+                    Name = al.Name
+                    FullName = al.Name
+                    Inherits = []
+                    Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
+                    TypeParameters = al.TypeParameters
+                } |> FsType.Interface
+            | FsType.Tuple tu-> 
+                match tu.Kind with 
+                | FsTupleKind.Mapped -> 
+                    {
+                        Comments = []
+                        IsStatic = false
+                        IsClass = false
+                        Name = al.Name
+                        FullName = al.Name
+                        Inherits = []
+                        Members = []
+                        TypeParameters = al.TypeParameters
+                    } |> FsType.Interface
+                | FsTupleKind.InterSection -> 
+                    {
+                        Comments = []
+                        IsStatic = false
+                        IsClass = false
+                        Name = al.Name
+                        FullName = al.Name
+                        Inherits = tu.Types |> List.filter FsType.isGeneric
+                        Members = []
+                        TypeParameters = al.TypeParameters
+                    } |> FsType.Interface
+                | _ -> tp
+            | _ -> tp    
+        | _ -> tp     
+    )         
+
+let removeExternalModuleAlias (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Module md ->
+            { md with 
+                Types = 
+                    let tps = new List<_>()
+                    md.Types |> List.iter(fun tp ->
+                        match tp with 
+                        | FsType.Import im ->
+                            match im with 
+                            | FsImport.Module immd ->
+                                match immd.Kind with 
+                                | FsModuleImportKind.ExternalAlias -> ()
+                                | _ -> tp |> tps.Add
+                            | _ -> tp |> tps.Add
+                        | _ -> tp |> tps.Add        
+                    )
+                    tps |> List.ofSeq
+            } |> FsType.Module
+        | _ -> tp     
+    )                
+
+let fixPointingToRemoteSubModuleAlias  (fo: FsFileOut): FsFileOut =
+    let asModuleImportedAlias tp = 
+        match tp with 
+        | FsType.Import im  -> 
+            match im with 
+            | FsImport.Module immd when immd.Kind = FsModuleImportKind.Alias -> 
+                if immd.Module = immd.SpecifiedModule then None
+                else Some immd
+            | _ -> None
+        | _ -> None  
+        
+    { fo with 
+        Files = fo.Files |> List.map(fun f ->
+            let moduleImportAliasMap = 
+                f.Modules 
+                |> List.collect(fun md -> md.Types) 
+                |> List.choose asModuleImportedAlias
+                |> List.map(fun immd -> immd.Module,immd.SpecifiedModule)
+                |> dict
+
+            f |> fixFile(fun tp -> 
+                match tp with 
+                | FsType.Mapped mp -> 
+                    let parts = mp.Name.Split('.') |> List.ofSeq
+                    if parts.Length = 3 then
+                        let specifiedModule = moduleImportAliasMap.[parts.[0]]
+                        let externalSpecifiedModule = 
+                            fo.Files
+                            |> List.collect(fun f -> f.Modules)
+                            |> List.find(fun md -> md.Name = specifiedModule)
+                            |> fun md -> 
+                                md.Types 
+                                |> List.choose asModuleImportedAlias
+                                |> List.tryFind (fun immd -> immd.Module = parts.[1])
+                                |> Option.map (fun immd -> immd.SpecifiedModule)
+                        
+                        match externalSpecifiedModule with 
+                        | Some newValue -> 
+                            let oldValue = parts.[0..1] |> String.concat(".") 
+                            let name = mp.Name.Replace(oldValue,newValue)
+                            simpleType name     
+                        | None -> tp    
+                    else tp
+                | _ -> tp
+            )
+        )
+    }
+let currentModuleImportToAlias (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Import im ->
+            match im with 
+            | FsImport.Module immd when immd.Kind = FsModuleImportKind.CurrentPackage -> 
+                { immd with Kind = FsModuleImportKind.Alias } |> FsImport.Module |> FsType.Import
+            | _ -> tp    
+        | _ -> tp     
+    )     

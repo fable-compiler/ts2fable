@@ -8,6 +8,8 @@ open TypeScript.Ts
 open System.Collections.Generic
 open System
 open ts2fable.Naming
+open ts2fable.Syntax
+open Fable
 
 type Node with
     member x.ForEachChild (cbNode: Node -> unit) =
@@ -27,6 +29,17 @@ let getBindingName(bn: BindingName): string =
         match bp with
         | U2.Case1 obp -> obp.getText()
         | U2.Case2 abp -> abp.getText()
+
+let inline getKindFromSpecifiedModuleName (text: string) = 
+    match  text.Contains("./") with 
+    | true -> FsModuleImportKind.CurrentPackage
+    | false -> 
+        match not <| text.Contains("'") with 
+        | true -> 
+            if text.Contains(".") then  FsModuleImportKind.ExternalAlias
+            else FsModuleImportKind.Alias
+
+        | false -> FsModuleImportKind.NodePackage 
 
 let readEnumCase(em: EnumMember): FsEnumCase =
     let name = em.name |> getPropertyName
@@ -62,12 +75,21 @@ let readTypeParameters (checker: TypeChecker) (tps: List<TypeParameterDeclaratio
     | None -> []
     | Some tps ->
         tps |> List.ofSeq |> List.map (fun tp ->
-            {
-                Name = tp.name.getText()
-                FullName = getFullNodeName checker tp
-            }
-            |> FsType.Mapped
-        )
+            match tp.``default`` with 
+            | Some df ->
+                {
+                    Default = readTypeNode checker df |> Some
+                    Name = tp.name.getText()
+                    FullName = getFullNodeName checker tp
+                }
+                |> FsType.TypeParameter                
+            | None ->
+                {
+                    Name = tp.name.getText()
+                    FullName = getFullNodeName checker tp
+                }
+                |> FsType.Mapped
+        )        
 
 let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsType list =
     match hcs with
@@ -138,7 +160,7 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
         Inherits = readInherits checker id.heritageClauses
         Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters checker id.typeParameters
-    }
+    } 
 
 let readTypeLiteral (checker: TypeChecker) (tl: TypeLiteralNode): FsTypeLiteral =
     {
@@ -278,6 +300,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         let tp = t :?> TupleTypeNode
         {
             Types = tp.elementTypes |> List.ofSeq |> List.map (readTypeNode checker)
+            Kind = FsTupleKind.Tuple
         }
         |> FsType.Tuple
     | SyntaxKind.SymbolKeyword -> simpleType "Symbol"
@@ -286,10 +309,16 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.TypeLiteral ->
         let tl = t :?> TypeLiteralNode
         readTypeLiteral checker tl |> FsType.TypeLiteral
-    | SyntaxKind.IntersectionType -> simpleType "obj"
+    | SyntaxKind.IntersectionType -> 
+        let itp = t :?> IntersectionTypeNode
+        {
+            Types = itp.types |> List.ofSeq |> List.map (readTypeNode checker)
+            Kind = FsTupleKind.InterSection
+        }
+        |> FsType.Tuple        
     | SyntaxKind.IndexedAccessType ->
-        // function createKeywordTypeNode(kind: KeywordTypeNode["kind"]): KeywordTypeNode;
-        simpleType "obj" // TODO?
+        let ia = t :?> IndexedAccessTypeNode
+        readTypeNode checker ia.objectType
     | SyntaxKind.TypeQuery ->
         // let tq = t :?> TypeQueryNode
         simpleType "obj"
@@ -317,10 +346,12 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         // just get the type in parenthesis
         readTypeNode checker pt.``type``
     | SyntaxKind.MappedType ->
-        let mt = t :?> MappedTypeNode
+        {
+            Types = [simpleType "obj"]
+            Kind = FsTupleKind.Mapped
+        }
+        |> FsType.Tuple   
         // TODO map mapped types https://github.com/fable-compiler/ts2fable/issues/44
-        // printfn "TODO mapped types %s" (mt.getText())
-        simpleType "obj"
     | SyntaxKind.NeverKeyword ->
         // printfn "unsupported TypeNode NeverKeyword: %A" t
         // simpleType "obj"
@@ -574,8 +605,9 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
             match namedBindings with
             | U2.Case1 namespaceImport ->
                 if isNull namespaceImport.name = false then
+                    let kind = moduleSpecifier |> getKindFromSpecifiedModuleName
                     [
-                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
+                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None; Kind = kind }
                         |> FsImport.Module |> FsType.Import
                     ]
                 else
@@ -595,6 +627,22 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
                     )
             | U2.Case2 namedImports -> []
 
+let readImportEqualsDeclaration(im: ImportEqualsDeclaration): FsType list =
+    match im.moduleReference with
+        | U2.Case1 entityName ->
+              match entityName with
+              | U2.Case1 id -> 
+                    let module' = im.name.getText()
+                    let specifiedModule = id.getText().Replace("require","") |> removeParentheses |> removeQuotes
+                    if module' = specifiedModule then []
+                    else 
+                        { Module = module'
+                          SpecifiedModule = specifiedModule
+                          ResolvedModule = None
+                          Kind = id.getText() |> getKindFromSpecifiedModuleName}
+                        |> FsImport.Module |> FsType.Import |> List.singleton
+              | U2.Case2 _ -> []
+        | U2.Case2 _ -> []
 let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
@@ -622,9 +670,7 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
         // printfn "TODO export statements"
         []
     | SyntaxKind.ImportEqualsDeclaration ->
-        let ime = sd :?> ImportEqualsDeclaration
-        // printfn "import equals decl %s" (ime.getText())
-        []
+        readImportEqualsDeclaration(sd :?> ImportEqualsDeclaration)
     | _ -> printfn "unsupported Statement kind: %A" sd.kind; []
 
 let readModuleName(mn: ModuleName): string =
@@ -656,18 +702,17 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
         Attributes = []
     }
 
-let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile): FsFile =
+let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFile =
     let modules = List()
-
+    
     let gbl: FsModule =
         {
             HasDeclare = false
             IsNamespace = false
             Name = ""
             Types =
-                sfs
-                |> List.map (fun sf -> sf.statements |> List.ofSeq)
-                |> List.concat
+                sf.statements
+                |> List.ofSeq
                 |> List.collect (readStatement checker)
             HelperLines = []
             Attributes = []
@@ -677,3 +722,77 @@ let readSourceFile (checker: TypeChecker) (sfs: SourceFile list) (file: FsFile):
     { file with
         Modules = modules |> List.ofSeq
     }
+
+let readResolvedModules (tsFile: SourceFile) =
+    let accum = dict[]
+
+    tsFile.resolvedModules
+        |> function 
+        | Some v ->
+            v
+            |> List.ofSeq 
+            |> List.map(|KeyValue|)
+            |> List.iter (fun (k,v) ->
+                match v with 
+                | Some rsmd ->
+                    let path = rsmd.resolvedFileName.Replace("\\","/")
+                    if not <| accum.ContainsKey path 
+                    then
+                        if k.Contains "./" 
+                        then 
+                            accum.Add (path,FsModuleImportKind.CurrentPackage)
+                        else     
+                            accum.Add (path,FsModuleImportKind.NodePackage)
+                | None -> ()            
+            )
+        | None -> ()     
+
+    tsFile.referencedFiles 
+    |> List.ofSeq
+    |> List.iter(fun f -> 
+        let name = path.join(ResizeArray [path.dirname tsFile.fileName;f.fileName]).Replace("\\","/")
+        accum.Add (name,FsModuleImportKind.CurrentPackage) )  
+
+    accum 
+    |> Seq.map(|KeyValue|) 
+    |> List.ofSeq
+let readAllResolvedModules (tsFiles: SourceFile list) = 
+    tsFiles 
+    |> List.collect readResolvedModules 
+    |> List.distinctBy (fun (s,_) -> s)
+let readNodeOpens (tsFiles: SourceFile list) =
+    tsFiles
+    |> readAllResolvedModules
+    |> List.filter(fun (_,kind) -> kind = FsModuleImportKind.NodePackage)
+    |> List.map (fst >> getJsModuleName >> capitalize >> sprintf "%s'")
+
+//recursively get all resolveModules
+//be careful to use this as creating a ts program costs expensively
+let readAllResolvedModuleNames  (tsPath: string) = 
+    let options = jsOptions<Ts.CompilerOptions>(fun o ->
+        o.target <- Some ScriptTarget.ES2015
+        o.``module`` <- Some ModuleKind.CommonJS
+    )
+    let setParentNodes = true
+    let host = ts.createCompilerHost(options, setParentNodes)
+    let program = ts.createProgram(ResizeArray [tsPath], options, host)
+
+    let tsFile = program.getSourceFile tsPath   
+    
+    let set = HashSet []
+    let rec loop accum tsFile: (string*FsModuleImportKind) list = 
+        tsFile 
+        |> readResolvedModules
+        |> List.collect(fun (tsPath,kind) ->
+            if not <| set.Contains tsPath then 
+                set.Add tsPath |> ignore
+                match kind with 
+                | FsModuleImportKind.CurrentPackage -> 
+                    loop [tsPath,kind] <| program.getSourceFile tsPath
+                | _ -> [tsPath,kind]
+            else []    
+        )
+        |> List.append accum
+    loop [tsPath,FsModuleImportKind.CurrentPackage] tsFile
+    |> List.partition (fun (_,v) -> FsModuleImportKind.isNodePackage v)
+    |> fun (f,s) -> f |> List.map fst, s |> List.map fst  
