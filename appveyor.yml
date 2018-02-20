@@ -1,29 +1,13 @@
 image: Visual Studio 2017
-
 install:
+  - cinst fake -pre
   - ps: Install-Product node 8 x64
   - yarn global add mocha
-
-environment:
-  NODE_NO_WARNINGS: 1
-
 build_script:
-  - ps: |
-      .\build.ps1
-      if ($lastexitcode -ne 0){ exit $lastexitcode }
-  - mocha --reporter mocha-appveyor-reporter .\test\bin\test.js
-  - ps: |
-      .\build-test-compile.ps1
-      if ($lastexitcode -ne 0){ exit $lastexitcode }
-
-test: off
-
+  - cmd: fake.exe run tools/deploy.fsx
+test: off  
 artifacts:
   - path: '*.tgz'
-
 cache:
-  - "%LOCALAPPDATA%\\Yarn"
+  - "%LOCALAPPDATA%\\Yarn"  
 
-deploy_script:
-  - ps: |
-      .\appveyor-deploy.ps1
