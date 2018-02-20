@@ -1,1 +1,0 @@
-dotnet fable yarn-build

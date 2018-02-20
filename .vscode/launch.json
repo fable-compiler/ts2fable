@@ -1,42 +1,18 @@
 {
-  // Use IntelliSense to learn about possible Node.js debug attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Test",
-      "protocol": "inspector",
-      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-      "args":[
-        "${workspaceRoot}/test/bin/test.js"
-      ],
-      "sourceMaps": true,
-      "preLaunchTask": "test",
-      "outFiles": []
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Program",
-      "protocol": "inspector",
-      "program": "${workspaceRoot}/dist/ts2fable.js",
-      "args":[
-        "${workspaceRoot}/node_modules/typescript/lib/typescript.d.ts",
-      ],
-      "sourceMaps": true,
-      "preLaunchTask": "build",
-      "outFiles": []
-    },
-    {
-      "type": "node",
-      "request": "attach",
-      "name": "Attach to Port",
-      "address": "localhost",
-      "port": 5858,
-      "outFiles": []
-    }
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Test",
+        "protocol": "inspector",
+        "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+        "args":[
+          "${workspaceRoot}/build/test.js"
+        ],
+        "sourceMaps": true,
+        "preLaunchTask": "Test",
+        "outFiles": []
+      },
   ]
 }

@@ -1,6 +1,0 @@
-{
-    "plugins": [["shebang", {
-        "replacement": "#!/usr/bin/env node",
-        "force": true
-    }]]
-}
