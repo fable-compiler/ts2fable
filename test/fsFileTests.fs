@@ -11,6 +11,9 @@ open ts2fable.Read
 open ts2fable.Write
 open ts2fable.Transform
 open ts2fable.Print
+
+let [<Emit("this.timeout($0)")>] private timeout (duration: int): unit = jsNative
+
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
@@ -73,6 +76,8 @@ let testFsFiles tsPath fsPath (f: FsFile list -> unit) =
 
 
 describe "transform tests" <| fun _ ->
+    timeout 10000
+    
     let getTopTypes fsFiles = 
         fsFiles
         |> List.head
