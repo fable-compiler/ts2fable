@@ -1,4 +1,5 @@
 image: Visual Studio 2017
+version: 0.6.0-build.{build}
 install:
   - cinst fake -pre
   - ps: Install-Product node 8 x64
@@ -10,4 +11,3 @@ artifacts:
   - path: '*.tgz'
 cache:
   - "%LOCALAPPDATA%\\Yarn"  
-

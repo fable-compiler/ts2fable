@@ -19,10 +19,6 @@ module.exports = {
   module: {
     rules: common.getModuleRules()
   },
-  plugins: common.getPlugins().concat([
-      new webpack.HotModuleReplacementPlugin(),
-      new webpack.NamedModulesPlugin()
-  ]),
   resolve: {
     modules: [common.config.nodeModulesDir]
   },

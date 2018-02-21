@@ -97,23 +97,30 @@ Target.Create "BuildTest" (fun _ ->
 )
 
 Target.Create "RunTest" (fun _ ->
-    node <| sprintf "%s --reporter mocha-appveyor-reporter %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
+    match buildServer with 
+    | AppVeyor -> node <| sprintf "%s --reporter mocha-appveyor-reporter %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
+    | _ -> node <| sprintf "%s %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
 )
 
 Target.Create "Publish" (fun _ ->
     match buildServer with 
     | AppVeyor -> 
+        node (toolDir</>"build-update.package.js")
+        let version = sprintf "0.6.0-build.%s" buildVersion
+        yarn <| sprintf "version --new-version %s --no-git-tag-version" version
+        npm "pack"
+        
         let repoName = environVar "appveyor_repo_name"
         let repoBranch = environVar "appveyor_repo_branch"
+        
         if repoName = "fable-compiler/ts2fable" && repoBranch = "master" then
-            let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| environVar "npmauthtoken"
+            let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| environVar "npmauthtoken`n"
             let npmrc = (GetFolderPath UserProfile)</>".npmrc"
+            printfn "Auth token is %s" line
+            printfn "npmrc path is %s" npmrc
             File.writeNew npmrc [line]
             npm "whoami"
-            node (toolDir</>"build-update.package.js")
-            yarn <| sprintf "publish %s.tgz --new-version %s --tag next" buildVersion buildVersion
-        
-        npm "pack"
+            yarn <| sprintf "publish ts2fable-%s.tgz --new-version %s --tag next" version version
     | _ ->  ()
 )
 
