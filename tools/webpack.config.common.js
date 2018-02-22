@@ -3,7 +3,6 @@ var path = require("path");
 var fableUtils = require("fable-utils");
 // var DynamicCdnWebpackPlugin = require('dynamic-cdn-webpack-plugin');
 
-var packageJson = JSON.parse(fs.readFileSync(resolve('../package.json')).toString());
 var errorMsg = "{0} missing in package.json";
 
 var nodeModulesDir = resolve("../node_modules");
@@ -24,6 +23,7 @@ var config = {
   publicDir: resolve("../public"),
   buildDir: resolve("../build"),
   distDir: resolve("../dist"),
+  jsonPath: resolve('../package.json'),
   nodeModulesDir: nodeModulesDir,
 }
 
