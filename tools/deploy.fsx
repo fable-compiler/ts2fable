@@ -113,7 +113,7 @@ Target.Create "Publish" (fun _ ->
         let repoBranch = environVar "appveyor_repo_branch"
         let prHeadRepoName = environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
         
-        if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && prHeadRepoName = "fable-compiler/ts2fable" then
+        if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && String.isNullOrEmpty prHeadRepoName then
             let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| environVar "npmauthtoken"
             let npmrc = (GetFolderPath UserProfile)</>".npmrc"
             File.writeNew npmrc [line]

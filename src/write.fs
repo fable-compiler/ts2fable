@@ -14,6 +14,7 @@ open ts2fable.Naming
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
+open System.Collections.Generic
 // This app has 3 main functions.
 // 1. Read a TypeScript file into a syntax tree.
 // 2. Fix the syntax tree.
@@ -43,9 +44,7 @@ let transform (file: FsFile): FsFile =
     |> extractTypeLiterals // after fixEscapeWords
     |> addAliasUnionHelpers
     
-let writeFile (tsPaths: string list) (fsPath: string): unit =
-    // printfn "writeFile %A %s" tsPaths fsPath
-
+let getFsFileOut (fsPath: string) (tsPaths: string list) = 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
         o.``module`` <- Some ModuleKind.CommonJS
@@ -55,7 +54,7 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
     let program = ts.createProgram(ResizeArray tsPaths, options, host)
     let tsFiles = tsPaths |> List.map program.getSourceFile
     let checker = program.getTypeChecker()
-
+   
     let moduleNameMap =
         program.getSourceFiles()
         |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
@@ -67,26 +66,39 @@ let writeFile (tsPaths: string list) (fsPath: string): unit =
             ModuleName = moduleNameMap.[tsFile.fileName]
             Modules = []
         }
-        |> readSourceFile checker tsFiles
+        |> readSourceFile checker tsFile
         |> transform
     )
 
-    let fsFileOut: FsFileOut =
-        {
-            // use the F# file name as the module namespace
-            // TODO ensure valid name
-            Namespace = path.basename(fsPath, path.extname(fsPath))
-            Opens =
-                [
-                    "System"
-                    "Fable.Core"
-                    "Fable.Import.JS"
-                ]
-            Files = fsFiles
-        }
-        |> fixOpens
 
+    {
+        // use the F# file name as the module namespace
+        // TODO ensure valid name
+        Namespace = path.basename(fsPath, path.extname(fsPath))
+        Opens =
+            [
+                "System"
+                "Fable.Core"
+                "Fable.Import.JS"
+            ]
+        Files = fsFiles
+    }
+
+let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
+    emitFsFileOutAsLines fsPath fsFileOut
+    |> ignore
+
+let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) = 
     let file = fs.createWriteStream (!^fsPath)
+    let lines = List []
     for line in printFsFile fsFileOut do
+        lines.Add(line)
         file.write(sprintf "%s%c" line '\n') |> ignore
-    file.``end``()    
+    file.``end``() 
+    lines |> List.ofSeq
+        
+let writeFile (tsPaths: string list) (fsPath: string): unit =
+    // printfn "writeFile %A %s" tsPaths fsPath
+
+    let fsFileOut = getFsFileOut fsPath tsPaths 
+    emitFsFileOut fsPath fsFileOut
