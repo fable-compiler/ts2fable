@@ -160,7 +160,7 @@ Target.Create "PushToExports" (fun _ ->
             StageAll repositoryDir
             try 
                 let descripton = 
-                    [ sprintf "Appveryor https://ci.appveyor.com/project/fable-compiler/ts2fable/build/%s" buildVersion
+                    [ sprintf "Appveyor https://ci.appveyor.com/project/fable-compiler/ts2fable/build/%s" buildVersion
                       RepocommitMsg]
                     |> String.concat "\n"
                     |> fun s -> sprintf "\"%s\"" s 
