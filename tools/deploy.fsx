@@ -1,9 +1,11 @@
-
 #r "paket:
 nuget Fake.DotNet.Cli
 nuget Fake.IO.FileSystem
 nuget Fake.Core.Environment
 nuget Fake.Core.BuildServer
+nuget Fake.Api.GitHub
+nuget Fake.Tools.Git
+nuget Fake.Windows.Chocolatey
 nuget Fake.Core.Target //"
 #load "./.fake/deploy.fsx/intellisense.fsx"
 open System
@@ -17,7 +19,16 @@ open Fake.DotNet.Cli
 open Fake.Core.BuildServer
 open Fake.Core.Environment
 open Fake.SystemHelper.Environment
-
+open Fake.Api
+open Fake.Tools.Git.Commit
+open Fake.Tools.Git.Branches
+open Fake.Tools.Git.Repository
+open Fake.Tools.Git.CommandHelper
+open Fake.Tools.Git.Staging
+open Fake.IO.Shell
+open Fake.IO.DirectoryInfo
+open Fake.IO.Directory
+open Fake.Windows.Choco
 let run' timeout (cmd:string) dir args  =
     if Process.ExecProcess (fun info ->
         { info with 
@@ -38,10 +49,11 @@ let platformTool tool =
 let yarnTool = platformTool "yarn"
 let npmTool = platformTool "npm"
 let nodeTool = platformTool "node"
+let gitTool = platformTool "git"
 let mochaPath = "./node_modules/mocha/bin/_mocha" |> Path.getFullName 
 let mutable dotnetExePath = "dotnet"
 let toolDir = "./tools" 
-let testCompileTool = "./test-compile" 
+let testCompileDir = "./test-compile" 
 let buildDir = "./build"
 let distDir = "./dist"
 let cliDir = "./src"
@@ -63,6 +75,9 @@ let node args =
 
 let npm args = 
     run npmTool "./" args   
+
+let git args = 
+    run gitTool "./" args   
 
 Target.Create "InstallDotNetCore" (fun _ ->
     DotNetCliInstall Release_2_1_4
@@ -88,7 +103,7 @@ Target.Create "RunCli" (fun _ ->
 )
 
 Target.Create "RestoreTestCompile" (fun _ ->
-    DotNetRestore(id) (testCompileTool</>"test-compile.fsproj")
+    DotNetRestore(id) (testCompileDir</>"test-compile.fsproj")
 )
 
 Target.Create "BuildTest" (fun _ ->
@@ -99,6 +114,64 @@ Target.Create "RunTest" (fun _ ->
     match buildServer with 
     | AppVeyor -> node <| sprintf "%s --reporter mocha-appveyor-reporter %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
     | _ -> node <| sprintf "%s %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
+)
+
+Target.Create "PushToExports" (fun _ ->
+    
+    let configGitAuthorization() = 
+        Install id "openssl.light"
+        Install id "openssh"
+
+        let sshDir = (GetFolderPath UserProfile)</>".ssh"
+       
+        create sshDir
+       
+        let id_rsa = sshDir</>"id_rsa"
+        let id_rsa_enc = toolDir</>"id_rsa.enc" |> Path.getFullName
+        
+        sprintf "enc -in %s -out %s -d -aes256 -k Michelin" id_rsa_enc id_rsa
+        |> run @"C:\Program Files\OpenSSL\bin\openssl.exe" toolDir 
+        
+        try run @"C:\Program Files\OpenSSH-Win64\ssh.exe" "./" """ -o "StrictHostKeyChecking no" git@github.com """
+        with _ -> ()
+
+        git "config --global user.name ts2fable-exports"
+        git "config --global user.email ts2fable-exports@outlook.com"
+
+    match buildServer with 
+    | AppVeyor -> 
+        let repoName = environVar "appveyor_repo_name"
+        let repoBranch = environVar "appveyor_repo_branch"
+        let RepocommitMsg = environVar "APPVEYOR_REPO_COMMIT_MESSAGE"
+        let prHeadRepoName = environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
+                                                      
+        if  repoName = "fable-compiler/ts2fable" && repoBranch = "master" then
+            configGitAuthorization()
+
+            let sshUrl = 
+                if String.isNullOrEmpty prHeadRepoName 
+                then "git@github.com:fable-compiler/ts2fable-exports.git"
+                else "-b dev git@github.com:fable-compiler/ts2fable-exports.git"
+
+            let repositoryDir = "./ts2fable-exports"
+            Shell.DeleteDir repositoryDir
+            clone "./" sshUrl repositoryDir
+            CopyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
+            StageAll repositoryDir
+            try 
+                let descripton = 
+                    [ sprintf "Appveyor https://ci.appveyor.com/project/fable-compiler/ts2fable/build/%s" buildVersion
+                      RepocommitMsg]
+                    |> String.concat "\n"
+                    |> fun s -> sprintf "\"%s\"" s 
+                
+                sprintf "commit -m %s -m %s" buildVersion descripton 
+                |> run gitTool repositoryDir
+                |> ignore
+
+                push repositoryDir
+            with ex -> printf "%A" ex   
+    | _ ->  ()
 )
 
 Target.Create "Publish" (fun _ ->
@@ -112,7 +185,8 @@ Target.Create "Publish" (fun _ ->
         let repoName = environVar "appveyor_repo_name"
         let repoBranch = environVar "appveyor_repo_branch"
         let prHeadRepoName = environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
-        
+  
+
         if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && String.isNullOrEmpty prHeadRepoName then
             let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| environVar "npmauthtoken"
             let npmrc = (GetFolderPath UserProfile)</>".npmrc"
@@ -133,6 +207,7 @@ Target.Create "Deploy" Target.DoNothing
           "BuildCli"
           "RunCli"
           "RestoreTestCompile"
+          "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
           "Publish" ]
 
 Target.RunOrDefault "Deploy"
