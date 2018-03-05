@@ -70,7 +70,6 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
         |> transform
     )
 
-
     {
         // use the F# file name as the module namespace
         // TODO ensure valid name
@@ -83,7 +82,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
             ]
         Files = fsFiles
     }
-
+    |> fixOpens
 let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
     emitFsFileOutAsLines fsPath fsFileOut
     |> ignore
