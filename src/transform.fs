@@ -810,8 +810,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                             }
                             |> FsType.Interface
 
-                        [it2] @ (List.ofSeq newTypes) // append new types
-
+                        [it2] @ (List.ofSeq newTypes) // append new types                     
                     | _ -> [tp]
                 )
             }
@@ -896,3 +895,23 @@ let fixNamespace (f: FsFile): FsFile =
             |> FsType.Import
         | _ -> tp
     )
+
+let aliasToInterfacePartly (f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with 
+        | FsType.Alias al ->
+            match al.Type with 
+            | FsType.Function f ->
+                {
+                    Comments = f.Comments
+                    IsStatic = false
+                    IsClass = false
+                    Name = al.Name
+                    FullName = al.Name
+                    Inherits = []
+                    Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
+                    TypeParameters = al.TypeParameters
+                } |> FsType.Interface
+            | _ -> tp    
+        | _ -> tp     
+    )    

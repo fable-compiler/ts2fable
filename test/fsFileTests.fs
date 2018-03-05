@@ -94,12 +94,21 @@ describe "transform tests" <| fun _ ->
             |> equal true
 
     it "multiple ts inputs should export one time" <| fun _ ->
-    let tsPaths =         
-        [   
-            "node_modules/@types/google-protobuf/index.d.ts"
-            "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
-        ]
-    let fsPath = "test-compile/Protobuf.fs"
-    testFsFileLines tsPaths fsPath  <| fun lines ->
-        lines.Length < 700
-        |> equal true
+        let tsPaths =         
+            [   
+                "node_modules/@types/google-protobuf/index.d.ts"
+                "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
+            ]
+        let fsPath = "test-compile/Protobuf.fs"
+        testFsFileLines tsPaths fsPath  <| fun lines ->
+            lines.Length < 700
+            |> equal true
+
+    
+    it "compile type alias has only function to interface" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f2.d.ts"]
+        let fsPath = "test/fragments/react/f2.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existOnlyOne "DOMFactory" FsType.isInterface
+            |> equal true

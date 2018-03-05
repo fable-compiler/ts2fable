@@ -24,6 +24,7 @@ let transform (file: FsFile): FsFile =
     file
     |> removeInternalModules
     |> mergeModulesInFile
+    |> aliasToInterfacePartly
     |> addConstructors
     |> fixThis
     |> fixNodeArray
@@ -70,7 +71,6 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
         |> transform
     )
 
-
     {
         // use the F# file name as the module namespace
         // TODO ensure valid name
@@ -83,7 +83,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
             ]
         Files = fsFiles
     }
-
+    
 let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
     emitFsFileOutAsLines fsPath fsFileOut
     |> ignore
