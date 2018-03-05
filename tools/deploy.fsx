@@ -25,9 +25,7 @@ open Fake.Tools.Git.Branches
 open Fake.Tools.Git.Repository
 open Fake.Tools.Git.CommandHelper
 open Fake.Tools.Git.Staging
-open Fake.IO.Shell
-open Fake.IO.DirectoryInfo
-open Fake.IO.Directory
+open Fake.IO
 open Fake.Windows.Choco
 let run' timeout (cmd:string) dir args  =
     if Process.ExecProcess (fun info ->
@@ -124,7 +122,7 @@ Target.Create "PushToExports" (fun _ ->
 
         let sshDir = (GetFolderPath UserProfile)</>".ssh"
        
-        create sshDir
+        Directory.create sshDir
        
         let id_rsa = sshDir</>"id_rsa"
         let id_rsa_enc = toolDir</>"id_rsa.enc" |> Path.getFullName
@@ -156,7 +154,7 @@ Target.Create "PushToExports" (fun _ ->
             let repositoryDir = "./ts2fable-exports"
             Shell.DeleteDir repositoryDir
             clone "./" sshUrl repositoryDir
-            CopyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
+            Shell.CopyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
             StageAll repositoryDir
             try 
                 let descripton = 
