@@ -41,19 +41,6 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
 describe "transform tests" <| fun _ ->
     timeout 10000
     
-    let getAllTypesFromFile fsFile =
-        let tps = List []
-        fsFile
-        |> fixFile (fun tp -> 
-            tp |> tps.Add
-            tp
-        ) |> ignore
-        tps |> List.ofSeq
-
-    let getAllTypes fsFiles =
-        fsFiles |> List.collect getAllTypesFromFile
-
-    
     let getTypeByName name fsFiles =
         getAllTypes fsFiles
         |> List.filter(fun tp -> getName tp = name)
@@ -63,6 +50,12 @@ describe "transform tests" <| fun _ ->
         |> getTypeByName name
         |> List.filter isType
         |> fun tp -> tp.Length = 1
+
+    let existLeastOne name (isType:FsType -> bool) fsFiles= 
+        fsFiles
+        |> getTypeByName name
+        |> List.filter isType
+        |> fun tp -> tp.Length > 0        
 
     let existMany i name (isType:FsType -> bool) fsFiles= 
         fsFiles
@@ -103,7 +96,20 @@ describe "transform tests" <| fun _ ->
         testFsFileLines tsPaths fsPath  <| fun lines ->
             lines.Length < 700
             |> equal true
-
+    
+    it "fix some Option.map to Microsoft.FSharp.Core.Option.map" <| fun _ ->
+        let tsPaths = ["node_modules/@types/react/index.d.ts"]
+        let fsPath = "test-compile/React.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existLeastOne "ReactNode" (fun tp ->
+                match tp with 
+                | FsType.Module md -> 
+                    md.HelperLines  |> List.exists(fun l -> l.Contains("Microsoft.FSharp.Core.Option.map"))
+                | _ -> false
+            )
+            |> equal true
+            
     it "compile type alias has only function to interface" <| fun _ ->
         let tsPaths = ["test/fragments/react/f2.d.ts"]
         let fsPath = "test/fragments/react/f2.fs"

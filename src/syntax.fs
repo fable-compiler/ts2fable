@@ -253,6 +253,7 @@ module FsType =
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
 
+    let asMapped (tp: FsType) = match tp with | FsType.Mapped v -> Some v | _ -> None
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
     let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
     let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
@@ -324,3 +325,4 @@ let rec getFullName (tp: FsType) =
     | FsType.Generic gn -> getFullName gn.Type
     | FsType.File fl -> fl.FileName
     | _ -> getName tp
+  

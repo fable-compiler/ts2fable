@@ -11,6 +11,18 @@ open ts2fable.Naming
 open System.Collections
 open System.Collections.Generic
 
+let getAllTypesFromFile fsFile =
+    let tps = List []
+    fsFile
+    |> fixFile (fun tp -> 
+        tp |> tps.Add
+        tp
+    ) |> ignore
+    tps |> List.ofSeq
+
+let getAllTypes fsFiles =
+    fsFiles |> List.collect getAllTypesFromFile  
+
 /// recursively fix all the FsType childen
 let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
 
@@ -577,31 +589,6 @@ let fixStatic(f: FsFile): FsFile =
             |> FsType.Module
         | _ -> tp
     )
-
-let fixOpens(fo: FsFileOut): FsFileOut =
-
-    let isBrowser (name: string): bool =
-        if isNull name then false
-        else name.StartsWith "HTML"
-
-    let mutable hasBrowser = false
-
-    let fix(tp: FsType): FsType =
-        match tp with
-        | FsType.Mapped mp ->
-            if isBrowser mp.Name then
-                hasBrowser <- true
-            tp
-        | _ -> tp
-
-    fo |> FsType.FileOut |> fixType fix |> ignore
-
-    { fo with
-        Opens =
-            if hasBrowser then fo.Opens @ ["Fable.Import.Browser"]
-            else fo.Opens
-    }
-
 let hasTodo (tp: FsType) =
     let mutable has = false
     tp |> fixType (fun t ->
@@ -931,3 +918,29 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
             | _ -> tp    
         | _ -> tp     
     )    
+
+let fixFsFileOut fo = 
+    
+    let isBrowser =
+        fo.Files
+        |> getAllTypes 
+        |> List.choose FsType.asMapped 
+        |> List.exists(fun mp -> mp.Name.StartsWith "HTML")
+    
+    let fixHelperLines (f: FsFile) =
+        f |> fixFile (fun tp ->
+            match tp with 
+            | FsType.Module md -> 
+                { md with
+                    HelperLines =                 
+                        md.HelperLines |> List.map(fun l -> 
+                            l.Replace("Option.map","Microsoft.FSharp.Core.Option.map")
+                ) } |> FsType.Module
+
+            | _ -> tp )
+
+    if isBrowser then 
+        { fo with 
+            Opens = fo.Opens @ ["Fable.Import.Browser"]
+            Files = fo.Files |> List.map fixHelperLines }
+    else fo        
