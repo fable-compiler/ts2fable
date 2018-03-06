@@ -288,8 +288,8 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         readTypeLiteral checker tl |> FsType.TypeLiteral
     | SyntaxKind.IntersectionType -> simpleType "obj"
     | SyntaxKind.IndexedAccessType ->
-        // function createKeywordTypeNode(kind: KeywordTypeNode["kind"]): KeywordTypeNode;
-        simpleType "obj" // TODO?
+        let ia = t :?> IndexedAccessTypeNode
+        readTypeNode checker ia.objectType
     | SyntaxKind.TypeQuery ->
         // let tq = t :?> TypeQueryNode
         simpleType "obj"

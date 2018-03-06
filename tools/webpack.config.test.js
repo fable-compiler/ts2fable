@@ -6,7 +6,7 @@ var fs = require('fs');
 console.log("Bundling for test...");
 
 module.exports = {
-  devtool: "source-map",
+  devtool: "inline-source-map",
   entry: common.config.testEntry,
   target: "node",
   externals: common.config.nodeExternals,
