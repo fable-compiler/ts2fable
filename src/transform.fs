@@ -810,7 +810,23 @@ let extractTypeLiterals(f: FsFile): FsFile =
                             }
                             |> FsType.Interface
 
-                        [it2] @ (List.ofSeq newTypes) // append new types                     
+                        [it2] @ (List.ofSeq newTypes) // append new types
+                    | FsType.Alias al -> 
+                        match al.Type with 
+                        | FsType.Union un -> 
+                            let un2 = 
+                                { un with 
+                                    Types = 
+                                        let tps = List<FsType>()
+                                        un.Types |> List.iter(fun tp -> 
+                                            match tp with 
+                                            | FsType.TypeLiteral tl -> tl.Members |> tps.AddRange
+                                            | _ -> tp |> tps.Add
+                                        )
+                                        tps |> List.ofSeq    
+                                }
+                            {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton 
+                        | _ -> [tp]                       
                     | _ -> [tp]
                 )
             }

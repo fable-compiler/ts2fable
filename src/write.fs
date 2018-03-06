@@ -83,7 +83,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
             ]
         Files = fsFiles
     }
-    
+    |> fixOpens
 let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
     emitFsFileOutAsLines fsPath fsFileOut
     |> ignore
