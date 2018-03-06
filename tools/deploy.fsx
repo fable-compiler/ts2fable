@@ -148,7 +148,7 @@ Target.Create "PushToExports" (fun _ ->
 
         let commit() =
             let descripton = 
-                [ sprintf "Appveyor https://ci.appveyor.com/project/humhei/ts2fable/build/%s" buildVersion
+                [ sprintf "Appveyor https://ci.appveyor.com/project/fable-compiler/ts2fable/build/%s" buildVersion
                   RepocommitMsg]
                 |> String.concat "\n"
                 |> fun s -> sprintf "\"%s\"" s 
@@ -157,11 +157,11 @@ Target.Create "PushToExports" (fun _ ->
             |> run gitTool repositoryDir
             |> ignore                  
                                                       
-        if  repoName = "humhei/ts2fable" && repoBranch = "master" then
+        if  repoName = "fable-compiler/ts2fable" && repoBranch = "master" then
             configGitAuthorization()    
             let handle addtionalBehavior = 
                 Shell.DeleteDir repositoryDir
-                clone "./" "-b dev git@github.com:humhei/ts2fable-exports.git" repositoryDir
+                clone "./" "-b dev git@github.com:fable-compiler/ts2fable-exports.git" repositoryDir
                 Shell.CopyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
                 StageAll repositoryDir
                 try 
