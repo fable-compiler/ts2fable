@@ -110,6 +110,7 @@ describe "transform tests" <| fun _ ->
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
             |> existOnlyOne "DOMFactory" FsType.isInterface
+            |> equal true
             
     it "extract type literal from union" <| fun _ ->
         let tsPaths = ["test/fragments/react/f1.d.ts"]
