@@ -20,6 +20,7 @@ open Fake.Core.BuildServer
 open Fake.Core.Environment
 open Fake.SystemHelper.Environment
 open Fake.Api
+open Fake.Tools.Git.Merge
 open Fake.Tools.Git.Commit
 open Fake.Tools.Git.Branches
 open Fake.Tools.Git.Repository
@@ -59,7 +60,7 @@ let testDir = "./test"
 let cliProj = cliDir</>"ts2fable.fsproj"
 let runDotnet workingDir args =
     let result =
-        Process.ExecProcess (fun info ->
+        Process.Exec (fun info ->
         { info with 
             FileName = dotnetExePath
             WorkingDirectory = workingDir 
@@ -135,6 +136,8 @@ Target.Create "PushToExports" (fun _ ->
 
         git "config --global user.name ts2fable-exports"
         git "config --global user.email ts2fable-exports@outlook.com"
+    
+    let repositoryDir = "./ts2fable-exports"  
 
     match buildServer with 
     | AppVeyor -> 
@@ -142,33 +145,41 @@ Target.Create "PushToExports" (fun _ ->
         let repoBranch = environVar "appveyor_repo_branch"
         let RepocommitMsg = environVar "APPVEYOR_REPO_COMMIT_MESSAGE"
         let prHeadRepoName = environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
+
+        let commit() =
+            let descripton = 
+                [ sprintf "Appveyor https://ci.appveyor.com/project/humhei/ts2fable/build/%s" buildVersion
+                  RepocommitMsg]
+                |> String.concat "\n"
+                |> fun s -> sprintf "\"%s\"" s 
+        
+            sprintf "commit -m %s -m %s" buildVersion descripton 
+            |> run gitTool repositoryDir
+            |> ignore                  
                                                       
-        if  repoName = "fable-compiler/ts2fable" && repoBranch = "master" then
-            configGitAuthorization()
+        if  repoName = "humhei/ts2fable" && repoBranch = "master" then
+            configGitAuthorization()    
+            let handle addtionalBehavior = 
+                Shell.DeleteDir repositoryDir
+                clone "./" "-b dev git@github.com:humhei/ts2fable-exports.git" repositoryDir
+                Shell.CopyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
+                StageAll repositoryDir
+                try 
+                    commit()
+                    push repositoryDir
+                    addtionalBehavior()       
+                with ex -> printf "%A" ex                     
 
-            let sshUrl = 
-                if String.isNullOrEmpty prHeadRepoName 
-                then "git@github.com:fable-compiler/ts2fable-exports.git"
-                else "-b dev git@github.com:fable-compiler/ts2fable-exports.git"
-
-            let repositoryDir = "./ts2fable-exports"
-            Shell.DeleteDir repositoryDir
-            clone "./" sshUrl repositoryDir
-            Shell.CopyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
-            StageAll repositoryDir
-            try 
-                let descripton = 
-                    [ sprintf "Appveyor https://ci.appveyor.com/project/fable-compiler/ts2fable/build/%s" buildVersion
-                      RepocommitMsg]
-                    |> String.concat "\n"
-                    |> fun s -> sprintf "\"%s\"" s 
-                
-                sprintf "commit -m %s -m %s" buildVersion descripton 
-                |> run gitTool repositoryDir
-                |> ignore
-
-                push repositoryDir
-            with ex -> printf "%A" ex   
+            if String.isNullOrEmpty prHeadRepoName then
+                handle 
+                    ( fun () -> 
+                        checkoutBranch repositoryDir "master"
+                        merge repositoryDir "-X theirs" "dev"
+                        StageAll repositoryDir
+                        push repositoryDir
+                        )
+            else
+                handle (fun () -> ())                
     | _ ->  ()
 )
 
