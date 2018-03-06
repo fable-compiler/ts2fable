@@ -104,6 +104,13 @@ describe "transform tests" <| fun _ ->
             lines.Length < 700
             |> equal true
 
+    it "compile type alias has only function to interface" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f2.d.ts"]
+        let fsPath = "test/fragments/react/f2.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existOnlyOne "DOMFactory" FsType.isInterface
+            
     it "extract type literal from union" <| fun _ ->
         let tsPaths = ["test/fragments/react/f1.d.ts"]
         let fsPath = "test/fragments/react/f1.fs"

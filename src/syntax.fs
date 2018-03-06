@@ -248,6 +248,7 @@ type FsType =
 [<RequireQualifiedAccess>]
 module FsType =
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
+    let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
