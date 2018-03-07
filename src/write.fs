@@ -25,6 +25,7 @@ let transform (file: FsFile): FsFile =
     |> removeInternalModules
     |> mergeModulesInFile
     |> aliasToInterfacePartly
+    |> extractGenericParameterDefaults
     |> addConstructors
     |> fixThis
     |> fixNodeArray

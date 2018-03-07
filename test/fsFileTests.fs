@@ -125,3 +125,11 @@ describe "transform tests" <| fun _ ->
             fsFiles 
             |> existOnlyOne "bivarianceHack" FsType.isFunction
             |> equal true
+
+    it "generic parameter defaults" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f3.d.ts"]
+        let fsPath = "test/fragments/react/f3.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existMany 2 "Component" FsType.isAlias
+            |> equal true            

@@ -62,12 +62,21 @@ let readTypeParameters (checker: TypeChecker) (tps: List<TypeParameterDeclaratio
     | None -> []
     | Some tps ->
         tps |> List.ofSeq |> List.map (fun tp ->
-            {
-                Name = tp.name.getText()
-                FullName = getFullNodeName checker tp
-            }
-            |> FsType.Mapped
-        )
+            match tp.``default`` with 
+            | Some df ->
+                {
+                    Default = readTypeNode checker df
+                    Name = tp.name.getText()
+                    FullName = getFullNodeName checker tp
+                }
+                |> FsType.GenericParameterDefaults              
+            | None ->
+                {
+                    Name = tp.name.getText()
+                    FullName = getFullNodeName checker tp
+                }
+                |> FsType.Mapped
+        )        
 
 let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsType list =
     match hcs with
