@@ -10,6 +10,8 @@ open System
 open ts2fable.Naming
 open System.Collections
 open System.Collections.Generic
+open ts2fable.Syntax
+open ts2fable.Keywords
 
 let getAllTypesFromFile fsFile =
     let tps = List []
@@ -128,7 +130,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.This -> tp
     | FsType.Import _ -> tp
     | FsType.GenericParameterDefaults gpd -> 
-        { gpd with Default = fixType fix gpd.Default}
+        { gpd with Default = fixType fix gpd.Default }
         |> FsType.GenericParameterDefaults
     |> fix // current type
 
@@ -1008,3 +1010,16 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
     f 
     |> fix
     |> flat
+
+let fixTypesHasESKeyWords  (f: FsFile): FsFile =
+    
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Generic gn ->
+            esKeyWords 
+            |> Set.contains (getName tp)
+            |> function 
+                | true -> { gn with Type = simpleType "obj"; TypeParameters = []} |> FsType.Generic
+                | _ -> tp
+        | _ -> tp
+    )    

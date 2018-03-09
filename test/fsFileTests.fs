@@ -14,6 +14,7 @@ open ts2fable.Print
 open System.Collections.Generic
 open Node
 open Node.Fs
+open ts2fable.Keywords
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
@@ -37,7 +38,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     |> f
 
 
-
+// make sure tests are strict
 describe "transform tests" <| fun _ ->
     timeout 10000
     
@@ -55,7 +56,13 @@ describe "transform tests" <| fun _ ->
         fsFiles
         |> getTypeByName name
         |> List.filter isType
-        |> fun tp -> tp.Length > 0        
+        |> fun tp -> tp.Length > 0     
+
+    let existNone (predicate:FsType -> bool) fsFiles= 
+        fsFiles
+        |> getAllTypes
+        |> List.filter predicate
+        |> fun tp -> tp.Length = 0              
 
     let existMany i name (isType:FsType -> bool) fsFiles= 
         fsFiles
@@ -75,7 +82,7 @@ describe "transform tests" <| fun _ ->
         |> getTopTypes
         |> List.choose FsType.asVariable 
 
-    //https://github.com/fable-compiler/ts2fable/issues/154
+    // https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
         let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
         let fsPath = "test-compile/ReactXP.fs"
@@ -86,6 +93,7 @@ describe "transform tests" <| fun _ ->
             |> List.forall(fun (_,l) -> l = 1)
             |> equal true
 
+    // https://github.com/fable-compiler/ts2fable/pull/164
     it "multiple ts inputs should export one time" <| fun _ ->
         let tsPaths =         
             [   
@@ -97,6 +105,7 @@ describe "transform tests" <| fun _ ->
             lines.Length < 700
             |> equal true
     
+    // https://github.com/fable-compiler/ts2fable/issues/175
     it "fix some Option.map to Microsoft.FSharp.Core.Option.map" <| fun _ ->
         let tsPaths = ["node_modules/@types/react/index.d.ts"]
         let fsPath = "test-compile/React.fs"
@@ -109,7 +118,8 @@ describe "transform tests" <| fun _ ->
                 | _ -> false
             )
             |> equal true
-            
+
+    // https://github.com/fable-compiler/ts2fable/pull/170
     it "compile type alias has only function to interface" <| fun _ ->
         let tsPaths = ["test/fragments/react/f2.d.ts"]
         let fsPath = "test/fragments/react/f2.fs"
@@ -117,7 +127,8 @@ describe "transform tests" <| fun _ ->
             fsFiles 
             |> existOnlyOne "DOMFactory" FsType.isInterface
             |> equal true
-            
+
+    // https://github.com/fable-compiler/ts2fable/pull/167        
     it "extract type literal from union" <| fun _ ->
         let tsPaths = ["test/fragments/react/f1.d.ts"]
         let fsPath = "test/fragments/react/f1.fs"
@@ -126,6 +137,7 @@ describe "transform tests" <| fun _ ->
             |> existOnlyOne "bivarianceHack" FsType.isFunction
             |> equal true
 
+    // https://github.com/fable-compiler/ts2fable/issues/177        
     it "generic parameter defaults" <| fun _ ->
         let tsPaths = ["test/fragments/react/f3.d.ts"]
         let fsPath = "test/fragments/react/f3.fs"
@@ -133,3 +145,15 @@ describe "transform tests" <| fun _ ->
             fsFiles 
             |> existMany 2 "Component" FsType.isAlias
             |> equal true            
+
+    // https://github.com/fable-compiler/ts2fable/issues/179  
+    it "fix types has ESKeyWords" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f4.d.ts"]
+        let fsPath = "test/fragments/react/f4.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existNone (fun tp -> 
+                let name = getName tp
+                esKeyWords.Contains name
+            )
+            |> equal true
