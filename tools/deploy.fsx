@@ -29,7 +29,7 @@ open Fake.Tools.Git.Staging
 open Fake.IO
 open Fake.Windows.Choco
 let run' timeout (cmd:string) dir args  =
-    if Process.ExecProcess (fun info ->
+    if Process.Exec (fun info ->
         { info with 
             FileName = cmd
             WorkingDirectory = 
@@ -167,9 +167,10 @@ Target.Create "PushToExports" (fun _ ->
                 try 
                     commit()
                     push repositoryDir
-                    addtionalBehavior()       
                 with ex -> printf "%A" ex                     
-
+                try 
+                    addtionalBehavior()
+                with ex -> printf "%A" ex   
             if String.isNullOrEmpty prHeadRepoName then
                 handle 
                     ( fun () -> 

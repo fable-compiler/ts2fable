@@ -127,7 +127,9 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
     | FsType.Import _ -> tp
-
+    | FsType.GenericParameterDefaults gpd -> 
+        { gpd with Default = fixType fix gpd.Default}
+        |> FsType.GenericParameterDefaults
     |> fix // current type
 
 /// recursively fix all the FsType childen for the given FsFile
@@ -944,3 +946,65 @@ let fixFsFileOut fo =
             Opens = fo.Opens @ ["Fable.Import.Browser"]
             Files = fo.Files |> List.map fixHelperLines }
     else fo        
+
+let extractGenericParameterDefaults (f: FsFile): FsFile =
+    let fix f = 
+        let extractAliasesFromGenericParameterDefaults name tps = 
+            let aliases = List<FsAlias>()
+
+            tps |> List.choose FsType.asGenericParameterDefaults
+                |> List.iteri(fun i _ ->
+                    {
+                        Name = name
+                        Type = 
+                            {
+                                Type = simpleType name
+                                TypeParameters = 
+                                    (tps.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
+                                    @ tps.[i+1 ..]
+                            } |> FsType.Generic
+                        TypeParameters = tps.[i+1 ..]    
+                    } |> aliases.Add
+                )    
+            aliases |> List.ofSeq |> List.map FsType.Alias 
+               
+        f |> fixFile(fun tp ->
+            match tp with 
+            | FsType.Module md ->
+                { md with 
+                    Types = 
+                        let tps = List<FsType>()
+                        md.Types |> List.iter(fun tp ->
+                            match tp with 
+                            | FsType.Interface it -> 
+                                it.TypeParameters
+                                |> extractAliasesFromGenericParameterDefaults it.Name
+                                |> tps.AddRange
+                                
+                                tp |> tps.Add
+                            | FsType.Alias al ->
+                                al.TypeParameters
+                                |> extractAliasesFromGenericParameterDefaults al.Name
+                                |> tps.AddRange
+
+                                tp |> tps.Add
+                            | _ -> tp |> tps.Add
+                        )
+
+                        tps |> List.ofSeq
+                        
+                } |> FsType.Module
+            | _ -> tp 
+        )
+        
+    let flat f =
+        f |> fixFile(fun tp ->
+            match tp with 
+            | FsType.GenericParameterDefaults gpd -> 
+                { Name = gpd.Name; FullName = gpd.FullName } |> FsType.Mapped
+            | _ -> tp 
+    )           
+    
+    f 
+    |> fix
+    |> flat

@@ -28,6 +28,13 @@ type FsTypeLiteral =
         Members: FsType list
     }
 
+type FsGenericParameterDefaults = 
+    {
+        Default: FsType
+        Name: string
+        FullName: string
+    }        
+
 [<RequireQualifiedAccess>]
 type FsEnumCaseType =
     | Numeric
@@ -244,6 +251,7 @@ type FsType =
     | This
     | Import of FsImport
     | TypeLiteral of FsTypeLiteral
+    | GenericParameterDefaults of FsGenericParameterDefaults
 
 [<RequireQualifiedAccess>]
 module FsType =
@@ -252,6 +260,7 @@ module FsType =
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
+    let isAlias tp = match tp with | FsType.Alias _ -> true | _ -> false
 
     let asMapped (tp: FsType) = match tp with | FsType.Mapped v -> Some v | _ -> None
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
@@ -261,6 +270,7 @@ module FsType =
     let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
     let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
     let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
+    let asGenericParameterDefaults (tp: FsType) = match tp with | FsType.GenericParameterDefaults v -> Some v | _ -> None
 
 type FsModule =
     {
