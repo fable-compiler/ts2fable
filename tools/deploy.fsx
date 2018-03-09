@@ -101,8 +101,8 @@ Target.Create "RunCli" (fun _ ->
     node <| sprintf "%s cliTest" (distDir</>"ts2fable.js")
 )
 
-Target.Create "RestoreTestCompile" (fun _ ->
-    DotNetRestore(id) (testCompileDir</>"test-compile.fsproj")
+Target.Create "BuildTestCompile" (fun _ ->
+    DotNetBuild(id) (testCompileDir</>"test-compile.fsproj")
 )
 
 Target.Create "BuildTest" (fun _ ->
@@ -216,7 +216,7 @@ Target.Create "Deploy" Target.DoNothing
           "RunTest" 
           "BuildCli"
           "RunCli"
-          "RestoreTestCompile"
+          "BuildTestCompile"
           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
           "Publish" ]
 

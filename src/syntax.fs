@@ -261,6 +261,7 @@ module FsType =
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
     let isAlias tp = match tp with | FsType.Alias _ -> true | _ -> false
+    let isGeneric tp = match tp with | FsType.Generic _ -> true | _ -> false
 
     let asMapped (tp: FsType) = match tp with | FsType.Mapped v -> Some v | _ -> None
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
