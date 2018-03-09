@@ -109,7 +109,7 @@ let keywords =
     ]
     |> Set.ofList
 
-let esKeyWords =
+let esKeywords =
     [
         "Readonly"
         "Partial"

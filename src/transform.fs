@@ -1011,15 +1011,30 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
     |> fix
     |> flat
 
-let fixTypesHasESKeyWords  (f: FsFile): FsFile =
+let fixTypesHasESKeywords  (f: FsFile): FsFile =
     
     f |> fixFile (fun tp ->
         match tp with
         | FsType.Generic gn ->
-            esKeyWords 
+            esKeywords 
             |> Set.contains (getName tp)
             |> function 
                 | true -> { gn with Type = simpleType "obj"; TypeParameters = []} |> FsType.Generic
                 | _ -> tp
         | _ -> tp
     )    
+
+let extractTypesInGlobalModule  (f: FsFile): FsFile =
+    { f with 
+        Modules = f.Modules |> List.map(fun md ->
+            let tps = List []
+            md.Types |> List.iter(fun tp -> 
+                match tp with 
+                | FsType.Module md2 -> 
+                    if md2.Name = "global" then md2.Types |> tps.AddRange
+                    else tp |> tps.Add
+                | _ -> tp |> tps.Add  
+            )
+            { md with Types = tps |> List.ofSeq }    
+        ) 
+    }
