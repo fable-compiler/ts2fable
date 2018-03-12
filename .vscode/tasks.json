@@ -5,33 +5,17 @@
     "tasks": [
         {
             "command": "fake",
-            "args": ["run","tools/workflow.fsx"],
+            "args": ["build","-t","WatchTest"],
             "type": "shell",
             "label": "WatchTest",
-            "group": "build",
-            "isBackground": true,
-            "problemMatcher": {
-                "fileLocation": "absolute",
-                "background": {
-                    "activeOnStart": true,
-                    "beginsPattern":{
-                        "regexp": "Parsing.*.fs$"
-                    },
-                    "endsPattern":{
-                        "regexp": "fable: Compiled.*|^.*hidden modules"
-                    }
-                },
-                "pattern": {
-                    "regexp": "^(.*)\\((\\d+),(\\d+)\\): \\((\\d+),(\\d+)\\) (warning|error) FABLE: (.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "endLine": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        }
+            "group": "build"
+        },
+        {
+            "command": "fake",
+            "args": ["build","-t","CliTest"],
+            "type": "shell",
+            "label": "CliTest",
+            "group": "build"
+        },
     ]
 }

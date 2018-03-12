@@ -172,3 +172,12 @@ describe "transform tests" <| fun _ ->
             fsFiles 
             |> existNoneByName "global" FsType.isModule
             |> equal true            
+
+    // https://github.com/fable-compiler/ts2fable/issues/182               
+    it "compile intersection to interface end" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f6.d.ts"]
+        let fsPath = "test/fragments/react/f6.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existOnlyOneByName "ClassType" FsType.isInterface
+            |> equal true                                    

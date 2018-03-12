@@ -5,7 +5,7 @@ install:
   - ps: Install-Product node 8 x64
   - yarn global add mocha
 build_script:
-  - cmd: fake.exe run tools/deploy.fsx
+  - cmd: fake.exe build
 test: off  
 artifacts:
   - path: '*.tgz'

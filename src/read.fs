@@ -287,6 +287,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         let tp = t :?> TupleTypeNode
         {
             Types = tp.elementTypes |> List.ofSeq |> List.map (readTypeNode checker)
+            Kind = FsTupleKind.Tuple
         }
         |> FsType.Tuple
     | SyntaxKind.SymbolKeyword -> simpleType "Symbol"
@@ -295,7 +296,13 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.TypeLiteral ->
         let tl = t :?> TypeLiteralNode
         readTypeLiteral checker tl |> FsType.TypeLiteral
-    | SyntaxKind.IntersectionType -> simpleType "obj"
+    | SyntaxKind.IntersectionType -> 
+        let itp = t :?> IntersectionTypeNode
+        {
+            Types = itp.types |> List.ofSeq |> List.map (readTypeNode checker)
+            Kind = FsTupleKind.Intersection
+        }
+        |> FsType.Tuple        
     | SyntaxKind.IndexedAccessType ->
         let ia = t :?> IndexedAccessTypeNode
         readTypeNode checker ia.objectType
