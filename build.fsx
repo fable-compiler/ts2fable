@@ -1,13 +1,5 @@
-#r "paket:
-nuget Fake.DotNet.Cli
-nuget Fake.IO.FileSystem
-nuget Fake.Core.Environment
-nuget Fake.Core.BuildServer
-nuget Fake.Api.GitHub
-nuget Fake.Tools.Git
-nuget Fake.Windows.Chocolatey
-nuget Fake.Core.Target //"
-#load "./.fake/deploy.fsx/intellisense.fsx"
+#r "paket: groupref netcorebuild //"
+#load "./.fake/build.fsx/intellisense.fsx"
 open System
 open Fake.Core
 open Microsoft.FSharp.Core.Printf
@@ -15,7 +7,7 @@ open Fake.IO.FileSystemOperators
 open Fake.IO
 open Fake.Core.Target
 open Fake.Core.TargetOperators
-open Fake.DotNet.Cli
+open Fake.DotNet
 open Fake.Core.BuildServer
 open Fake.Core.Environment
 open Fake.SystemHelper.Environment
@@ -76,11 +68,10 @@ let npm args =
     run npmTool "./" args   
 
 let git args = 
-    run gitTool "./" args   
-
+    run gitTool "./" args  
 Target.Create "InstallDotNetCore" (fun _ ->
-    DotNetCliInstall Release_2_1_4
-    dotnetExePath <- DotNetInfoOptions.Create().Common.DotNetCliPath
+    DotNet.Install DotNet.Release_2_1_4
+    dotnetExePath <- DotNet.InfoOptions.Create().Common.DotNetCliPath
 )
 
 Target.Create "YarnInstall" (fun _ ->
@@ -88,9 +79,9 @@ Target.Create "YarnInstall" (fun _ ->
 )
 
 Target.Create "Restore" (fun _ ->
-    DotNetRestore(id) (toolDir</>"DotnetCLI.fsproj")
-    DotNetRestore(id) (testDir</>"test.fsproj")
-    DotNetRestore(id) cliProj
+    DotNet.Restore(id) (toolDir</>"DotnetCLI.fsproj")
+    DotNet.Restore(id) (testDir</>"test.fsproj")
+    DotNet.Restore(id) cliProj
 )
 
 Target.Create "BuildCli" (fun _ ->
@@ -102,7 +93,7 @@ Target.Create "RunCli" (fun _ ->
 )
 
 Target.Create "BuildTestCompile" (fun _ ->
-    DotNetBuild(id) (testCompileDir</>"test-compile.fsproj")
+    DotNet.Build(id) (testCompileDir</>"test-compile.fsproj")
 )
 
 Target.Create "BuildTest" (fun _ ->
@@ -206,7 +197,17 @@ Target.Create "Publish" (fun _ ->
     | _ ->  ()
 )
 
-Target.Create "Deploy" Target.DoNothing    
+Target.Create "WatchTest" (fun _ ->
+    runDotnet toolDir "fable webpack -- --config webpack.config.test.js -w"
+)
+
+Target.Create "CliTest" Target.DoNothing
+Target.Create "Deploy" DoNothing
+
+"CliTest"
+    <== [ "BuildCli"
+          "RunCli"
+          "BuildTestCompile" ]
 
 "Deploy"
     <== [ "InstallDotNetCore"
@@ -214,9 +215,7 @@ Target.Create "Deploy" Target.DoNothing
           "Restore"
           "BuildTest"
           "RunTest" 
-          "BuildCli"
-          "RunCli"
-          "BuildTestCompile"
+          "CliTest"
           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
           "Publish" ]
 

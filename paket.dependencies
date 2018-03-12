@@ -4,3 +4,16 @@ storage:none
 clitool dotnet-fable
 nuget Fable.Core
 nuget Fable.Import.Browser
+group netcorebuild
+    source https://api.nuget.org/v3/index.json
+    storage:none
+
+    nuget Fake.DotNet.Cli
+    nuget Fake.IO.FileSystem
+    nuget Fake.Core.Environment
+    nuget Fake.Core.BuildServer
+    nuget Fake.Api.GitHub
+    nuget Fake.Tools.Git
+    nuget Fake.Windows.Chocolatey
+    nuget Fake.Core.Target
+    
