@@ -46,28 +46,34 @@ describe "transform tests" <| fun _ ->
         getAllTypes fsFiles
         |> List.filter(fun tp -> getName tp = name)
 
-    let existOnlyOne name (isType:FsType -> bool) fsFiles= 
+    let existOnlyOneByName name (predicate: FsType -> bool) fsFiles= 
         fsFiles
         |> getTypeByName name
-        |> List.filter isType
+        |> List.filter predicate
         |> fun tp -> tp.Length = 1
 
-    let existLeastOne name (isType:FsType -> bool) fsFiles= 
+    let existLeastOneByName name (predicate: FsType -> bool) fsFiles= 
         fsFiles
         |> getTypeByName name
-        |> List.filter isType
+        |> List.filter predicate
         |> fun tp -> tp.Length > 0     
 
-    let existNone (predicate:FsType -> bool) fsFiles= 
+    let existNone (predicate: FsType -> bool) fsFiles= 
         fsFiles
         |> getAllTypes
         |> List.filter predicate
-        |> fun tp -> tp.Length = 0              
+        |> fun tp -> tp.Length = 0        
 
-    let existMany i name (isType:FsType -> bool) fsFiles= 
+    let existNoneByName name (predicate: FsType -> bool) fsFiles= 
         fsFiles
         |> getTypeByName name
-        |> List.filter isType 
+        |> List.filter predicate
+        |> fun tp -> tp.Length = 0                  
+
+    let existManyByName i name (predicate: FsType -> bool) fsFiles= 
+        fsFiles
+        |> getTypeByName name
+        |> List.filter predicate
         |> fun tp -> tp.Length = i   
 
     let getTopTypes fsFiles = 
@@ -111,7 +117,7 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test-compile/React.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existLeastOne "ReactNode" (fun tp ->
+            |> existLeastOneByName "ReactNode" (fun tp ->
                 match tp with 
                 | FsType.Module md -> 
                     md.HelperLines  |> List.exists(fun l -> l.Contains("Microsoft.FSharp.Core.Option.map"))
@@ -125,7 +131,7 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test/fragments/react/f2.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existOnlyOne "DOMFactory" FsType.isInterface
+            |> existOnlyOneByName "DOMFactory" FsType.isInterface
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/pull/167        
@@ -134,7 +140,7 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test/fragments/react/f1.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existOnlyOne "bivarianceHack" FsType.isFunction
+            |> existOnlyOneByName "bivarianceHack" FsType.isFunction
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/issues/177        
@@ -143,17 +149,26 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test/fragments/react/f3.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existMany 2 "Component" FsType.isAlias
+            |> existManyByName 2 "Component" FsType.isAlias
             |> equal true            
 
     // https://github.com/fable-compiler/ts2fable/issues/179  
-    it "fix types has ESKeyWords" <| fun _ ->
+    it "fix types has ESKeywords" <| fun _ ->
         let tsPaths = ["test/fragments/react/f4.d.ts"]
         let fsPath = "test/fragments/react/f4.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
             |> existNone (fun tp -> 
                 let name = getName tp
-                esKeyWords.Contains name
+                esKeywords.Contains name
             )
             |> equal true
+
+    // https://github.com/fable-compiler/ts2fable/issues/181 
+    it "extract types in global module" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f5.d.ts"]
+        let fsPath = "test/fragments/react/f5.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existNoneByName "global" FsType.isModule
+            |> equal true            
