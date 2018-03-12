@@ -12,6 +12,7 @@ open System.Collections
 open System.Collections.Generic
 open ts2fable.Syntax
 open ts2fable.Keywords
+open Fable
 
 let getAllTypesFromFile fsFile =
     let tps = List []
@@ -904,24 +905,62 @@ let fixNamespace (f: FsFile): FsFile =
     )
 
 let aliasToInterfacePartly (f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
-        match tp with 
-        | FsType.Alias al ->
-            match al.Type with 
-            | FsType.Function f ->
-                {
-                    Comments = f.Comments
-                    IsStatic = false
-                    IsClass = false
-                    Name = al.Name
-                    FullName = al.Name
-                    Inherits = []
-                    Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
-                    TypeParameters = al.TypeParameters
-                } |> FsType.Interface
+    let compileAliasHasOnlyFunctionToInterface f = 
+        f |> fixFile (fun tp ->
+            match tp with 
+            | FsType.Alias al ->
+                match al.Type with 
+                | FsType.Function f ->
+                    {
+                        Comments = f.Comments
+                        IsStatic = false
+                        IsClass = false
+                        Name = al.Name
+                        FullName = al.Name
+                        Inherits = []
+                        Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
+                        TypeParameters = al.TypeParameters
+                    } |> FsType.Interface
+                | _ -> tp    
+            | _ -> tp     
+    )  
+
+    let compileAliasHasIntersectionToInterface f = 
+        f |> fixFile(fun tp ->
+            match tp with 
+            | FsType.Alias al ->
+                match al.Type with 
+                | FsType.Tuple tu ->
+                    match tu.Kind with 
+                    | FsTupleKind.Intersection ->
+                        {
+                            Comments = []
+                            IsStatic = false
+                            IsClass = false
+                            Name = al.Name
+                            FullName = al.Name
+                            Inherits = []
+                            Members = []
+                            TypeParameters = al.TypeParameters                            
+                        } |> FsType.Interface
+                    | _ -> tp
+                | _ -> tp        
             | _ -> tp    
-        | _ -> tp     
-    )    
+        )
+
+    let flatten f = 
+        f |> fixFile(fun tp ->
+            match tp with 
+            | FsType.Tuple tu ->
+                match tu.Kind with 
+                | FsTupleKind.Intersection -> simpleType "obj"
+                | _ -> tp
+            | _ -> tp
+        )    
+    f 
+    |> compileAliasHasOnlyFunctionToInterface
+    |> compileAliasHasIntersectionToInterface
+    |> flatten
 
 let fixFsFileOut fo = 
     
@@ -999,7 +1038,7 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
             | _ -> tp 
         )
         
-    let flat f =
+    let flatten f =
         f |> fixFile(fun tp ->
             match tp with 
             | FsType.GenericParameterDefaults gpd -> 
@@ -1009,7 +1048,7 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
     
     f 
     |> fix
-    |> flat
+    |> flatten
 
 let fixTypesHasESKeywords  (f: FsFile): FsFile =
     
@@ -1024,7 +1063,7 @@ let fixTypesHasESKeywords  (f: FsFile): FsFile =
         | _ -> tp
     )    
 
-let extractTypesInGlobalModule  (f: FsFile): FsFile =
+let extractTypesInGlobalModules  (f: FsFile): FsFile =
     { f with 
         Modules = f.Modules |> List.map(fun md ->
             let tps = List []

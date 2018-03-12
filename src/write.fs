@@ -27,7 +27,7 @@ let transform (file: FsFile): FsFile =
     |> aliasToInterfacePartly
     |> extractGenericParameterDefaults
     |> fixTypesHasESKeywords
-    |> extractTypesInGlobalModule
+    |> extractTypesInGlobalModules
     |> addConstructors
     |> fixThis
     |> fixNodeArray

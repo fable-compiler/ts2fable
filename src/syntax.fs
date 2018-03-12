@@ -159,9 +159,15 @@ type FsAlias =
         TypeParameters: FsType list
     }
 
+[<RequireQualifiedAccess>]
+type FsTupleKind =
+    | Intersection
+    | Tuple
+
 type FsTuple =
     {
         Types: FsType list
+        Kind: FsTupleKind
     }
 
 type TypeImport =
