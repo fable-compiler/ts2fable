@@ -11,7 +11,7 @@
           "${workspaceRoot}/build/test.js"
         ],
         "sourceMaps": true,
-        "outFiles": []
+        "outFiles": ["${workspaceRoot}/build/*.js"]
       },
   ]
 }
