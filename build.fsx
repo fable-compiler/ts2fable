@@ -203,20 +203,24 @@ Target.Create "WatchTest" (fun _ ->
 
 Target.Create "CliTest" Target.DoNothing
 Target.Create "Deploy" DoNothing
+Target.Create "BuildAll" Target.DoNothing
 
 "CliTest"
     <== [ "BuildCli"
           "RunCli"
           "BuildTestCompile" ]
 
-"Deploy"
+"BuildAll"
     <== [ "InstallDotNetCore"
           "YarnInstall"
           "Restore"
           "BuildTest"
           "RunTest" 
-          "CliTest"
+          "CliTest" ]
+
+"Deploy"
+    <== [ "BuildAll"
           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
           "Publish" ]
 
-Target.RunOrDefault "Deploy"
+Target.RunOrDefault "BuildAll"
