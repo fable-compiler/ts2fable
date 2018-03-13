@@ -31,26 +31,31 @@ Succesfull [builds](https://ci.appveyor.com/project/fable-compiler/ts2fable/hist
 yarn global add ts2fable@next
 ```
 
-You may also clone the source code, build, and run it directly from source:
-```
-git clone https://github.com/fable-compiler/ts2fable
-```
-Please use yarn so you will use the exact same versions of everything that was used during development
-```
-yarn
-```
+### Running code from source
 
-```
-cd src
-dotnet restore
-dotnet fable yarn-build
-node ../dist/ts2fable.js ../node_modules/typescript/lib/typescript.d.ts ../test-compile/TypeScript.fs
-```
+**Windows**:
+- `git clone https://github.com/fable-compiler/ts2fable`
+- Install all dependencies: `fake build`
+- In vscode, Press `CTRL+SHIFT+P` run task ---- WatchTest
+- Add your test in `fsfiletest.fs` and prefix it with mocha `only` (See below sample)
 
-You can also have it watch the files with:
+Sample Test:
+```fsharp
+only "duplicated variable exports" <| fun _ ->
+    let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
+    let fsPath = "test-compile/ReactXP.fs"
+    testFsFiles tsPaths fsPath  <| fun fsFiles ->
+        fsFiles
+        |> getTopVarialbles 
+        |> List.countBy(fun vb -> vb.Name)
+        |> List.forall(fun (_,l) -> l = 1)
+        |> equal true
 ```
-dotnet fable yarn-watch
-```
+- Press F5 to debug this test
+
+**Linux**:
+- Help me ----- Please send a PR to this repository
+
 
 ## Conventions
 
