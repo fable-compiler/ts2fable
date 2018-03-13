@@ -35,9 +35,15 @@ yarn global add ts2fable@next
 
 **Windows**:
 - `git clone https://github.com/fable-compiler/ts2fable`
-- Install all dependencies: `fake build`
-- In vscode, Press `CTRL+SHIFT+P` run task ---- WatchTest
-- Add your test in `fsfiletest.fs` and prefix it with mocha `only` (See below sample)
+- Install all dependencies: `fake.cmd run build.fsx`
+
+**Unix**:
+- `git clone https://github.com/fable-compiler/ts2fable`
+- `./fake.sh run build.fsx`
+
+**Common to all OS**
+- In vscode, press `Ctrl+Shift+P` > Run Task > WatchTest
+- Add your test in `test/fsFileTests.fs` and prefix it with mocha `only` (See below sample)
 
 Sample Test:
 ```fsharp
@@ -46,15 +52,12 @@ only "duplicated variable exports" <| fun _ ->
     let fsPath = "test-compile/ReactXP.fs"
     testFsFiles tsPaths fsPath  <| fun fsFiles ->
         fsFiles
-        |> getTopVarialbles 
+        |> getTopVarialbles
         |> List.countBy(fun vb -> vb.Name)
         |> List.forall(fun (_,l) -> l = 1)
         |> equal true
 ```
 - Press F5 to debug this test
-
-**Linux**:
-- Help me ----- Please send a PR to this repository
 
 
 ## Conventions
@@ -96,5 +99,3 @@ type Express =
     abstract application: obj with get, set
     [<Emit("$0($1...)")>] abstract Invoke: unit -> Application
 ```
-
-
