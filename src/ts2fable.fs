@@ -37,6 +37,7 @@ if argv |> List.exists (fun s -> s = "cliTest") then // run from build
     writeFile ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
     writeFile ["node_modules/@types/chai/index.d.ts"] "test-compile/Chai.fs"
     writeFile ["node_modules/chalk/types/index.d.ts"] "test-compile/Chalk.fs"
+    writeFile ["node_modules/monaco-editor/monaco.d.ts"] "test-compile/Monaco.fs"
     writeFile
         [   "node_modules/@types/google-protobuf/index.d.ts"
             "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
@@ -61,7 +62,7 @@ else
     let files = argv.["files"].Value :?> string array |> List.ofArray
     let tsfiles = files |> List.filter (fun s -> s.EndsWith ".ts")
     let fsfile = files |> List.tryFind (fun s -> s.EndsWith ".fs")
-    
+
     match tsfiles.Length, fsfile with
     | 0, _ -> failwithf "Please provide the path to a TypeScript file"
     | _, None -> failwithf "Please provide the path to the F# file to be written "
