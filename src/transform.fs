@@ -818,6 +818,17 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                         tps |> List.ofSeq    
                                 }
                             {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton 
+                        | FsType.TypeLiteral tl -> 
+                            {
+                                Comments = []
+                                IsStatic = false
+                                IsClass = false
+                                Name = al.Name
+                                FullName = al.Name
+                                Inherits = []
+                                Members = tl.Members
+                                TypeParameters = al.TypeParameters
+                            } |> FsType.Interface |> List.singleton                                
                         | _ -> [tp]                       
                     | _ -> [tp]
                 )

@@ -88,6 +88,9 @@ describe "transform tests" <| fun _ ->
         |> getTopTypes
         |> List.choose FsType.asVariable 
 
+    let inline (<&&>) (t1:FsFile list -> bool) (t2:FsFile list -> bool) fsFiles =
+        fsFiles |> t1 && fsFiles |> t2        
+
     // https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
         let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
@@ -181,3 +184,15 @@ describe "transform tests" <| fun _ ->
             fsFiles 
             |> existOnlyOneByName "ClassType" FsType.isInterface
             |> equal true                                    
+
+    // https://github.com/fable-compiler/ts2fable/issues/182               
+    it "extract type literal from type alias" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f7.d.ts"]
+        let fsPath = "test/fragments/react/f7.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |>  (
+                    existOnlyOneByName "EventHandler" FsType.isInterface 
+                    <&&> existOnlyOneByName "bivarianceHack" FsType.isFunction
+                )
+            |> equal true                                                
