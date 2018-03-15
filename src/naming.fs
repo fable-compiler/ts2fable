@@ -10,6 +10,11 @@ let (|Capital|_|) (letter: string)=
     // Char.IsUpper https://github.com/fable-compiler/Fable/issues/1236
     // if letter.Length = 1 && Char.IsUpper letter.[0] then Some letter else None
 
+
+let (|InvariantEqualI|_|) (str:string) arg = 
+  if String.Compare(str, arg, StringComparison.InvariantCultureIgnoreCase) = 0
+  then Some() else None
+  
 let private digits = [ '0' .. '9' ] |> Seq.map string
 
 let isDigit digit = Seq.contains digit digits
