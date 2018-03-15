@@ -3,6 +3,9 @@
     "dist/"
   ],
   "main": "./dist/ts2fable.js",
+  "bin": {
+    "ts2fable": "./dist/ts2fable.js"
+  },
   "name": "ts2fable",
   "version": "0.0.0",
   "description": "TypeScript definition files parser for fable-compiler",
