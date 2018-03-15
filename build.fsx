@@ -179,6 +179,7 @@ Target.Create "Publish" (fun _ ->
     match buildServer with 
     | AppVeyor -> 
         node (toolDir</>"build-update.package.js")
+        node (toolDir</>"add-shebang.js")
         
         yarn <| sprintf "version --new-version %s --no-git-tag-version" buildVersion
         npm "pack"
@@ -186,7 +187,6 @@ Target.Create "Publish" (fun _ ->
         let repoName = environVar "appveyor_repo_name"
         let repoBranch = environVar "appveyor_repo_branch"
         let prHeadRepoName = environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
-  
 
         if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && String.isNullOrEmpty prHeadRepoName then
             let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| environVar "npmauthtoken"
