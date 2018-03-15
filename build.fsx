@@ -89,7 +89,7 @@ Target.Create "BuildCli" (fun _ ->
 )
 
 Target.Create "RunCli" (fun _ ->
-    node <| sprintf "%s cliTest" (distDir</>"ts2fable.js")
+    node <| sprintf "%s node_modules/typescript/lib/typescript.d.ts test-compile/TypeScript.fs" (distDir</>"ts2fable.js")
 )
 
 Target.Create "BuildTestCompile" (fun _ ->
@@ -201,22 +201,18 @@ Target.Create "WatchTest" (fun _ ->
     runDotnet toolDir "fable webpack -- --config webpack.config.test.js -w"
 )
 
-Target.Create "CliTest" Target.DoNothing
 Target.Create "Deploy" DoNothing
 Target.Create "BuildAll" Target.DoNothing
-
-"CliTest"
-    <== [ "BuildCli"
-          "RunCli"
-          "BuildTestCompile" ]
 
 "BuildAll"
     <== [ "InstallDotNetCore"
           "YarnInstall"
           "Restore"
           "BuildTest"
-          "RunTest" 
-          "CliTest" ]
+          "RunTest"
+          "BuildCli"
+          "RunCli"
+          "BuildTestCompile" ]
 
 "Deploy"
     <== [ "BuildAll"
