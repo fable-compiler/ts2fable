@@ -67,7 +67,7 @@ else
     | 0, _ -> failwithf "Please provide the path to a TypeScript file"
     | _, None -> failwithf "Please provide the path to the F# file to be written "
     | _, Some fsf ->
-        printfn "ts2fable %s" (Version.version())
+        printfn "ts2fable %s" Version.version
 
         // validate ts files exist
         for ts in tsfiles do
