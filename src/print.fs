@@ -258,7 +258,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
 let printFsFile (file: FsFileOut): ResizeArray<string> =
     let lines = ResizeArray<string>()
 
-    sprintf "// ts2fable %s" Version.version |> lines.Add
+    sprintf "// ts2fable %s" (Version.version()) |> lines.Add
     sprintf "module rec %s" file.Namespace |> lines.Add
 
     for opn in file.Opens do
