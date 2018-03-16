@@ -163,6 +163,7 @@ type FsAlias =
 type FsTupleKind =
     | Intersection
     | Tuple
+    | Mapped
 
 type FsTuple =
     {

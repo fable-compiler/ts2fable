@@ -333,10 +333,13 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         // just get the type in parenthesis
         readTypeNode checker pt.``type``
     | SyntaxKind.MappedType ->
-        let mt = t :?> MappedTypeNode
+        {
+            Types = [simpleType "obj"]
+            Kind = FsTupleKind.Mapped
+        }
+        |> FsType.Tuple   
         // TODO map mapped types https://github.com/fable-compiler/ts2fable/issues/44
-        // printfn "TODO mapped types %s" (mt.getText())
-        simpleType "obj"
+
     | SyntaxKind.NeverKeyword ->
         // printfn "unsupported TypeNode NeverKeyword: %A" t
         // simpleType "obj"
