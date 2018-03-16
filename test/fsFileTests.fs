@@ -13,7 +13,6 @@ open ts2fable.Transform
 open ts2fable.Print
 open System.Collections.Generic
 open Node
-open Node.Fs
 open ts2fable.Keywords
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
@@ -101,7 +100,7 @@ describe "transform tests" <| fun _ ->
             |> List.countBy(fun vb -> vb.Name)
             |> List.forall(fun (_,l) -> l = 1)
             |> equal true
-
+            
     // https://github.com/fable-compiler/ts2fable/pull/164
     it "multiple ts inputs should export one time" <| fun _ ->
         let tsPaths =         
@@ -185,7 +184,7 @@ describe "transform tests" <| fun _ ->
             |> existOnlyOneByName "ClassType" FsType.isInterface
             |> equal true                                    
 
-    // https://github.com/fable-compiler/ts2fable/issues/182               
+    // https://github.com/fable-compiler/ts2fable/issues/185               
     it "extract type literal from type alias" <| fun _ ->
         let tsPaths = ["test/fragments/react/f7.d.ts"]
         let fsPath = "test/fragments/react/f7.fs"
@@ -196,3 +195,12 @@ describe "transform tests" <| fun _ ->
                     <&&> existOnlyOneByName "bivarianceHack" FsType.isFunction
                 )
             |> equal true                                                
+
+    // https://github.com/fable-compiler/ts2fable/issues/191               
+    it "rearrage namespace" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f8.d.ts"]
+        let fsPath = "test/fragments/react/f8.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles
+            |> existNoneByName "F8" FsType.isModule
+            |> equal true

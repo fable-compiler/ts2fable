@@ -1088,3 +1088,23 @@ let extractTypesInGlobalModules  (f: FsFile): FsFile =
             { md with Types = tps |> List.ofSeq }    
         ) 
     }
+
+let rearrageNamespace nameSpace (f: FsFile): FsFile =
+    { f with 
+        Modules = 
+            f.Modules |> List.map(fun md -> 
+                { md with 
+                    Types = 
+                        let tps = List[]
+                        md.Types |> List.iter(fun tp -> 
+                            match tp with 
+                            | FsType.Module md -> 
+                                match escapeWord md.Name with 
+                                | InvariantEqualI nameSpace -> md.Types |> tps.AddRange
+                                | _ -> tp |> tps.Add
+                            | _ -> tp |> tps.Add
+                        )
+                        tps |> List.ofSeq  
+                }
+            )
+    }

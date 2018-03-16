@@ -20,10 +20,11 @@ open System.Collections.Generic
 // 2. Fix the syntax tree.
 // 3. Print the syntax tree to a F# file.
 
-let transform (file: FsFile): FsFile =
+let transform nameSpace (file: FsFile): FsFile =
     file
     |> removeInternalModules
     |> mergeModulesInFile
+    |> rearrageNamespace nameSpace
     |> aliasToInterfacePartly
     |> extractGenericParameterDefaults
     |> fixTypesHasESKeywords
@@ -64,6 +65,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
         |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
         |> dict
 
+    let nameSpace = path.basename(fsPath, path.extname(fsPath))
     let fsFiles = tsFiles |> List.map (fun tsFile ->
         {
             FileName = tsFile.fileName
@@ -71,7 +73,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
             Modules = []
         }
         |> readSourceFile checker tsFile
-        |> transform
+        |> transform nameSpace
     )
 
 
@@ -79,7 +81,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
     {
         // use the F# file name as the module namespace
         // TODO ensure valid name
-        Namespace = path.basename(fsPath, path.extname(fsPath))
+        Namespace = nameSpace
         Opens =
             [
                 "System"
