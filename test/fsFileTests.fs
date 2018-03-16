@@ -185,7 +185,7 @@ describe "transform tests" <| fun _ ->
             |> existOnlyOneByName "ClassType" FsType.isInterface
             |> equal true                                    
 
-    // https://github.com/fable-compiler/ts2fable/issues/182               
+    // https://github.com/fable-compiler/ts2fable/issues/185               
     it "extract type literal from type alias" <| fun _ ->
         let tsPaths = ["test/fragments/react/f7.d.ts"]
         let fsPath = "test/fragments/react/f7.fs"
@@ -196,3 +196,12 @@ describe "transform tests" <| fun _ ->
                     <&&> existOnlyOneByName "bivarianceHack" FsType.isFunction
                 )
             |> equal true                                                
+
+    // https://github.com/fable-compiler/ts2fable/issues/44               
+    it "map mapped types" <| fun _ ->
+        let tsPaths = ["test/fragments/react/f8.d.ts"]
+        let fsPath = "test/fragments/react/f8.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existLeastOneByName "ValidationMap" FsType.isInterface
+            |> equal true                

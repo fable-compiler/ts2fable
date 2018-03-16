@@ -10,7 +10,7 @@
     <Compile Include="VSCode.fs" />
     <Compile Include="IziToast.fs" />
     <!-- <Compile Include="Electron.fs" /> -->
-    <!-- <Compile Include="React.fs" /> -->
+    <Compile Include="React.fs" />
     <Compile Include="Mocha.fs" />
     <!-- <Compile Include="Chai.fs" /> -->
     <Compile Include="Chalk.fs" />

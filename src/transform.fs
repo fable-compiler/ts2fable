@@ -959,18 +959,41 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
             | _ -> tp    
         )
 
+    let compileAliasHasMappedToInterface f = 
+        f |> fixFile (fun tp ->
+            match tp with 
+            | FsType.Alias al -> 
+                match al.Type with 
+                | FsType.Tuple tu when tu.Kind = FsTupleKind.Mapped -> 
+                    {
+                        Comments = []
+                        IsStatic = false
+                        IsClass = false
+                        Name = al.Name
+                        FullName = al.Name
+                        Inherits = []
+                        Members = []
+                        TypeParameters = al.TypeParameters
+                    } |> FsType.Interface  
+                | _ -> tp
+            | _ -> tp                          
+        )
+
+    //we don't want to print intersection and mapped types, so compile them to simpleType "obj"
     let flatten f = 
         f |> fixFile(fun tp ->
             match tp with 
             | FsType.Tuple tu ->
                 match tu.Kind with 
-                | FsTupleKind.Intersection -> simpleType "obj"
+                | FsTupleKind.Intersection | FsTupleKind.Mapped -> simpleType "obj"
                 | _ -> tp
             | _ -> tp
         )    
+
     f 
     |> compileAliasHasOnlyFunctionToInterface
     |> compileAliasHasIntersectionToInterface
+    |> compileAliasHasMappedToInterface
     |> flatten
 
 let fixFsFileOut fo = 
