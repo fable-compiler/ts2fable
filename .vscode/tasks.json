@@ -11,12 +11,11 @@
             "group": "build"
         },
         {
-            "command": "dotnet",
-            "label": "BuildTestCompile",
+            "command": "fake",
+            "args": ["build","-t","CliTest"],
             "type": "shell",
-            "group": "build",
-            "args": ["build","${workspaceRoot}/test-compile/test-compile.fsproj"],
-            "problemMatcher": "$msCompile"
+            "label": "CliTest",
+            "group": "build"
         }
     ]
 }

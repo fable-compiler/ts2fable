@@ -4,7 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\ts2fable.fsproj" />
-    <Compile Include="testCompileTests.fs" />
     <Compile Include="functionTests.fs" />
     <Compile Include="fsFileTests.fs" />
     <Compile Include="test.fs" />
