@@ -85,11 +85,46 @@ Target.Create "Restore" (fun _ ->
 )
 
 Target.Create "BuildCli" (fun _ ->
-    runDotnet toolDir <| sprintf "fable yarn-fable-splitter -- %s  --config %s" cliProj (toolDir</>"splitter.config.js")
+    runDotnet toolDir <| sprintf "fable yarn-fable-splitter -- %s  --config %s --port free" cliProj (toolDir</>"splitter.config.js")
 )
 
 Target.Create "RunCli" (fun _ ->
-    node <| sprintf "%s cliTest" (distDir</>"ts2fable.js")
+    let ts2fable definitionsFiles output = 
+        let args = definitionsFiles @ [output] |> String.concat " "
+        async {
+        node <| sprintf "%s %s" (distDir</>"ts2fable.js") args
+        }
+
+    [
+        // used by ts2fable
+        ts2fable ["node_modules/typescript/lib/typescript.d.ts"] "test-compile/TypeScript.fs"
+        ts2fable ["node_modules/@types/node/index.d.ts"] "test-compile/Node.fs"
+        ts2fable ["node_modules/@types/yargs/index.d.ts"] "test-compile/Yargs.fs"
+
+        // for test-compile
+        ts2fable ["node_modules/vscode/vscode.d.ts"] "test-compile/VSCode.fs"
+        // ts2fable ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
+        ts2fable ["node_modules/izitoast/types/index.d.ts"] "test-compile/IziToast.fs"
+        ts2fable ["node_modules/electron/electron.d.ts"] "test-compile/Electron.fs"
+        ts2fable ["node_modules/@types/react/index.d.ts"] "test-compile/React.fs"
+        ts2fable ["node_modules/@types/mocha/index.d.ts"] "test-compile/Mocha.fs"
+        ts2fable ["node_modules/@types/chai/index.d.ts"] "test-compile/Chai.fs"
+        ts2fable ["node_modules/chalk/types/index.d.ts"] "test-compile/Chalk.fs"
+        ts2fable ["node_modules/monaco-editor/monaco.d.ts"] "test-compile/Monaco.fs"
+        ts2fable
+            [   "node_modules/@types/google-protobuf/index.d.ts"
+                "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
+            ]
+            "test-compile/Protobuf.fs"
+    ]
+    |> Async.Parallel
+    |> Async.RunSynchronously
+    |> ignore
+    // files that have too many TODOs
+    // ts2fable ["node_modules/@types/jquery/index.d.ts"] "test-compile/JQuery.fs"
+    // ts2fable ["node_modules/typescript/lib/lib.es2015.promise.d.ts"] "test-compile/Promise.fs"
+
+    printfn "done writing test-compile files"
 )
 
 Target.Create "BuildTestCompile" (fun _ ->

@@ -16,6 +16,6 @@
             "type": "shell",
             "label": "CliTest",
             "group": "build"
-        },
+        }
     ]
 }
