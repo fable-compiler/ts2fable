@@ -59,7 +59,8 @@
     "reactxp": "^1.0.2",
     "vscode": "^1.1.8",
     "webpack": "^3.11.0",
-    "webpack-dev-server": "^2.11.1"
+    "webpack-dev-server": "^2.11.1",
+    "office-ui-fabric-react": "^5.67.0"
   },
   "engines": {
     "vscode": "^1.18.1"
