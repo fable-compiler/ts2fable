@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@microsoft/load-themed-styles@^1.7.13":
+  version "1.7.43"
+  resolved "https://registry.yarnpkg.com/@microsoft/load-themed-styles/-/load-themed-styles-1.7.43.tgz#57b549f574eceb2411259c61ad1c1853bd01d306"
+
 "@types/chai@^4.0.4":
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.1.2.tgz#f1af664769cfb50af805431c407425ed619daa21"
@@ -14,9 +18,13 @@
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.3.0.tgz#6316ac20a1a13c5d521a2dc661befc7184f73f5b"
 
-"@types/lodash@^4.14.64", "@types/lodash@^4.14.78":
+"@types/lodash@^4.14.64":
   version "4.14.104"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.104.tgz#53ee2357fa2e6e68379341d92eb2ecea4b11bb80"
+
+"@types/lodash@^4.14.80":
+  version "4.14.105"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.105.tgz#9fcc4627a1f98f8f8fce79ddb2bff4afd97e959b"
 
 "@types/mocha@^2.2.44":
   version "2.2.48"
@@ -30,24 +38,55 @@
   version "8.9.4"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.9.4.tgz#dfd327582a06c114eb6e0441fa3d6fab35edad48"
 
-"@types/react-dom@^16.0.0":
+"@types/react-dom@^16.0.3":
   version "16.0.4"
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-16.0.4.tgz#2e8fd45f5443780ed49bf2cdd9809e6091177a7d"
   dependencies:
     "@types/node" "*"
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^16.0.0":
+"@types/react@*":
   version "16.0.38"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.0.38.tgz#76617433ea10274505f60bb86eddfdd0476ffdc2"
 
-"@types/react@^15.0.20":
-  version "15.6.14"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-15.6.14.tgz#fe176209b9de3514f9782fa41a239bffd26a3b56"
+"@types/react@^16.0.36", "@types/react@^16.0.4":
+  version "16.0.40"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-16.0.40.tgz#caabc2296886f40b67f6fc80f0f3464476461df9"
 
 "@types/yargs@^8.0.2":
   version "8.0.3"
   resolved "https://registry.yarnpkg.com/@types/yargs/-/yargs-8.0.3.tgz#6f0ad77792762fc69d209716dbab3201dcba56fb"
+
+"@uifabric/icons@>=5.6.0 <6.0.0":
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/@uifabric/icons/-/icons-5.6.0.tgz#7a93d71c6db625c40abbc0c6afb060f69fd56735"
+  dependencies:
+    "@uifabric/styling" ">=5.19.1 <6.0.0"
+    tslib "^1.7.1"
+
+"@uifabric/merge-styles@>=5.13.0 <6.0.0":
+  version "5.13.0"
+  resolved "https://registry.yarnpkg.com/@uifabric/merge-styles/-/merge-styles-5.13.0.tgz#0cdc751d3c593ddf04526f996d48438e60f89666"
+  dependencies:
+    tslib "^1.7.1"
+
+"@uifabric/styling@>=5.19.1 <6.0.0", "@uifabric/styling@>=5.20.0 <6.0.0":
+  version "5.20.0"
+  resolved "https://registry.yarnpkg.com/@uifabric/styling/-/styling-5.20.0.tgz#def2b07f971ffb60c3ea80692d038858244b9b83"
+  dependencies:
+    "@microsoft/load-themed-styles" "^1.7.13"
+    "@uifabric/merge-styles" ">=5.13.0 <6.0.0"
+    "@uifabric/utilities" ">=5.18.3 <6.0.0"
+    tslib "^1.7.1"
+
+"@uifabric/utilities@>=5.18.3 <6.0.0", "@uifabric/utilities@>=5.19.1 <6.0.0":
+  version "5.19.1"
+  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-5.19.1.tgz#2c47a246d5dad799e1f74b553cb108507c4ccc5d"
+  dependencies:
+    "@microsoft/load-themed-styles" "^1.7.13"
+    "@uifabric/merge-styles" ">=5.13.0 <6.0.0"
+    prop-types "^15.5.10"
+    tslib "^1.7.1"
 
 abbrev@1:
   version "1.1.1"
@@ -2726,9 +2765,9 @@ ieee754@^1.1.4:
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.1.8.tgz#be33d40ac10ef1926701f6f08a2d86fbfd1ad3e4"
 
-ifvisible.js@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/ifvisible.js/-/ifvisible.js-1.0.6.tgz#52eb151ce89c56f15316226462e892d1f8451261"
+ifvisible@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/ifvisible/-/ifvisible-1.1.0.tgz#a47768028c7c256368b16eaf3312e6898280215c"
 
 import-local@^1.0.0:
   version "1.0.0"
@@ -3339,7 +3378,7 @@ lodash.templatesettings@^3.0.0:
     lodash._reinterpolate "^3.0.0"
     lodash.escape "^3.0.0"
 
-lodash@^4.14.0, lodash@^4.17.1, lodash@^4.17.2, lodash@^4.17.4:
+lodash@^4.14.0, lodash@^4.17.2, lodash@^4.17.4:
   version "4.17.5"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.5.tgz#99a92d65c0272debe8c96b6057bc8fbfa3bed511"
 
@@ -3803,6 +3842,18 @@ obuf@^1.0.0, obuf@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/obuf/-/obuf-1.1.1.tgz#104124b6c602c6796881a042541d36db43a5264e"
 
+office-ui-fabric-react@^5.67.0:
+  version "5.67.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-5.67.0.tgz#ffa1efed19380a857e8a066d6b8a9125b78775e6"
+  dependencies:
+    "@microsoft/load-themed-styles" "^1.7.13"
+    "@uifabric/icons" ">=5.6.0 <6.0.0"
+    "@uifabric/merge-styles" ">=5.13.0 <6.0.0"
+    "@uifabric/styling" ">=5.20.0 <6.0.0"
+    "@uifabric/utilities" ">=5.19.1 <6.0.0"
+    prop-types "^15.5.10"
+    tslib "^1.7.1"
+
 on-finished@~2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/on-finished/-/on-finished-2.3.0.tgz#20f1336481b083cd75337992a16971aa2d906947"
@@ -4123,6 +4174,14 @@ promise@^7.1.1:
   dependencies:
     asap "~2.0.3"
 
+prop-types@^15.5.10:
+  version "15.6.1"
+  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.1.tgz#36644453564255ddda391191fb3a125cbdf654ca"
+  dependencies:
+    fbjs "^0.8.16"
+    loose-envify "^1.3.1"
+    object-assign "^4.1.1"
+
 prop-types@^15.5.8, prop-types@^15.5.9:
   version "15.6.0"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.0.tgz#ceaf083022fc46b4a35f69e13ef75aed0d639856"
@@ -4265,20 +4324,20 @@ react-relay@^1.4.1:
     prop-types "^15.5.8"
     relay-runtime "1.4.1"
 
-reactxp@^0.46.6:
-  version "0.46.6"
-  resolved "https://registry.yarnpkg.com/reactxp/-/reactxp-0.46.6.tgz#166a503a7147f3a1e29efc4469bda32603471a5f"
+reactxp@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/reactxp/-/reactxp-1.0.2.tgz#fff3e0f11b32773c3ee2bde8e72796b45e79847e"
   dependencies:
-    "@types/lodash" "^4.14.78"
-    "@types/react" "^16.0.0"
-    "@types/react-dom" "^16.0.0"
+    "@types/lodash" "^4.14.80"
+    "@types/react" "^16.0.36"
+    "@types/react-dom" "^16.0.3"
     assert "^1.3.0"
-    ifvisible.js "^1.0.6"
-    lodash "^4.17.1"
+    ifvisible "^1.1.0"
+    lodash "^4.17.4"
     prop-types "^15.5.9"
     rebound "^0.0.13"
     subscribableevent "^1.0.0"
-    synctasks "^0.3.0"
+    synctasks "^0.3.1"
 
 read-pkg-up@^1.0.1:
   version "1.0.1"
@@ -5089,7 +5148,7 @@ supports-color@^5.1.0, supports-color@^5.2.0:
   dependencies:
     has-flag "^3.0.0"
 
-synctasks@^0.3.0:
+synctasks@^0.3.1:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/synctasks/-/synctasks-0.3.1.tgz#1f9012b23792ad775ba2693e0cafcfcd65b80d97"
 
@@ -5226,6 +5285,10 @@ trim-newlines@^1.0.0:
 trim-right@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/trim-right/-/trim-right-1.0.1.tgz#cb2e1203067e0c8de1f614094b9fe45704ea6003"
+
+tslib@^1.7.1:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.0.tgz#e37a86fda8cbbaf23a057f473c9f4dc64e5fc2e8"
 
 tty-browserify@0.0.0:
   version "0.0.0"

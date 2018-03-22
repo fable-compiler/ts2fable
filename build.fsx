@@ -118,6 +118,7 @@ Target.Create "RunCli" (fun _ ->
             "test-compile/Protobuf.fs"
         ts2fable ["node_modules/synctasks/dist/SyncTasks.d.ts"] "test-compile/SyncTasks.fs"            
         ts2fable ["node_modules/subscribableevent/dist/SubscribableEvent.d.ts"] "test-compile/SubscribableEvent.fs"            
+        ts2fable ["node_modules/office-ui-fabric-react/lib/index.d.ts"] "test-compile/OfficeUiFabricReact.fs"            
     ]
     |> Async.Parallel
     |> Async.RunSynchronously
