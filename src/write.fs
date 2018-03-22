@@ -45,6 +45,7 @@ let transform (file: FsFile): FsFile =
     // |> removeTodoMembers
     |> removeTypeParamsFromStatic
     |> removeDuplicateFunctions
+    |> removeDuplicateOptions
     |> extractTypeLiterals // after fixEscapeWords
     |> addAliasUnionHelpers
     

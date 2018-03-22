@@ -1,0 +1,3 @@
+interface Options {
+default?: any;
+}

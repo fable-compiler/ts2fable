@@ -205,3 +205,16 @@ describe "transform tests" <| fun _ ->
             fsFiles 
             |> existLeastOneByName "ValidationMap" FsType.isInterface
             |> equal true                
+
+    // https://github.com/fable-compiler/ts2fable/issues/208
+    it "remove duplicate options" <| fun _ ->
+        let tsPaths = ["test/fragments/yargs/duplicateOption.d.ts"]
+        let fsPath = "test/fragments/yargs/duplicateOption.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existNone (fun tp ->
+                match tp with 
+                | FsType.Union un when un.Option -> true
+                | _ -> false
+            )
+            |> equal true                            
