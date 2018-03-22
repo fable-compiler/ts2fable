@@ -116,6 +116,8 @@ Target.Create "RunCli" (fun _ ->
                 "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
             ]
             "test-compile/Protobuf.fs"
+        ts2fable ["node_modules/synctasks/dist/SyncTasks.d.ts"] "test-compile/SyncTasks.fs"            
+        ts2fable ["node_modules/subscribableevent/dist/SubscribableEvent.d.ts"] "test-compile/SubscribableEvent.fs"            
     ]
     |> Async.Parallel
     |> Async.RunSynchronously
