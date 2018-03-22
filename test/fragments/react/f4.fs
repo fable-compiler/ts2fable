@@ -4,6 +4,8 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
+type DetailedHTMLFactory = React.DetailedHTMLFactory
+type DialogHTMLAttributes = React.DialogHTMLAttributes
 
 module React =
 
@@ -21,3 +23,6 @@ type StatelessComponent =
 
 type [<AllowNullLiteral>] StatelessComponent<'P> =
     abstract defaultProps: obj option with get, set
+
+type [<AllowNullLiteral>] ReactHTML =
+    abstract dialog: DetailedHTMLFactory<DialogHTMLAttributes<obj>, obj> with get, set

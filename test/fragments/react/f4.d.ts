@@ -1,4 +1,5 @@
 
+import { DetailedHTMLFactory, DialogHTMLAttributes } from "react";
 declare namespace React {
     class Component<P, S> {
         setState<K extends keyof S>(
@@ -10,4 +11,9 @@ declare namespace React {
 
 interface StatelessComponent<P = {}> {
     defaultProps?: Partial<P>;
+}
+
+interface ReactHTML {
+
+    dialog: DetailedHTMLFactory<DialogHTMLAttributes<HTMLDialogElement>, HTMLDialogElement>;
 }
