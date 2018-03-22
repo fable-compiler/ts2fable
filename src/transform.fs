@@ -1085,15 +1085,23 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
     |> flatten
 
 let fixTypesHasESKeywords  (f: FsFile): FsFile =
-    
     f |> fixFile (fun tp ->
         match tp with
         | FsType.Generic gn ->
             esKeywords 
-            |> Set.contains (getName tp)
+            |> Set.contains (getName tp) 
             |> function 
                 | true -> { gn with Type = simpleType "obj"; TypeParameters = []} |> FsType.Generic
-                | _ -> tp
+                | _ -> 
+                    { gn with 
+                        TypeParameters = gn.TypeParameters |> List.map(fun tp2 ->
+                        match tp2 with 
+                        | FsType.Mapped mp -> 
+                            if esKeywords.Contains mp.Name then simpleType "obj"
+                            else tp2
+                        | _ -> tp2    
+                    )
+                    } |> FsType.Generic
         | _ -> tp
     )    
 
