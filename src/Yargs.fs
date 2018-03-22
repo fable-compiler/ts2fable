@@ -201,7 +201,7 @@ module Yargs =
         abstract configParser: (string -> obj) option with get, set
         abstract conflicts: U2<string, obj> option with get, set
         abstract count: bool option with get, set
-        abstract ``default``: obj option option with get, set
+        abstract ``default``: obj option with get, set
         abstract defaultDescription: string option with get, set
         abstract demand: U2<bool, string> option with get, set
         abstract demandOption: U2<bool, string> option with get, set

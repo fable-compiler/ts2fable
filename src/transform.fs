@@ -730,6 +730,20 @@ let removeDuplicateFunctions(f: FsFile): FsFile =
         | _ -> tp
     )
 
+let removeDuplicateOptions(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Property pr when pr.Option ->
+            match pr.Type with 
+            | FsType.Union un when un.Option ->
+                { pr with 
+                    Type = { un  with Option = false } |> FsType.Union 
+                }
+                |> FsType.Property
+            | _ -> tp
+
+        | _ -> tp
+    )
 let extractTypeLiterals(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
