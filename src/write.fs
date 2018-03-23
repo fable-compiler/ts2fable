@@ -1,7 +1,4 @@
 module rec ts2fable.Write
-open ts2fable.Naming
-open ts2fable.Print
-
 
 open Fable.Core
 open Fable.Core.JsInterop
@@ -11,10 +8,12 @@ open Node
 open Yargs
 
 open ts2fable.Naming
+open ts2fable.Print
 open ts2fable.Read
 open ts2fable.Transform
 open ts2fable.Write
 open System.Collections.Generic
+
 // This app has 3 main functions.
 // 1. Read a TypeScript file into a syntax tree.
 // 2. Fix the syntax tree.
@@ -75,8 +74,6 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
         |> transform
     )
 
-
-
     {
         // use the F# file name as the module namespace
         // TODO ensure valid name
@@ -90,6 +87,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
         Files = fsFiles
     }
     |> fixFsFileOut
+
 let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
     emitFsFileOutAsLines fsPath fsFileOut
     |> ignore
@@ -105,6 +103,5 @@ let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) =
         
 let writeFile (tsPaths: string list) (fsPath: string): unit =
     // printfn "writeFile %A %s" tsPaths fsPath
-
     let fsFileOut = getFsFileOut fsPath tsPaths 
     emitFsFileOut fsPath fsFileOut

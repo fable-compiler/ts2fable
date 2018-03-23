@@ -2,14 +2,9 @@ module ts2fable.App
 
 open Fable.Core
 open Fable.Core.JsInterop
-open TypeScript
-open TypeScript.Ts
 open Node
 open Yargs
 
-open ts2fable.Naming
-open ts2fable.Read
-open ts2fable.Transform
 open ts2fable.Write
 
 let argv =
