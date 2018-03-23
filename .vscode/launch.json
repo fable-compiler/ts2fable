@@ -13,5 +13,19 @@
         "sourceMaps": true,
         "outFiles": ["${workspaceRoot}/*/*.js"]
       },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Cli",
+        "protocol": "inspector",
+        "program": "${workspaceRoot}/build/ts2fable.js",
+        "args":[
+          "--multiple",
+          "${workspaceRoot}/node_modules/office-ui-fabric-react/lib/index.d.ts",
+          "${workspaceRoot}/test-compile/OfficeUiFabricReact.fs"
+        ],
+        "sourceMaps": true,
+        "outFiles": ["${workspaceRoot}/*/*.js"]
+      },
   ]
 }
