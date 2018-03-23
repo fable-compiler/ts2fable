@@ -56,6 +56,13 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
     let setParentNodes = true
     let host = ts.createCompilerHost(options, setParentNodes)
     let program = ts.createProgram(ResizeArray tsPaths, options, host)
+
+    // all the linked source files get loaded by TypeScript
+    // we just have to what to export and to how many files
+    for sf in program.getSourceFiles() do
+        printfn "%s" sf.fileName
+
+    // this just limits the code exported to the files we specified
     let tsFiles = tsPaths |> List.map program.getSourceFile
     let checker = program.getTypeChecker()
    
