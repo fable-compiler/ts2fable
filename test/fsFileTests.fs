@@ -27,14 +27,14 @@ let inline equal (expected: 'T) (actual: 'T): unit =
 
 let testFsFiles tsPaths fsPath (f: FsFile list -> unit) =
 
-    let fsFileOut = getFsFileOut fsPath tsPaths 
-    emitFsFileOut fsPath fsFileOut
+    let fsFileOut = getFsFileOut fsPath tsPaths []
+    emitFsFileOut fsPath fsFileOut 
     f fsFileOut.Files
 
 let testFsFileLines tsPaths fsPath (f: string list -> unit) =
 
-    let fsFileOut = getFsFileOut fsPath tsPaths 
-    emitFsFileOutAsLines fsPath fsFileOut
+    let fsFileOut = getFsFileOut fsPath tsPaths []
+    emitFsFileOutAsLines fsPath fsFileOut 
     |> f
 
 
