@@ -246,6 +246,10 @@ Target.Create "WatchTest" (fun _ ->
     runDotnet toolDir "fable webpack -- --config webpack.config.test.js -w"
 )
 
+Target.Create "WatchCli" (fun _ ->
+    runDotnet toolDir "fable webpack -- --config webpack.config.cli.js -w"
+)
+
 Target.Create "CliTest" Target.DoNothing
 Target.Create "Deploy" DoNothing
 Target.Create "BuildAll" Target.DoNothing
