@@ -16,6 +16,13 @@
             "type": "shell",
             "label": "CliTest",
             "group": "build"
+        },
+        {
+            "command": "fake",
+            "args": ["build","-t","WatchCli"],
+            "type": "shell",
+            "label": "WatchCli",
+            "group": "build"
         }
     ]
 }

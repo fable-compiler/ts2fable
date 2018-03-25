@@ -48,7 +48,10 @@ let transform (file: FsFile): FsFile =
     |> extractTypeLiterals // after fixEscapeWords
     |> addAliasUnionHelpers
     
-let getFsFileOut (fsPath: string) (tsPaths: string list) = 
+let stringContainsAny (b: string list) (a: string): bool =
+    b |> List.exists a.Contains
+
+let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) = 
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
         o.target <- Some ScriptTarget.ES2015
         o.``module`` <- Some ModuleKind.CommonJS
@@ -56,7 +59,19 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) =
     let setParentNodes = true
     let host = ts.createCompilerHost(options, setParentNodes)
     let program = ts.createProgram(ResizeArray tsPaths, options, host)
-    let tsFiles = tsPaths |> List.map program.getSourceFile
+
+    let exportFiles =
+        if exports.Length = 0 then tsPaths
+        else
+            program.getSourceFiles()
+            |> List.ofSeq
+            |> List.map (fun sf -> sf.fileName)
+            |> List.filter (stringContainsAny exports)
+
+    for export in exportFiles do
+        printfn "export %s" export
+
+    let tsFiles = exportFiles |> List.map program.getSourceFile
     let checker = program.getTypeChecker()
    
     let moduleNameMap =
@@ -101,7 +116,7 @@ let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) =
     file.``end``() 
     lines |> List.ofSeq
         
-let writeFile (tsPaths: string list) (fsPath: string): unit =
+let writeFile (tsPaths: string list) (fsPath: string) exports: unit =
     // printfn "writeFile %A %s" tsPaths fsPath
-    let fsFileOut = getFsFileOut fsPath tsPaths 
+    let fsFileOut = getFsFileOut fsPath tsPaths exports
     emitFsFileOut fsPath fsFileOut
