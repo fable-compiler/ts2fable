@@ -21,6 +21,7 @@ ts2fable node_modules/@types/yargs/index.d.ts src/Yargs.fs
 ```
 
 You can also use `--export`(or `-e`) option to collect from multiple `tsfiles` 
+
 In below sample: All the **related ts files** in npm packages **uifabric** and **office-ui-fabric-react** will be compiled to `OfficeReact.fs` as a [bundle](https://github.com/fable-compiler/ts2fable-exports/blob/master/OfficeReact.fs)
 ```
 ts2fable node_modules/office-ui-fabric-react/lib/index.d.ts test-compile/OfficeReact.fs -e uifabric office-ui-fabric-react
