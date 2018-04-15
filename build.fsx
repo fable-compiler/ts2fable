@@ -1,4 +1,5 @@
 #r "paket: groupref netcorebuild //"
+open Fake.IO
 #load "./.fake/build.fsx/intellisense.fsx"
 open System
 open Fake.Core
@@ -19,9 +20,9 @@ open Fake.Tools.Git.Repository
 open Fake.Tools.Git.CommandHelper
 open Fake.Tools.Git.Staging
 open Fake.IO
-open Fake.Windows.Choco
+open Fake.Windows
 let run' timeout (cmd:string) dir args  =
-    if Process.Exec (fun info ->
+    if Process.execSimple (fun info ->
         { info with 
             FileName = cmd
             WorkingDirectory = 
@@ -50,9 +51,12 @@ let distDir = "./dist"
 let cliDir = "./src"
 let testDir = "./test"
 let cliProj = cliDir</>"ts2fable.fsproj"
+let version = environVarOrDefault "APPVEYOR_REPO_TAG_NAME" buildVersion
+
+    
 let runDotnet workingDir args =
     let result =
-        Process.Exec (fun info ->
+        Process.execSimple (fun info ->
         { info with 
             FileName = dotnetExePath
             WorkingDirectory = workingDir 
@@ -69,26 +73,26 @@ let npm args =
 
 let git args = 
     run gitTool "./" args  
-Target.Create "InstallDotNetCore" (fun _ ->
-    DotNet.Install DotNet.Release_2_1_4
+Target.create "InstallDotNetCore" (fun _ ->
+    DotNet.install DotNet.Release_2_1_4 |> ignore
     dotnetExePath <- DotNet.InfoOptions.Create().Common.DotNetCliPath
 )
 
-Target.Create "YarnInstall" (fun _ ->
+Target.create "YarnInstall" (fun _ ->
     yarn "install"
 )
 
-Target.Create "Restore" (fun _ ->
-    DotNet.Restore(id) (toolDir</>"DotnetCLI.fsproj")
-    DotNet.Restore(id) (testDir</>"test.fsproj")
-    DotNet.Restore(id) cliProj
+Target.create "Restore" (fun _ ->
+    DotNet.restore(id) (toolDir</>"DotnetCLI.fsproj")
+    DotNet.restore(id) (testDir</>"test.fsproj")
+    DotNet.restore(id) cliProj
 )
 
-Target.Create "BuildCli" (fun _ ->
+Target.create "BuildCli" (fun _ ->
     runDotnet toolDir <| sprintf "fable yarn-fable-splitter -- %s  --config %s --port free" cliProj (toolDir</>"splitter.config.js")
 )
 
-Target.Create "RunCli" (fun _ ->
+Target.create "RunCli" (fun _ ->
     let ts2fable args = 
         let args = args |> String.concat " "
         async {
@@ -137,25 +141,25 @@ Target.Create "RunCli" (fun _ ->
     printfn "done writing test-compile files"
 )
 
-Target.Create "BuildTestCompile" (fun _ ->
-    DotNet.Build(id) (testCompileDir</>"test-compile.fsproj")
+Target.create "BuildTestCompile" (fun _ ->
+    DotNet.build(id) (testCompileDir</>"test-compile.fsproj")
 )
 
-Target.Create "BuildTest" (fun _ ->
+Target.create "BuildTest" (fun _ ->
     runDotnet toolDir "fable webpack -- --config webpack.config.test.js"
 )
 
-Target.Create "RunTest" (fun _ ->
+Target.create "RunTest" (fun _ ->
     match buildServer with 
     | AppVeyor -> node <| sprintf "%s --reporter mocha-appveyor-reporter %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
     | _ -> node <| sprintf "%s %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
 )
 
-Target.Create "PushToExports" (fun _ ->
+Target.create "PushToExports" (fun _ ->
     
     let configGitAuthorization() = 
-        Install id "openssl.light"
-        Install id "openssh"
+        Choco.install id "openssl.light"
+        Choco.install id "openssh"
 
         let sshDir = (GetFolderPath UserProfile)</>".ssh"
        
@@ -184,12 +188,12 @@ Target.Create "PushToExports" (fun _ ->
 
         let commit() =
             let descripton = 
-                [ sprintf "Appveyor https://ci.appveyor.com/project/fable-compiler/ts2fable/build/%s" buildVersion
+                [ sprintf "Appveyor https://ci.appveyor.com/project/fable-compiler/ts2fable/build/%s" version
                   RepocommitMsg]
                 |> String.concat "\n"
                 |> fun s -> sprintf "\"%s\"" s 
         
-            sprintf "commit -m %s -m %s" buildVersion descripton 
+            sprintf "commit -m %s -m %s" version descripton 
             |> run gitTool repositoryDir
             |> ignore                  
                                                       
@@ -199,7 +203,7 @@ Target.Create "PushToExports" (fun _ ->
                 Shell.DeleteDir repositoryDir
                 clone "./" "-b dev git@github.com:fable-compiler/ts2fable-exports.git" repositoryDir
                 Shell.CopyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
-                StageAll repositoryDir
+                stageAll repositoryDir
                 try 
                     commit()
                     push repositoryDir
@@ -212,7 +216,7 @@ Target.Create "PushToExports" (fun _ ->
                     ( fun () -> 
                         checkoutBranch repositoryDir "master"
                         merge repositoryDir "-X theirs" "dev"
-                        StageAll repositoryDir
+                        stageAll repositoryDir
                         push repositoryDir
                         )
             else
@@ -220,7 +224,7 @@ Target.Create "PushToExports" (fun _ ->
     | _ ->  ()
 )
 
-Target.Create "Publish" (fun _ ->
+Target.create "Publish" (fun _ ->
     match buildServer with 
     | AppVeyor -> 
         node (toolDir</>"build-update.package.js")
@@ -238,21 +242,24 @@ Target.Create "Publish" (fun _ ->
             let npmrc = (GetFolderPath UserProfile)</>".npmrc"
             File.writeNew npmrc [line]
             npm "whoami"
-            yarn <| sprintf "publish ts2fable-%s.tgz --new-version %s --tag next" buildVersion buildVersion
+            if version <> buildVersion && version = buildVersion.Substring(0,5) then 
+                yarn <| sprintf "publish ts2fable-%s.tgz --new-version %s" version version
+            else            
+                yarn <| sprintf "publish ts2fable-%s.tgz --new-version %s --tag next" version version
     | _ ->  ()
 )
 
-Target.Create "WatchTest" (fun _ ->
+Target.create "WatchTest" (fun _ ->
     runDotnet toolDir "fable webpack -- --config webpack.config.test.js -w"
 )
 
-Target.Create "WatchCli" (fun _ ->
+Target.create "WatchCli" (fun _ ->
     runDotnet toolDir "fable webpack -- --config webpack.config.cli.js -w"
 )
 
-Target.Create "CliTest" Target.DoNothing
-Target.Create "Deploy" DoNothing
-Target.Create "BuildAll" Target.DoNothing
+Target.create "CliTest" Target.DoNothing
+Target.create "Deploy" DoNothing
+Target.create "BuildAll" Target.DoNothing
 
 "CliTest"
     <== [ "BuildCli"
@@ -272,4 +279,4 @@ Target.Create "BuildAll" Target.DoNothing
           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
           "Publish" ]
 
-Target.RunOrDefault "BuildAll"
+Target.runOrDefault "BuildAll"
