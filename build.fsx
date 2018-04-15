@@ -242,7 +242,8 @@ Target.create "Publish" (fun _ ->
             let npmrc = (GetFolderPath UserProfile)</>".npmrc"
             File.writeNew npmrc [line]
             npm "whoami"
-            if version <> buildVersion && version = buildVersion.Substring(0,5) then 
+            let p = buildVersion.IndexOf("-build.")
+            if version <> buildVersion && version = buildVersion.Substring(0,p) then 
                 yarn <| sprintf "publish ts2fable-%s.tgz --new-version %s" version version
             else            
                 yarn <| sprintf "publish ts2fable-%s.tgz --new-version %s --tag next" version version
