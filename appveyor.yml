@@ -1,11 +1,10 @@
 image: Visual Studio 2017
 version: 0.6.0-build.{build}
 install:
-  - cinst fake -pre
   - ps: Install-Product node 8 x64
   - yarn global add mocha
 build_script:
-  - cmd: fake.exe build -t Deploy
+  - cmd: fake build -t Deploy
 test: off  
 artifacts:
   - path: '*.tgz'
