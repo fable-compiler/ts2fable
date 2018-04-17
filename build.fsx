@@ -230,7 +230,7 @@ Target.create "Publish" (fun _ ->
         node (toolDir</>"build-update.package.js")
         node (toolDir</>"add-shebang.js")
         
-        yarn <| sprintf "version --new-version %s --no-git-tag-version" buildVersion
+        yarn <| sprintf "version --new-version %s --no-git-tag-version" version
         npm "pack"
         
         let repoName = environVar "appveyor_repo_name"
@@ -242,8 +242,7 @@ Target.create "Publish" (fun _ ->
             let npmrc = (GetFolderPath UserProfile)</>".npmrc"
             File.writeNew npmrc [line]
             npm "whoami"
-            let p = buildVersion.IndexOf("-build.")
-            if version <> buildVersion && version = buildVersion.Substring(0,p) then 
+            if not <| version.Contains("-build") then 
                 yarn <| sprintf "publish ts2fable-%s.tgz --new-version %s" version version
             else            
                 yarn <| sprintf "publish ts2fable-%s.tgz --new-version %s --tag next" version version
