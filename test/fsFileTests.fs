@@ -217,4 +217,15 @@ describe "transform tests" <| fun _ ->
                 | FsType.Union un when un.Option -> true
                 | _ -> false
             )
-            |> equal true                            
+            |> equal true         
+
+    // https://github.com/fable-compiler/ts2fable/issues/219
+    it "string enum with period" <| fun _ ->
+        let tsPaths = ["test/fragments/react-native-fbsdk/stringEnumWithPeriod.d.ts"]
+        let fsPath = "test/fragments/react-native-fbsdk/stringEnumWithPeriod.fs"
+        testFsFileLines tsPaths fsPath  <| fun lines ->
+            lines 
+            |> List.exists (fun line ->
+                line.Contains "User_actions_books"    
+            )
+            |> equal true                      

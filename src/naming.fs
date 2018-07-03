@@ -33,6 +33,7 @@ let createEnumNameParts (name: string) =
         | Capital letter :: rest when part = "" -> splitParts letter parts rest
         | Capital letter :: rest -> splitParts letter (part :: parts) rest
         | "-" :: rest -> splitParts "" (part :: parts) rest
+        | "." :: rest -> splitParts "_" (part :: parts) rest
         | token :: rest ->  splitParts (part + token) parts rest
     tokens 
     |> List.ofSeq
