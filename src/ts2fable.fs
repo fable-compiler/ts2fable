@@ -11,6 +11,7 @@ let argv =
     yargs
         .usage("Usage: ts2fable some.d.ts src/Some.fs")
         .command(U2.Case1 "$0 [files..]", "")
+        .demandOption(U2.Case1 "files", "")
         .option("files", jsOptions<Yargs.Options>(fun o ->
             o.alias <- Some !^"f"
             o.description <- Some "input ts files and output fs file"
