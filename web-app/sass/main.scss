@@ -1,0 +1,39 @@
+// Font Awesome
+$fa-font-path: "./../../node_modules/font-awesome/fonts";
+@import './../../node_modules/font-awesome/scss/font-awesome';
+
+@import "./../../node_modules/bulma/sass/utilities/initial-variables";
+
+// Bulma customization
+$body-size: 14px;
+
+@import './../../node_modules/bulma/bulma';
+@import './../../node_modules/bulma-pageloader/dist/css/bulma-pageloader';
+@import './../../node_modules/bulma-tooltip/dist/css/bulma-tooltip';
+
+html {
+    overflow-y: hidden;
+}
+
+.page-content {
+    height: calc(100vh - #{$navbar-height});
+}
+
+// Overwrite, monaco style to make the code center compare to the Message box
+.monaco-scrollable-element {
+    left: 5px !important;
+}
+
+.copy-button {
+    position: absolute;
+    z-index: 1000;
+    right: 2em;
+}
+
+.copy-notification {
+    position: absolute;
+    z-index: 1000;
+    bottom: 1em;
+    right: 2em;
+    margin-bottom: 0 !important;
+}
