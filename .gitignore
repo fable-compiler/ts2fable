@@ -263,3 +263,5 @@ paket-files/
 .idea/
 *.sln.iml
 
+web-app/output/
+web-app/public/
