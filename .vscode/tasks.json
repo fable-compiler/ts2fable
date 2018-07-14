@@ -4,24 +4,31 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "command": "fake",
-            "args": ["build","-t","WatchTest"],
+            "command": "dotnet",
+            "args": ["fake","build","-t","WatchTest"],
             "type": "shell",
             "label": "WatchTest",
             "group": "build"
         },
         {
-            "command": "fake",
-            "args": ["build","-t","CliTest"],
+            "command": "dotnet",
+            "args": ["fake","build","-t","CliTest"],
             "type": "shell",
             "label": "CliTest",
             "group": "build"
         },
         {
-            "command": "fake",
-            "args": ["build","-t","WatchCli"],
+            "command": "dotnet",
+            "args": ["fake","build","-t","WatchCli"],
             "type": "shell",
             "label": "WatchCli",
+            "group": "build"
+        },
+        {
+            "command": "dotnet",
+            "args": ["fake","build","-t","WebApp.Watch"],
+            "type": "shell",
+            "label": "WebApp.Watch",
             "group": "build"
         }
     ]
