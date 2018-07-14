@@ -1,4 +1,4 @@
-module ts2fable.Version
+module ts2fable.node.Version
 
 open Node
 open Fable.Core.JsInterop

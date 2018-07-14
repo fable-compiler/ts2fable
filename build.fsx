@@ -149,7 +149,7 @@ Target.create "BuildTest" (fun _ ->
         DotNet.exec
             (dtntWorkDir toolDir)
             "fable"
-            "webpack -- --config webpack.config.test.js"
+            "webpack --port free -- --config webpack.config.test.js"
 
     if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
 )
@@ -163,7 +163,7 @@ Target.create "RunTest" (fun _ ->
     else
         node <| sprintf "%s %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
 )
-
+            
 Target.create "PushToExports" (fun _ ->
 
     let configGitAuthorization() =
@@ -231,7 +231,7 @@ Target.create "PushToExports" (fun _ ->
                 handle (fun () -> ())
 )
 
-Target.create "Publish" (fun _ ->
+Target.create "Cli.Publish" (fun _ ->
     if (String.isNullOrEmpty BuildServer.appVeyorBuildVersion) then
         node (toolDir</>"build-update.package.js")
         node (toolDir</>"add-shebang.js")
@@ -259,7 +259,7 @@ Target.create "WatchTest" (fun _ ->
         DotNet.exec
             (dtntWorkDir toolDir)
             "fable"
-            "webpack -- --config webpack.config.test.js -w"
+            "webpack --port free -- --config webpack.config.test.js -w"
 
     if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
 )
@@ -269,7 +269,7 @@ Target.create "WatchCli" (fun _ ->
         DotNet.exec
             (dtntWorkDir toolDir)
             "fable"
-            "webpack -- --config webpack.config.cli.js -w"
+            "webpack --port free -- --config webpack.config.cli.js -w"
 
     if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
 )
@@ -311,7 +311,19 @@ Target.create "WebApp.Watch" (fun _ ->
 )
 
 Target.create "WebApp.Publish" (fun _ ->
-    Yarn.exec "run gh-pages --dist web-app/output" id
+    if (String.isNullOrEmpty BuildServer.appVeyorBuildVersion) then
+        Yarn.exec (sprintf "version --new-version %s --no-git-tag-version" version) id
+
+        let repoName = Environment.environVar "appveyor_repo_name"
+        let repoBranch = Environment.environVar "appveyor_repo_branch"
+        let prHeadRepoName = Environment.environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
+
+        if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && String.isNullOrEmpty prHeadRepoName then
+            let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| Environment.environVar "npmauthtoken"
+            let npmrc = (Fake.SystemHelper.Environment.GetFolderPath Fake.SystemHelper.Environment.UserProfile)</>".npmrc"
+            File.writeNew npmrc [line]
+            npm "whoami"
+            Yarn.exec "run gh-pages --dist web-app/output" id
 )
 
 Target.create "WebApp.Setup" ignore
@@ -331,7 +343,8 @@ Target.create "WebApp.Setup" ignore
 "Deploy"
     <== [ "BuildAll"
           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
-          "Publish" ]
+          "WebApp.Publish"
+          "Cli.Publish" ]
 
 "WebApp.Setup"
     <== [ "YarnInstall"

@@ -4,8 +4,6 @@ open Fable.Core
 open Fable.Core.JsInterop
 open TypeScript
 open TypeScript.Ts
-open Node
-open Yargs
 
 open ts2fable.Naming
 open ts2fable.Print
@@ -51,29 +49,35 @@ let transform (file: FsFile): FsFile =
 let stringContainsAny (b: string list) (a: string): bool =
     b |> List.exists a.Contains
 
-let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) = 
+let getFsFileOutWithText (text: string) = 
+    let scriptTarget = ScriptTarget.ES2015
+    let inputFileName = "module.d.ts"
+    let sourceFile = ts.createSourceFile (inputFileName,text, scriptTarget, true)
+    let tsFiles = [sourceFile]
     let options = jsOptions<Ts.CompilerOptions>(fun o ->
-        o.target <- Some ScriptTarget.ES2015
+        o.target <- Some scriptTarget
         o.``module`` <- Some ModuleKind.CommonJS
     )
-    let setParentNodes = true
-    let host = ts.createCompilerHost(options, setParentNodes)
-    let program = ts.createProgram(ResizeArray tsPaths, options, host)
 
-    let exportFiles =
-        if exports.Length = 0 then tsPaths
-        else
-            program.getSourceFiles()
-            |> List.ofSeq
-            |> List.map (fun sf -> sf.fileName)
-            |> List.filter (stringContainsAny exports)
+    let host =  jsOptions<CompilerHost>(fun o ->
+        o.getSourceFile <- fun fileName -> if fileName.StartsWith "module" then Some sourceFile else None
+        o.writeFile <- fun (_,_) -> ()
+        o.getDefaultLibFileName <- fun _ -> "lib.d.ts"
+        o.useCaseSensitiveFileNames <- fun _ -> false
+        o.getCanonicalFileName <- id
+        o.getCurrentDirectory <- fun _ -> ""
+        o.getNewLine <- fun _ -> "\r\n"
+        o.fileExists <- fun fileName -> inputFileName = fileName
+        o.readFile <- fun _ -> Some ""
+        o.directoryExists <- fun _ -> true
+        o.getDirectories <- fun _ -> ResizeArray [] 
+    )
 
-    for export in exportFiles do
-        printfn "export %s" export
+    let program = ts.createProgram(ResizeArray [inputFileName], options, host)
+    printfn "export %s" inputFileName
 
-    let tsFiles = exportFiles |> List.map program.getSourceFile
     let checker = program.getTypeChecker()
-   
+    
     let moduleNameMap =
         program.getSourceFiles()
         |> Seq.map (fun sf -> sf.fileName, getJsModuleName sf.fileName)
@@ -92,7 +96,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) 
     {
         // use the F# file name as the module namespace
         // TODO ensure valid name
-        Namespace = path.basename(fsPath, path.extname(fsPath))
+        Namespace = "ModuleName"
         Opens =
             [
                 "System"
@@ -102,21 +106,11 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) 
         Files = fsFiles
     }
     |> fixFsFileOut
-
-let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
-    emitFsFileOutAsLines fsPath fsFileOut
-    |> ignore
-
-let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) = 
-    let file = fs.createWriteStream (!^fsPath)
+let emitFsFileOutAsText (fsFileOut: FsFileOut) = 
     let lines = List []
-    for line in printFsFile fsFileOut do
+    for line in printFsFile "0.6.1" fsFileOut do
         lines.Add(line)
-        file.write(sprintf "%s%c" line '\n') |> ignore
-    file.``end``() 
-    lines |> List.ofSeq
+    lines |> String.concat "\n"
+
+
         
-let writeFile (tsPaths: string list) (fsPath: string) exports: unit =
-    // printfn "writeFile %A %s" tsPaths fsPath
-    let fsFileOut = getFsFileOut fsPath tsPaths exports
-    emitFsFileOut fsPath fsFileOut

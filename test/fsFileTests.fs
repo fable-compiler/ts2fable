@@ -8,11 +8,10 @@ open TypeScript
 open TypeScript.Ts
 open Node
 open ts2fable.Read
-open ts2fable.Write
+open ts2fable.node.Write
 open ts2fable.Transform
 open ts2fable.Print
 open System.Collections.Generic
-open Node
 open Node.Fs
 open ts2fable.Keywords
 

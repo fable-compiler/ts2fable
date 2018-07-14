@@ -255,10 +255,10 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         for _ in 0..1 do
             lines.RemoveAt (lines.Count-1)
 
-let printFsFile (file: FsFileOut): ResizeArray<string> =
+let printFsFile version (file: FsFileOut): ResizeArray<string> =
     let lines = ResizeArray<string>()
 
-    sprintf "// ts2fable %s" Version.version |> lines.Add
+    sprintf "// ts2fable %s" version |> lines.Add
     sprintf "module rec %s" file.Namespace |> lines.Add
 
     for opn in file.Opens do

@@ -6,6 +6,7 @@ var fs = require('fs');
 console.log("Bundling for cli...");
 
 module.exports = {
+  mode: 'development',
   devtool: "inline-source-map",
   entry: common.config.cliEntry,
   target: "node",

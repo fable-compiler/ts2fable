@@ -1,5 +1,5 @@
+dotnet-fable
 group WebApp
-    dotnet-fable
 
     Fable.Core
     Fable.Elmish

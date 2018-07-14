@@ -2,7 +2,6 @@ module rec ts2fable.Transform
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Node
 open TypeScript
 open TypeScript.Ts
 open System.Collections.Generic

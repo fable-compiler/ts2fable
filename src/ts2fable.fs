@@ -1,11 +1,11 @@
-module ts2fable.App
+module ts2fable.node.App
 
 open Fable.Core
 open Fable.Core.JsInterop
 open Node
 open Yargs
-
-open ts2fable.Write
+open ts2fable.node.Write
+open ts2fable.node.Version
 
 let argv =
     yargs
