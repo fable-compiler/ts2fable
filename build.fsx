@@ -60,7 +60,7 @@ let cliDir = "./src"
 let testDir = "./test"
 let cliProj = cliDir</>"ts2fable.fsproj"
 let version = Environment.environVarOrDefault "APPVEYOR_REPO_TAG_NAME" BuildServer.buildVersion
-
+let isAppveyor = String.isNotNullOrEmpty BuildServer.appVeyorBuildVersion
 let node args =
     run nodeTool "./" args
 
@@ -158,7 +158,7 @@ Target.create "RunTest" (fun _ ->
     // match BuildServer.buildServer with
     // | AppVeyor -> node <| sprintf "%s --reporter mocha-appveyor-reporter %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
     // | _ -> node <| sprintf "%s %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
-    if (String.isNullOrEmpty BuildServer.appVeyorBuildVersion) then
+    if (isAppveyor) then
         node <| sprintf "%s --reporter mocha-appveyor-reporter %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
     else
         node <| sprintf "%s %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
@@ -188,7 +188,7 @@ Target.create "PushToExports" (fun _ ->
 
     let repositoryDir = "./ts2fable-exports"
 
-    if (String.isNullOrEmpty BuildServer.appVeyorBuildVersion) then
+    if (isAppveyor) then
         let repoName = Environment.environVar "appveyor_repo_name"
         let repoBranch = Environment.environVar "appveyor_repo_branch"
         let RepocommitMsg = Environment.environVar "APPVEYOR_REPO_COMMIT_MESSAGE"
@@ -232,7 +232,7 @@ Target.create "PushToExports" (fun _ ->
 )
 
 Target.create "Cli.Publish" (fun _ ->
-    if (String.isNullOrEmpty BuildServer.appVeyorBuildVersion) then
+    if (isAppveyor) then
         node (toolDir</>"build-update.package.js")
         node (toolDir</>"add-shebang.js")
 
@@ -311,7 +311,7 @@ Target.create "WebApp.Watch" (fun _ ->
 )
 
 Target.create "WebApp.Publish" (fun _ ->
-    if (String.isNullOrEmpty BuildServer.appVeyorBuildVersion) then
+    if (isAppveyor) then
         Yarn.exec (sprintf "version --new-version %s --no-git-tag-version" version) id
 
         let repoName = Environment.environVar "appveyor_repo_name"

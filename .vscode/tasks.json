@@ -5,6 +5,13 @@
     "tasks": [
         {
             "command": "dotnet",
+            "args": ["fake","build"],
+            "type": "shell",
+            "label": "BuildAll",
+            "group": "build"
+        },
+        {
+            "command": "dotnet",
             "args": ["fake","build","-t","WatchTest"],
             "type": "shell",
             "label": "WatchTest",
