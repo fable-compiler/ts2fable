@@ -10,6 +10,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\src\ts2fable.fsproj" />
     <Compile Include="Samples.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>

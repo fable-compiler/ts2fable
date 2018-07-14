@@ -3,17 +3,18 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Node.fs" />
+    <Compile Include="node/Node.fs" />
     <Compile Include="Yargs.fs" />
     <Compile Include="TypeScript.fs" />
     <Compile Include="keywords.fs" />
     <Compile Include="naming.fs" />
     <Compile Include="syntax.fs" />
     <Compile Include="read.fs" />
-    <Compile Include="version.fs" />
+    <Compile Include="node/version.fs" />
     <Compile Include="print.fs" />
     <Compile Include="transform.fs" />
     <Compile Include="write.fs" />
+    <Compile Include="node/write.fs" />
     <Compile Include="ts2fable.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

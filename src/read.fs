@@ -2,7 +2,6 @@ module rec ts2fable.Read
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Node
 open TypeScript
 open TypeScript.Ts
 open System.Collections.Generic
@@ -126,10 +125,13 @@ let readCommentTags (nd: Node) =
         )
 
 let readCommentsForSignatureDeclaration (checker: TypeChecker) (declaration: SignatureDeclaration): FsComment list =
-    match checker.getSignatureFromDeclaration declaration with
-    | None -> []
-    | Some signature ->
-        signature.getDocumentationComment() |> readComments
+    try 
+        match checker.getSignatureFromDeclaration declaration with
+        | None -> []
+        | Some signature ->
+            signature.getDocumentationComment() |> readComments
+    with _ -> 
+        []        
 
 let readCommentsAtLocation (checker: TypeChecker) (nd: Node): FsComment list =
     match checker.getSymbolAtLocation nd with

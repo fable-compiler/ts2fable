@@ -4,7 +4,10 @@ open Elmish
 open Fable.Import
 open Fable.Core
 open Monaco
-
+open ts2fable.Write
+open TypeScript
+open Monaco.Monaco.Languages
+open TypeScript.Ts
 type EditorState =
     | Loading
     | Loaded
@@ -21,7 +24,9 @@ type Msg =
     | OnHtmlChange of string
     | UpdateFSharpCode
 
-let ts2fable s = "// Placeholder for ts2fable lib\n" + s
+let ts2fable s = 
+    printfn "// Placeholder for ts2fable lib\n"
+    s |> getFsFileOutWithText |> emitFsFileOutAsText
 
 let init _ =
     { HtmlCode = ""
@@ -49,6 +54,7 @@ open Fable.Helpers.React.Props
 open Fulma
 open Fulma.Extensions
 open Fulma.FontAwesome
+open Monaco.Monaco
 
 module Monaco =
 
@@ -110,11 +116,10 @@ let private navbar dispatch =
                 [ Navbar.Link.a [ ]
                     [ str "Samples" ]
                   Navbar.Dropdown.div [ ]
-                    [ navbarItem "Hello world" Samples.helloWorld dispatch
-                      navbarItem "Bootstrap: Navbar" Samples.boostrapNavbar dispatch
-                      navbarItem "Fulma: Box" Samples.fulmaBox dispatch
-                      navbarItem "Fulma: Media Object" Samples.fulmaMediaObject dispatch
-                      navbarItem "Foundation: Top Bar" Samples.foundationTopBar dispatch ] ] ]
+                    [ navbarItem "Monoca" Samples.monoca dispatch
+                      navbarItem "Mocha" Samples.mocha dispatch
+                      navbarItem "chai" Samples.chai dispatch
+                      navbarItem "Typescript" Samples.typescript dispatch ] ] ]
           Navbar.End.div [ ]
             [ Navbar.Item.div [ ]
                 [ Button.a [ Button.Props [ Href "https://github.com/fable-compiler/ts2fable" ]
@@ -153,7 +158,8 @@ let view model dispatch =
                                 Columns.IsMultiline
                                 Columns.Props [ Style [ Height "100%" ] ] ]
                 [ Column.column [ Column.Width(Screen.All, Column.IsHalf) ]
-                    [ Editor.editor [ Editor.OnChange (OnHtmlChange >> dispatch)
+                    [ Editor.editor [ Editor.Language "typescript"
+                                      Editor.OnChange (OnHtmlChange >> dispatch)
                                       Editor.Value model.HtmlCode
                                       Editor.EditorDidMount (fun _ -> dispatch HtmlEditorLoaded) ] ]
                   Column.column [ Column.Width(Screen.All, Column.IsHalf) ]

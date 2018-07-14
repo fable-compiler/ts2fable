@@ -1,5 +1,5 @@
 image: Visual Studio 2017
-version: 0.6.0-build.{build}
+version: 0.6.1-build.{build}
 install:
   - ps: Install-Product node 8 x64
   - yarn global add mocha

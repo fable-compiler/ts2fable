@@ -4349,14 +4349,14 @@ module Ts =
         abstract wildcardDirectories: MapLike<WatchDirectoryFlags> with get, set
 
     type [<AllowNullLiteral>] ModuleResolutionHost =
-        abstract fileExists: fileName: string -> bool
-        abstract readFile: fileName: string -> string option
+        abstract fileExists: (string -> bool) with get,set
+        abstract readFile: (string -> string option) with get,set
         abstract trace: s: string -> unit
-        abstract directoryExists: directoryName: string -> bool
+        abstract directoryExists: (string -> bool) with get,set
         /// Resolve a symbolic link.
         abstract realpath: path: string -> string
         abstract getCurrentDirectory: unit -> string
-        abstract getDirectories: path: string -> ResizeArray<string>
+        abstract getDirectories: (string -> ResizeArray<string>) with get,set
 
     /// Represents the result of module resolution.
     /// Module resolution will pick up tsx/jsx/js files even if '--jsx' and '--allowJs' are turned off.
@@ -4414,17 +4414,19 @@ module Ts =
 
     type [<AllowNullLiteral>] CompilerHost =
         inherit ModuleResolutionHost
-        abstract getSourceFile: fileName: string * languageVersion: ScriptTarget * ?onError: (string -> unit) * ?shouldCreateNewSourceFile: bool -> SourceFile option
+        abstract getSourceFile: (string -> SourceFile option) with get,set
+        // abstract getSourceFile: fileName: string * languageVersion: ScriptTarget * ?onError: (string -> unit) * ?shouldCreateNewSourceFile: bool -> SourceFile option with get,set
         abstract getSourceFileByPath: fileName: string * path: Path * languageVersion: ScriptTarget * ?onError: (string -> unit) * ?shouldCreateNewSourceFile: bool -> SourceFile option
         abstract getCancellationToken: unit -> CancellationToken
-        abstract getDefaultLibFileName: options: CompilerOptions -> string
+        abstract getDefaultLibFileName: (CompilerOptions -> string) with get,set
         abstract getDefaultLibLocation: unit -> string
-        abstract writeFile: WriteFileCallback with get, set
-        abstract getCurrentDirectory: unit -> string
-        abstract getDirectories: path: string -> ResizeArray<string>
-        abstract getCanonicalFileName: fileName: string -> string
-        abstract useCaseSensitiveFileNames: unit -> bool
-        abstract getNewLine: unit -> string
+        // abstract writeFile: WriteFileCallback with get, set
+        abstract writeFile: ((string * string) -> unit) with get, set
+        abstract getCurrentDirectory: (unit -> string) with get, set
+        abstract getDirectories: (string -> ResizeArray<string>) with get, set
+        abstract getCanonicalFileName: (string -> string) with get,set
+        abstract useCaseSensitiveFileNames: (unit -> bool) with get,set
+        abstract getNewLine: (unit -> string) with get,set
         abstract resolveModuleNames: moduleNames: ResizeArray<string> * containingFile: string * ?reusedNames: ResizeArray<string> -> ResizeArray<ResolvedModule>
         /// This method is a companion for 'resolveModuleNames' and is used to resolve 'types' references to actual type declaration files
         abstract resolveTypeReferenceDirectives: typeReferenceDirectiveNames: ResizeArray<string> * containingFile: string -> ResizeArray<ResolvedTypeReferenceDirective>
