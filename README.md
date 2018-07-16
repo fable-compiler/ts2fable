@@ -1,7 +1,6 @@
 # **ts2fable**  [![npm version](https://badge.fury.io/js/ts2fable.svg)](https://www.npmjs.com/package/ts2fable)
 
 [Fable](https://github.com/fable-compiler/Fable) parser for [TypeScript declaration files](https://www.typescriptlang.org/docs/handbook/writing-declaration-files.html).
-
 ## Usage
 
 Install it with yarn or npm. With yarn it is:
@@ -30,6 +29,10 @@ ts2fable node_modules/office-ui-fabric-react/lib/index.d.ts test-compile/OfficeR
 You can find more information about how to interact with JavaScript
 from F# [here](https://github.com/fable-compiler/Fable/blob/master/docs/source/docs/interacting.md).
 Please note the parser is not perfect and some tweaking by hand may be needed. Please submit bugs as [issues on GitHub](https://github.com/fable-compiler/ts2fable/issues).
+
+### Online Version
+You can also try out an in-browser version [here](http://fable.io/ts2fable/)
+
 
 ## Contributing
 Succesfull [builds](https://ci.appveyor.com/project/fable-compiler/ts2fable/history) on the master branch are uploaded and tagged as `next`. You can help us test these builds by installing them with:
