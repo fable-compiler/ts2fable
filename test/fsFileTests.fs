@@ -227,4 +227,38 @@ describe "transform tests" <| fun _ ->
             |> List.exists (fun line ->
                 line.Contains "User_actions_books"    
             )
-            |> equal true                      
+            |> equal true      
+
+    // https://github.com/fable-compiler/ts2fable/issues/219
+    it "global variable is not generated" <| fun _ ->
+        let tsPaths = ["test/fragments/breezejs/globalVariable.d.ts"]
+        let fsPath = "test/fragments/breezejs/globalVariable.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existOnlyOneByName "FilterQueryOp" (fun tp ->
+                tp 
+                |> FsType.asVariable
+                |> function 
+                    | Some vb ->
+                        match vb.Export with 
+                        | Some ep ->
+                            ep.Selector = "FilterQueryOp"
+                        | None -> false 
+                    | None -> false
+            )
+            |> equal true  
+
+    it "variable in module should be added to exports" <| fun _ ->
+        let tsPaths = ["test/fragments/monaco/variableInModule.d.ts"]
+        let fsPath = "test/fragments/monaco/variableInModule.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existOnlyOneByName "EditorType" FsType.isVariable
+            |> equal true  
+
+    it "globalClass" <| fun _ ->
+        let tsPaths = ["test/fragments/breezejs/globalClass.d.ts"]
+        let fsPath = "test/fragments/breezejs/globalClass.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            // not implemented
+            equal true true

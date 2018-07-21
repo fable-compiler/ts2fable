@@ -103,6 +103,7 @@ Target.create "RunCli" (fun _ ->
         ts2fable ["node_modules/typescript/lib/typescript.d.ts";"test-compile/TypeScript.fs"]
         ts2fable ["node_modules/@types/node/index.d.ts";"test-compile/Node.fs"]
         ts2fable ["node_modules/@types/yargs/index.d.ts";"test-compile/Yargs.fs"]
+        ts2fable ["node_modules/breeze-client/index.d.ts";"test-compile/Breeze.fs"]
 
         // for test-compile
         ts2fable ["node_modules/vscode/vscode.d.ts";"test-compile/VSCode.fs"]
