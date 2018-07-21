@@ -241,7 +241,12 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
             if vb.HasDeclare then
                 if md.Name = "" then
                     { vb with
-                        Export = { IsGlobal = engines.Contains ns.[0]; Selector = "*"; Path = ns.[0] } |> Some
+                        Export = 
+                            { IsGlobal = engines.Contains ns.[0]
+                              Selector = 
+                                if String.Compare(vb.Name,ns.[0],true) = 0 then "*"
+                                else vb.Name
+                              Path = ns.[0] } |> Some
                     }
                     |> FsType.Variable
                     |> typesGlobal.Add
@@ -249,7 +254,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     if vb.IsGlobal then
                         typesGlobal.Add tp
                     else 
-                        typesOther.Add tp
+                        typesInIExports.Add tp
             else
                 typesInIExports.Add tp
         | FsType.Function _ -> typesInIExports.Add tp

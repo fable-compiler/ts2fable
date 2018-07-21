@@ -1242,6 +1242,10 @@ braces@^2.3.0, braces@^2.3.1:
     split-string "^3.0.2"
     to-regex "^3.0.1"
 
+breeze-client@^1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/breeze-client/-/breeze-client-1.7.1.tgz#f10037328bcb41a088c33ccc74db15a8eff94e2a"
+
 brorand@^1.0.1:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/brorand/-/brorand-1.1.0.tgz#12c25efe40a45e3c323eb8675a0a0ce57b22371f"

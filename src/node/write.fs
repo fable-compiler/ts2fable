@@ -1,4 +1,4 @@
-module rec ts2fable.node.Write
+module ts2fable.node.Write
 
 open Fable.Core
 open Fable.Core.JsInterop
@@ -24,9 +24,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) 
         ReadText = readText
     } |> Bridge.Node |> Bridge.getFsFileOut
 
-let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
-    emitFsFileOutAsLines fsPath fsFileOut
-    |> ignore
+
 
 let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) = 
     let file = fs.createWriteStream (!^fsPath)
@@ -36,7 +34,10 @@ let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) =
         file.write(sprintf "%s%c" line '\n') |> ignore
     file.``end``() 
     lines |> List.ofSeq
-        
+    
+let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
+    emitFsFileOutAsLines fsPath fsFileOut
+    |> ignore
 let writeFile (tsPaths: string list) (fsPath: string) exports: unit =
     // printfn "writeFile %A %s" tsPaths fsPath
     let fsFileOut = getFsFileOut fsPath tsPaths exports

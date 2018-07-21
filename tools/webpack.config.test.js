@@ -7,7 +7,7 @@ console.log("Bundling for test...");
 
 module.exports = {
   mode: 'development',
-  devtool: "inline-source-map",
+  devtool: "source-map",
   entry: common.config.testEntry,
   target: "node",
   externals: common.config.nodeExternals,

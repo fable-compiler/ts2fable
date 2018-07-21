@@ -198,7 +198,7 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
     vb.declarationList.declarations |> List.ofSeq |> List.map (fun vd ->
         {
             Export = None
-            HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers
+            HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers || hasModifier SyntaxKind.ExportKeyword vb.modifiers
             Name = vd.name |> getBindingName
             Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
             IsConst = isConst vd

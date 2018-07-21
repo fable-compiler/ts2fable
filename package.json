@@ -49,6 +49,7 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "1.6.1",
     "babel-preset-react": "^6.24.1",
+    "breeze-client": "^1.7.1",
     "bulma": "^0.7.1",
     "bulma-pageloader": "^2.1.0",
     "bulma-tooltip": "^2.0.1",
@@ -59,6 +60,7 @@
     "cross-env": "^5.1.1",
     "css-loader": "^1.0.0",
     "electron": "^1.7.9",
+    "eslint-scope": "3.7.1",
     "fable-loader": "^1.1.6",
     "fable-splitter": "^0.1.21",
     "fable-utils": "^1.0.6",
@@ -86,8 +88,7 @@
     "vscode": "^1.1.8",
     "webpack": "^4.16.0",
     "webpack-cli": "^3.0.8",
-    "webpack-dev-server": "^3.1.4",
-    "eslint-scope": "3.7.1"
+    "webpack-dev-server": "^3.1.4"
   },
   "engines": {
     "vscode": "^1.18.1"
