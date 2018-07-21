@@ -91,9 +91,7 @@ module internal Bridge =
                 o.``module`` <- Some ModuleKind.CommonJS
             )
             let host =  jsOptions<CompilerHost>(fun o ->
-                o.getSourceFile <- fun fileName ->
-                    if fileName = "lib.d.ts" then None
-                    else  sourceFiles |> List.find (fun sf -> sf.fileName = fileName) |> Some
+                o.getSourceFile <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
                 o.writeFile <- fun (_,_) -> ()
                 o.getDefaultLibFileName <- fun _ -> "lib.d.ts"
                 o.useCaseSensitiveFileNames <- fun _ -> false
