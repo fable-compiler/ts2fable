@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="node/Node.fs" />
+    <Compile Include="node/fileSystem.fs" />
     <Compile Include="Yargs.fs" />
     <Compile Include="TypeScript.fs" />
     <Compile Include="keywords.fs" />
@@ -13,6 +14,7 @@
     <Compile Include="node/version.fs" />
     <Compile Include="print.fs" />
     <Compile Include="transform.fs" />
+    <Compile Include="bridge.fs" />
     <Compile Include="write.fs" />
     <Compile Include="node/write.fs" />
     <Compile Include="ts2fable.fs" />

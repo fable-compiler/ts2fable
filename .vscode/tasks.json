@@ -37,6 +37,13 @@
             "type": "shell",
             "label": "WebApp.Watch",
             "group": "build"
+        },
+        {
+            "command": "dotnet",
+            "args": ["fake","build","-t","WebApp.Build"],
+            "type": "shell",
+            "label": "WebApp.Build",
+            "group": "build"
         }
     ]
 }
