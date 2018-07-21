@@ -13,4 +13,5 @@ open Fake.Tools.Git.Repository
 open Fake.Tools.Git.Staging
 open Fake.Windows
 open Fake.JavaScript
+open Common
 Target.runOrDefault "BuildAll"
