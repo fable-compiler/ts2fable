@@ -283,7 +283,9 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     let path =
         if ns.Length = 0 then 
             md.Name.Replace("'","")
-        else ns |> String.concat "/"
+        elif ns.Length = 1 then 
+            ns.[0]
+        else ns |> List.skip 1 |> String.concat "/"
 
     if typesInIExports.Count > 0 then
         if md.HasDeclare then

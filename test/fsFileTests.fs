@@ -262,3 +262,23 @@ describe "transform tests" <| fun _ ->
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             // not implemented
             equal true true
+
+    // https://github.com/fable-compiler/ts2fable/issues/192
+    it "incorrent import generated" <| fun _ ->
+        let tsPaths = ["test/fragments/monaco/incorrentImportGenerated.d.ts"]
+        let fsPath = "test/fragments/monaco/incorrentImportGenerated.fs"
+        testFsFiles tsPaths fsPath  <| fun fsFiles ->
+            fsFiles 
+            |> existOnlyOneByName "editor" 
+                (fun tp ->
+                    tp 
+                    |> FsType.asVariable
+                    |> function 
+                        | Some vb ->
+                            match vb.Export with 
+                            | Some ep ->
+                                ep.Path = "monaco"
+                            | None -> false 
+                        | None -> false
+                )
+            |> equal true  
