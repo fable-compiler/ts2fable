@@ -127,6 +127,13 @@ Target.create "RunCli" (fun _ ->
                 "uifabric"
                 "office-ui-fabric-react"
             ]
+        ts2fable
+            [
+                "node_modules/reactxp/dist/ReactXP.d.ts"
+                "test-compile/ReactXP.fs"
+                "-e"
+                "reactxp"
+            ]    
     ]
     |> Async.Parallel
     |> Async.RunSynchronously
