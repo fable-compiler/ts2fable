@@ -136,6 +136,7 @@ let rec fixType (fix: FsType -> FsType) (tp: FsType): FsType =
 
 /// recursively fix all the FsType childen for the given FsFile
 let fixFile (fix: FsType -> FsType) (f: FsFile): FsFile =
+
     { f with
         Modules = 
             f.Modules 
@@ -231,7 +232,21 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
-            let ns = if md.Name = "" then ns else ns @ [md.Name.Replace("'","")]
+            let ns = 
+                if md.Name = "" then ns 
+                else 
+                    let (|Normal|Parts|) (mdName: string) =
+                        if mdName.Contains "/" then 
+                            let parts = mdName.Split('/') |> List.ofSeq |> List.filter((<>) ".")
+                            Parts parts
+                        else Normal mdName      
+
+                    let parts =
+                        match md.Name.Replace("'","") with 
+                        | Normal mdName -> [mdName]
+                        | Parts parts -> parts
+                    ns @ parts
+                    
             let smd, vars = createIExportsModule ns smd
             for v in vars do
                 if v.Export.IsSome then v |> variables.Add |> ignore
@@ -357,6 +372,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     newMd, variablesForParent |> List.ofSeq
 
 let createIExports (f: FsFile): FsFile =
+    
     { f with
         Modules = 
             f.Modules
@@ -1137,3 +1153,27 @@ let extractTypesInGlobalModules  (f: FsFile): FsFile =
             { md with Types = tps |> List.ofSeq }    
         ) 
     }
+
+let wrapperModuleForExtralFile (f: FsFile): FsFile =
+    match f.Kind with 
+    | FsFileKind.Index -> f
+    | FsFileKind.Extra extra ->
+        { f with 
+            Modules = f.Modules |> List.map(fun md ->
+                let tps = 
+                    md.Types |> List.map (fun tp ->
+                        match tp with 
+                        | FsType.Module md ->
+                            {
+                                HasDeclare = true
+                                IsNamespace = false
+                                Name = extra |> String.concat "/" |> sprintf "./%s"
+                                Types = md |> FsType.Module |> List.singleton
+                                HelperLines = []
+                                Attributes = []
+                            } |> FsType.Module
+                        | _ -> tp             
+                    )
+                { md with Types = tps}                                
+            ) 
+        }

@@ -24,11 +24,15 @@ let [<Emit("this.timeout($0)")>] timeout (duration: int): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
     Testing.Assert.AreEqual(expected, actual)
 
-let testFsFiles tsPaths fsPath (f: FsFile list -> unit) =
+let testFsFilesWithExports tsPaths fsPath exports (f: FsFile list -> unit) =
 
-    let fsFileOut = getFsFileOut fsPath tsPaths []
+    let fsFileOut = getFsFileOut fsPath tsPaths exports
     emitFsFileOut fsPath fsFileOut 
     f fsFileOut.Files
+
+let testFsFiles tsPaths fsPath (f: FsFile list -> unit) =
+    testFsFilesWithExports tsPaths fsPath [] f
+    
 
 let testFsFileLines tsPaths fsPath (f: string list -> unit) =
 
@@ -93,12 +97,32 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
         let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
-        let fsPath = "test-compile/ReactXP.fs"
+        let fsPath = "test/fragments/reactxp/duplicatedVariableExports.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles
             |> getTopVarialbles 
             |> List.countBy(fun vb -> vb.Name)
             |> List.forall(fun (_,l) -> l = 1)
+            |> equal true
+
+    it "add wrapper module to extra files" <| fun _ ->
+        // let tsPaths = ["node_modules/reactxp/dist/ReactXP.d.ts"]
+        let tsPaths = ["test/fragments/reactxp/ReactXP.d.ts"]
+        let fsPath = "test/fragments/reactxp/wrapperModuleForExtraFile.fs"
+        testFsFilesWithExports tsPaths fsPath ["reactxp"] <| fun fsFiles ->
+            fsFiles
+            |> 
+                ( 
+                    existOnlyOneByName "__web_ReactXP" FsType.isModule 
+                    <&&> existOnlyOneByName "reactXP" (fun tp ->
+                        match FsType.asVariable tp with 
+                        | Some vb -> 
+                            match vb.Export with 
+                            | Some ex -> ex.Path = "test/web/ReactXP"
+                            | None -> false
+                        | None -> false
+                    ) 
+                )
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/pull/164

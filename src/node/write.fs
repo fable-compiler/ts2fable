@@ -18,6 +18,27 @@ open ts2fable.node.FileSystem
 open ts2fable.Bridges
 let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) = 
     {
+        GetFsFileKind =
+            fun (nb,tsPath) ->
+                if nb.Exports.Length = 0 then FsFileKind.Index
+                else
+                    NodeBridge.useExport nb (fun index ->
+                        if nb.TsPaths |> List.contains tsPath then 
+                            FsFileKind.Index
+                        else 
+                            let dir = path.dirname index
+                            let relativePath = 
+                                path.relative (dir,tsPath) 
+                                |> replace "\\" "/" 
+                            let relativePathWithOutExtension = 
+                                relativePath.Substring(0,relativePath.LastIndexOf(".d.ts"))      
+                            let parts = relativePathWithOutExtension.Split('/') |> List.ofSeq                                                 
+                            FsFileKind.Extra parts
+                    )        
+        EnumerateFilesInSameDir = 
+            fun indexFile -> 
+                let dir = path.dirname indexFile
+                enumerateFiles [dir]
         NameSpace = path.basename(fsPath, path.extname(fsPath))
         TsPaths = tsPaths
         Exports = exports

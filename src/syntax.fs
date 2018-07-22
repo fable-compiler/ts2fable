@@ -293,8 +293,15 @@ with
     member x.IsHelper = x.HelperLines.Length > 0
     member x.HasAttributes = x.Attributes.Length > 0
 
+[<RequireQualifiedAccess>]
+type FsFileKind =
+    | Index 
+    | Extra of string list(*relative path parts to index file*)
+
+
 type FsFile =
     {
+        Kind: FsFileKind
         FileName: string
         ModuleName: string
         Modules: FsModule list

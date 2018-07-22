@@ -21,6 +21,7 @@ let transform (file: FsFile): FsFile =
     file
     |> removeInternalModules
     |> mergeModulesInFile
+    |> wrapperModuleForExtralFile
     |> aliasToInterfacePartly
     |> extractGenericParameterDefaults
     |> fixTypesHasESKeywords
@@ -57,7 +58,16 @@ type internal NodeBridge =
         Exports: string list
         ReadText: string -> string
         NameSpace: string
+        EnumerateFilesInSameDir: string -> seq<string>
+        GetFsFileKind:  (NodeBridge * string) -> FsFileKind
     }
+[<RequireQualifiedAccess>]
+module NodeBridge =
+    let useExport nb f =
+        match nb.TsPaths with 
+        | [tsPath] -> f tsPath
+        | _ -> failwith "tspaths 's length must be 1 when with --exports option" 
+
 type internal WebBridge =
     {
         FileName: string
@@ -71,20 +81,37 @@ type internal Bridge =
 
 [<RequireQualifiedAccess>]
 module internal Bridge =
+   
+    let private fsFileKind tsPath =
+        function
+        | Bridge.Node nb -> 
+            nb.GetFsFileKind (nb,tsPath)
+
+        | Bridge.Web w -> FsFileKind.Index
     let private getTsPaths = 
         function
-        | Bridge.Node nm -> nm.TsPaths
+        | Bridge.Node nb -> nb.TsPaths
         | Bridge.Web w -> [w.FileName]
 
-    let private getExports =
+    let private getExportFiles =
         function
-        | Bridge.Node nm -> nm.Exports
-        | Bridge.Web _ -> []
+        | Bridge.Node nb -> 
+            if nb.Exports.Length = 0 then nb.TsPaths 
+            else
+                NodeBridge.useExport nb (fun index ->
+                    let tsPathsInExports (exports:string list) =
+                        nb.EnumerateFilesInSameDir index |> List.ofSeq |> List.filter (fun f ->
+                            f.EndsWith(".d.ts") && stringContainsAny exports f
+                        ) 
+                    tsPathsInExports nb.Exports
+                )                
+        | Bridge.Web w -> [w.FileName]
+
     let private getNamespace =      
         function
-        | Bridge.Node nm -> nm.NameSpace
+        | Bridge.Node nb -> nb.NameSpace
         | Bridge.Web _ -> "moduleName"  
-    let private createProgram =
+    let private createProgram bridge =
         let createDummy tsPaths (sourceFiles: SourceFile list) =
             let options = jsOptions<CompilerOptions>(fun o ->
                 o.target <- Some scriptTarget
@@ -104,41 +131,24 @@ module internal Bridge =
                 o.getDirectories <- fun _ -> ResizeArray [] 
             )
             ts.createProgram(ResizeArray tsPaths, options, host)    
-        function
-        | Bridge.Node nm -> 
-            let exports,tsPaths,readText = nm.Exports,nm.TsPaths,nm.ReadText
-            if List.isEmpty exports then 
-                let sourceFiles = 
-                    tsPaths |> List.map (fun tsPath ->
-                        let text = tsPath |> readText
-                        ts.createSourceFile (tsPath,text, scriptTarget, true)
-                    )
-                createDummy tsPaths sourceFiles
-            else
-                let options = jsOptions<Ts.CompilerOptions>(fun o ->
-                    o.target <- Some scriptTarget
-                    o.``module`` <- Some ModuleKind.CommonJS
+        match bridge with
+        | Bridge.Node nb -> 
+            let exports,readText = getExportFiles bridge,nb.ReadText
+            let sourceFiles = 
+                exports |> List.map (fun tsPath ->
+                    let text = tsPath |> readText
+                    ts.createSourceFile (tsPath,text, scriptTarget, true)
                 )
-                let setParentNodes = true
-                let host = ts.createCompilerHost(options, setParentNodes)
-                ts.createProgram(ResizeArray tsPaths, options, host)    
+            createDummy exports sourceFiles
+
         | Bridge.Web w -> 
             createDummy [w.FileName] [w.SourceFile]
 
     let getFsFileOut bridge = 
         let program = createProgram bridge
-        let exports = getExports bridge
-        let tsPaths = getTsPaths bridge
         let nameSpace = getNamespace bridge
-
-        let exportFiles =
-            if exports.Length = 0 then tsPaths
-            else
-                program.getSourceFiles()
-                |> List.ofSeq
-                |> List.map (fun sf -> sf.fileName)
-                |> List.filter (stringContainsAny exports)
-
+        let exportFiles = getExportFiles bridge
+        
         for export in exportFiles do
             printfn "export %s" export
 
@@ -152,6 +162,7 @@ module internal Bridge =
 
         let fsFiles = tsFiles |> List.map (fun tsFile ->
             {
+                Kind = fsFileKind tsFile.fileName bridge
                 FileName = tsFile.fileName
                 ModuleName = moduleNameMap.[tsFile.fileName]
                 Modules = []
@@ -159,7 +170,7 @@ module internal Bridge =
             |> readSourceFile checker tsFile
             |> transform
         )
-
+        
         {
             // use the F# file name as the module namespace
             // TODO ensure valid name
