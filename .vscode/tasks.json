@@ -44,6 +44,20 @@
             "type": "shell",
             "label": "WebApp.Build",
             "group": "build"
+        },
+        {
+            "command": "dotnet",
+            "args": ["fake","build","-t","PushForComparision"],
+            "type": "shell",
+            "label": "PushForComparision",
+            "group": "build"
+        },
+        {
+            "command": "dotnet",
+            "args": ["fake","build","-f","build2.fsx","-t","Watch"],
+            "type": "shell",
+            "label": "Watch",
+            "group": "build"
         }
     ]
 }
