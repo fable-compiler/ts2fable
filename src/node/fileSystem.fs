@@ -11,3 +11,22 @@ let readLines =
         text.Split('\n') |> Seq.ofArray
 let readLine num file = 
     readLines file |> Seq.item (num - 1)
+
+let enumerateFileSystemEntries dir =
+    let encoding = BufferEncoding.Utf8 |> U2.Case2 |> Some
+    let t= dir |> PathLike.ofString
+    fs.readdirSync (t,encoding) |> Seq.map(fun str -> path.join(ResizeArray<string> [dir;str]))             
+let isFile path=  
+    let stats=
+        path |> PathLike.ofString |> fs.lstatSync
+    stats.isFile()
+let isDirectory path=  
+    let stats=
+        path |> PathLike.ofString |> fs.lstatSync
+    stats.isDirectory()  
+    
+//get all files from a dirctory
+let rec enumerateFiles dirs =
+    if Seq.isEmpty dirs then Seq.empty else
+        seq { yield! dirs |> Seq.collect (enumerateFileSystemEntries >> Seq.filter isFile)
+              yield! dirs |> Seq.collect (enumerateFileSystemEntries >> Seq.filter isDirectory) |> enumerateFiles }

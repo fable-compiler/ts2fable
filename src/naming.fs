@@ -21,6 +21,10 @@ let (|Digit|_|) (digit: string) =
     // Char.IsNumber https://github.com/fable-compiler/Fable/issues/1237
     // if digit.Length = 1 && Char.IsNumber digit.[0] then Some digit else None
 
+let replace (pattern:string) (destPattern:string) (text: string) =
+    text.Replace(pattern,destPattern)
+
+    
 let createEnumNameParts (name: string) = 
     let tokens = Seq.map string name
     let rec splitParts part parts  = 
