@@ -134,7 +134,6 @@ Target.create "RunCli" (fun _ ->
                 "-e"
                 "reactxp"
             ]    
-    
     ]
     |> Async.Parallel
     |> Async.RunSynchronously
