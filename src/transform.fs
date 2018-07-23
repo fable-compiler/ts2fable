@@ -235,16 +235,11 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
             let ns = 
                 if md.Name = "" then ns 
                 else 
-                    let (|Normal|Parts|) (mdName: string) =
-                        if mdName.Contains "/" then 
-                            let parts = mdName.Split('/') |> List.ofSeq |> List.filter((<>) ".")
-                            Parts parts
-                        else Normal mdName      
-
                     let parts =
-                        match md.Name.Replace("'","") with 
-                        | Normal mdName -> [mdName]
-                        | Parts parts -> parts
+                        let name = md.Name.Replace("'","")
+                        match name with 
+                        | ModuleName.Normal -> [name]
+                        | ModuleName.Parts parts -> parts |> List.filter((<>) ".")
                     ns @ parts
                     
             let smd, vars = createIExportsModule ns smd
@@ -942,7 +937,11 @@ let fixNamespace (f: FsFile): FsFile =
                 |> FsImport.Module
             | FsImport.Type imtp ->
                 { imtp with 
-                    SpecifiedModule = fixModuleName imtp.SpecifiedModule
+                    SpecifiedModule = 
+                        match f.Kind with 
+                        | FsFileKind.Index ->
+                            fixModuleName imtp.SpecifiedModule
+                        | FsFileKind.Extra _ -> imtp.SpecifiedModule
                 }
                 |> FsImport.Type
             |> FsType.Import
@@ -1163,7 +1162,7 @@ let wrapperModuleForExtralFile (f: FsFile): FsFile =
                 {
                     HasDeclare = true
                     IsNamespace = false
-                    Name = extra |> String.concat "/" |> sprintf "./%s"
+                    Name = extra |> ModuleName.normalize
                     Types = md |> FsType.Module |> List.singleton
                     HelperLines = []
                     Attributes = []

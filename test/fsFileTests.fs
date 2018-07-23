@@ -94,6 +94,19 @@ describe "transform tests" <| fun _ ->
     let inline (<&&>) (t1:FsFile list -> bool) (t2:FsFile list -> bool) fsFiles =
         fsFiles |> t1 && fsFiles |> t2        
 
+    let importSpecifierHasNames name propertyName =
+            (fun tp ->
+                match tp with 
+                | FsType.Import ti -> 
+                    match ti with 
+                    | FsImport.Type imtp ->
+                        let imsp = imtp.ImportSpecifier
+                        imsp.Name = name
+                        && imsp.PropertyName = propertyName
+                    | _ -> false                    
+                | _ -> false
+            )
+    let containLine tsPaths fsPath line = testFsFileLines tsPaths fsPath (stringContainsAny line >> equal true)
     // https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
         let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
@@ -108,9 +121,9 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/issues/246
     it "add wrapper module to extra files" <| fun _ ->
         // let tsPaths = ["node_modules/reactxp/dist/ReactXP.d.ts"]
-        let tsPaths = ["test/fragments/reactxp/ReactXP.d.ts"]
-        let fsPath = "test/fragments/reactxp/ReactXP.fs"
-        testFsFilesWithExports tsPaths fsPath ["reactxp"] <| fun fsFiles ->
+        let tsPaths = ["test/fragments/reactxp/multiple/ReactXP.d.ts"]
+        let fsPath = "test/fragments/reactxp/multiple/ReactXP.fs"
+        testFsFilesWithExports tsPaths fsPath ["multiple"] <| fun fsFiles ->
             fsFiles
             |> 
                 ( 
@@ -125,6 +138,17 @@ describe "transform tests" <| fun _ ->
                         | None -> false
                     ) 
                 )
+            |> equal true
+
+    // https://github.com/fable-compiler/ts2fable/issues/251
+    it "type import code generataion" <| fun _ ->
+        let tsPaths = ["test/fragments/reactxp/multiple/ReactXP.d.ts"]
+        let fsPath = "test/fragments/reactxp/multiple/ReactXP.fs"
+        testFsFilesWithExports tsPaths fsPath ["multiple"] <| fun fsFiles ->
+            fsFiles
+            |> existOnlyOneByName 
+                "CommonAccessibility" 
+                (importSpecifierHasNames "CommonAccessibility" (Some "Accessibility"))
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/pull/164
@@ -288,3 +312,8 @@ describe "transform tests" <| fun _ ->
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             // not implemented
             equal true true
+
+    it "typeImport test 2" <| fun _ ->
+        let tsPaths = ["test/fragments/node/typeImport.d.ts"]
+        let fsPath = "test/fragments/node/typeImport.fs"
+        containLine tsPaths fsPath "Url.URL"

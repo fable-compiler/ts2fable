@@ -164,7 +164,12 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         | FsType.Import imp ->
             match imp with
             | FsImport.Type imptp ->
-                sprintf "%stype %s = %s.%s" indent imptp.Type imptp.SpecifiedModule imptp.Type |> lines.Add
+                let imsp = imptp.ImportSpecifier
+                match imsp.PropertyName with 
+                | Some pn ->
+                    sprintf "%stype %s = %s.%s" indent imsp.Name imptp.SpecifiedModule pn |> lines.Add
+                | None -> 
+                    sprintf "%stype %s = %s.%s" indent imsp.Name imptp.SpecifiedModule imsp.Name |> lines.Add
             | _ -> ()
         | _ -> ()
 
