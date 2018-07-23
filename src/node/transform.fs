@@ -32,8 +32,9 @@ let fixNamespace (f: FsFile): FsFile =
                                 | ModuleName.Parts _ -> 
                                     let dir = path.dirname extra
                                     let joinedPath = path.join (ResizeArray [dir;imtp.SpecifiedModule]) |> ModuleName.normalize
-                                    joinedPath |> fixModuleName
+                                    joinedPath 
                                 | _ -> imtp.SpecifiedModule
+                                |> fixModuleName
                     }
                     |> FsImport.Type
                     |> FsType.Import

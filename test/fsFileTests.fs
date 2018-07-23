@@ -106,7 +106,7 @@ describe "transform tests" <| fun _ ->
                     | _ -> false                    
                 | _ -> false
             )
-    let containLine tsPaths fsPath line = testFsFileLines tsPaths fsPath (stringContainsAny line >> equal true)
+    let containLineHasWord tsPaths fsPath line = testFsFileLines tsPaths fsPath (stringContainsAny line >> equal true)
     // https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
         let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
@@ -141,7 +141,7 @@ describe "transform tests" <| fun _ ->
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/issues/251
-    it "type import code generataion" <| fun _ ->
+    it "typeImport for importSpecifier that has propertyname" <| fun _ ->
         let tsPaths = ["test/fragments/reactxp/multiple/ReactXP.d.ts"]
         let fsPath = "test/fragments/reactxp/multiple/ReactXP.fs"
         testFsFilesWithExports tsPaths fsPath ["multiple"] <| fun fsFiles ->
@@ -313,7 +313,7 @@ describe "transform tests" <| fun _ ->
             // not implemented
             equal true true
 
-    it "typeImport test 2" <| fun _ ->
+    it "typeImport for importSpecifier that has not propertyname" <| fun _ ->
         let tsPaths = ["test/fragments/node/typeImport.d.ts"]
         let fsPath = "test/fragments/node/typeImport.fs"
-        containLine tsPaths fsPath "Url.URL"
+        containLineHasWord tsPaths fsPath "Url.URL"

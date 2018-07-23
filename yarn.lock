@@ -51,6 +51,12 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-native@^0.56.4":
+  version "0.56.4"
+  resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.56.4.tgz#2643ca2a9a81e30da9fde96cfd8587fca4e3c19d"
+  dependencies:
+    "@types/react" "*"
+
 "@types/react@*":
   version "16.4.6"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.4.6.tgz#5024957c6bcef4f02823accf5974faba2e54fada"

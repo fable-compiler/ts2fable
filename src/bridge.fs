@@ -119,9 +119,9 @@ module internal Bridge =
     // 3. Print the syntax tree to a F# file.
     let private transform bridge (file: FsFile): FsFile =
         file
+        // |> wrapperModuleForExtralFile
         |> removeInternalModules
         |> mergeModulesInFile
-        |> wrapperModuleForExtralFile
         |> aliasToInterfacePartly
         |> extractGenericParameterDefaults
         |> fixTypesHasESKeywords

@@ -212,7 +212,7 @@ let mergeModulesInFile (f: FsFile): FsFile =
 let engines = ["node"; "vscode"] |> Set.ofList
 
 let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVariable list =
-    // printfn "createIExportsModule %A, %s" ns md.Name
+    printfn "createIExportsModule %A, %s" ns md.Name
     let typesInIExports = ResizeArray<FsType>()
     let typesGlobal = ResizeArray<FsType>()
     let typesChild = ResizeArray<FsType>()
@@ -1152,20 +1152,3 @@ let extractTypesInGlobalModules  (f: FsFile): FsFile =
             { md with Types = tps |> List.ofSeq }    
         ) 
     }
-
-let wrapperModuleForExtralFile (f: FsFile): FsFile =
-    match f.Kind with 
-    | FsFileKind.Index -> f
-    | FsFileKind.Extra extra ->
-        { f with 
-            Modules = f.Modules |> List.map(fun md ->
-                {
-                    HasDeclare = true
-                    IsNamespace = false
-                    Name = extra |> ModuleName.normalize
-                    Types = md |> FsType.Module |> List.singleton
-                    HelperLines = []
-                    Attributes = []
-                }
-            ) 
-        }
