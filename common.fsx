@@ -247,11 +247,15 @@ Target.create "PushForComparision" (fun _ ->
             |> git
             |> ignore
             
+        git "remote remove upstream"
+        git "remote add upstream git@github.com:fable-compiler/ts2fable-exports.git"
         git "fetch upstream"
         git "reset --hard upstream/dev"
         Shell.copyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
         stageAll repositoryDir
-        commit()
+        try 
+            commit()
+        with ex -> printf "%A" ex        
         git "push origin -f"
 )
 
