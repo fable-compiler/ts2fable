@@ -683,22 +683,32 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
     }
 
 let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFile =
-    let modules = List()
+    let md = 
+        let tps =
+            sf.statements
+            |> List.ofSeq
+            |> List.collect (readStatement checker)
+        match file.Kind with 
+        | FsFileKind.Index -> 
+            {
+                HasDeclare = false
+                IsNamespace = false
+                Name = ""
+                Types = tps
 
-    let gbl: FsModule =
-        {
-            HasDeclare = false
-            IsNamespace = false
-            Name = ""
-            Types =
-                sf.statements
-                |> List.ofSeq
-                |> List.collect (readStatement checker)
-            HelperLines = []
-            Attributes = []
-        }
-    modules.Add gbl
+                HelperLines = []
+                Attributes = []
+            }
+        | FsFileKind.Extra extra ->
+            {
+                HasDeclare = true
+                IsNamespace = false
+                Name = extra |> ModuleName.normalize
+                Types = tps
+                HelperLines = []
+                Attributes = []
+            }
 
     { file with
-        Modules = modules |> List.ofSeq
+        Modules = [md]
     }
