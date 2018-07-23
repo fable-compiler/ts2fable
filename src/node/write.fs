@@ -16,8 +16,10 @@ open System.Collections.Generic
 open ts2fable.Syntax
 open ts2fable.node.FileSystem
 open ts2fable.Bridges
+open ts2fable.node.Transform
 let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) = 
     {
+        FixNamespace = fixNamespace
         GetFsFileKind =
             fun (nb,tsPath) ->
                 if nb.Exports.Length = 0 then FsFileKind.Index
@@ -27,13 +29,10 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) 
                             FsFileKind.Index
                         else 
                             let dir = path.dirname index
-                            let relativePath = 
-                                path.relative (dir,tsPath) 
-                                |> replace "\\" "/" 
+                            let relativePath = path.relative (dir,tsPath)                                               
                             let relativePathWithOutExtension = 
                                 relativePath.Substring(0,relativePath.LastIndexOf(".d.ts"))      
-                            let parts = relativePathWithOutExtension.Split('/') |> List.ofSeq                                                 
-                            FsFileKind.Extra parts
+                            FsFileKind.Extra relativePathWithOutExtension
                     )        
         EnumerateFilesInSameDir = 
             fun indexFile -> 
@@ -43,6 +42,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) 
         TsPaths = tsPaths
         Exports = exports
         ReadText = readText
+
     } |> Bridge.Node |> Bridge.getFsFileOut
 
 

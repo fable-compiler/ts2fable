@@ -608,7 +608,12 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
                                 match slch.kind with
                                 | SyntaxKind.ImportSpecifier ->
                                     let imp = slch :?> ImportSpecifier
-                                    { Type = imp.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
+                                    { ImportSpecifier = 
+                                        { Name = imp.name.text
+                                          PropertyName = imp.propertyName |> Option.map (fun id ->
+                                            id.text) }
+                                      SpecifiedModule = moduleSpecifier
+                                      ResolvedModule = None }
                                     |> FsImport.Type |> FsType.Import |> Some
                                 | _ -> None
                             )

@@ -12,45 +12,6 @@ open ts2fable.Read
 open ts2fable.Transform
 open System.Collections.Generic
 
-// This app has 3 main functions.
-// 1. Read a TypeScript file into a syntax tree.
-// 2. Fix the syntax tree.
-// 3. Print the syntax tree to a F# file.
-
-let transform (file: FsFile): FsFile =
-    file
-    |> removeInternalModules
-    |> mergeModulesInFile
-    |> wrapperModuleForExtralFile
-    |> aliasToInterfacePartly
-    |> extractGenericParameterDefaults
-    |> fixTypesHasESKeywords
-    |> extractTypesInGlobalModules
-    |> addConstructors
-    |> fixThis
-    |> fixNodeArray
-    |> fixReadonlyArray
-    |> fixDateTime
-    |> fixStatic
-    |> createIExports
-    |> fixOverloadingOnStringParameters // fixEscapeWords must be after
-    |> fixEnumReferences
-    |> fixDuplicatesInUnion
-    |> fixEscapeWords
-    |> fixNamespace
-    |> addTicForGenericFunctions // must be after fixEscapeWords
-    |> addTicForGenericTypes
-    // |> removeTodoMembers
-    |> removeTypeParamsFromStatic
-    |> removeDuplicateFunctions
-    |> removeDuplicateOptions
-    |> extractTypeLiterals // after fixEscapeWords
-    |> addAliasUnionHelpers
-
-
-
-let stringContainsAny (b: string list) (a: string): bool =
-    b |> List.exists a.Contains
 let scriptTarget = ScriptTarget.ES2015
 type internal NodeBridge =
     {
@@ -60,9 +21,10 @@ type internal NodeBridge =
         NameSpace: string
         EnumerateFilesInSameDir: string -> seq<string>
         GetFsFileKind:  (NodeBridge * string) -> FsFileKind
+        FixNamespace: FsFile -> FsFile
     }
 [<RequireQualifiedAccess>]
-module NodeBridge =
+module internal NodeBridge =
     let useExport nb f =
         match nb.TsPaths with 
         | [tsPath] -> f tsPath
@@ -101,7 +63,7 @@ module internal Bridge =
                 NodeBridge.useExport nb (fun index ->
                     let tsPathsInExports (exports:string list) =
                         nb.EnumerateFilesInSameDir index |> List.ofSeq |> List.filter (fun f ->
-                            f.EndsWith(".d.ts") && stringContainsAny exports f
+                            f.EndsWith(".d.ts") && stringContainsAny f exports 
                         ) 
                     tsPathsInExports nb.Exports
                 )                
@@ -144,6 +106,47 @@ module internal Bridge =
         | Bridge.Web w -> 
             createDummy [w.FileName] [w.SourceFile]
 
+    let private fixNameSpaceWithBridge bridge file =
+        match bridge with 
+        | Bridge.Node nb -> nb.FixNamespace file
+        | Bridge.Web _ -> fixNamespace file
+
+
+
+    // This app has 3 main functions.
+    // 1. Read a TypeScript file into a syntax tree.
+    // 2. Fix the syntax tree.
+    // 3. Print the syntax tree to a F# file.
+    let private transform bridge (file: FsFile): FsFile =
+        file
+        |> removeInternalModules
+        |> mergeModulesInFile
+        |> wrapperModuleForExtralFile
+        |> aliasToInterfacePartly
+        |> extractGenericParameterDefaults
+        |> fixTypesHasESKeywords
+        |> extractTypesInGlobalModules
+        |> addConstructors
+        |> fixThis
+        |> fixNodeArray
+        |> fixReadonlyArray
+        |> fixDateTime
+        |> fixStatic
+        |> createIExports
+        |> fixOverloadingOnStringParameters // fixEscapeWords must be after
+        |> fixEnumReferences
+        |> fixDuplicatesInUnion
+        |> fixEscapeWords
+        |> fixNameSpaceWithBridge bridge
+        |> addTicForGenericFunctions // must be after fixEscapeWords
+        |> addTicForGenericTypes
+        // |> removeTodoMembers
+        |> removeTypeParamsFromStatic
+        |> removeDuplicateFunctions
+        |> removeDuplicateOptions
+        |> extractTypeLiterals // after fixEscapeWords
+        |> addAliasUnionHelpers
+
     let getFsFileOut bridge = 
         let program = createProgram bridge
         let nameSpace = getNamespace bridge
@@ -168,7 +171,7 @@ module internal Bridge =
                 Modules = []
             }
             |> readSourceFile checker tsFile
-            |> transform
+            |> transform bridge
         )
         
         {
@@ -184,3 +187,4 @@ module internal Bridge =
             Files = fsFiles
         }
         |> fixFsFileOut
+

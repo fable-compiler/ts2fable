@@ -6,9 +6,25 @@ open Fable.Import.JS
 
 module ReactXP = __web_ReactXP
 
+module __common_Accessibility =
+    let [<Import("","test/common/Accessibility")>] : ``.IExports`` = jsNative
+
+    type [<AllowNullLiteral>] IExports =
+        abstract Accessibility: AccessibilityStatic
+
+    type [<AllowNullLiteral>] Accessibility =
+        abstract isScreenReaderEnabled: unit -> bool
+        abstract screenReaderChangedEvent: SubscribableEvent<(bool -> unit)> with get, set
+        abstract isHighContrastEnabled: unit -> bool
+        abstract newAnnouncementReadyEvent: SubscribableEvent<(string -> unit)> with get, set
+        abstract announceForAccessibility: announcement: string -> unit
+
+    type [<AllowNullLiteral>] AccessibilityStatic =
+        [<Emit "new $0($1...)">] abstract Create: unit -> Accessibility
+
 module __web_Accessibility =
     let [<Import("","test/web/Accessibility")>] : ``.IExports`` = jsNative
-    type Accessibility as CommonAccessibility = ___common_Accessibility.Accessibility as CommonAccessibility
+    type CommonAccessibility = __common_Accessibility.Accessibility
     let [<Import("_default","test")>] _default: Accessibility = jsNative
 
     type [<AllowNullLiteral>] IExports =

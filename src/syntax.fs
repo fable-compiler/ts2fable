@@ -170,10 +170,15 @@ type FsTuple =
         Types: FsType list
         Kind: FsTupleKind
     }
-
-type TypeImport =
+type FsImportSpecifier =
     {
-        Type: string
+        PropertyName: string option
+        Name: string
+    }
+
+type FsTypeImport =
+    {
+        ImportSpecifier: FsImportSpecifier
         SpecifiedModule: string
         ResolvedModule: string option
     }
@@ -187,7 +192,7 @@ type ModuleImport =
 
 [<RequireQualifiedAccess>]
 type FsImport =
-    | Type of TypeImport
+    | Type of FsTypeImport
     | Module of ModuleImport
 
 type FsExport =
@@ -266,6 +271,7 @@ module FsType =
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
+    let isImport tp = match tp with | FsType.Import _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
     let isAlias tp = match tp with | FsType.Alias _ -> true | _ -> false
     let isGeneric tp = match tp with | FsType.Generic _ -> true | _ -> false
@@ -296,8 +302,8 @@ with
 [<RequireQualifiedAccess>]
 type FsFileKind =
     | Index 
-    | Extra of string list(*relative path parts to index file*)
-
+    | Extra of string(*relative path to index file*)
+    
 
 type FsFile =
     {
@@ -338,6 +344,10 @@ let rec getName (tp: FsType) =
     | FsType.File fl -> fl.ModuleName
     | FsType.Generic gn -> getName gn.Type
     | FsType.Mapped mp -> mp.Name
+    | FsType.Import im ->
+        match im with 
+        | FsImport.Type imtp -> imtp.ImportSpecifier.Name
+        | _ -> "" 
     | FsType.Array ar ->
         let name = getName ar
         if name = "" then "" else sprintf "%sArray" name

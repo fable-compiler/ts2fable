@@ -2,6 +2,8 @@ module ts2fable.Naming
 
 open System
 
+let stringContainsAny (a: string) (b: string list) : bool =
+    b |> List.exists a.Contains
 let (|Capital|_|) (letter: string)= 
     let capitals = [ 'A' .. 'Z' ] |> Seq.map string
     match Seq.contains letter capitals with
@@ -9,6 +11,27 @@ let (|Capital|_|) (letter: string)=
     | false -> None
     // Char.IsUpper https://github.com/fable-compiler/Fable/issues/1236
     // if letter.Length = 1 && Char.IsUpper letter.[0] then Some letter else None
+    
+let replace (pattern:string) (destPattern:string) (text: string) =
+    text.Replace(pattern,destPattern)
+
+[<RequireQualifiedAccess>]
+module ModuleName =
+    let forwordSlash (s:string) =
+        s.Replace("\\","/")
+
+    let (|Normal|Parts|) (moduleName: string) =
+        let moduleName2 = forwordSlash moduleName
+        if moduleName2.Contains "/" then 
+            let parts = moduleName2.Split('/') |> List.ofSeq
+            Parts parts
+        else Normal  
+
+    let normalize moduleName =
+        let moduleName2 = forwordSlash moduleName
+        match moduleName2 with 
+        | Normal -> moduleName2  
+        | Parts parts -> moduleName2 |> sprintf "./%s"    
 
 let private digits = [ '0' .. '9' ] |> Seq.map string
 
@@ -21,8 +44,6 @@ let (|Digit|_|) (digit: string) =
     // Char.IsNumber https://github.com/fable-compiler/Fable/issues/1237
     // if digit.Length = 1 && Char.IsNumber digit.[0] then Some digit else None
 
-let replace (pattern:string) (destPattern:string) (text: string) =
-    text.Replace(pattern,destPattern)
 
     
 let createEnumNameParts (name: string) = 
