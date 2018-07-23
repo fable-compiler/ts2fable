@@ -108,6 +108,7 @@ Target.create "RunCli" (fun _ ->
         ts2fable ["node_modules/izitoast/types/index.d.ts";"test-compile/IziToast.fs"]
         ts2fable ["node_modules/electron/electron.d.ts";"test-compile/Electron.fs"]
         ts2fable ["node_modules/@types/react/index.d.ts";"test-compile/React.fs"]
+        ts2fable ["node_modules/@types/react-native/index.d.ts";"test-compile/ReactNative.fs"]
         ts2fable ["node_modules/@types/mocha/index.d.ts";"test-compile/Mocha.fs"]
         ts2fable ["node_modules/@types/chai/index.d.ts";"test-compile/Chai.fs"]
         ts2fable ["node_modules/chalk/types/index.d.ts";"test-compile/Chalk.fs"]
