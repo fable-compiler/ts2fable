@@ -105,15 +105,17 @@ describe "transform tests" <| fun _ ->
             |> List.forall(fun (_,l) -> l = 1)
             |> equal true
 
+    // https://github.com/fable-compiler/ts2fable/issues/246
     it "add wrapper module to extra files" <| fun _ ->
         // let tsPaths = ["node_modules/reactxp/dist/ReactXP.d.ts"]
         let tsPaths = ["test/fragments/reactxp/ReactXP.d.ts"]
-        let fsPath = "test/fragments/reactxp/wrapperModuleForExtraFile.fs"
+        let fsPath = "test/fragments/reactxp/ReactXP.fs"
         testFsFilesWithExports tsPaths fsPath ["reactxp"] <| fun fsFiles ->
             fsFiles
             |> 
                 ( 
                     existOnlyOneByName "__web_ReactXP" FsType.isModule 
+                    <&&> existOnlyOneByName "__web_Accessibility" FsType.isModule 
                     <&&> existOnlyOneByName "reactXP" (fun tp ->
                         match FsType.asVariable tp with 
                         | Some vb -> 

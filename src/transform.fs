@@ -1160,20 +1160,13 @@ let wrapperModuleForExtralFile (f: FsFile): FsFile =
     | FsFileKind.Extra extra ->
         { f with 
             Modules = f.Modules |> List.map(fun md ->
-                let tps = 
-                    md.Types |> List.map (fun tp ->
-                        match tp with 
-                        | FsType.Module md ->
-                            {
-                                HasDeclare = true
-                                IsNamespace = false
-                                Name = extra |> String.concat "/" |> sprintf "./%s"
-                                Types = md |> FsType.Module |> List.singleton
-                                HelperLines = []
-                                Attributes = []
-                            } |> FsType.Module
-                        | _ -> tp             
-                    )
-                { md with Types = tps}                                
+                {
+                    HasDeclare = true
+                    IsNamespace = false
+                    Name = extra |> String.concat "/" |> sprintf "./%s"
+                    Types = md |> FsType.Module |> List.singleton
+                    HelperLines = []
+                    Attributes = []
+                }
             ) 
         }
