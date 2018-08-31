@@ -401,7 +401,6 @@ Target.create "Watch" (fun _ ->
 "Deploy"
     <== [ "BuildAll"
           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
-          "WebApp.Publish"
           "Cli.Publish" ]
 
 "WebApp.Setup"
