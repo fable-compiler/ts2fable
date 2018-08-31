@@ -116,7 +116,7 @@ let private navbar dispatch =
                 [ Navbar.Link.a [ ]
                     [ str "Samples" ]
                   Navbar.Dropdown.div [ ]
-                    [ navbarItem "Monoca" Samples.monoca dispatch
+                    [ navbarItem "Monaco" Samples.monaco dispatch
                       navbarItem "Mocha" Samples.mocha dispatch
                       navbarItem "chai" Samples.chai dispatch
                       navbarItem "Typescript" Samples.typescript dispatch ] ] ]

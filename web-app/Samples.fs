@@ -9206,7 +9206,7 @@ declare module "perf_hooks" {
     const performance: Performance;
 }
 """
-let [<Literal>] monoca =
+let [<Literal>] monaco =
   """/*!-----------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Type definitions for monaco-editor v0.10.1
