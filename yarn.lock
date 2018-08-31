@@ -2302,16 +2302,9 @@ escape-string-regexp@1.0.5, escape-string-regexp@^1.0.2, escape-string-regexp@^1
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
 
-eslint-scope@3.7.1:
+eslint-scope@3.7.1, eslint-scope@^3.7.1:
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/eslint-scope/-/eslint-scope-3.7.1.tgz#3d63c3edfda02e06e01a452ad88caacc7cdcb6e8"
-  dependencies:
-    esrecurse "^4.1.0"
-    estraverse "^4.1.1"
-
-eslint-scope@^3.7.1:
-  version "3.7.1"
-  resolved "https://registry.yarnpkg.com/eslint-scope/-/eslint-scope-3.7.1.tgz#59152c94e2e2cbf64c03b8d3bdc5072a39d54043"
   dependencies:
     esrecurse "^4.1.0"
     estraverse "^4.1.1"
@@ -6428,9 +6421,16 @@ url-join@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/url-join/-/url-join-4.0.0.tgz#4d3340e807d3773bda9991f8305acdcc2a665d2a"
 
-url-parse@^1.1.8, url-parse@^1.1.9, url-parse@~1.4.0:
+url-parse@^1.1.8, url-parse@~1.4.0:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/url-parse/-/url-parse-1.4.1.tgz#4dec9dad3dc8585f862fed461d2e19bbf623df30"
+  dependencies:
+    querystringify "^2.0.0"
+    requires-port "^1.0.0"
+
+url-parse@^1.4.3:
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/url-parse/-/url-parse-1.4.3.tgz#bfaee455c889023219d757e045fa6a684ec36c15"
   dependencies:
     querystringify "^2.0.0"
     requires-port "^1.0.0"
@@ -6597,9 +6597,9 @@ vscode-debugprotocol@^1.24.0:
   version "1.29.0"
   resolved "https://registry.yarnpkg.com/vscode-debugprotocol/-/vscode-debugprotocol-1.29.0.tgz#520030db8486f7d9e1f889ece82538efe7ec6fac"
 
-vscode@^1.1.8:
-  version "1.1.18"
-  resolved "https://registry.yarnpkg.com/vscode/-/vscode-1.1.18.tgz#e9227265dc72fc826bd6cd7bd21193f4e48fa671"
+vscode@^1.1.21:
+  version "1.1.21"
+  resolved "https://registry.yarnpkg.com/vscode/-/vscode-1.1.21.tgz#1c8253d6238aefb4112d6e58cf975ad25313dafc"
   dependencies:
     glob "^7.1.2"
     gulp-chmod "^2.0.0"
@@ -6613,7 +6613,7 @@ vscode@^1.1.8:
     request "^2.83.0"
     semver "^5.4.1"
     source-map-support "^0.5.0"
-    url-parse "^1.1.9"
+    url-parse "^1.4.3"
     vinyl-source-stream "^1.1.0"
 
 watchpack@^1.5.0:
