@@ -347,12 +347,17 @@ Target.create "WebApp.Watch" (fun _ ->
 
 Target.create "WebApp.Publish" (fun _ ->
     if (isAppveyor) then
-        
+        Yarn.exec (sprintf "version --new-version %s --no-git-tag-version" version) id
+
         let repoName = Environment.environVar "appveyor_repo_name"
         let repoBranch = Environment.environVar "appveyor_repo_branch"
         let prHeadRepoName = Environment.environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
-        // Only deploy the web app, from master branch
+
         if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && String.isNullOrEmpty prHeadRepoName then
+            let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| Environment.environVar "npmauthtoken"
+            let npmrc = (Fake.SystemHelper.Environment.GetFolderPath Fake.SystemHelper.Environment.UserProfile)</>".npmrc"
+            File.writeNew npmrc [line]
+            npm "whoami"
             Yarn.exec "run gh-pages --dist web-app/output" id
 )
 
@@ -396,7 +401,6 @@ Target.create "Watch" (fun _ ->
 "Deploy"
     <== [ "BuildAll"
           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
-          "WebApp.Publish"
           "Cli.Publish" ]
 
 "WebApp.Setup"
