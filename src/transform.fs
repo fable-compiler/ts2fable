@@ -789,41 +789,57 @@ let extractTypeLiterals(f: FsFile): FsFile =
                     | FsType.Interface it ->
 
                         let newTypes = List<FsType>()
+                        let materializeInterfaceType name members =
+                            let materialized = {
+                                Comments = []
+                                IsStatic = false
+                                IsClass = false
+                                Name = name
+                                FullName = name
+                                Inherits = []
+                                Members = members
+                                TypeParameters = []
+                            }
+                            newTypes.Add (FsType.Interface materialized)
+
+
                         let it2 =
                             { it with
                                 Members = it.Members |> List.map (fun mb ->
                                     match mb with
                                     | FsType.Function fn ->
+                                        let mapParam (prm:FsParam) : FsParam =
+                                            match prm.Type with
+                                            | FsType.TypeLiteral tl ->
+                                                let name =
+                                                    let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
+                                                    let fnName = fn.Name.Value.Replace("`","")
+                                                    let pmName = prm.Name.Replace("`","")
+                                                    if fnName = "Create" then
+                                                        sprintf "%s%s" itName (capitalize pmName) |> newTypeName
+                                                    else if fnName = pmName then
+                                                        sprintf "%s%s" itName (capitalize pmName) |> newTypeName
+                                                    else
+                                                        sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
+                                                
+                                                materializeInterfaceType name tl.Members
+                                                { prm with Type = simpleType name }
+                                            | _ -> prm
+                                        
+                                        let mapReturnType (tp:FsType) =
+                                            match tp with
+                                            | FsType.TypeLiteral tl ->
+                                                let name =
+                                                    let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
+                                                    let fnName = fn.Name.Value.Replace("`","")
+                                                    sprintf "%s%sReturn" itName (capitalize fnName) |> newTypeName
+                                                
+                                                materializeInterfaceType name tl.Members
+                                                simpleType name
+                                            | _ -> tp
                                         { fn with
-                                            Params = fn.Params |> List.map (fun prm ->
-                                                match prm.Type with
-                                                | FsType.TypeLiteral tl ->
-                                                    let name =
-                                                        let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
-                                                        let fnName = fn.Name.Value.Replace("`","")
-                                                        let pmName = prm.Name.Replace("`","")
-                                                        if fnName = "Create" then
-                                                            sprintf "%s%s" itName (capitalize pmName) |> newTypeName
-                                                        else if fnName = pmName then
-                                                            sprintf "%s%s" itName (capitalize pmName) |> newTypeName
-                                                        else
-                                                            sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
-                                                    {
-                                                        Comments = []
-                                                        IsStatic = false
-                                                        IsClass = false
-                                                        Name = name
-                                                        FullName = name
-                                                        Inherits = []
-                                                        Members = tl.Members
-                                                        TypeParameters = []
-                                                    }
-                                                    |> FsType.Interface
-                                                    |> newTypes.Add |> ignore
-
-                                                    { prm with Type = simpleType name }
-                                                | _ -> prm
-                                            )
+                                            Params = fn.Params |> List.map mapParam
+                                            ReturnType = fn.ReturnType |> mapReturnType
                                         }
                                         |> FsType.Function
                                     | _ -> mb
