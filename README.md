@@ -77,7 +77,7 @@ Now compile the local sources:
 * Navigate to .tools: ``cd ./tools``
 * compile: ``dotnet fable yarn-fable-splitter -- ./src/ts2fable.fsproj --config ./tools/splitter.config.js --port free``
 
-This should have created a folder ``.dist``.
+This should have created a folder ``./dist``.
 
 You can now execute it through node: ``node ./dist/ts2fable.js C:\projects\MyCoolProject\node_modules\babylonjs\babylon.d.ts C:\projects\MyCoolProject\Bindings\BabylonJS\babylonjs.fs``
 
