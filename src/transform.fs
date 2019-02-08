@@ -279,6 +279,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     Option = false
                     Type = it.Name |> simpleType
                     IsReadonly = true
+                    Accessibility = None
                 }
                 |> FsType.Property
                 |> typesInIExports.Add
@@ -304,6 +305,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     Name = md.Name |> lowerFirst
                     Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
                     IsConst = true
+                    Accessibility = None
                 }
                 |> variablesForParent.Add
         else
@@ -313,6 +315,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 Name = md.Name |> lowerFirst
                 Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
                 IsConst = true
+                Accessibility = None
             }
             |> variablesForParent.Add
 
@@ -330,6 +333,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     TypeParameters = []
                     Members =
                         (typesInIExports |> List.ofSeq)
+                    Accessibility = None
                 }
                 |> FsType.Interface
             ]
@@ -348,6 +352,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     Name = smd.Name |> lowerFirst
                     Type = sprintf "%s.IExports" (fixModuleName smd.Name) |> simpleType
                     IsConst = true
+                    Accessibility = None
                 }
                 |> variables.Add |> ignore
         | _ -> ()
@@ -697,6 +702,7 @@ let addConstructors  (f: FsFile): FsFile =
                                 TypeParameters = it.TypeParameters
                                 Params = []
                                 ReturnType = FsType.This
+                                Accessibility = None
                             }
                             |> FsType.Function
 
@@ -719,6 +725,17 @@ let removeInternalModules(f: FsFile): FsFile =
                 )
             }
             |> FsType.Module
+        | _ -> tp
+    )
+
+let removePrivatesFromClasses(f: FsFile): FsFile =
+    f |> fixFile (fun tp ->
+        match tp with
+        | FsType.Interface c when c.IsClass ->
+            { c with
+                Members = c.Members |> List.filter (fun m -> getAccessibility m <> Some FsAccessibility.Private)
+            }
+            |> FsType.Interface
         | _ -> tp
     )
 
@@ -817,6 +834,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                         Inherits = []
                                                         Members = tl.Members
                                                         TypeParameters = []
+                                                        Accessibility = None
                                                     }
                                                     |> FsType.Interface
                                                     |> newTypes.Add |> ignore
@@ -857,6 +875,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                 Inherits = []
                                 Members = tl.Members
                                 TypeParameters = al.TypeParameters
+                                Accessibility = None
                             } |> FsType.Interface |> List.singleton                                
                         | _ -> [tp]                       
                     | _ -> [tp]
@@ -964,6 +983,7 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                         Inherits = []
                         Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
                         TypeParameters = al.TypeParameters
+                        Accessibility = None
                     } |> FsType.Interface
                 | _ -> tp    
             | _ -> tp     
@@ -985,7 +1005,8 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                             FullName = al.Name
                             Inherits = []
                             Members = []
-                            TypeParameters = al.TypeParameters                            
+                            TypeParameters = al.TypeParameters
+                            Accessibility = None
                         } |> FsType.Interface
                     | _ -> tp
                 | _ -> tp        
@@ -1007,6 +1028,7 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                         Inherits = []
                         Members = []
                         TypeParameters = al.TypeParameters
+                        Accessibility = None
                     } |> FsType.Interface  
                 | _ -> tp
             | _ -> tp                          

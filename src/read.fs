@@ -12,6 +12,19 @@ type Node with
     member x.ForEachChild (cbNode: Node -> unit) =
         x.forEachChild<unit> (fun nd -> cbNode nd; None) |> ignore
 
+let getAccessibility (modifiersOpt: ModifiersArray option) : FsAccessibility option =
+    match modifiersOpt with
+    | Some modifiers ->
+        if modifiers |> Seq.exists (fun m -> m.kind = SyntaxKind.PublicKeyword) then
+            Some FsAccessibility.Public
+        else if modifiers |> Seq.exists (fun m -> m.kind = SyntaxKind.ProtectedKeyword) then
+            Some FsAccessibility.Protected
+        else if modifiers |> Seq.exists (fun m -> m.kind = SyntaxKind.PrivateKeyword) then
+            Some FsAccessibility.Private
+        else
+            None
+    | None -> None
+
 let getPropertyName(pn: PropertyName): string =
     match pn with
     | U4.Case1 id -> id.getText() |> removeQuotes
@@ -149,6 +162,7 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
         Inherits = readInherits checker id.heritageClauses
         Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters checker id.typeParameters
+        Accessibility = getAccessibility id.modifiers
     }
 
 let readTypeLiteral (checker: TypeChecker) (tl: TypeLiteralNode): FsTypeLiteral =
@@ -181,6 +195,7 @@ let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
         Inherits = readInherits checker cd.heritageClauses
         Members = cd.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters checker cd.typeParameters
+        Accessibility = getAccessibility cd.modifiers
     }
 
 let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
@@ -202,6 +217,7 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
             Name = vd.name |> getBindingName
             Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
             IsConst = isConst vd
+            Accessibility = getAccessibility vb.modifiers
         }
         |> FsType.Variable
     )
@@ -252,6 +268,7 @@ let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
             match ft.``type`` with
             | Some t -> readTypeNode checker t
             | None -> simpleType "unit"
+        Accessibility = getAccessibility ft.modifiers
     }
 
 let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
@@ -397,6 +414,7 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
             match ms.``type`` with
             | Some t -> readTypeNode checker t
             | None -> simpleType "unit"
+        Accessibility = getAccessibility ms.modifiers
     }
 
 let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
@@ -411,6 +429,7 @@ let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
             match md.``type`` with
             | Some t -> readTypeNode checker t
             | None -> simpleType "unit"
+        Accessibility = getAccessibility md.modifiers
     }
 
 let isReadOnly (modifiers: ModifiersArray option) =
@@ -428,6 +447,7 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
         IsReadonly = isReadOnly ps.modifiers
+        Accessibility = getAccessibility ps.modifiers
     }
 
 let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): FsComment list =
@@ -449,6 +469,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
         IsReadonly = isReadOnly pd.modifiers
+        Accessibility = getAccessibility pd.modifiers
     }
 
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
@@ -463,6 +484,7 @@ let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): Fs
             match fd.``type`` with
             | Some t -> readTypeNode checker t
             | None -> simpleType "unit"
+        Accessibility = getAccessibility fd.modifiers
     }
 
 let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): FsProperty =
@@ -478,6 +500,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
         IsReadonly = isReadOnly ps.modifiers
+        Accessibility = getAccessibility ps.modifiers
     }
 
 let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsFunction =
@@ -492,6 +515,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
             match cs.``type`` with
             | Some t -> readTypeNode checker t
             | None -> simpleType "unit"
+        Accessibility = getAccessibility cs.modifiers
     }
 
 let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSignatureDeclaration): FsFunction =
@@ -503,6 +527,7 @@ let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSigna
         TypeParameters = cs.typeParameters |> (readTypeParameters checker)
         Params = cs.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType = FsType.This
+        Accessibility = getAccessibility cs.modifiers
     }
 
 let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaration): FsFunction =
@@ -514,6 +539,7 @@ let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaratio
         TypeParameters = cs.typeParameters |> (readTypeParameters checker)
         Params = cs.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
         ReturnType = FsType.This
+        Accessibility = getAccessibility cs.modifiers
     }
 
 let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =

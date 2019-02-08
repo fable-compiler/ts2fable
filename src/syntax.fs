@@ -5,6 +5,12 @@ module rec ts2fable.Syntax
 // some names inspired by the actual F# AST:
 // https://github.com/fsharp/FSharp.Compiler.Service/blob/master/src/fsharp/ast.fs
 
+[<RequireQualifiedAccess>]
+type FsAccessibility =
+| Public
+| Protected
+| Private
+
 type FsInterface =
     {
         Comments: FsComment list
@@ -15,6 +21,7 @@ type FsInterface =
         TypeParameters: FsType list
         Inherits: FsType list
         Members: FsType list
+        Accessibility : FsAccessibility option
     }
 with
     member x.HasStaticMembers = x.Members |> List.exists isStatic
@@ -112,6 +119,7 @@ type FsFunction =
         TypeParameters: FsType list
         Params: FsParam list
         ReturnType: FsType
+        Accessibility : FsAccessibility option
     }
 with
     member x.HasStringLiteralParams = x.Params |> List.exists FsParam.isStringLiteral
@@ -138,6 +146,7 @@ type FsProperty =
         Option: bool
         Type: FsType
         IsReadonly: bool
+        Accessibility : FsAccessibility option
     }
 
 type FsGenericType =
@@ -209,6 +218,7 @@ type FsVariable =
         Name: string
         Type: FsType
         IsConst: bool
+        Accessibility : FsAccessibility option
     }
     
 with
@@ -361,3 +371,28 @@ let rec getFullName (tp: FsType) =
     | FsType.File fl -> fl.FileName
     | _ -> getName tp
   
+let getAccessibility (tp: FsType) : FsAccessibility option =
+    match tp with
+    | FsType.Interface it -> it.Accessibility
+    | FsType.Function fn -> fn.Accessibility
+    | FsType.Property pr -> pr.Accessibility
+    | FsType.Variable vb -> vb.Accessibility
+    | FsType.Module _
+    | FsType.Enum _
+    | FsType.Param _
+    | FsType.Alias _
+    | FsType.File _
+    | FsType.Generic _
+    | FsType.Mapped _
+    | FsType.Import _
+    | FsType.Array _
+    | FsType.ExportAssignment _
+    | FsType.GenericParameterDefaults _
+    | FsType.None
+    | FsType.TODO
+    | FsType.StringLiteral _
+    | FsType.This
+    | FsType.Tuple _
+    | FsType.TypeLiteral _
+    | FsType.Union _
+    | FsType.FileOut _ -> None
