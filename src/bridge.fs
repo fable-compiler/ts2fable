@@ -146,6 +146,7 @@ module internal Bridge =
         |> removeDuplicateOptions
         |> extractTypeLiterals // after fixEscapeWords
         |> addAliasUnionHelpers
+        |> removeDuplicateOptionsFromParameters
 
     let getFsFileOut bridge = 
         let program = createProgram bridge

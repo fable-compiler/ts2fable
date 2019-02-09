@@ -759,6 +759,53 @@ let removeDuplicateOptions(f: FsFile): FsFile =
 
         | _ -> tp
     )
+
+/// this converts `(?x : int option)` to `(?x : int)`
+let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
+
+    // consider two TS cases:
+    //   1) (?p : int | null)
+    //   2) type Nullable<T> = T | null
+    //      (?p : Nullable<int>)
+
+    let allTypes = lazy (getAllTypesFromFile f |> List.toArray)
+
+    let rec isAliasToOption (name: string) =
+        let typFromName = allTypes.Value |> Seq.tryFind (fun t ->
+            match t with
+            | FsType.Alias { Name = aliasName }
+                when (aliasName = name) -> true
+            | _ -> false
+        )
+        match typFromName with
+        // simple: the alias is itself a union with option
+        | Some (FsType.Alias { Type = FsType.Union { Option = true; Types = [ t ] }; TypeParameters = [ t2 ] })
+            when (t = t2) -> true
+        // here we could check if the alias is another alias to option, but that seems like an unlikely pattern
+        | _ -> false
+        
+
+    f |> fixFile (fun tp ->
+
+        match tp with
+        | FsType.Param pr when pr.Optional ->
+
+            match pr.Type with 
+            // case 1: simple
+            | FsType.Union { Option = true; Types = [ t ] } -> { pr with Type = t } |> FsType.Param
+            // not tested: I assume this is hit with (?p : int | string | null)
+            | FsType.Union un when un.Option ->
+                { pr with Type = { un  with Option = false } |> FsType.Union } |> FsType.Param
+            // case 2: alias
+            | FsType.Generic { Type = FsType.Mapped { Name = name; FullName = "" }; TypeParameters = [ t ] }
+                when (isAliasToOption name) ->
+                    { pr with Type = t } |> FsType.Param
+                
+            | _ -> tp
+
+        | _ -> tp
+    )
+
 let extractTypeLiterals(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
         match tp with
