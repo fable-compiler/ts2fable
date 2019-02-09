@@ -68,6 +68,18 @@ only "duplicated variable exports" <| fun _ ->
 ```
 - Press F5 to debug this test
 
+## Use locally built version of TS2Fable
+
+As above, clone then run `fake.cmd run build.fsx`.
+
+Now compile the local sources:
+
+* Navigate to .tools: ``cd ./tools``
+* compile: ``dotnet fable yarn-fable-splitter -- ./src/ts2fable.fsproj --config ./tools/splitter.config.js --port free``
+
+This should have created a folder ``./dist``.
+
+You can now execute it through node: ``node ./dist/ts2fable.js C:\projects\MyCoolProject\node_modules\babylonjs\babylon.d.ts C:\projects\MyCoolProject\Bindings\BabylonJS\babylonjs.fs``
 
 ## Conventions
 
