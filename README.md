@@ -51,6 +51,7 @@ yarn global add ts2fable@next
 - `./fake.sh run build.fsx`
 
 **Common to all OS**
+- `dotnet restore dotnet-fake.proj`
 - In vscode, press `Ctrl+Shift+P` > Run Task > WatchTest
 - Add your test in `test/fsFileTests.fs` and prefix it with mocha `only` (See below sample)
 
