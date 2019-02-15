@@ -10,6 +10,7 @@ open Fake.IO.FileSystemOperators
 open Fake.IO
 open Fake.Core.TargetOperators
 open Fake.DotNet
+open Fake.Tools.Git
 open Fake.Tools.Git.Merge
 open Fake.Tools.Git.Branches
 open Fake.Tools.Git.Repository
@@ -351,14 +352,22 @@ Target.create "WebApp.Publish" (fun _ ->
 
         let repoName = Environment.environVar "appveyor_repo_name"
         let repoBranch = Environment.environVar "appveyor_repo_branch"
-        let prHeadRepoName = Environment.environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
 
-        if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && String.isNullOrEmpty prHeadRepoName then
-            let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| Environment.environVar "npmauthtoken"
-            let npmrc = (Fake.SystemHelper.Environment.GetFolderPath Fake.SystemHelper.Environment.UserProfile)</>".npmrc"
-            File.writeNew npmrc [line]
-            npm "whoami"
-            Yarn.exec "run gh-pages --dist web-app/output" id
+        if repoName = "fable-compiler/ts2fable" && repoBranch = "master" then
+            /// code adapted from https://github.com/fsharp/FAKE/blob/release/next/build.fsx
+            Shell.cleanDir "gh-pages"
+            let auth = sprintf "%s:x-oauth-basic@" (Environment.environVar "githubtoken")
+            let url = sprintf "https://%sgithub.com/%s/%s.git" auth "humhei" "ts2fable"
+            cloneSingleBranch "" url "gh-pages" "gh-pages"
+
+            fullclean "gh-pages"
+            Shell.copyRecursive "web-app/output" "gh-pages" true |> printfn "%A"
+            stageAll "gh-pages"
+            CommandHelper.directRunGitCommandAndFail "gh-pages" "config user.email humhei@outlook.com"
+            CommandHelper.directRunGitCommandAndFail "gh-pages" "config user.name \"humhei\""
+            let repocommitMsg = Environment.environVar "APPVEYOR_REPO_COMMIT_MESSAGE"
+            Commit.exec "gh-pages" (sprintf "%s" repocommitMsg)
+            Branches.pushBranch "gh-pages" url "gh-pages"
 )
 
 Target.create "WebApp.Setup" ignore
@@ -401,6 +410,7 @@ Target.create "Watch" (fun _ ->
 "Deploy"
     <== [ "BuildAll"
           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
+          "WebApp.Publish"
           "Cli.Publish" ]
 
 "WebApp.Setup"
@@ -411,7 +421,7 @@ Target.create "Watch" (fun _ ->
 "WebApp.Setup"
     ==> "WebApp.Build"
     ==> "WebApp.Publish"
-
+    
 "WebApp.Setup"
     ==> "WebApp.Watch"
 

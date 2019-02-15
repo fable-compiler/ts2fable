@@ -1,5 +1,5 @@
 image: Visual Studio 2017
-version: 0.6.1-build.{build}
+version: 0.6.2-build.{build}
 install:
   - ps: Install-Product node 8 x64
   - yarn global add mocha
@@ -9,4 +9,4 @@ test: off
 artifacts:
   - path: '*.tgz'
 cache:
-  - "%LOCALAPPDATA%\\Yarn"  
+  - "%LOCALAPPDATA%\\Yarn" 
