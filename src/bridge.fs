@@ -120,7 +120,6 @@ module internal Bridge =
     let private transform bridge (file: FsFile): FsFile =
         file
         // |> wrapperModuleForExtralFile
-        |> removePrivatesFromClasses
         |> removeInternalModules
         |> mergeModulesInFile
         |> aliasToInterfacePartly
@@ -128,6 +127,7 @@ module internal Bridge =
         |> fixTypesHasESKeywords
         |> extractTypesInGlobalModules
         |> addConstructors
+        |> removePrivatesFromClasses
         |> fixThis
         |> fixNodeArray
         |> fixReadonlyArray
