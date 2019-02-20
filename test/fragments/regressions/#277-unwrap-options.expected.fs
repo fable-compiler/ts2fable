@@ -36,15 +36,15 @@ module UnwrapOptionsAlias =
     type [<AllowNullLiteral>] Class =
         /// The parameter should be "?p : string", NOT "?p : Option<string>"
         abstract Foo: ?p: string -> unit
-        /// The parameter should be "?p : string", NOT "?p : Option<string>"
+        /// (DOES NOT YET WORK) The parameter should be "?p : string", NOT "?p : Option<string>"
         abstract Foo2: ?p: Nullable<string> -> unit
-        /// The parameter should be "?p : string", NOT "?p : Option<string>"
+        /// (DOES NOT YET WORK) The parameter should be "?p : string", NOT "?p : Option<string>"
         abstract Foo3: ?p: Nullable<string> -> unit
         /// the return value should be Option<string> 
         abstract Bar: unit -> Nullable<string>
-        /// the return value should be Option<string> 
+        /// (DOES NOT YET WORK) the return value should be Option<string> 
         abstract Bar2: unit -> Nullable<string> option
-        /// the return value should be Option<string> 
+        /// (DOES NOT YET WORK) the return value should be Option<string> 
         abstract Bar3: unit -> Nullable<string> option
 
     type [<AllowNullLiteral>] ClassStatic =

@@ -37,22 +37,22 @@ export module UnwrapOptionsAlias {
         Foo(p?: Nullable<string>);
 
         /**
-         * The parameter should be "?p : string", NOT "?p : Option<string>"
+         * (DOES NOT YET WORK) The parameter should be "?p : string", NOT "?p : Option<string>"
          */
         Foo2(p?: Nullable<string> | undefined);
 
         /**
-         * The parameter should be "?p : string", NOT "?p : Option<string>"
+         * (DOES NOT YET WORK) The parameter should be "?p : string", NOT "?p : Option<string>"
          */
         Foo3(p?: Nullable<string> | undefined | null);
 
         /** the return value should be Option<string> */
         Bar(): Nullable<string>
 
-        /** the return value should be Option<string> */
+        /** (DOES NOT YET WORK) the return value should be Option<string> */
         Bar2(): Nullable<string> | undefined
 
-        /** the return value should be Option<string> */
+        /** (DOES NOT YET WORK) the return value should be Option<string> */
         Bar3(): Nullable<string> | undefined | null
     }
 }
