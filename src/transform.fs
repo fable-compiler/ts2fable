@@ -1114,6 +1114,23 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
     |> compileAliasHasMappedToInterface
     |> flatten
 
+/// babylonjs contains 'type float = number;', which creates invalid f# output (type float = float)
+let fixFloatAlias (f: FsFile): FsFile =
+    f |> fixFile(fun tp ->
+        match tp with 
+        | FsType.Module m ->
+            let floatNumberAlias =
+                m.Types
+                |> List.tryFind (function
+                    | FsType.Alias { Name = "float"; Type = FsType.Mapped { Name = "float"; FullName = "float" } } -> true
+                    | _ -> false)
+            match floatNumberAlias with
+            | Some a -> FsType.Module { m with Types = m.Types |> List.except [ a ] }
+            | None -> tp
+        | _ -> tp
+    )    
+    
+
 let fixFsFileOut fo = 
     
     let isBrowser =
