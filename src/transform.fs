@@ -189,7 +189,7 @@ let mergeModules(tps: FsType list): FsType list =
                 let a = (list.[i] |> FsType.asModule).Value
                 list.[i] <-
                     { a with
-                        Types = a.Types @ md2.Types |> mergeTypes
+                        Types = a.Types @ md2.Types |> mergeTypes |> mergeModules
                     }
                     |> FsType.Module
             else
