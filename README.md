@@ -33,6 +33,7 @@ Please note the parser is not perfect and some tweaking by hand may be needed. P
 ### Online Version
 You can also try out an in-browser version [here](http://fable.io/ts2fable/)
 
+The online version will be updated automatically when commits is merged
 
 ## Contributing
 Succesfull [builds](https://ci.appveyor.com/project/fable-compiler/ts2fable/history) on the master branch are uploaded and tagged as `next`. You can help us test these builds by installing them with:

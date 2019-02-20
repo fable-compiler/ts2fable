@@ -357,7 +357,7 @@ Target.create "WebApp.Publish" (fun _ ->
             /// code adapted from https://github.com/fsharp/FAKE/blob/release/next/build.fsx
             Shell.cleanDir "gh-pages"
             let auth = sprintf "%s:x-oauth-basic@" (Environment.environVar "githubtoken")
-            let url = sprintf "https://%sgithub.com/%s/%s.git" auth "humhei" "ts2fable"
+            let url = sprintf "https://%sgithub.com/%s/%s.git" auth "fable-compiler" "ts2fable"
             cloneSingleBranch "" url "gh-pages" "gh-pages"
 
             fullclean "gh-pages"
@@ -423,10 +423,10 @@ Target.create "Watch" (fun _ ->
     ==> "WebApp.Publish"
     
 "WebApp.Setup"
-    ==> "WebApp.Watch"
+    ==> "WebApp.Watch" 
 
 "PushForComparision"
     <==
          [ "RunCli"
            "BuildTestCompile" 
-           "RunTest" ]
+           "RunTest" ] 
