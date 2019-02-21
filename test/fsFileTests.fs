@@ -107,6 +107,31 @@ describe "transform tests" <| fun _ ->
                 | _ -> false
             )
     let containLineHasWord tsPaths fsPath line = testFsFileLines tsPaths fsPath (stringContainsAny line >> equal true)
+
+    // clean up an fs file for a comparison later
+    let sanitizeFsFile (lines:#seq<string>) : string array =
+        lines
+        |> Seq.filter (not << System.String.IsNullOrWhiteSpace)
+        |> Seq.filter (fun l -> not (l.StartsWith("//")))
+        |> Seq.map (fun l -> l.TrimEnd())
+        |> Seq.toArray
+
+    let fileLinesEqual expected actual =
+        equal (sanitizeFsFile expected) (sanitizeFsFile actual)
+
+    let convertAndCompareAgainstExpected tsPaths fsPath expected =
+        testFsFileLines tsPaths fsPath <| fun lines ->
+            let expected =
+                let lines = ts2fable.node.FileSystem.readLines (expected)
+                Seq.toArray lines
+            fileLinesEqual expected lines
+
+    let runRegressionTest name =
+        let tsPaths = [sprintf "test/fragments/regressions/%s.d.ts" name]
+        let fsPath = sprintf "test/fragments/regressions/%s.fs" name
+        let expected = sprintf "test/fragments/regressions/%s.expected.fs" name
+        convertAndCompareAgainstExpected tsPaths fsPath expected
+
     // https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
         let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
@@ -317,3 +342,38 @@ describe "transform tests" <| fun _ ->
         let tsPaths = ["test/fragments/node/typeImport.d.ts"]
         let fsPath = "test/fragments/node/typeImport.fs"
         containLineHasWord tsPaths fsPath "Url.URL"
+
+    // https://github.com/fable-compiler/ts2fable/issues/272
+    it "babylonJS.SceneLoader.ImportMeshAsync" <| fun _ ->
+        let tsPaths = ["test/fragments/babylonjs/SceneLoader.ImportMeshAsync.d.ts"]
+        let fsPath = "test/fragments/babylonjs/SceneLoader.ImportMeshAsync.fs"
+        let expected = "test/fragments/babylonjs/SceneLoader.ImportMeshAsync.expected.fs"
+        convertAndCompareAgainstExpected tsPaths fsPath expected
+
+    // https://github.com/fable-compiler/ts2fable/pull/275
+    it "babylonJS.PrivateCtor" <| fun _ ->
+        let tsPaths = ["test/fragments/babylonjs/Stage.PrivateCtor.d.ts"]
+        let fsPath = "test/fragments/babylonjs/Stage.PrivateCtor.fs"
+        let expected = "test/fragments/babylonjs/Stage.PrivateCtor.expected.fs"
+        convertAndCompareAgainstExpected tsPaths fsPath expected
+
+    // https://github.com/fable-compiler/ts2fable/pull/275
+    it "regression #275 remove private members" <| fun _ ->
+        runRegressionTest "#275-private-members"
+
+    // https://github.com/fable-compiler/ts2fable/pull/277
+    it "regression #277 unwrap options for optional parameters" <| fun _ ->
+        runRegressionTest "#277-unwrap-options"
+
+    // https://github.com/fable-compiler/ts2fable/pull/278
+    it "regression #278 type literals in return position" <| fun _ ->
+        runRegressionTest "#278-typeliterals-return"
+
+    // https://github.com/fable-compiler/ts2fable/pull/288
+    it "regression #288 type alias 'type float = number'" <| fun _ ->
+        runRegressionTest "#288-type-alias-float-number"
+
+    // https://github.com/fable-compiler/ts2fable/issues/280
+    // https://github.com/fable-compiler/ts2fable/pull/289
+    it "regression #289 merging outer modules" <| fun _ ->
+        runRegressionTest "#289-recursive-merge-modules"

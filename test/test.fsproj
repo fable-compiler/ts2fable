@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
@@ -7,6 +7,9 @@
     <Compile Include="functionTests.fs" />
     <Compile Include="fsFileTests.fs" />
     <Compile Include="test.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fragments\**" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
