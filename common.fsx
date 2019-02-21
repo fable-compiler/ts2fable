@@ -352,8 +352,9 @@ Target.create "WebApp.Publish" (fun _ ->
 
         let repoName = Environment.environVar "appveyor_repo_name"
         let repoBranch = Environment.environVar "appveyor_repo_branch"
+        let prHeadRepoName = Environment.environVar "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME"
 
-        if repoName = "fable-compiler/ts2fable" && repoBranch = "master" then
+        if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && String.isNullOrEmpty prHeadRepoName then
             /// code adapted from https://github.com/fsharp/FAKE/blob/release/next/build.fsx
             Shell.cleanDir "gh-pages"
             let auth = sprintf "%s:x-oauth-basic@" (Environment.environVar "githubtoken")
