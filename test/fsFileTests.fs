@@ -377,3 +377,7 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/pull/289
     it "regression #289 merging outer modules" <| fun _ ->
         runRegressionTest "#289-recursive-merge-modules"
+
+    // https://github.com/fable-compiler/ts2fable/issues/292
+    it "regression #292 static props" <| fun _ ->
+        runRegressionTest "#292-static-props"

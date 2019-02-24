@@ -217,6 +217,7 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
             Name = vd.name |> getBindingName
             Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
             IsConst = isConst vd
+            IsStatic = hasModifier SyntaxKind.StaticKeyword vd.modifiers
             Accessibility = getAccessibility vb.modifiers
         }
         |> FsType.Variable
@@ -447,6 +448,7 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
         IsReadonly = isReadOnly ps.modifiers
+        IsStatic = hasModifier SyntaxKind.StaticKeyword ps.modifiers
         Accessibility = getAccessibility ps.modifiers
     }
 
@@ -469,6 +471,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
         IsReadonly = isReadOnly pd.modifiers
+        IsStatic = hasModifier SyntaxKind.StaticKeyword pd.modifiers
         Accessibility = getAccessibility pd.modifiers
     }
 
@@ -500,6 +503,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
             | None -> FsType.None 
             | Some tp -> readTypeNode checker tp
         IsReadonly = isReadOnly ps.modifiers
+        IsStatic = hasModifier SyntaxKind.StaticKeyword ps.modifiers
         Accessibility = getAccessibility ps.modifiers
     }
 

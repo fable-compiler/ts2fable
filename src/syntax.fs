@@ -146,6 +146,7 @@ type FsProperty =
         Option: bool
         Type: FsType
         IsReadonly: bool
+        IsStatic: bool
         Accessibility : FsAccessibility option
     }
 
@@ -218,6 +219,7 @@ type FsVariable =
         Name: string
         Type: FsType
         IsConst: bool
+        IsStatic: bool
         Accessibility : FsAccessibility option
     }
     
@@ -334,6 +336,8 @@ let isStatic (tp: FsType) =
     match tp with
     | FsType.Function fn -> fn.IsStatic
     | FsType.Interface it -> it.IsStatic
+    | FsType.Property p -> p.IsStatic
+    | FsType.Variable v -> v.IsStatic
     | _ -> false
 
 let isConstructor (tp: FsType) =
