@@ -287,6 +287,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     Option = false
                     Type = it.Name |> simpleType
                     IsReadonly = true
+                    IsStatic = false
                     Accessibility = None
                 }
                 |> FsType.Property
@@ -313,6 +314,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     Name = md.Name |> lowerFirst
                     Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
                     IsConst = true
+                    IsStatic = false
                     Accessibility = None
                 }
                 |> variablesForParent.Add
@@ -323,6 +325,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 Name = md.Name |> lowerFirst
                 Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
                 IsConst = true
+                IsStatic = false
                 Accessibility = None
             }
             |> variablesForParent.Add
@@ -360,6 +363,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     Name = smd.Name |> lowerFirst
                     Type = sprintf "%s.IExports" (fixModuleName smd.Name) |> simpleType
                     IsConst = true
+                    IsStatic = false
                     Accessibility = None
                 }
                 |> variables.Add |> ignore
