@@ -306,12 +306,20 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         else ns |> String.concat "/"
 
     if typesInIExports.Count > 0 then
+
+        // Some JS names are all uppercase which looks really odd if we just lowercase the first letter
+        let name =
+            if md.Name |> Seq.forall Char.IsUpper then
+                md.Name.ToLower()
+            else
+                md.Name |> lowerFirst
+
         if md.HasDeclare then
             if not <| md.IsNamespace then
                 {
                     Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                     HasDeclare = true
-                    Name = md.Name |> lowerFirst
+                    Name = name
                     Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
                     IsConst = true
                     IsStatic = false
@@ -322,7 +330,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
             {
                 Export = { IsGlobal = false; Selector = selector; Path = path } |> Some
                 HasDeclare = true
-                Name = md.Name |> lowerFirst
+                Name = name
                 Type = sprintf "%s.IExports" (fixModuleName md.Name) |> simpleType
                 IsConst = true
                 IsStatic = false

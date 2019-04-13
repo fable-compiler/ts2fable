@@ -4,7 +4,7 @@ open System
 open Fable.Core
 open Fable.Import.JS
 
-let [<Import("*","test")>] bABYLON: BABYLON.IExports = jsNative
+let [<Import("*","test")>] babylon: BABYLON.IExports = jsNative
 
 module BABYLON =
 
