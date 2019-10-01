@@ -2,7 +2,7 @@
 module rec ``#311-error-to-exception``
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("ErrorExceptionTest","test")>] errorExceptionTest: ErrorExceptionTest.IExports = jsNative
 

@@ -2,7 +2,7 @@
 module rec stringEnumWithPeriod
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 
 type [<StringEnum>] [<RequireQualifiedAccess>] Permissions =

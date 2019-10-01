@@ -2,7 +2,7 @@
 module rec ``#278-typeliterals-return``
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("TypeLiteralsAsReturnValue","test")>] typeLiteralsAsReturnValue: TypeLiteralsAsReturnValue.IExports = jsNative
 

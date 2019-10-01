@@ -2,7 +2,7 @@
 module rec ``#275-private-members``
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("PrivateMembersTests","test")>] privateMembersTests: PrivateMembersTests.IExports = jsNative
 

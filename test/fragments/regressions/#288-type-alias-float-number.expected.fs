@@ -2,7 +2,7 @@
 module rec ``#288-type-alias-float-number``
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("TypeAloasFloatNumber","test")>] typeAloasFloatNumber: TypeAloasFloatNumber.IExports = jsNative
 

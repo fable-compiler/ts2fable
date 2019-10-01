@@ -2,7 +2,7 @@
 module rec variableInModule
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("*","test")>] monaco: Monaco.IExports = jsNative
 

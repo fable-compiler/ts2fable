@@ -2,7 +2,7 @@
 module rec f2
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 type ClassAttributes = React.ClassAttributes
 type ReactNode = React.ReactNode

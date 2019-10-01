@@ -2,7 +2,7 @@
 module rec ``#292-static-props``
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("StaticTests","test")>] staticTests: StaticTests.IExports = jsNative
 

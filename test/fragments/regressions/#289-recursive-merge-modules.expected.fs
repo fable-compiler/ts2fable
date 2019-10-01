@@ -2,7 +2,7 @@
 module rec ``#289-recursive-merge-modules``
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 
 module Outer =
