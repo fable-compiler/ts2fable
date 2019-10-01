@@ -132,6 +132,7 @@ module internal Bridge =
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
+        |> mapErrorToException
         |> fixStatic
         |> createIExports
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
