@@ -14,4 +14,7 @@ module React =
 module JSX =
 
     type [<AllowNullLiteral>] ElementAttributesProperty =
-        abstract props: obj with get, set
+        abstract props: TypeLiteral_01 with get, set
+
+    type [<AllowNullLiteral>] TypeLiteral_01 =
+        interface end

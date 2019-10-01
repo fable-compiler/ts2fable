@@ -12,8 +12,8 @@ type DOMAttributes = React.DOMAttributes
 type DetailedReactHTMLElement = React.DetailedReactHTMLElement
 
 type [<AllowNullLiteral>] DOMFactory<'P, 'T> =
-    [<Emit "$0($1...)">] abstract Invoke: ?props: obj option * [<ParamArray>] children: ResizeArray<ReactNode> -> DOMElement<'P, 'T>
+    [<Emit "$0($1...)">] abstract Invoke: ?props: obj * [<ParamArray>] children: ResizeArray<ReactNode> -> DOMElement<'P, 'T>
 
 type [<AllowNullLiteral>] DetailedHTMLFactory<'P, 'T> =
     inherit DOMFactory<'P, 'T>
-    [<Emit "$0($1...)">] abstract Invoke: ?props: obj option * [<ParamArray>] children: ResizeArray<ReactNode> -> DetailedReactHTMLElement<'P, 'T>
+    [<Emit "$0($1...)">] abstract Invoke: ?props: obj * [<ParamArray>] children: ResizeArray<ReactNode> -> DetailedReactHTMLElement<'P, 'T>
