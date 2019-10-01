@@ -382,6 +382,6 @@ describe "transform tests" <| fun _ ->
     it "regression #292 static props" <| fun _ ->
         runRegressionTest "#292-static-props"
 
-    // https://github.com/fable-compiler/ts2fable/issues/xxx
-    it "regression #xxx error to exception" <| fun _ ->
-        runRegressionTest "#xxx-error-to-exception"
+    // https://github.com/fable-compiler/ts2fable/issues/311
+    it "regression #311 error to exception" <| fun _ ->
+        runRegressionTest "#311-error-to-exception"

@@ -1,5 +1,5 @@
 // ts2fable 0.0.0
-module rec ``#xxx-error-to-exception``
+module rec ``#311-error-to-exception``
 open System
 open Fable.Core
 open Fable.Import.JS
