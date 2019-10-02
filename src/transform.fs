@@ -494,12 +494,7 @@ let fixReadonlyArray(f: FsFile): FsFile =
             | _ -> tp
         | _ -> tp
 
-    // only replace in functions
-    f |> fixFile (fun tp ->
-        match tp with
-        | FsType.Function _ -> fixType fix tp
-        | _ -> tp
-    )
+    f |> fixFile (fun tp -> fixType fix tp)
 
 let fixEscapeWords(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
