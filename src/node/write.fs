@@ -47,13 +47,10 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) 
 
 
 
-let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) = 
-    let file = fs.createWriteStream (!^fsPath)
-    let lines = List []
-    for line in printFsFile Version.version fsFileOut do
-        lines.Add(line)
-        file.write(sprintf "%s%c" line '\n') |> ignore
-    file.``end``() 
+let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) =
+    let lines = printFsFile Version.version fsFileOut
+    let fullText = lines |> String.concat "\n"
+    fs.writeFileSync(!! fsPath, !! (fullText + "\n"))
     lines |> List.ofSeq
     
 let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 

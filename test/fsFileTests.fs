@@ -381,3 +381,17 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/issues/292
     it "regression #292 static props" <| fun _ ->
         runRegressionTest "#292-static-props"
+
+    // https://github.com/fable-compiler/ts2fable/issues/312
+    it "regression #312 import generics" <| fun _ ->
+        // assume cwd is the repository root
+        let originalCwd = Node.``process``.cwd()
+        Node.``process``.chdir(Node.path.join(ResizeArray([originalCwd; "test/fragments/regressions/#312-import-generics"])))
+        try
+            let tsFile = "node_modules/test312/index.d.ts"
+            let fsFile = "test312.actual.fs"
+            ts2fable.node.Write.writeFile [tsFile] fsFile ["test312"]
+            let expectedFsFile = "test312.expected.fs"
+            fileLinesEqual (ts2fable.node.FileSystem.readLines expectedFsFile) (ts2fable.node.FileSystem.readLines fsFile)
+        finally
+            Node.``process``.chdir(originalCwd)
