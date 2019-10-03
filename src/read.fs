@@ -614,7 +614,7 @@ let readExportAssignment(ea: ExportAssignment): FsType =
         FsType.ExportAssignment path
     | _ -> FsType.None
 
-let readImportDeclaration(im: ImportDeclaration): FsType list =
+let readImportDeclaration (checker: TypeChecker) (im: ImportDeclaration): FsType list =
     let moduleSpecifier = im.moduleSpecifier.getText() |> removeQuotes
     match im.importClause with
     | None -> []
@@ -622,34 +622,60 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
         match cl.namedBindings with
         | None -> []
         | Some namedBindings ->
-            match namedBindings with
-            | U2.Case1 namespaceImport ->
-                if isNull namespaceImport.name = false then
-                    [
-                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
-                        |> FsImport.Module |> FsType.Import
-                    ]
-                else
-                    namespaceImport.getChildren() |> List.ofSeq |> List.collect (fun ch ->
-                        match ch.kind with
-                        | SyntaxKind.SyntaxList  ->
-                            let sl = ch :?> SyntaxList
-                            sl.getChildren() |> List.ofSeq |> List.choose (fun slch ->
-                                match slch.kind with
-                                | SyntaxKind.ImportSpecifier ->
-                                    let imp = slch :?> ImportSpecifier
-                                    { ImportSpecifier = 
-                                        { Name = imp.name.text
-                                          PropertyName = imp.propertyName |> Option.map (fun id ->
-                                            id.text) }
-                                      SpecifiedModule = moduleSpecifier
-                                      ResolvedModule = None }
-                                    |> FsImport.Type |> FsType.Import |> Some
-                                | _ -> None
-                            )
-                        | _ -> []
-                    )
-            | U2.Case2 namedImports -> []
+            if ts.isNamedImports (!! namedBindings) then
+                let namedImport : NamedImports = !! namedBindings
+                namedImport.elements
+                |> Seq.toList
+                |> List.map (fun imp ->
+                    // see https://stackoverflow.com/a/50528136/1872399
+                    let symbolOfImportNameO = checker.getSymbolAtLocation(imp.name)
+                    let metaTypeO = symbolOfImportNameO |> Option.map checker.getDeclaredTypeOfSymbol
+                    let metaSymbolO =
+                        metaTypeO
+                        |> Option.map (fun t -> t.getSymbol())
+                        |> Option.flatten
+                    let declarationsO =
+                        metaSymbolO
+                        |> Option.map (fun s -> s.getDeclarations())
+                        |> Option.flatten
+                    let declarationO =
+                        declarationsO
+                        |> Option.map (Seq.tryHead)
+                        |> Option.flatten
+
+                    let typeParameters =
+                        match declarationO with
+                        | Some decl ->
+                            match decl.kind with
+                            | SyntaxKind.InterfaceDeclaration ->
+                                let id = decl :?> InterfaceDeclaration
+                                let tpx = readTypeParameters checker id.typeParameters
+                                tpx
+                            | SyntaxKind.ClassDeclaration ->
+                                let cd = decl :?> ClassDeclaration
+                                let tpx = readTypeParameters checker cd.typeParameters
+                                tpx
+                            // can other kinds of declarations also have type parameters? Probably yes
+                            | _ -> []
+                        | None -> []
+
+                    let import = {
+                        ImportSpecifier = {
+                            Name = imp.name.text
+                            PropertyName = imp.propertyName |> Option.map (fun id -> id.text)
+                            TypeParameters = typeParameters
+                        }
+                        SpecifiedModule = moduleSpecifier
+                        ResolvedModule = None
+                    }
+                    import |> FsImport.Type |> FsType.Import
+                )
+            else
+                let namespaceImport : NamespaceImport = !! namedBindings
+                [
+                    { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
+                    |> FsImport.Module |> FsType.Import
+                ]
 
 let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     match sd.kind with
@@ -670,7 +696,7 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     | SyntaxKind.ExportAssignment ->
         [readExportAssignment(sd :?> ExportAssignment)]
     | SyntaxKind.ImportDeclaration ->
-        readImportDeclaration(sd :?> ImportDeclaration)
+        readImportDeclaration checker (sd :?> ImportDeclaration)
     | SyntaxKind.NamespaceExportDeclaration ->
         // let ns = sd :?> NamespaceExportDeclaration
         []
