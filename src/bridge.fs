@@ -75,6 +75,7 @@ module internal Bridge =
         | Bridge.Web _ -> "moduleName"  
     let private createProgram bridge =
         let createDummy tsPaths (sourceFiles: SourceFile list) =
+            let allFiles = set [ yield! tsPaths; for f in sourceFiles -> f.fileName ]
             let options = jsOptions<CompilerOptions>(fun o ->
                 o.target <- Some scriptTarget
                 o.``module`` <- Some ModuleKind.CommonJS
@@ -87,8 +88,8 @@ module internal Bridge =
                 o.getCanonicalFileName <- id
                 o.getCurrentDirectory <- fun _ -> ""
                 o.getNewLine <- fun _ -> "\r\n"
-                o.fileExists <- fun fileName -> List.contains fileName tsPaths
-                o.readFile <- fun _ -> Some ""
+                o.fileExists <- fun fileName -> allFiles |> Seq.contains fileName
+                o.readFile <- fun _fileName -> Some ""
                 o.directoryExists <- fun _ -> true
                 o.getDirectories <- fun _ -> ResizeArray [] 
             )
