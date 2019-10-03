@@ -7,6 +7,7 @@ open Fable.Import.JS
 module ReactXP = __web_ReactXP
 
 module __common_Accessibility =
+    type SubscribableEvent = Subscribableevent.SubscribableEvent
 
     type [<AllowNullLiteral>] IExports =
         abstract Accessibility: AccessibilityStatic
