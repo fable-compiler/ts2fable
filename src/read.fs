@@ -615,67 +615,98 @@ let readExportAssignment(ea: ExportAssignment): FsType =
     | _ -> FsType.None
 
 let readImportDeclaration (checker: TypeChecker) (im: ImportDeclaration): FsType list =
+
+    // helper
+    // see https://stackoverflow.com/a/50528136/1872399
+    let tryGetTypeParametersFromImportLocation (node) =
+        let symbolOfImportNameO = checker.getSymbolAtLocation(node)
+        let metaTypeO = symbolOfImportNameO |> Option.map checker.getDeclaredTypeOfSymbol
+        let metaSymbolO =
+            metaTypeO
+            |> Option.map (fun t -> t.getSymbol())
+            |> Option.flatten
+        let declarationsO =
+            metaSymbolO
+            |> Option.map (fun s -> s.getDeclarations())
+            |> Option.flatten
+        let declarationO =
+            declarationsO
+            |> Option.map (Seq.tryHead)
+            |> Option.flatten
+
+        let typeParameters =
+            match declarationO with
+            | Some decl ->
+                match decl.kind with
+                | SyntaxKind.InterfaceDeclaration ->
+                    let id = decl :?> InterfaceDeclaration
+                    let tpx = readTypeParameters checker id.typeParameters
+                    tpx
+                | SyntaxKind.ClassDeclaration ->
+                    let cd = decl :?> ClassDeclaration
+                    let tpx = readTypeParameters checker cd.typeParameters
+                    tpx
+                // can other kinds of declarations also have type parameters? Probably yes
+                | _ -> []
+            | None -> []
+
+        typeParameters
+
     let moduleSpecifier = im.moduleSpecifier.getText() |> removeQuotes
     match im.importClause with
     | None -> []
     | Some cl ->
-        match cl.namedBindings with
-        | None -> []
-        | Some namedBindings ->
-            if ts.isNamedImports (!! namedBindings) then
-                let namedImport : NamedImports = !! namedBindings
-                namedImport.elements
-                |> Seq.toList
-                |> List.map (fun imp ->
-                    // see https://stackoverflow.com/a/50528136/1872399
-                    let symbolOfImportNameO = checker.getSymbolAtLocation(imp.name)
-                    let metaTypeO = symbolOfImportNameO |> Option.map checker.getDeclaredTypeOfSymbol
-                    let metaSymbolO =
-                        metaTypeO
-                        |> Option.map (fun t -> t.getSymbol())
-                        |> Option.flatten
-                    let declarationsO =
-                        metaSymbolO
-                        |> Option.map (fun s -> s.getDeclarations())
-                        |> Option.flatten
-                    let declarationO =
-                        declarationsO
-                        |> Option.map (Seq.tryHead)
-                        |> Option.flatten
+        // see https://github.com/microsoft/TypeScript/blob/9a62db2b5c5a305139d18f5f25c725f0779493cd/src/compiler/types.ts#L1807-L1817
 
-                    let typeParameters =
-                        match declarationO with
-                        | Some decl ->
-                            match decl.kind with
-                            | SyntaxKind.InterfaceDeclaration ->
-                                let id = decl :?> InterfaceDeclaration
-                                let tpx = readTypeParameters checker id.typeParameters
-                                tpx
-                            | SyntaxKind.ClassDeclaration ->
-                                let cd = decl :?> ClassDeclaration
-                                let tpx = readTypeParameters checker cd.typeParameters
-                                tpx
-                            // can other kinds of declarations also have type parameters? Probably yes
-                            | _ -> []
-                        | None -> []
+        // either or both of 'namedBindings' and 'name' can be set.
 
-                    let import = {
-                        ImportSpecifier = {
-                            Name = imp.name.text
-                            PropertyName = imp.propertyName |> Option.map (fun id -> id.text)
-                            TypeParameters = typeParameters
+        let fromNamedBindings =
+            match cl.namedBindings with
+            | None -> []
+            | Some namedBindings ->
+                if ts.isNamedImports (!! namedBindings) then
+                    let namedImport : NamedImports = !! namedBindings
+                    namedImport.elements
+                    |> Seq.toList
+                    |> List.map (fun imp ->
+                        let typeParameters = tryGetTypeParametersFromImportLocation imp.name
+
+                        let import = {
+                            ImportSpecifier = {
+                                Name = imp.name.text
+                                PropertyName = imp.propertyName |> Option.map (fun id -> id.text)
+                                TypeParameters = typeParameters
+                            }
+                            SpecifiedModule = moduleSpecifier
+                            ResolvedModule = None
                         }
-                        SpecifiedModule = moduleSpecifier
-                        ResolvedModule = None
+                        import |> FsImport.Type |> FsType.Import
+                    )
+                else
+                    let namespaceImport : NamespaceImport = !! namedBindings
+                    [
+                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
+                        |> FsImport.Module |> FsType.Import
+                    ]
+
+        let fromName =
+            match cl.name with
+            | Some clName ->
+                let typeParameters = tryGetTypeParametersFromImportLocation clName
+
+                let import = {
+                    ImportSpecifier = {
+                        Name = clName.text
+                        PropertyName = None
+                        TypeParameters = typeParameters
                     }
-                    import |> FsImport.Type |> FsType.Import
-                )
-            else
-                let namespaceImport : NamespaceImport = !! namedBindings
-                [
-                    { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
-                    |> FsImport.Module |> FsType.Import
-                ]
+                    SpecifiedModule = moduleSpecifier
+                    ResolvedModule = None
+                }
+                import |> FsImport.Type |> FsType.Import |> List.singleton
+            | None -> []
+
+        fromNamedBindings @ fromName
 
 let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     match sd.kind with
