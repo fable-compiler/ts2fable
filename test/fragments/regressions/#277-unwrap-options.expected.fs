@@ -1,8 +1,8 @@
 // ts2fable 0.0.0
-module rec #277-unwrap-options
+module rec ``#277-unwrap-options``
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("UnwrapOptions","test")>] unwrapOptions: UnwrapOptions.IExports = jsNative
 let [<Import("UnwrapOptionsAlias","test")>] unwrapOptionsAlias: UnwrapOptionsAlias.IExports = jsNative

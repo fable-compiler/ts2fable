@@ -132,6 +132,7 @@ module internal Bridge =
         |> fixNodeArray
         |> fixReadonlyArray
         |> fixDateTime
+        |> mapErrorToException
         |> fixStatic
         |> createIExports
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
@@ -178,14 +179,13 @@ module internal Bridge =
         )
         
         {
-            // use the F# file name as the module namespace
-            // TODO ensure valid name
-            Namespace = nameSpace
+            // use the escaped F# file name as the module namespace
+            Namespace = Naming.escapeWord nameSpace
             Opens =
                 [
                     "System"
                     "Fable.Core"
-                    "Fable.Import.JS"
+                    "Fable.Core.JS"
                 ]
             Files = fsFiles
         }

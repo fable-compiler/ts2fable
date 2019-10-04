@@ -12,13 +12,14 @@ group netcorebuild
 
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem
-    nuget Fake.Core.Environment
+    nuget Fake.Core.Environment 5.2
     nuget Fake.Core.BuildServer
     nuget Fake.Api.GitHub
     nuget Fake.Tools.Git
     nuget Fake.Windows.Chocolatey
     nuget Fake.Core.Target
     nuget Fake.JavaScript.Yarn
+	nuget FSharp.Core 4.5
 
 group WebApp
     source https://api.nuget.org/v3/index.json
@@ -39,3 +40,10 @@ group WebApp
     github fable-compiler/ts2fable-exports:dev Monaco.fs
 
     clitool dotnet-fable
+
+group TestCompile
+    source https://api.nuget.org/v3/index.json
+    storage:none
+
+    nuget Fable.Core
+    nuget Fable.Browser.Dom

@@ -1008,6 +1008,30 @@ NUGET
       System.Xml.XmlDocument (>= 4.3)
       System.Xml.XPath (>= 4.3)
 
+GROUP TestCompile
+STORAGE: NONE
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Fable.Browser.Blob (1.1) - restriction: >= netstandard2.0
+      Fable.Core (>= 3.0) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
+    Fable.Browser.Dom (1.1)
+      Fable.Browser.Blob (>= 1.1) - restriction: >= netstandard2.0
+      Fable.Browser.Event (>= 1.0) - restriction: >= netstandard2.0
+      Fable.Browser.WebStorage (>= 1.0) - restriction: >= netstandard2.0
+      Fable.Core (>= 3.0) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
+    Fable.Browser.Event (1.0) - restriction: >= netstandard2.0
+      Fable.Core (>= 3.0) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
+    Fable.Browser.WebStorage (1.0) - restriction: >= netstandard2.0
+      Fable.Browser.Event (>= 1.0) - restriction: >= netstandard2.0
+      Fable.Core (>= 3.0) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
+    Fable.Core (3.1.1)
+      FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
+    FSharp.Core (4.7) - restriction: >= netstandard2.0
+
 GROUP WebApp
 STORAGE: NONE
 NUGET

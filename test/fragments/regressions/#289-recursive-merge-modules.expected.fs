@@ -1,8 +1,8 @@
 // ts2fable 0.0.0
-module rec #289-recursive-merge-modules
+module rec ``#289-recursive-merge-modules``
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 
 module Outer =

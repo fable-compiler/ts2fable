@@ -2,7 +2,7 @@
 module rec f7
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 type SyntheticEvent = React.SyntheticEvent
 

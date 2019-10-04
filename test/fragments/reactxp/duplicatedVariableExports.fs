@@ -2,7 +2,7 @@
 module rec duplicatedVariableExports
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("*","reactxp")>] reactXP: ReactXP.IExports = jsNative
 

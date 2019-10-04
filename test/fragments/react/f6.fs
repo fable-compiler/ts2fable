@@ -2,7 +2,7 @@
 module rec f6
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 type Component = React.Component
 type ComponentState = React.ComponentState

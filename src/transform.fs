@@ -403,6 +403,15 @@ let createIExports (f: FsFile): FsFile =
             )
     }
 
+let flattenInherits (i:FsInterface) : FsType seq = seq {
+    for b in i.Inherits do
+        yield b
+        match b with
+        | FsType.Interface i2 ->
+            yield! flattenInherits i2
+        | _ -> ()
+}
+
 let fixTic (typeParameters: FsType list) (tp: FsType) =
     if typeParameters.Length = 0 then
         tp
@@ -485,12 +494,7 @@ let fixReadonlyArray(f: FsFile): FsFile =
             | _ -> tp
         | _ -> tp
 
-    // only replace in functions
-    f |> fixFile (fun tp ->
-        match tp with
-        | FsType.Function _ -> fixType fix tp
-        | _ -> tp
-    )
+    f |> fixFile (fun tp -> fixType fix tp)
 
 let fixEscapeWords(f: FsFile): FsFile =
     f |> fixFile (fun tp ->
@@ -522,6 +526,25 @@ let fixDateTime(f: FsFile): FsFile =
         match tp with
         | FsType.Mapped mp ->
             { mp with Name = replaceName mp.Name } |> FsType.Mapped
+        | _ -> tp
+    )
+
+/// https://github.com/fable-compiler/ts2fable/issues/298#issuecomment-478328229
+let mapErrorToException (f: FsFile): FsFile =
+    let simpleExceptionType = simpleType "System.Exception"
+    f |> fixFile (fun tp ->
+        match tp with
+
+        // if the type IS error, map it to System.Exception
+        | FsType.Mapped m when (m.Name = "Error") ->
+            simpleExceptionType
+
+        // if the type INHERITS from error, replace it with System.Exception.
+        // This loses information, but at least compiles.
+        // see https://github.com/fable-compiler/ts2fable/issues/298#issuecomment-504104618
+        | FsType.Interface i when (flattenInherits i |> Seq.contains simpleExceptionType) ->
+            FsType.Alias { Name = i.Name; Type = simpleExceptionType; TypeParameters = [] }
+
         | _ -> tp
     )
 
@@ -1253,7 +1276,7 @@ let fixFsFileOut fo =
 
     if isBrowser then 
         { fo with 
-            Opens = fo.Opens @ ["Fable.Import.Browser"]
+            Opens = fo.Opens @ ["Browser.Types"]
             Files = fo.Files |> List.map fixHelperLines }
     else fo        
 

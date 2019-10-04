@@ -2,7 +2,7 @@
 module rec SceneLoader.ImportMeshAsync
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("*","test")>] babylon: BABYLON.IExports = jsNative
 
