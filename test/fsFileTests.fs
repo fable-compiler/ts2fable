@@ -381,3 +381,7 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/issues/292
     it "regression #292 static props" <| fun _ ->
         runRegressionTest "#292-static-props"
+
+    // https://github.com/fable-compiler/ts2fable/issues/314
+    it "regression #314 inline destruct" <| fun _ ->
+        runRegressionTest "#314-inline-destruct"
