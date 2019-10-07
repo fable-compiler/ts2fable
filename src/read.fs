@@ -32,13 +32,17 @@ let getPropertyName(pn: PropertyName): string =
     | U4.Case3 nl -> nl.getText()
     | U4.Case4 cpn -> cpn.getText()
 
-let getBindingName(bn: BindingName): string =
-    match bn with
-    | U2.Case1 id -> id.getText()
-    | U2.Case2 bp -> // BindingPattern
-        match bp with
-        | U2.Case1 obp -> obp.getText()
-        | U2.Case2 abp -> abp.getText()
+let getBindingName(bn: BindingName): string option =
+    // Note: matching on Un does not actually work at runtime.
+    // So need to manually check the .kind
+    let syntaxNode : Node = !! bn
+    match syntaxNode.kind with
+    | SyntaxKind.Identifier ->
+        let id : Identifier = !! bn
+        Some (id.getText())
+    | SyntaxKind.ObjectBindingPattern
+    | SyntaxKind.ArrayBindingPattern -> None
+    | _ -> failwithf "unknown Binding Name kind %A" syntaxNode.kind
 
 let readEnumCase(em: EnumMember): FsEnumCase =
     let name = em.name |> getPropertyName
@@ -214,7 +218,7 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
         {
             Export = None
             HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers || hasModifier SyntaxKind.ExportKeyword vb.modifiers
-            Name = vd.name |> getBindingName
+            Name = vd.name |> getBindingName |> Option.defaultValue "unsupported_pattern"
             Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
             IsConst = isConst vd
             IsStatic = hasModifier SyntaxKind.StaticKeyword vd.modifiers
@@ -264,7 +268,7 @@ let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
         IsStatic = hasModifier SyntaxKind.StaticKeyword ft.modifiers
         Name = ft.name |> Option.map getPropertyName
         TypeParameters = readTypeParameters checker ft.typeParameters
-        Params =  ft.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
+        Params =  ft.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType =
             match ft.``type`` with
             | Some t -> readTypeNode checker t
@@ -374,7 +378,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         printfn "unsupported TypeNode kind: %A" t.kind
         FsType.TODO
 
-let readParameterDeclaration (checker: TypeChecker) (pd: ParameterDeclaration): FsParam =
+let readParameterDeclaration (checker: TypeChecker) (iParam:int) (pd: ParameterDeclaration): FsParam =
     let stringLiteral =
         pd.getChildren() |> List.ofSeq |> List.tryPick (fun ch ->
             ch.getChildren() |> List.ofSeq |> List.tryFind (fun gch -> gch.kind = SyntaxKind.StringLiteral)
@@ -387,7 +391,7 @@ let readParameterDeclaration (checker: TypeChecker) (pd: ParameterDeclaration): 
             | Some t -> readTypeNode checker t
             | None -> simpleType "obj"
     
-    let name = pd.name |> getBindingName
+    let name = pd.name |> getBindingName |> Option.defaultValue ("p" + string iParam)
     {
         Comment =
             readCommentTags pd
@@ -410,7 +414,7 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters checker ms.typeParameters
-        Params = ms.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
+        Params = ms.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType =
             match ms.``type`` with
             | Some t -> readTypeNode checker t
@@ -425,7 +429,7 @@ let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
         IsStatic = hasModifier SyntaxKind.StaticKeyword md.modifiers
         Name = md.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters checker md.typeParameters
-        Params = md.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
+        Params = md.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType =
             match md.``type`` with
             | Some t -> readTypeNode checker t
@@ -482,7 +486,7 @@ let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): Fs
         IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
         Name = fd.name |> Option.map (fun id -> id.getText())
         TypeParameters = readTypeParameters checker fd.typeParameters
-        Params = fd.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
+        Params = fd.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType =
             match fd.``type`` with
             | Some t -> readTypeNode checker t
@@ -491,7 +495,7 @@ let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): Fs
     }
 
 let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): FsProperty =
-    let pm = readParameterDeclaration checker ps.parameters.[0]
+    let pm = readParameterDeclaration checker 0 ps.parameters.[0]
     {
         Comments = readCommentsForSignatureDeclaration checker ps
         Kind = FsPropertyKind.Index
@@ -514,7 +518,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
         IsStatic = false // TODO ?
         Name = Some "Invoke"
         TypeParameters = []
-        Params = cs.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
+        Params = cs.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType =
             match cs.``type`` with
             | Some t -> readTypeNode checker t
@@ -529,7 +533,7 @@ let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSigna
         IsStatic = true
         Name = Some "Create"
         TypeParameters = cs.typeParameters |> (readTypeParameters checker)
-        Params = cs.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
+        Params = cs.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType = FsType.This
         Accessibility = getAccessibility cs.modifiers
     }
@@ -541,7 +545,7 @@ let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaratio
         IsStatic = true
         Name = Some "Create"
         TypeParameters = cs.typeParameters |> (readTypeParameters checker)
-        Params = cs.parameters |> List.ofSeq |> List.map (readParameterDeclaration checker)
+        Params = cs.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType = FsType.This
         Accessibility = getAccessibility cs.modifiers
     }

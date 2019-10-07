@@ -395,3 +395,8 @@ describe "transform tests" <| fun _ ->
             fileLinesEqual (ts2fable.node.FileSystem.readLines expectedFsFile) (ts2fable.node.FileSystem.readLines fsFile)
         finally
             Node.``process``.chdir(originalCwd)
+
+    // https://github.com/fable-compiler/ts2fable/issues/314
+    it "regression #314 inline destruct" <| fun _ ->
+        runRegressionTest "#314-inline-destruct"
+
