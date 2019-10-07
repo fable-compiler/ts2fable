@@ -131,7 +131,13 @@ let rec fixTypeEx (doFix:FsType->bool) (fix: FsType -> FsType) (tp: FsType): FsT
     | FsType.TODO _ -> tp
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
-    | FsType.Import _ -> tp
+    | FsType.Import (FsImport.Type timp) ->
+        let tpx = timp.ImportSpecifier.TypeParameters |> List.map (fixType fix)
+        { timp with
+            ImportSpecifier = { timp.ImportSpecifier with TypeParameters = tpx }
+        }
+        |> FsImport.Type |> FsType.Import
+    | FsType.Import (FsImport.Module _) -> tp
     | FsType.GenericParameterDefaults gpd -> 
         { gpd with Default = fixType fix gpd.Default }
         |> FsType.GenericParameterDefaults
@@ -576,6 +582,7 @@ let addTicForGenericTypes(f: FsFile): FsFile =
         match tp with
         | FsType.Interface it -> fixTic it.TypeParameters tp
         | FsType.Alias al -> fixTic al.TypeParameters tp
+        | FsType.Import (FsImport.Type timp) -> fixTic timp.ImportSpecifier.TypeParameters tp
         | _ -> tp
     )
 

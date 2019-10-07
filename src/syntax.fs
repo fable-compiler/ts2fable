@@ -184,6 +184,7 @@ type FsImportSpecifier =
     {
         PropertyName: string option
         Name: string
+        TypeParameters: FsType list
     }
 
 type FsTypeImport =
