@@ -3,7 +3,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="node/Node.fs" />
+    <ProjectReference Include="../../fable-node/src/Fable.Node.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- <Compile Include="node/Node.fs" /> -->
     <Compile Include="node/fileSystem.fs" />
     <Compile Include="Yargs.fs" />
     <Compile Include="TypeScript.fs" />
@@ -20,5 +23,8 @@
     <Compile Include="node/write.fs" />
     <Compile Include="ts2fable.fs" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Fable.Core" Version="3.1.2" />
+  </ItemGroup>
+  <!-- <Import Project="..\.paket\Paket.Restore.targets" /> -->
 </Project>

@@ -2,7 +2,7 @@
 module rec #314-inline-destruct
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 
 type [<AllowNullLiteral>] IExports =

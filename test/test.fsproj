@@ -4,6 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\ts2fable.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="functionTests.fs" />
     <Compile Include="fsFileTests.fs" />
     <Compile Include="test.fs" />
@@ -11,5 +13,8 @@
   <ItemGroup>
     <None Include="fragments\**" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Fable.Core" Version="3.1.2" />
+  </ItemGroup>
+  <!-- <Import Project="..\.paket\Paket.Restore.targets" /> -->
 </Project>

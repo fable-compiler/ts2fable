@@ -6,13 +6,12 @@ open Fable.Core.JsInterop
 open ts2fable.Naming
 open TypeScript
 open TypeScript.Ts
-open Node
+open Node.Api
 open ts2fable.Read
 open ts2fable.node.Write
 open ts2fable.Transform
 open ts2fable.Print
 open System.Collections.Generic
-open Node.Fs
 open ts2fable.Keywords
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative

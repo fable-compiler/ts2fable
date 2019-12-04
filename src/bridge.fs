@@ -185,7 +185,7 @@ module internal Bridge =
                 [
                     "System"
                     "Fable.Core"
-                    "Fable.Import.JS"
+                    "Fable.Core.JS"
                 ]
             Files = fsFiles
         }

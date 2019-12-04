@@ -2,7 +2,7 @@
 module rec Node
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Global>] Symbol: SymbolConstructor = jsNative
 let [<Global>] ``process``: NodeJS.Process = jsNative

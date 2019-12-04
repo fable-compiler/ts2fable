@@ -26,11 +26,12 @@ let getAccessibility (modifiersOpt: ModifiersArray option) : FsAccessibility opt
     | None -> None
 
 let getPropertyName(pn: PropertyName): string =
-    match pn with
-    | U4.Case1 id -> id.getText() |> removeQuotes
-    | U4.Case2 sl -> sl.getText()
-    | U4.Case3 nl -> nl.getText()
-    | U4.Case4 cpn -> cpn.getText()
+    !!pn?getText() |> removeQuotes
+    // match pn with
+    // | U4.Case1 id -> id.getText() |> removeQuotes
+    // | U4.Case2 sl -> sl.getText()
+    // | U4.Case3 nl -> nl.getText()
+    // | U4.Case4 cpn -> cpn.getText()
 
 let getBindingName(bn: BindingName): string option =
     // Note: matching on Un does not actually work at runtime.
@@ -245,10 +246,10 @@ let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
     | Some tas ->
         {
             Type =
-                let typeName =
-                    match tr.typeName with
-                    | U2.Case1 id -> id.getText()
-                    | U2.Case2 qn -> qn.getText()
+                let typeName = !!tr.typeName?getText()
+                    // match tr.typeName with
+                    // | U2.Case1 id -> id.getText()
+                    // | U2.Case2 qn -> qn.getText()
                 if isNull typeName then
                     failwithf "readTypeReference type name is null: %s" (tr.getText())
                 {
@@ -340,10 +341,11 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
             | SyntaxKind.StringLiteral ->
                 FsType.StringLiteral (text |> removeQuotes)
             | _ -> simpleType "obj"
-        match lt.literal with
-        | U3.Case1 bl -> readLiteralKind bl.kind (bl.getText())
-        | U3.Case2 le -> readLiteralKind le.kind (le.getText())
-        | U3.Case3 pue -> readLiteralKind pue.kind (pue.getText())
+        !!lt.literal?getText()
+        // match lt.literal with
+        // | U3.Case1 bl -> readLiteralKind bl.kind (bl.getText())
+        // | U3.Case2 le -> readLiteralKind le.kind (le.getText())
+        // | U3.Case3 pue -> readLiteralKind pue.kind (pue.getText())
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
         let tp = checker.getTypeFromTypeNode eta
@@ -457,11 +459,12 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
     }
 
 let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): FsComment list =
-    match pn with
-    | U4.Case1 id -> readCommentsAtLocation checker id
-    | U4.Case2 sl -> readCommentsAtLocation checker sl
-    | U4.Case3 nl -> readCommentsAtLocation checker nl
-    | U4.Case4 cpn -> readCommentsAtLocation checker cpn
+    readCommentsAtLocation checker !!pn
+    // match pn with
+    // | U4.Case1 id -> readCommentsAtLocation checker id
+    // | U4.Case2 sl -> readCommentsAtLocation checker sl
+    // | U4.Case3 nl -> readCommentsAtLocation checker nl
+    // | U4.Case4 cpn -> readCommentsAtLocation checker cpn
 
 let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): FsProperty =
     {
@@ -626,15 +629,17 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
         match cl.namedBindings with
         | None -> []
         | Some namedBindings ->
-            match namedBindings with
-            | U2.Case1 namespaceImport ->
-                if isNull namespaceImport.name = false then
+            // match namedBindings with
+            // | U2.Case1 namespaceImport ->
+                // can't match on erased union, so testing properties instead
+                if not (isNull !!namedBindings?name) then
                     [
-                        { Module = namespaceImport.name.getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
+                        { Module = !!namedBindings?name?getText(); SpecifiedModule = moduleSpecifier; ResolvedModule = None }
                         |> FsImport.Module |> FsType.Import
                     ]
                 else
-                    namespaceImport.getChildren() |> List.ofSeq |> List.collect (fun ch ->
+                    let children: ResizeArray<Node> = !!namedBindings?getChildren()
+                    children |> List.ofSeq |> List.collect (fun ch ->
                         match ch.kind with
                         | SyntaxKind.SyntaxList  ->
                             let sl = ch :?> SyntaxList
@@ -653,7 +658,7 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
                             )
                         | _ -> []
                     )
-            | U2.Case2 namedImports -> []
+            // | U2.Case2 namedImports -> []
 
 let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     match sd.kind with
@@ -688,9 +693,10 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     | _ -> printfn "unsupported Statement kind: %A" sd.kind; []
 
 let readModuleName(mn: ModuleName): string =
-    match mn with
-    | U2.Case1 id -> id.getText().Replace("\"","")
-    | U2.Case2 sl -> sl.getText()
+    !!mn?getText() |> removeQuotes
+    // match mn with
+    // | U2.Case1 id -> id.getText().Replace("\"","")
+    // | U2.Case2 sl -> sl.getText()
 
 let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
     let types = List()

@@ -2,11 +2,14 @@
 module rec Yargs
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("*","yargs")>] yargs: Yargs.Argv = jsNative
 
 module Yargs =
+
+    type [<AllowNullLiteral>] Error =
+        abstract stack: string option with get, set
 
     type [<AllowNullLiteral>] Argv =
         abstract argv: Arguments with get, set
@@ -188,8 +191,8 @@ module Yargs =
         abstract recurse: bool option with get, set
         abstract extensions: ResizeArray<string> option with get, set
         abstract visit: (obj option -> string -> string -> obj option) option with get, set
-        abstract ``include``: U2<RegExp, (string -> bool)> option with get, set
-        abstract exclude: U2<RegExp, (string -> bool)> option with get, set
+        // abstract ``include``: U2<RegExp, (string -> bool)> option with get, set
+        // abstract exclude: U2<RegExp, (string -> bool)> option with get, set
 
     type [<AllowNullLiteral>] Options =
         abstract alias: U2<string, ResizeArray<string>> option with get, set

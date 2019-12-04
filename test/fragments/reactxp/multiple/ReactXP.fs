@@ -2,7 +2,7 @@
 module rec ReactXP
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 module ReactXP = __web_ReactXP
 

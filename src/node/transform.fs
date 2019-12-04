@@ -12,9 +12,10 @@ open System.Collections.Generic
 open ts2fable.Syntax
 open ts2fable.Keywords
 open Fable
-open Node
+open Node.Api
 
 module Common = ts2fable.Transform
+
 let fixFile = Common.fixFile
 let fixNamespace (f: FsFile): FsFile =
     Common.fixNamespace f |> fun f ->
@@ -31,13 +32,13 @@ let fixNamespace (f: FsFile): FsFile =
                             match imtp.SpecifiedModule with 
                                 | ModuleName.Parts _ -> 
                                     let dir = path.dirname extra
-                                    let joinedPath = path.join (ResizeArray [dir;imtp.SpecifiedModule]) |> ModuleName.normalize
-                                    joinedPath 
+                                    let joinedPath = path.join [| dir; imtp.SpecifiedModule |]
+                                    joinedPath |> ModuleName.normalize
                                 | _ -> imtp.SpecifiedModule
                                 |> fixModuleName
                     }
                     |> FsImport.Type
                     |> FsType.Import
-                | _ -> tp                
+                | _ -> tp
             | _ -> tp
         )

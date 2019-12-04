@@ -5,14 +5,12 @@ open ts2fable.Print
 open System.Collections.Generic
 open ts2fable.Bridges
 
-
-
 let getFsFileOutWithText (text: string) = 
     let inputFileName = "module.d.ts"
     let sourceFile = ts.createSourceFile (inputFileName, text, scriptTarget, true)
     {
         FileName = inputFileName
-        SourceFile = sourceFile        
+        SourceFile = sourceFile
     }
     |> Bridge.Web |> Bridge.getFsFileOut
 
@@ -21,6 +19,3 @@ let emitFsFileOutAsText (fsFileOut: FsFileOut) =
     for line in printFsFile "0.6.2" fsFileOut do
         lines.Add(line)
     lines |> String.concat "\n"
-
-
-        
