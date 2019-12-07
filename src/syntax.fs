@@ -35,12 +35,12 @@ type FsTypeLiteral =
         Members: FsType list
     }
 
-type FsGenericParameterDefaults = 
+type FsGenericParameterDefaults =
     {
         Default: FsType
         Name: string
         FullName: string
-    }        
+    }
 
 [<RequireQualifiedAccess>]
 type FsEnumCaseType =
@@ -222,17 +222,17 @@ type FsVariable =
         IsStatic: bool
         Accessibility : FsAccessibility option
     }
-    
+
 with
     member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal
-    override x.Equals(y) = 
-        match y with 
+    override x.Equals(y) =
+        match y with
         | :? FsVariable as other -> x.Name = other.Name
         | _ -> false
     override x.GetHashCode() = hash x.Name
-    interface System.IComparable with 
-        member x.CompareTo y = 
-            match y with 
+    interface System.IComparable with
+        member x.CompareTo y =
+            match y with
             | :? FsVariable as vb -> compare x.Name vb.Name
             | _ -> invalidArg "y" "cannot compare values of different types"
 
@@ -244,10 +244,10 @@ type FsMapped =
     }
 
 let simpleType name: FsType =
-    { 
+    {
         // Namespace = []
         Name = name
-        FullName = name 
+        FullName = name
     }
     |> FsType.Mapped
 
@@ -313,9 +313,9 @@ with
 
 [<RequireQualifiedAccess>]
 type FsFileKind =
-    | Index 
+    | Index
     | Extra of string(*relative path to index file*)
-    
+
 
 type FsFile =
     {
@@ -359,9 +359,9 @@ let rec getName (tp: FsType) =
     | FsType.Generic gn -> getName gn.Type
     | FsType.Mapped mp -> mp.Name
     | FsType.Import im ->
-        match im with 
+        match im with
         | FsImport.Type imtp -> imtp.ImportSpecifier.Name
-        | _ -> "" 
+        | _ -> ""
     | FsType.Array ar ->
         let name = getName ar
         if name = "" then "" else sprintf "%sArray" name
@@ -374,7 +374,7 @@ let rec getFullName (tp: FsType) =
     | FsType.Generic gn -> getFullName gn.Type
     | FsType.File fl -> fl.FileName
     | _ -> getName tp
-  
+
 let getAccessibility (tp: FsType) : FsAccessibility option =
     match tp with
     | FsType.Interface it -> it.Accessibility

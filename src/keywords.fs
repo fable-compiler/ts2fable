@@ -41,7 +41,7 @@ let reserved =
     ]
     |> Set.ofList
 
-let keywords = 
+let keywords =
     [
         "abstract"
         "and"

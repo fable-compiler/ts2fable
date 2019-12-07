@@ -18,7 +18,7 @@ open ts2fable.node.FileSystem
 open ts2fable.Bridges
 open ts2fable.node.Transform
 
-let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) = 
+let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) =
     {
         FixNamespace = fixNamespace
         GetFsFileKind =
@@ -26,17 +26,17 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) 
                 if nb.Exports.Length = 0 then FsFileKind.Index
                 else
                     NodeBridge.useExport nb (fun index ->
-                        if nb.TsPaths |> List.contains tsPath then 
+                        if nb.TsPaths |> List.contains tsPath then
                             FsFileKind.Index
-                        else 
+                        else
                             let dir = path.dirname index
                             let relativePath = path.relative (dir,tsPath)
-                            let relativePathWithOutExtension = 
+                            let relativePathWithOutExtension =
                                 relativePath.Substring(0,relativePath.LastIndexOf(".d.ts"))
                             FsFileKind.Extra relativePathWithOutExtension
-                    )        
-        EnumerateFilesInSameDir = 
-            fun indexFile -> 
+                    )
+        EnumerateFilesInSameDir =
+            fun indexFile ->
                 let dir = path.dirname indexFile
                 enumerateFiles [dir]
         NameSpace = path.basename(fsPath, path.extname(fsPath))
@@ -47,7 +47,7 @@ let getFsFileOut (fsPath: string) (tsPaths: string list) (exports: string list) 
     |> Bridge.Node
     |> Bridge.getFsFileOut
 
-let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) = 
+let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) =
     let file = fs.createWriteStream (fsPath)
     let lines = List []
     for line in printFsFile Version.version fsFileOut do
@@ -56,7 +56,7 @@ let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) =
     file.``end``()
     lines |> List.ofSeq
 
-let emitFsFileOut fsPath (fsFileOut: FsFileOut) = 
+let emitFsFileOut fsPath (fsFileOut: FsFileOut) =
     emitFsFileOutAsLines fsPath fsFileOut
     |> ignore
 

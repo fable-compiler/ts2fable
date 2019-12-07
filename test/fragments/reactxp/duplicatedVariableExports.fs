@@ -37,8 +37,6 @@ module ReactXP =
         abstract UserPresence: RXInterfaces.UserPresence
         abstract View: obj
         abstract WebView: RXInterfaces.WebViewConstructor
-        abstract createElement: obj
-        abstract Children: React.ReactChildren
         abstract __spread: obj option
 
     type Accessibility =

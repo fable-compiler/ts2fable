@@ -63,13 +63,13 @@ let printFunction (fn: FsFunction): string =
         sprintf  "[<Emit \"%s\">] " emit |> line.Add
 
     sprintf "abstract %s" fn.Name.Value |> line.Add
-    let prms = 
+    let prms =
         fn.Params |> List.map(fun p ->
             if p.ParamArray then
                 sprintf "[<ParamArray>] %s%s: %s" (if p.Optional then "?" else "") p.Name
                     (   match p.Type with
                         | FsType.Array _ -> printType p.Type
-                        | _ -> 
+                        | _ ->
                             // failwithf "function with unsupported param array type: %s" f.Name.Value
                             printfn "ParamArray function is not an array type: %s" (getName(FsType.Function fn))
                             printType p.Type
@@ -112,7 +112,7 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
     if comments |> List.exists FsComment.isParam then
         let summaryLines = comments |> List.choose FsComment.asSummaryLine
         summaryLines |> List.iteri (fun i desc ->
-            sprintf "%s/// %s%s%s" indent 
+            sprintf "%s/// %s%s%s" indent
                 (if i = 0 then "<summary>" else "")
                 desc
                 (if i = summaryLines.Length - 1 then "</summary>" else "")
@@ -165,10 +165,10 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             match imp with
             | FsImport.Type imptp ->
                 let imsp = imptp.ImportSpecifier
-                match imsp.PropertyName with 
+                match imsp.PropertyName with
                 | Some pn ->
                     sprintf "%stype %s = %s.%s" indent imsp.Name imptp.SpecifiedModule pn |> lines.Add
-                | None -> 
+                | None ->
                     sprintf "%stype %s = %s.%s" indent imsp.Name imptp.SpecifiedModule imsp.Name |> lines.Add
             | _ -> ()
         | _ -> ()
@@ -238,7 +238,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         | FsType.Variable vb ->
             if vb.HasDeclare then
                 // sprintf "" |> lines.Add
-                sprintf "%slet %s%s: %s = jsNative" indent 
+                sprintf "%slet %s%s: %s = jsNative" indent
                     (   match vb.Export with
                         | None -> ""
                         | Some ep ->
@@ -274,4 +274,4 @@ let printFsFile version (file: FsFileOut): ResizeArray<string> =
         f.Modules
             |> List.filter (fun md -> md.Types.Length > 0)
             |> List.iter (printModule lines "")
-    lines        
+    lines

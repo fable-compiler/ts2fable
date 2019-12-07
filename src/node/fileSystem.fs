@@ -6,7 +6,7 @@ let readText (path: string) =
     fs.readFileSync (path, "utf-8")
 let readLines =
     readText >> fun text -> text.Split('\n') |> Seq.ofArray
-let readLine num file = 
+let readLine num file =
     readLines file |> Seq.item (num - 1)
 
 let enumerateFileSystemEntries dir =
@@ -17,7 +17,7 @@ let isFile path =
     stats.isFile()
 let isDirectory path =
     let stats = path |> U2.Case1 |> fs.lstatSync
-    stats.isDirectory() 
+    stats.isDirectory()
 
 // get all files from a directory
 let rec enumerateFiles dirs =
