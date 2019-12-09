@@ -146,7 +146,7 @@ module internal Bridge =
         |> removeDuplicateFunctions
         |> removeDuplicateOptions
         |> extractTypeLiterals // after fixEscapeWords
-        |> addAliasUnionHelpers
+        // |> addAliasUnionHelpers // disabled for Fable.Core 3.x
         |> removeDuplicateOptionsFromParameters
         |> fixFloatAlias
 

@@ -380,8 +380,8 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     // | ConditionalType -> FsType.TODO
     // | ConstructorType -> FsType.TODO
     | SyntaxKind.TypeOperator ->
-        printfn "unsupported TypeNode TypeOperator: %A" t
-        FsType.TODO // jQuery
+        let pt = t :?> TypeOperatorNode
+        readTypeNode checker pt.``type``
     | _ ->
         printfn "unsupported TypeNode kind: %A" t.kind
         FsType.TODO

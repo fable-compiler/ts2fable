@@ -44,8 +44,6 @@ let (|Digit|_|) (digit: string) =
     // Char.IsNumber https://github.com/fable-compiler/Fable/issues/1237
     // if digit.Length = 1 && Char.IsNumber digit.[0] then Some digit else None
 
-
-
 let createEnumNameParts (name: string) =
     let tokens = Seq.map string name
     let rec splitParts part parts  =
@@ -73,9 +71,20 @@ let lowerFirst (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
     else sprintf "%c%s" (Char.ToLower input.[0]) (input.Substring 1)
 
-let createEnumName s =
+let isIdentifier (input: string) =
+    let isLetterOrDigitOrUnderscore c = Char.IsLetterOrDigit c || (c = '_')
+    if String.IsNullOrWhiteSpace input then false
+    else
+        if Char.IsDigit input.[0] then "N" + input else input
+        |> Seq.forall isLetterOrDigitOrUnderscore
+
+let createEnumName (s: string) =
+    let replaceChar c = if Char.IsLetterOrDigit c then c else '_'
+    let s = s |> String.map replaceChar
     if String.IsNullOrWhiteSpace s then "Empty"
-    else s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+    else
+        if isIdentifier s then capitalize s else "``" + s + "``"
+        //s |> createEnumNameParts |> List.map capitalize |> String.concat ""
 
 // by default Fable lowercases the first letter of the name for the value
 let nameEqualsDefaultFableValue (name: string) (value: string): bool =
@@ -128,9 +137,13 @@ let fixModuleName (s: string) =
         else s
     s
 
-let removeQuotes (s:string): string =
-    if isNull s then ""
-    else s.Replace("\"","").Replace("'","")
+let removeQuotes (s: string) =
+    if String.IsNullOrEmpty s then ""
+    else
+        let c = s.[0]
+        if (c = '\"' || c = ''')
+        then s.Trim(c)
+        else s
 
 // gets the JavaScript module name
 // intended for use by SourceFile.fileName which has slashes normalized

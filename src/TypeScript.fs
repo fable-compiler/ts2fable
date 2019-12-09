@@ -9,16 +9,6 @@ let [<Import("*","typescript")>] ts: Ts.IExports = jsNative
 type [<AllowNullLiteral>] IExports =
     abstract setTimeout: handler: (ResizeArray<obj option> -> unit) * timeout: float -> obj option
     abstract clearTimeout: handle: obj option -> unit
-    // /// Create the builder to manage semantic diagnostics and cache them
-    // abstract createSemanticDiagnosticsBuilderProgram: newProgram: Program * host: BuilderProgramHost * ?oldProgram: SemanticDiagnosticsBuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> -> SemanticDiagnosticsBuilderProgram
-    // abstract createSemanticDiagnosticsBuilderProgram: rootNames: ResizeArray<string> option * options: CompilerOptions option * ?host: CompilerHost * ?oldProgram: SemanticDiagnosticsBuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> * ?projectReferences: ResizeArray<ProjectReference> -> SemanticDiagnosticsBuilderProgram
-    // /// Create the builder that can handle the changes in program and iterate through changed files
-    // /// to emit the those files and manage semantic diagnostics cache as well
-    // abstract createEmitAndSemanticDiagnosticsBuilderProgram: newProgram: Program * host: BuilderProgramHost * ?oldProgram: EmitAndSemanticDiagnosticsBuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> -> EmitAndSemanticDiagnosticsBuilderProgram
-    // abstract createEmitAndSemanticDiagnosticsBuilderProgram: rootNames: ResizeArray<string> option * options: CompilerOptions option * ?host: CompilerHost * ?oldProgram: EmitAndSemanticDiagnosticsBuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> * ?projectReferences: ResizeArray<ProjectReference> -> EmitAndSemanticDiagnosticsBuilderProgram
-    // /// Creates a builder thats just abstraction over program and can be used with watch
-    // abstract createAbstractBuilder: newProgram: Program * host: BuilderProgramHost * ?oldProgram: BuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> -> BuilderProgram
-    // abstract createAbstractBuilder: rootNames: ResizeArray<string> option * options: CompilerOptions option * ?host: CompilerHost * ?oldProgram: BuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> * ?projectReferences: ResizeArray<ProjectReference> -> BuilderProgram
 
 module Ts =
     let [<Import("ScriptSnapshot","typescript/ts")>] scriptSnapshot: ScriptSnapshot.IExports = jsNative
@@ -33,7 +23,7 @@ module Ts =
         abstract getPositionOfLineAndCharacter: sourceFile: SourceFileLike * line: float * character: float -> float
         abstract getLineAndCharacterOfPosition: sourceFile: SourceFileLike * position: float -> LineAndCharacter
         abstract isWhiteSpaceLike: ch: float -> bool
-        /// Does not include line breaks. For that, see isWhiteSpaceLike. 
+        /// Does not include line breaks. For that, see isWhiteSpaceLike.
         abstract isWhiteSpaceSingleLine: ch: float -> bool
         abstract isLineBreak: ch: float -> bool
         abstract couldStartTrivia: text: string * pos: float -> bool
@@ -45,7 +35,7 @@ module Ts =
         abstract reduceEachTrailingCommentRange: text: string * pos: float * cb: (float -> float -> CommentKind -> bool -> 'T -> 'U -> 'U) * state: 'T * initial: 'U -> 'U option
         abstract getLeadingCommentRanges: text: string * pos: float -> ResizeArray<CommentRange> option
         abstract getTrailingCommentRanges: text: string * pos: float -> ResizeArray<CommentRange> option
-        /// Optionally, get the shebang 
+        /// Optionally, get the shebang
         abstract getShebang: text: string -> string option
         abstract isIdentifierStart: ch: float * languageVersion: ScriptTarget option -> bool
         abstract isIdentifierPart: ch: float * languageVersion: ScriptTarget option -> bool
@@ -101,7 +91,7 @@ module Ts =
         /// <param name="node">The original node.</param>
         /// <param name="nodeTest">A callback used to ensure the correct type of parse tree node is returned.</param>
         abstract getParseTreeNode: node: Node option * ?nodeTest: (Node -> bool) -> 'T option
-        /// Add an extra underscore to identifiers that start with two underscores to avoid issues with magic names like '__proto__' 
+        /// Add an extra underscore to identifiers that start with two underscores to avoid issues with magic names like '__proto__'
         abstract escapeLeadingUnderscores: identifier: string -> __String
         /// <summary>Remove extra underscore from escaped identifier text content.</summary>
         /// <param name="identifier">The escaped identifier text.</param>
@@ -116,27 +106,27 @@ module Ts =
         abstract getJSDocTypeParameterTags: param: TypeParameterDeclaration -> ResizeArray<JSDocTemplateTag>
         /// Return true if the node has JSDoc parameter tags.
         abstract hasJSDocParameterTags: node: U2<FunctionLikeDeclaration, SignatureDeclaration> -> bool
-        /// Gets the JSDoc augments tag for the node if present 
+        /// Gets the JSDoc augments tag for the node if present
         abstract getJSDocAugmentsTag: node: Node -> JSDocAugmentsTag option
-        /// Gets the JSDoc class tag for the node if present 
+        /// Gets the JSDoc class tag for the node if present
         abstract getJSDocClassTag: node: Node -> JSDocClassTag option
-        /// Gets the JSDoc enum tag for the node if present 
+        /// Gets the JSDoc enum tag for the node if present
         abstract getJSDocEnumTag: node: Node -> JSDocEnumTag option
-        /// Gets the JSDoc this tag for the node if present 
+        /// Gets the JSDoc this tag for the node if present
         abstract getJSDocThisTag: node: Node -> JSDocThisTag option
-        /// Gets the JSDoc return tag for the node if present 
+        /// Gets the JSDoc return tag for the node if present
         abstract getJSDocReturnTag: node: Node -> JSDocReturnTag option
-        /// Gets the JSDoc template tag for the node if present 
+        /// Gets the JSDoc template tag for the node if present
         abstract getJSDocTemplateTag: node: Node -> JSDocTemplateTag option
-        /// Gets the JSDoc type tag for the node if present and valid 
+        /// Gets the JSDoc type tag for the node if present and valid
         abstract getJSDocTypeTag: node: Node -> JSDocTypeTag option
         /// Gets the type node for the node if provided via JSDoc.
         abstract getJSDocType: node: Node -> TypeNode option
         /// Gets the return type node for the node if provided via JSDoc return tag or type tag.
         abstract getJSDocReturnType: node: Node -> TypeNode option
-        /// Get all JSDoc tags related to a node, including those on parent nodes. 
+        /// Get all JSDoc tags related to a node, including those on parent nodes.
         abstract getJSDocTags: node: Node -> ResizeArray<JSDocTag>
-        /// Gets all JSDoc tags of a specified kind, or undefined if not present. 
+        /// Gets all JSDoc tags of a specified kind, or undefined if not present.
         abstract getAllJSDocTagsOfKind: node: Node * kind: SyntaxKind -> ResizeArray<JSDocTag>
         /// Gets the effective type parameters. If the node was parsed in a
         /// JavaScript file, gets the type parameters from the `@template` tag from JSDoc.
@@ -353,7 +343,7 @@ module Ts =
         abstract isIterationStatement: node: Node * lookInLabeledStatements: bool -> bool
         abstract isJsxOpeningLikeElement: node: Node -> bool
         abstract isCaseOrDefaultClause: node: Node -> bool
-        /// True if node is of a kind that may contain comment text. 
+        /// True if node is of a kind that may contain comment text.
         abstract isJSDocCommentContainingNode: node: Node -> bool
         abstract isSetAccessor: node: Node -> bool
         abstract isGetAccessor: node: Node -> bool
@@ -370,9 +360,7 @@ module Ts =
         abstract forEachChild: node: Node * cbNode: (Node -> 'T option) * ?cbNodes: (ResizeArray<Node> -> 'T option) -> 'T option
         abstract createSourceFile: fileName: string * sourceText: string * languageVersion: ScriptTarget * ?setParentNodes: bool * ?scriptKind: ScriptKind -> SourceFile
         abstract parseIsolatedEntityName: text: string * languageVersion: ScriptTarget -> EntityName option
-        /// <summary>Parse json text into SyntaxTree and return node and parse errors if any</summary>
-        /// <param name="fileName"></param>
-        /// <param name="sourceText"></param>
+        /// Parse json text into SyntaxTree and return node and parse errors if any
         abstract parseJsonText: fileName: string * sourceText: string -> JsonSourceFile
         abstract isExternalModule: file: SourceFile -> bool
         abstract updateSourceFile: sourceFile: SourceFile * newText: string * textChangeRange: TextChangeRange * ?aggressiveChecks: bool -> SourceFile
@@ -422,7 +410,7 @@ module Ts =
         abstract nodeModuleNameResolver: moduleName: string * containingFile: string * compilerOptions: CompilerOptions * host: ModuleResolutionHost * ?cache: ModuleResolutionCache * ?redirectedReference: ResolvedProjectReference -> ResolvedModuleWithFailedLookupLocations
         abstract classicNameResolver: moduleName: string * containingFile: string * compilerOptions: CompilerOptions * host: ModuleResolutionHost * ?cache: NonRelativeModuleNameResolutionCache * ?redirectedReference: ResolvedProjectReference -> ResolvedModuleWithFailedLookupLocations
         abstract createNodeArray: ?elements: ResizeArray<'T> * ?hasTrailingComma: bool -> ResizeArray<'T>
-        /// If a node is passed, creates a string literal whose source text is read from a source node during emit. 
+        /// If a node is passed, creates a string literal whose source text is read from a source node during emit.
         abstract createLiteral: value: U5<string, StringLiteral, NoSubstitutionTemplateLiteral, NumericLiteral, Identifier> -> StringLiteral
         abstract createLiteral: value: U2<float, PseudoBigInt> -> NumericLiteral
         abstract createLiteral: value: bool -> BooleanLiteral
@@ -433,17 +421,17 @@ module Ts =
         abstract createRegularExpressionLiteral: text: string -> RegularExpressionLiteral
         abstract createIdentifier: text: string -> Identifier
         abstract updateIdentifier: node: Identifier -> Identifier
-        /// Create a unique temporary variable. 
+        /// Create a unique temporary variable.
         abstract createTempVariable: recordTempVariable: (Identifier -> unit) option -> Identifier
-        /// Create a unique temporary variable for use in a loop. 
+        /// Create a unique temporary variable for use in a loop.
         abstract createLoopVariable: unit -> Identifier
-        /// Create a unique name based on the supplied text. 
+        /// Create a unique name based on the supplied text.
         abstract createUniqueName: text: string -> Identifier
-        /// Create a unique name based on the supplied text. 
+        /// Create a unique name based on the supplied text.
         abstract createOptimisticUniqueName: text: string -> Identifier
-        /// Create a unique name based on the supplied text. This does not consider names injected by the transformer. 
+        /// Create a unique name based on the supplied text. This does not consider names injected by the transformer.
         abstract createFileLevelUniqueName: text: string -> Identifier
-        /// Create a unique name generated for a node. 
+        /// Create a unique name generated for a node.
         abstract getGeneratedNameForNode: node: Node option -> Identifier
         abstract createToken: token: 'TKind -> Token<'TKind>
         abstract createSuper: unit -> SuperExpression
@@ -884,9 +872,19 @@ module Ts =
         /// Note: The file might not exist.
         abstract resolveProjectReferencePath: ref: ProjectReference -> ResolvedConfigFileName
         abstract resolveProjectReferencePath: host: ResolveProjectReferencePathHost * ref: ProjectReference -> ResolvedConfigFileName
-        // abstract readBuilderProgram: compilerOptions: CompilerOptions * host: ReadBuildProgramHost -> EmitAndSemanticDiagnosticsBuilderProgram option
+        /// Create the builder to manage semantic diagnostics and cache them
+        abstract createSemanticDiagnosticsBuilderProgram: newProgram: Program * host: BuilderProgramHost * ?oldProgram: SemanticDiagnosticsBuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> -> SemanticDiagnosticsBuilderProgram
+        abstract createSemanticDiagnosticsBuilderProgram: rootNames: ResizeArray<string> option * options: CompilerOptions option * ?host: CompilerHost * ?oldProgram: SemanticDiagnosticsBuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> * ?projectReferences: ResizeArray<ProjectReference> -> SemanticDiagnosticsBuilderProgram
+        /// Create the builder that can handle the changes in program and iterate through changed files
+        /// to emit the those files and manage semantic diagnostics cache as well
+        abstract createEmitAndSemanticDiagnosticsBuilderProgram: newProgram: Program * host: BuilderProgramHost * ?oldProgram: EmitAndSemanticDiagnosticsBuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> -> EmitAndSemanticDiagnosticsBuilderProgram
+        abstract createEmitAndSemanticDiagnosticsBuilderProgram: rootNames: ResizeArray<string> option * options: CompilerOptions option * ?host: CompilerHost * ?oldProgram: EmitAndSemanticDiagnosticsBuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> * ?projectReferences: ResizeArray<ProjectReference> -> EmitAndSemanticDiagnosticsBuilderProgram
+        /// Creates a builder thats just abstraction over program and can be used with watch
+        abstract createAbstractBuilder: newProgram: Program * host: BuilderProgramHost * ?oldProgram: BuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> -> BuilderProgram
+        abstract createAbstractBuilder: rootNames: ResizeArray<string> option * options: CompilerOptions option * ?host: CompilerHost * ?oldProgram: BuilderProgram * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> * ?projectReferences: ResizeArray<ProjectReference> -> BuilderProgram
+        abstract readBuilderProgram: compilerOptions: CompilerOptions * host: ReadBuildProgramHost -> EmitAndSemanticDiagnosticsBuilderProgram option
         abstract createIncrementalCompilerHost: options: CompilerOptions * ?system: System -> CompilerHost
-        // abstract createIncrementalProgram: { rootNames, options, configFileParsingDiagnostics, projectReferences, host, createProgram }: IncrementalProgramOptions<'T> -> 'T
+        abstract createIncrementalProgram: p0: IncrementalProgramOptions<'T> -> 'T
         /// Create the watch compiler host for either configFile or fileNames and its options
         abstract createWatchCompilerHost: configFileName: string * optionsToExtend: CompilerOptions option * system: System * ?createProgram: CreateProgram<'T> * ?reportDiagnostic: DiagnosticReporter * ?reportWatchStatus: WatchStatusReporter -> WatchCompilerHostOfConfigFile<'T>
         abstract createWatchCompilerHost: rootFiles: ResizeArray<string> * options: CompilerOptions * system: System * ?createProgram: CreateProgram<'T> * ?reportDiagnostic: DiagnosticReporter * ?reportWatchStatus: WatchStatusReporter * ?projectReferences: ResizeArray<ProjectReference> -> WatchCompilerHostOfFilesAndCompilerOptions<'T>
@@ -901,7 +899,7 @@ module Ts =
         abstract createSolutionBuilder: host: SolutionBuilderHost<'T> * rootNames: ResizeArray<string> * defaultOptions: BuildOptions -> SolutionBuilder<'T>
         abstract createSolutionBuilderWithWatch: host: SolutionBuilderWithWatchHost<'T> * rootNames: ResizeArray<string> * defaultOptions: BuildOptions -> SolutionBuilder<'T>
         abstract getDefaultFormatCodeSettings: ?newLineCharacter: string -> FormatCodeSettings
-        /// The classifier is used for syntactic highlighting in editors via the TSServer 
+        /// The classifier is used for syntactic highlighting in editors via the TSServer
         abstract createClassifier: unit -> Classifier
         abstract createDocumentRegistry: ?useCaseSensitiveFileNames: bool * ?currentDirectory: string -> DocumentRegistry
         abstract preProcessFile: sourceText: string * ?readImportFiles: bool * ?detectJavaScriptImports: bool -> PreProcessedFileInfo
@@ -962,7 +960,7 @@ module Ts =
         // inherit Array<'T>
         abstract  __sortedArrayBrand: obj option with get, set
 
-    /// ES6 Map interface, only read methods included. 
+    /// ES6 Map interface, only read methods included.
     type [<AllowNullLiteral>] ReadonlyMap<'T> =
         abstract get: key: string -> 'T option
         abstract has: key: string -> bool
@@ -972,18 +970,18 @@ module Ts =
         abstract values: unit -> Iterator<'T>
         abstract entries: unit -> Iterator<string * 'T>
 
-    /// ES6 Map interface. 
+    /// ES6 Map interface.
     type [<AllowNullLiteral>] Map<'T> =
         inherit ReadonlyMap<'T>
         abstract set: key: string * value: 'T -> Map<'T>
         abstract delete: key: string -> bool
         abstract clear: unit -> unit
 
-    /// ES6 Iterator type. 
+    /// ES6 Iterator type.
     type [<AllowNullLiteral>] Iterator<'T> =
         abstract next: unit -> U2<TypeLiteral_01<'T>, TypeLiteral_02>
 
-    /// Array that is only intended to be pushed to, never read. 
+    /// Array that is only intended to be pushed to, never read.
     type [<AllowNullLiteral>] Push<'T> =
         abstract push: [<ParamArray>] values: ResizeArray<'T> -> unit
 
@@ -996,15 +994,6 @@ module Ts =
 
     type JSDocSyntaxKind =
         U2<SyntaxKind, KeywordSyntaxKind>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module JSDocSyntaxKind =
-    //    let ofSyntaxKind v: JSDocSyntaxKind = v |> U2.Case1
-    //    let isSyntaxKind (v: JSDocSyntaxKind) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asSyntaxKind (v: JSDocSyntaxKind) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofKeywordSyntaxKind v: JSDocSyntaxKind = v |> U2.Case2
-    //    let isKeywordSyntaxKind (v: JSDocSyntaxKind) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asKeywordSyntaxKind (v: JSDocSyntaxKind) = match v with U2.Case2 o -> Some o | _ -> None
 
     type KeywordSyntaxKind =
         SyntaxKind
@@ -1462,50 +1451,8 @@ module Ts =
     type HasInitializer =
         U5<HasExpressionInitializer, ForStatement, ForInStatement, ForOfStatement, JsxAttribute>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module HasInitializer =
-    //    let ofHasExpressionInitializer v: HasInitializer = v |> U5.Case1
-    //    let isHasExpressionInitializer (v: HasInitializer) = match v with U5.Case1 _ -> true | _ -> false
-    //    let asHasExpressionInitializer (v: HasInitializer) = match v with U5.Case1 o -> Some o | _ -> None
-    //    let ofForStatement v: HasInitializer = v |> U5.Case2
-    //    let isForStatement (v: HasInitializer) = match v with U5.Case2 _ -> true | _ -> false
-    //    let asForStatement (v: HasInitializer) = match v with U5.Case2 o -> Some o | _ -> None
-    //    let ofForInStatement v: HasInitializer = v |> U5.Case3
-    //    let isForInStatement (v: HasInitializer) = match v with U5.Case3 _ -> true | _ -> false
-    //    let asForInStatement (v: HasInitializer) = match v with U5.Case3 o -> Some o | _ -> None
-    //    let ofForOfStatement v: HasInitializer = v |> U5.Case4
-    //    let isForOfStatement (v: HasInitializer) = match v with U5.Case4 _ -> true | _ -> false
-    //    let asForOfStatement (v: HasInitializer) = match v with U5.Case4 o -> Some o | _ -> None
-    //    let ofJsxAttribute v: HasInitializer = v |> U5.Case5
-    //    let isJsxAttribute (v: HasInitializer) = match v with U5.Case5 _ -> true | _ -> false
-    //    let asJsxAttribute (v: HasInitializer) = match v with U5.Case5 o -> Some o | _ -> None
-
     type HasExpressionInitializer =
         U7<VariableDeclaration, ParameterDeclaration, BindingElement, PropertySignature, PropertyDeclaration, PropertyAssignment, EnumMember>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module HasExpressionInitializer =
-    //    let ofVariableDeclaration v: HasExpressionInitializer = v |> U7.Case1
-    //    let isVariableDeclaration (v: HasExpressionInitializer) = match v with U7.Case1 _ -> true | _ -> false
-    //    let asVariableDeclaration (v: HasExpressionInitializer) = match v with U7.Case1 o -> Some o | _ -> None
-    //    let ofParameterDeclaration v: HasExpressionInitializer = v |> U7.Case2
-    //    let isParameterDeclaration (v: HasExpressionInitializer) = match v with U7.Case2 _ -> true | _ -> false
-    //    let asParameterDeclaration (v: HasExpressionInitializer) = match v with U7.Case2 o -> Some o | _ -> None
-    //    let ofBindingElement v: HasExpressionInitializer = v |> U7.Case3
-    //    let isBindingElement (v: HasExpressionInitializer) = match v with U7.Case3 _ -> true | _ -> false
-    //    let asBindingElement (v: HasExpressionInitializer) = match v with U7.Case3 o -> Some o | _ -> None
-    //    let ofPropertySignature v: HasExpressionInitializer = v |> U7.Case4
-    //    let isPropertySignature (v: HasExpressionInitializer) = match v with U7.Case4 _ -> true | _ -> false
-    //    let asPropertySignature (v: HasExpressionInitializer) = match v with U7.Case4 o -> Some o | _ -> None
-    //    let ofPropertyDeclaration v: HasExpressionInitializer = v |> U7.Case5
-    //    let isPropertyDeclaration (v: HasExpressionInitializer) = match v with U7.Case5 _ -> true | _ -> false
-    //    let asPropertyDeclaration (v: HasExpressionInitializer) = match v with U7.Case5 o -> Some o | _ -> None
-    //    let ofPropertyAssignment v: HasExpressionInitializer = v |> U7.Case6
-    //    let isPropertyAssignment (v: HasExpressionInitializer) = match v with U7.Case6 _ -> true | _ -> false
-    //    let asPropertyAssignment (v: HasExpressionInitializer) = match v with U7.Case6 o -> Some o | _ -> None
-    //    let ofEnumMember v: HasExpressionInitializer = v |> U7.Case7
-    //    let isEnumMember (v: HasExpressionInitializer) = match v with U7.Case7 _ -> true | _ -> false
-    //    let asEnumMember (v: HasExpressionInitializer) = match v with U7.Case7 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] NodeArray<'T> =
         // inherit ReadonlyArray<'T>
@@ -1591,59 +1538,11 @@ module Ts =
     type EntityName =
         U2<Identifier, QualifiedName>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module EntityName =
-    //    let ofIdentifier v: EntityName = v |> U2.Case1
-    //    let isIdentifier (v: EntityName) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asIdentifier (v: EntityName) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofQualifiedName v: EntityName = v |> U2.Case2
-    //    let isQualifiedName (v: EntityName) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asQualifiedName (v: EntityName) = match v with U2.Case2 o -> Some o | _ -> None
-
     type PropertyName =
         U4<Identifier, StringLiteral, NumericLiteral, ComputedPropertyName>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module PropertyName =
-    //    let ofIdentifier v: PropertyName = v |> U4.Case1
-    //    let isIdentifier (v: PropertyName) = match v with U4.Case1 _ -> true | _ -> false
-    //    let asIdentifier (v: PropertyName) = match v with U4.Case1 o -> Some o | _ -> None
-    //    let ofStringLiteral v: PropertyName = v |> U4.Case2
-    //    let isStringLiteral (v: PropertyName) = match v with U4.Case2 _ -> true | _ -> false
-    //    let asStringLiteral (v: PropertyName) = match v with U4.Case2 o -> Some o | _ -> None
-    //    let ofNumericLiteral v: PropertyName = v |> U4.Case3
-    //    let isNumericLiteral (v: PropertyName) = match v with U4.Case3 _ -> true | _ -> false
-    //    let asNumericLiteral (v: PropertyName) = match v with U4.Case3 o -> Some o | _ -> None
-    //    let ofComputedPropertyName v: PropertyName = v |> U4.Case4
-    //    let isComputedPropertyName (v: PropertyName) = match v with U4.Case4 _ -> true | _ -> false
-    //    let asComputedPropertyName (v: PropertyName) = match v with U4.Case4 o -> Some o | _ -> None
-
     type DeclarationName =
         U7<Identifier, StringLiteralLike, NumericLiteral, ComputedPropertyName, ElementAccessExpression, BindingPattern, EntityNameExpression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module DeclarationName =
-    //    let ofIdentifier v: DeclarationName = v |> U7.Case1
-    //    let isIdentifier (v: DeclarationName) = match v with U7.Case1 _ -> true | _ -> false
-    //    let asIdentifier (v: DeclarationName) = match v with U7.Case1 o -> Some o | _ -> None
-    //    let ofStringLiteralLike v: DeclarationName = v |> U7.Case2
-    //    let isStringLiteralLike (v: DeclarationName) = match v with U7.Case2 _ -> true | _ -> false
-    //    let asStringLiteralLike (v: DeclarationName) = match v with U7.Case2 o -> Some o | _ -> None
-    //    let ofNumericLiteral v: DeclarationName = v |> U7.Case3
-    //    let isNumericLiteral (v: DeclarationName) = match v with U7.Case3 _ -> true | _ -> false
-    //    let asNumericLiteral (v: DeclarationName) = match v with U7.Case3 o -> Some o | _ -> None
-    //    let ofComputedPropertyName v: DeclarationName = v |> U7.Case4
-    //    let isComputedPropertyName (v: DeclarationName) = match v with U7.Case4 _ -> true | _ -> false
-    //    let asComputedPropertyName (v: DeclarationName) = match v with U7.Case4 o -> Some o | _ -> None
-    //    let ofElementAccessExpression v: DeclarationName = v |> U7.Case5
-    //    let isElementAccessExpression (v: DeclarationName) = match v with U7.Case5 _ -> true | _ -> false
-    //    let asElementAccessExpression (v: DeclarationName) = match v with U7.Case5 o -> Some o | _ -> None
-    //    let ofBindingPattern v: DeclarationName = v |> U7.Case6
-    //    let isBindingPattern (v: DeclarationName) = match v with U7.Case6 _ -> true | _ -> false
-    //    let asBindingPattern (v: DeclarationName) = match v with U7.Case6 o -> Some o | _ -> None
-    //    let ofEntityNameExpression v: DeclarationName = v |> U7.Case7
-    //    let isEntityNameExpression (v: DeclarationName) = match v with U7.Case7 _ -> true | _ -> false
-    //    let asEntityNameExpression (v: DeclarationName) = match v with U7.Case7 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] Declaration =
         inherit Node
@@ -1675,7 +1574,7 @@ module Ts =
         abstract kind: SyntaxKind with get, set
         abstract parent: U2<DeclarationWithTypeParameterChildren, InferTypeNode> with get, set
         abstract name: Identifier with get, set
-        /// Note: Consider calling `getEffectiveConstraintOfTypeParameter` 
+        /// Note: Consider calling `getEffectiveConstraintOfTypeParameter`
         abstract ``constraint``: TypeNode option with get, set
         abstract ``default``: TypeNode option with get, set
         abstract expression: Expression option with get, set
@@ -1704,15 +1603,6 @@ module Ts =
 
     type BindingName =
         U2<Identifier, BindingPattern>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BindingName =
-    //    let ofIdentifier v: BindingName = v |> U2.Case1
-    //    let isIdentifier (v: BindingName) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asIdentifier (v: BindingName) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofBindingPattern v: BindingName = v |> U2.Case2
-    //    let isBindingPattern (v: BindingName) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asBindingPattern (v: BindingName) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] VariableDeclaration =
         inherit NamedDeclaration
@@ -1777,24 +1667,6 @@ module Ts =
     type ObjectLiteralElementLike =
         U5<PropertyAssignment, ShorthandPropertyAssignment, SpreadAssignment, MethodDeclaration, AccessorDeclaration>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ObjectLiteralElementLike =
-    //    let ofPropertyAssignment v: ObjectLiteralElementLike = v |> U5.Case1
-    //    let isPropertyAssignment (v: ObjectLiteralElementLike) = match v with U5.Case1 _ -> true | _ -> false
-    //    let asPropertyAssignment (v: ObjectLiteralElementLike) = match v with U5.Case1 o -> Some o | _ -> None
-    //    let ofShorthandPropertyAssignment v: ObjectLiteralElementLike = v |> U5.Case2
-    //    let isShorthandPropertyAssignment (v: ObjectLiteralElementLike) = match v with U5.Case2 _ -> true | _ -> false
-    //    let asShorthandPropertyAssignment (v: ObjectLiteralElementLike) = match v with U5.Case2 o -> Some o | _ -> None
-    //    let ofSpreadAssignment v: ObjectLiteralElementLike = v |> U5.Case3
-    //    let isSpreadAssignment (v: ObjectLiteralElementLike) = match v with U5.Case3 _ -> true | _ -> false
-    //    let asSpreadAssignment (v: ObjectLiteralElementLike) = match v with U5.Case3 o -> Some o | _ -> None
-    //    let ofMethodDeclaration v: ObjectLiteralElementLike = v |> U5.Case4
-    //    let isMethodDeclaration (v: ObjectLiteralElementLike) = match v with U5.Case4 _ -> true | _ -> false
-    //    let asMethodDeclaration (v: ObjectLiteralElementLike) = match v with U5.Case4 o -> Some o | _ -> None
-    //    let ofAccessorDeclaration v: ObjectLiteralElementLike = v |> U5.Case5
-    //    let isAccessorDeclaration (v: ObjectLiteralElementLike) = match v with U5.Case5 _ -> true | _ -> false
-    //    let asAccessorDeclaration (v: ObjectLiteralElementLike) = match v with U5.Case5 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] PropertyAssignment =
         inherit ObjectLiteralElement
         inherit JSDocContainer
@@ -1844,26 +1716,8 @@ module Ts =
     type BindingPattern =
         U2<ObjectBindingPattern, ArrayBindingPattern>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BindingPattern =
-    //    let ofObjectBindingPattern v: BindingPattern = v |> U2.Case1
-    //    let isObjectBindingPattern (v: BindingPattern) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asObjectBindingPattern (v: BindingPattern) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofArrayBindingPattern v: BindingPattern = v |> U2.Case2
-    //    let isArrayBindingPattern (v: BindingPattern) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asArrayBindingPattern (v: BindingPattern) = match v with U2.Case2 o -> Some o | _ -> None
-
     type ArrayBindingElement =
         U2<BindingElement, OmittedExpression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ArrayBindingElement =
-    //    let ofBindingElement v: ArrayBindingElement = v |> U2.Case1
-    //    let isBindingElement (v: ArrayBindingElement) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asBindingElement (v: ArrayBindingElement) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofOmittedExpression v: ArrayBindingElement = v |> U2.Case2
-    //    let isOmittedExpression (v: ArrayBindingElement) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asOmittedExpression (v: ArrayBindingElement) = match v with U2.Case2 o -> Some o | _ -> None
 
     /// Several node kinds share function-like features such as a signature,
     /// a name, and a body. These nodes should extend FunctionLikeDeclarationBase.
@@ -1881,30 +1735,6 @@ module Ts =
 
     type FunctionLikeDeclaration =
         U7<FunctionDeclaration, MethodDeclaration, GetAccessorDeclaration, SetAccessorDeclaration, ConstructorDeclaration, FunctionExpression, ArrowFunction>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module FunctionLikeDeclaration =
-    //    let ofFunctionDeclaration v: FunctionLikeDeclaration = v |> U7.Case1
-    //    let isFunctionDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case1 _ -> true | _ -> false
-    //    let asFunctionDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case1 o -> Some o | _ -> None
-    //    let ofMethodDeclaration v: FunctionLikeDeclaration = v |> U7.Case2
-    //    let isMethodDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case2 _ -> true | _ -> false
-    //    let asMethodDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case2 o -> Some o | _ -> None
-    //    let ofGetAccessorDeclaration v: FunctionLikeDeclaration = v |> U7.Case3
-    //    let isGetAccessorDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case3 _ -> true | _ -> false
-    //    let asGetAccessorDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case3 o -> Some o | _ -> None
-    //    let ofSetAccessorDeclaration v: FunctionLikeDeclaration = v |> U7.Case4
-    //    let isSetAccessorDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case4 _ -> true | _ -> false
-    //    let asSetAccessorDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case4 o -> Some o | _ -> None
-    //    let ofConstructorDeclaration v: FunctionLikeDeclaration = v |> U7.Case5
-    //    let isConstructorDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case5 _ -> true | _ -> false
-    //    let asConstructorDeclaration (v: FunctionLikeDeclaration) = match v with U7.Case5 o -> Some o | _ -> None
-    //    let ofFunctionExpression v: FunctionLikeDeclaration = v |> U7.Case6
-    //    let isFunctionExpression (v: FunctionLikeDeclaration) = match v with U7.Case6 _ -> true | _ -> false
-    //    let asFunctionExpression (v: FunctionLikeDeclaration) = match v with U7.Case6 o -> Some o | _ -> None
-    //    let ofArrowFunction v: FunctionLikeDeclaration = v |> U7.Case7
-    //    let isArrowFunction (v: FunctionLikeDeclaration) = match v with U7.Case7 _ -> true | _ -> false
-    //    let asArrowFunction (v: FunctionLikeDeclaration) = match v with U7.Case7 o -> Some o | _ -> None
 
     type FunctionLike =
         SignatureDeclaration
@@ -1941,7 +1771,7 @@ module Ts =
         abstract parent: ClassLikeDeclaration with get, set
         abstract body: FunctionBody option with get, set
 
-    /// For when we encounter a semicolon in a class declaration. ES6 allows these as class elements. 
+    /// For when we encounter a semicolon in a class declaration. ES6 allows these as class elements.
     type [<AllowNullLiteral>] SemicolonClassElement =
         inherit ClassElement
         abstract kind: SyntaxKind with get, set
@@ -1969,15 +1799,6 @@ module Ts =
 
     type AccessorDeclaration =
         U2<GetAccessorDeclaration, SetAccessorDeclaration>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module AccessorDeclaration =
-    //    let ofGetAccessorDeclaration v: AccessorDeclaration = v |> U2.Case1
-    //    let isGetAccessorDeclaration (v: AccessorDeclaration) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asGetAccessorDeclaration (v: AccessorDeclaration) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofSetAccessorDeclaration v: AccessorDeclaration = v |> U2.Case2
-    //    let isSetAccessorDeclaration (v: AccessorDeclaration) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asSetAccessorDeclaration (v: AccessorDeclaration) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] IndexSignatureDeclaration =
         inherit SignatureDeclarationBase
@@ -2008,15 +1829,6 @@ module Ts =
     type FunctionOrConstructorTypeNode =
         U2<FunctionTypeNode, ConstructorTypeNode>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module FunctionOrConstructorTypeNode =
-    //    let ofFunctionTypeNode v: FunctionOrConstructorTypeNode = v |> U2.Case1
-    //    let isFunctionTypeNode (v: FunctionOrConstructorTypeNode) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asFunctionTypeNode (v: FunctionOrConstructorTypeNode) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofConstructorTypeNode v: FunctionOrConstructorTypeNode = v |> U2.Case2
-    //    let isConstructorTypeNode (v: FunctionOrConstructorTypeNode) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asConstructorTypeNode (v: FunctionOrConstructorTypeNode) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] FunctionOrConstructorTypeNodeBase =
         inherit TypeNode
         inherit SignatureDeclarationBase
@@ -2037,15 +1849,6 @@ module Ts =
 
     type TypeReferenceType =
         U2<TypeReferenceNode, ExpressionWithTypeArguments>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module TypeReferenceType =
-    //    let ofTypeReferenceNode v: TypeReferenceType = v |> U2.Case1
-    //    let isTypeReferenceNode (v: TypeReferenceType) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asTypeReferenceNode (v: TypeReferenceType) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofExpressionWithTypeArguments v: TypeReferenceType = v |> U2.Case2
-    //    let isExpressionWithTypeArguments (v: TypeReferenceType) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asExpressionWithTypeArguments (v: TypeReferenceType) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] TypeReferenceNode =
         inherit NodeWithTypeArguments
@@ -2093,15 +1896,6 @@ module Ts =
 
     type UnionOrIntersectionTypeNode =
         U2<UnionTypeNode, IntersectionTypeNode>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module UnionOrIntersectionTypeNode =
-    //    let ofUnionTypeNode v: UnionOrIntersectionTypeNode = v |> U2.Case1
-    //    let isUnionTypeNode (v: UnionOrIntersectionTypeNode) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asUnionTypeNode (v: UnionOrIntersectionTypeNode) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofIntersectionTypeNode v: UnionOrIntersectionTypeNode = v |> U2.Case2
-    //    let isIntersectionTypeNode (v: UnionOrIntersectionTypeNode) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asIntersectionTypeNode (v: UnionOrIntersectionTypeNode) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] UnionTypeNode =
         inherit TypeNode
@@ -2164,15 +1958,6 @@ module Ts =
 
     type StringLiteralLike =
         U2<StringLiteral, NoSubstitutionTemplateLiteral>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module StringLiteralLike =
-    //    let ofStringLiteral v: StringLiteralLike = v |> U2.Case1
-    //    let isStringLiteral (v: StringLiteralLike) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asStringLiteral (v: StringLiteralLike) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofNoSubstitutionTemplateLiteral v: StringLiteralLike = v |> U2.Case2
-    //    let isNoSubstitutionTemplateLiteral (v: StringLiteralLike) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asNoSubstitutionTemplateLiteral (v: StringLiteralLike) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] Expression =
         inherit Node
@@ -2292,29 +2077,11 @@ module Ts =
     type MultiplicativeOperatorOrHigher =
         U2<ExponentiationOperator, MultiplicativeOperator>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module MultiplicativeOperatorOrHigher =
-    //    let ofExponentiationOperator v: MultiplicativeOperatorOrHigher = v |> U2.Case1
-    //    let isExponentiationOperator (v: MultiplicativeOperatorOrHigher) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asExponentiationOperator (v: MultiplicativeOperatorOrHigher) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofMultiplicativeOperator v: MultiplicativeOperatorOrHigher = v |> U2.Case2
-    //    let isMultiplicativeOperator (v: MultiplicativeOperatorOrHigher) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asMultiplicativeOperator (v: MultiplicativeOperatorOrHigher) = match v with U2.Case2 o -> Some o | _ -> None
-
     type AdditiveOperator =
         SyntaxKind
 
     type AdditiveOperatorOrHigher =
         U2<MultiplicativeOperatorOrHigher, AdditiveOperator>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module AdditiveOperatorOrHigher =
-    //    let ofMultiplicativeOperatorOrHigher v: AdditiveOperatorOrHigher = v |> U2.Case1
-    //    let isMultiplicativeOperatorOrHigher (v: AdditiveOperatorOrHigher) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asMultiplicativeOperatorOrHigher (v: AdditiveOperatorOrHigher) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofAdditiveOperator v: AdditiveOperatorOrHigher = v |> U2.Case2
-    //    let isAdditiveOperator (v: AdditiveOperatorOrHigher) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asAdditiveOperator (v: AdditiveOperatorOrHigher) = match v with U2.Case2 o -> Some o | _ -> None
 
     type ShiftOperator =
         SyntaxKind
@@ -2322,29 +2089,11 @@ module Ts =
     type ShiftOperatorOrHigher =
         U2<AdditiveOperatorOrHigher, ShiftOperator>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ShiftOperatorOrHigher =
-    //    let ofAdditiveOperatorOrHigher v: ShiftOperatorOrHigher = v |> U2.Case1
-    //    let isAdditiveOperatorOrHigher (v: ShiftOperatorOrHigher) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asAdditiveOperatorOrHigher (v: ShiftOperatorOrHigher) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofShiftOperator v: ShiftOperatorOrHigher = v |> U2.Case2
-    //    let isShiftOperator (v: ShiftOperatorOrHigher) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asShiftOperator (v: ShiftOperatorOrHigher) = match v with U2.Case2 o -> Some o | _ -> None
-
     type RelationalOperator =
         SyntaxKind
 
     type RelationalOperatorOrHigher =
         U2<ShiftOperatorOrHigher, RelationalOperator>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module RelationalOperatorOrHigher =
-    //    let ofShiftOperatorOrHigher v: RelationalOperatorOrHigher = v |> U2.Case1
-    //    let isShiftOperatorOrHigher (v: RelationalOperatorOrHigher) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asShiftOperatorOrHigher (v: RelationalOperatorOrHigher) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofRelationalOperator v: RelationalOperatorOrHigher = v |> U2.Case2
-    //    let isRelationalOperator (v: RelationalOperatorOrHigher) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asRelationalOperator (v: RelationalOperatorOrHigher) = match v with U2.Case2 o -> Some o | _ -> None
 
     type EqualityOperator =
         SyntaxKind
@@ -2352,29 +2101,11 @@ module Ts =
     type EqualityOperatorOrHigher =
         U2<RelationalOperatorOrHigher, EqualityOperator>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module EqualityOperatorOrHigher =
-    //    let ofRelationalOperatorOrHigher v: EqualityOperatorOrHigher = v |> U2.Case1
-    //    let isRelationalOperatorOrHigher (v: EqualityOperatorOrHigher) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asRelationalOperatorOrHigher (v: EqualityOperatorOrHigher) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofEqualityOperator v: EqualityOperatorOrHigher = v |> U2.Case2
-    //    let isEqualityOperator (v: EqualityOperatorOrHigher) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asEqualityOperator (v: EqualityOperatorOrHigher) = match v with U2.Case2 o -> Some o | _ -> None
-
     type BitwiseOperator =
         SyntaxKind
 
     type BitwiseOperatorOrHigher =
         U2<EqualityOperatorOrHigher, BitwiseOperator>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BitwiseOperatorOrHigher =
-    //    let ofEqualityOperatorOrHigher v: BitwiseOperatorOrHigher = v |> U2.Case1
-    //    let isEqualityOperatorOrHigher (v: BitwiseOperatorOrHigher) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asEqualityOperatorOrHigher (v: BitwiseOperatorOrHigher) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofBitwiseOperator v: BitwiseOperatorOrHigher = v |> U2.Case2
-    //    let isBitwiseOperator (v: BitwiseOperatorOrHigher) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asBitwiseOperator (v: BitwiseOperatorOrHigher) = match v with U2.Case2 o -> Some o | _ -> None
 
     type LogicalOperator =
         SyntaxKind
@@ -2382,56 +2113,17 @@ module Ts =
     type LogicalOperatorOrHigher =
         U2<BitwiseOperatorOrHigher, LogicalOperator>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module LogicalOperatorOrHigher =
-    //    let ofBitwiseOperatorOrHigher v: LogicalOperatorOrHigher = v |> U2.Case1
-    //    let isBitwiseOperatorOrHigher (v: LogicalOperatorOrHigher) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asBitwiseOperatorOrHigher (v: LogicalOperatorOrHigher) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofLogicalOperator v: LogicalOperatorOrHigher = v |> U2.Case2
-    //    let isLogicalOperator (v: LogicalOperatorOrHigher) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asLogicalOperator (v: LogicalOperatorOrHigher) = match v with U2.Case2 o -> Some o | _ -> None
-
     type CompoundAssignmentOperator =
         SyntaxKind
 
     type AssignmentOperator =
         U2<SyntaxKind, CompoundAssignmentOperator>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module AssignmentOperator =
-    //    let ofSyntaxKind v: AssignmentOperator = v |> U2.Case1
-    //    let isSyntaxKind (v: AssignmentOperator) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asSyntaxKind (v: AssignmentOperator) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofCompoundAssignmentOperator v: AssignmentOperator = v |> U2.Case2
-    //    let isCompoundAssignmentOperator (v: AssignmentOperator) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asCompoundAssignmentOperator (v: AssignmentOperator) = match v with U2.Case2 o -> Some o | _ -> None
-
     type AssignmentOperatorOrHigher =
         U3<SyntaxKind, LogicalOperatorOrHigher, AssignmentOperator>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module AssignmentOperatorOrHigher =
-    //    let ofSyntaxKind v: AssignmentOperatorOrHigher = v |> U3.Case1
-    //    let isSyntaxKind (v: AssignmentOperatorOrHigher) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asSyntaxKind (v: AssignmentOperatorOrHigher) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofLogicalOperatorOrHigher v: AssignmentOperatorOrHigher = v |> U3.Case2
-    //    let isLogicalOperatorOrHigher (v: AssignmentOperatorOrHigher) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asLogicalOperatorOrHigher (v: AssignmentOperatorOrHigher) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofAssignmentOperator v: AssignmentOperatorOrHigher = v |> U3.Case3
-    //    let isAssignmentOperator (v: AssignmentOperatorOrHigher) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asAssignmentOperator (v: AssignmentOperatorOrHigher) = match v with U3.Case3 o -> Some o | _ -> None
-
     type BinaryOperator =
         U2<AssignmentOperatorOrHigher, SyntaxKind>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BinaryOperator =
-    //    let ofAssignmentOperatorOrHigher v: BinaryOperator = v |> U2.Case1
-    //    let isAssignmentOperatorOrHigher (v: BinaryOperator) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asAssignmentOperatorOrHigher (v: BinaryOperator) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofSyntaxKind v: BinaryOperator = v |> U2.Case2
-    //    let isSyntaxKind (v: BinaryOperator) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asSyntaxKind (v: BinaryOperator) = match v with U2.Case2 o -> Some o | _ -> None
 
     type BinaryOperatorToken =
         Token<BinaryOperator>
@@ -2463,101 +2155,26 @@ module Ts =
     type DestructuringAssignment =
         U2<ObjectDestructuringAssignment, ArrayDestructuringAssignment>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module DestructuringAssignment =
-    //    let ofObjectDestructuringAssignment v: DestructuringAssignment = v |> U2.Case1
-    //    let isObjectDestructuringAssignment (v: DestructuringAssignment) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asObjectDestructuringAssignment (v: DestructuringAssignment) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofArrayDestructuringAssignment v: DestructuringAssignment = v |> U2.Case2
-    //    let isArrayDestructuringAssignment (v: DestructuringAssignment) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asArrayDestructuringAssignment (v: DestructuringAssignment) = match v with U2.Case2 o -> Some o | _ -> None
-
     type BindingOrAssignmentElement =
         obj
 
     type BindingOrAssignmentElementRestIndicator =
         U3<DotDotDotToken, SpreadElement, SpreadAssignment>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BindingOrAssignmentElementRestIndicator =
-    //    let ofDotDotDotToken v: BindingOrAssignmentElementRestIndicator = v |> U3.Case1
-    //    let isDotDotDotToken (v: BindingOrAssignmentElementRestIndicator) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asDotDotDotToken (v: BindingOrAssignmentElementRestIndicator) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofSpreadElement v: BindingOrAssignmentElementRestIndicator = v |> U3.Case2
-    //    let isSpreadElement (v: BindingOrAssignmentElementRestIndicator) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asSpreadElement (v: BindingOrAssignmentElementRestIndicator) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofSpreadAssignment v: BindingOrAssignmentElementRestIndicator = v |> U3.Case3
-    //    let isSpreadAssignment (v: BindingOrAssignmentElementRestIndicator) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asSpreadAssignment (v: BindingOrAssignmentElementRestIndicator) = match v with U3.Case3 o -> Some o | _ -> None
-
     type BindingOrAssignmentElementTarget =
         U5<BindingOrAssignmentPattern, Identifier, PropertyAccessExpression, ElementAccessExpression, OmittedExpression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BindingOrAssignmentElementTarget =
-    //    let ofBindingOrAssignmentPattern v: BindingOrAssignmentElementTarget = v |> U5.Case1
-    //    let isBindingOrAssignmentPattern (v: BindingOrAssignmentElementTarget) = match v with U5.Case1 _ -> true | _ -> false
-    //    let asBindingOrAssignmentPattern (v: BindingOrAssignmentElementTarget) = match v with U5.Case1 o -> Some o | _ -> None
-    //    let ofIdentifier v: BindingOrAssignmentElementTarget = v |> U5.Case2
-    //    let isIdentifier (v: BindingOrAssignmentElementTarget) = match v with U5.Case2 _ -> true | _ -> false
-    //    let asIdentifier (v: BindingOrAssignmentElementTarget) = match v with U5.Case2 o -> Some o | _ -> None
-    //    let ofPropertyAccessExpression v: BindingOrAssignmentElementTarget = v |> U5.Case3
-    //    let isPropertyAccessExpression (v: BindingOrAssignmentElementTarget) = match v with U5.Case3 _ -> true | _ -> false
-    //    let asPropertyAccessExpression (v: BindingOrAssignmentElementTarget) = match v with U5.Case3 o -> Some o | _ -> None
-    //    let ofElementAccessExpression v: BindingOrAssignmentElementTarget = v |> U5.Case4
-    //    let isElementAccessExpression (v: BindingOrAssignmentElementTarget) = match v with U5.Case4 _ -> true | _ -> false
-    //    let asElementAccessExpression (v: BindingOrAssignmentElementTarget) = match v with U5.Case4 o -> Some o | _ -> None
-    //    let ofOmittedExpression v: BindingOrAssignmentElementTarget = v |> U5.Case5
-    //    let isOmittedExpression (v: BindingOrAssignmentElementTarget) = match v with U5.Case5 _ -> true | _ -> false
-    //    let asOmittedExpression (v: BindingOrAssignmentElementTarget) = match v with U5.Case5 o -> Some o | _ -> None
 
     type ObjectBindingOrAssignmentPattern =
         U2<ObjectBindingPattern, ObjectLiteralExpression>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ObjectBindingOrAssignmentPattern =
-    //    let ofObjectBindingPattern v: ObjectBindingOrAssignmentPattern = v |> U2.Case1
-    //    let isObjectBindingPattern (v: ObjectBindingOrAssignmentPattern) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asObjectBindingPattern (v: ObjectBindingOrAssignmentPattern) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofObjectLiteralExpression v: ObjectBindingOrAssignmentPattern = v |> U2.Case2
-    //    let isObjectLiteralExpression (v: ObjectBindingOrAssignmentPattern) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asObjectLiteralExpression (v: ObjectBindingOrAssignmentPattern) = match v with U2.Case2 o -> Some o | _ -> None
-
     type ArrayBindingOrAssignmentPattern =
         U2<ArrayBindingPattern, ArrayLiteralExpression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ArrayBindingOrAssignmentPattern =
-    //    let ofArrayBindingPattern v: ArrayBindingOrAssignmentPattern = v |> U2.Case1
-    //    let isArrayBindingPattern (v: ArrayBindingOrAssignmentPattern) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asArrayBindingPattern (v: ArrayBindingOrAssignmentPattern) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofArrayLiteralExpression v: ArrayBindingOrAssignmentPattern = v |> U2.Case2
-    //    let isArrayLiteralExpression (v: ArrayBindingOrAssignmentPattern) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asArrayLiteralExpression (v: ArrayBindingOrAssignmentPattern) = match v with U2.Case2 o -> Some o | _ -> None
 
     type AssignmentPattern =
         U2<ObjectLiteralExpression, ArrayLiteralExpression>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module AssignmentPattern =
-    //    let ofObjectLiteralExpression v: AssignmentPattern = v |> U2.Case1
-    //    let isObjectLiteralExpression (v: AssignmentPattern) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asObjectLiteralExpression (v: AssignmentPattern) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofArrayLiteralExpression v: AssignmentPattern = v |> U2.Case2
-    //    let isArrayLiteralExpression (v: AssignmentPattern) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asArrayLiteralExpression (v: AssignmentPattern) = match v with U2.Case2 o -> Some o | _ -> None
-
     type BindingOrAssignmentPattern =
         U2<ObjectBindingOrAssignmentPattern, ArrayBindingOrAssignmentPattern>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BindingOrAssignmentPattern =
-    //    let ofObjectBindingOrAssignmentPattern v: BindingOrAssignmentPattern = v |> U2.Case1
-    //    let isObjectBindingOrAssignmentPattern (v: BindingOrAssignmentPattern) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asObjectBindingOrAssignmentPattern (v: BindingOrAssignmentPattern) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofArrayBindingOrAssignmentPattern v: BindingOrAssignmentPattern = v |> U2.Case2
-    //    let isArrayBindingOrAssignmentPattern (v: BindingOrAssignmentPattern) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asArrayBindingOrAssignmentPattern (v: BindingOrAssignmentPattern) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] ConditionalExpression =
         inherit Expression
@@ -2573,15 +2190,6 @@ module Ts =
 
     type ConciseBody =
         U2<FunctionBody, Expression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ConciseBody =
-    //    let ofFunctionBody v: ConciseBody = v |> U2.Case1
-    //    let isFunctionBody (v: ConciseBody) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asFunctionBody (v: ConciseBody) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofExpression v: ConciseBody = v |> U2.Case2
-    //    let isExpression (v: ConciseBody) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asExpression (v: ConciseBody) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] FunctionExpression =
         inherit PrimaryExpression
@@ -2660,15 +2268,6 @@ module Ts =
     type TemplateLiteral =
         U2<TemplateExpression, NoSubstitutionTemplateLiteral>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module TemplateLiteral =
-    //    let ofTemplateExpression v: TemplateLiteral = v |> U2.Case1
-    //    let isTemplateExpression (v: TemplateLiteral) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asTemplateExpression (v: TemplateLiteral) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofNoSubstitutionTemplateLiteral v: TemplateLiteral = v |> U2.Case2
-    //    let isNoSubstitutionTemplateLiteral (v: TemplateLiteral) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asNoSubstitutionTemplateLiteral (v: TemplateLiteral) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] TemplateExpression =
         inherit PrimaryExpression
         abstract kind: SyntaxKind with get, set
@@ -2715,26 +2314,8 @@ module Ts =
     type EntityNameExpression =
         U2<Identifier, PropertyAccessEntityNameExpression>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module EntityNameExpression =
-    //    let ofIdentifier v: EntityNameExpression = v |> U2.Case1
-    //    let isIdentifier (v: EntityNameExpression) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asIdentifier (v: EntityNameExpression) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofPropertyAccessEntityNameExpression v: EntityNameExpression = v |> U2.Case2
-    //    let isPropertyAccessEntityNameExpression (v: EntityNameExpression) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asPropertyAccessEntityNameExpression (v: EntityNameExpression) = match v with U2.Case2 o -> Some o | _ -> None
-
     type EntityNameOrEntityNameExpression =
         U2<EntityName, EntityNameExpression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module EntityNameOrEntityNameExpression =
-    //    let ofEntityName v: EntityNameOrEntityNameExpression = v |> U2.Case1
-    //    let isEntityName (v: EntityNameOrEntityNameExpression) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asEntityName (v: EntityNameOrEntityNameExpression) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofEntityNameExpression v: EntityNameOrEntityNameExpression = v |> U2.Case2
-    //    let isEntityNameExpression (v: EntityNameOrEntityNameExpression) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asEntityNameExpression (v: EntityNameOrEntityNameExpression) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] PropertyAccessExpression =
         inherit MemberExpression
@@ -2752,7 +2333,7 @@ module Ts =
         inherit PropertyAccessExpression
         abstract expression: SuperExpression with get, set
 
-    /// Brand for a PropertyAccessExpression which, like a QualifiedName, consists of a sequence of identifiers separated by dots. 
+    /// Brand for a PropertyAccessExpression which, like a QualifiedName, consists of a sequence of identifiers separated by dots.
     type [<AllowNullLiteral>] PropertyAccessEntityNameExpression =
         inherit PropertyAccessExpression
         abstract _propertyAccessExpressionLikeQualifiedNameBrand: obj option with get, set
@@ -2776,15 +2357,6 @@ module Ts =
     type SuperProperty =
         U2<SuperPropertyAccessExpression, SuperElementAccessExpression>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module SuperProperty =
-    //    let ofSuperPropertyAccessExpression v: SuperProperty = v |> U2.Case1
-    //    let isSuperPropertyAccessExpression (v: SuperProperty) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asSuperPropertyAccessExpression (v: SuperProperty) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofSuperElementAccessExpression v: SuperProperty = v |> U2.Case2
-    //    let isSuperElementAccessExpression (v: SuperProperty) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asSuperElementAccessExpression (v: SuperProperty) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] CallExpression =
         inherit LeftHandSideExpression
         inherit Declaration
@@ -2800,18 +2372,6 @@ module Ts =
 
     type OptionalChain =
         U3<PropertyAccessChain, ElementAccessChain, CallChain>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module OptionalChain =
-    //    let ofPropertyAccessChain v: OptionalChain = v |> U3.Case1
-    //    let isPropertyAccessChain (v: OptionalChain) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asPropertyAccessChain (v: OptionalChain) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofElementAccessChain v: OptionalChain = v |> U3.Case2
-    //    let isElementAccessChain (v: OptionalChain) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asElementAccessChain (v: OptionalChain) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofCallChain v: OptionalChain = v |> U3.Case3
-    //    let isCallChain (v: OptionalChain) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asCallChain (v: OptionalChain) = match v with U3.Case3 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] SuperCall =
         inherit CallExpression
@@ -2845,24 +2405,6 @@ module Ts =
     type CallLikeExpression =
         U5<CallExpression, NewExpression, TaggedTemplateExpression, Decorator, JsxOpeningLikeElement>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module CallLikeExpression =
-    //    let ofCallExpression v: CallLikeExpression = v |> U5.Case1
-    //    let isCallExpression (v: CallLikeExpression) = match v with U5.Case1 _ -> true | _ -> false
-    //    let asCallExpression (v: CallLikeExpression) = match v with U5.Case1 o -> Some o | _ -> None
-    //    let ofNewExpression v: CallLikeExpression = v |> U5.Case2
-    //    let isNewExpression (v: CallLikeExpression) = match v with U5.Case2 _ -> true | _ -> false
-    //    let asNewExpression (v: CallLikeExpression) = match v with U5.Case2 o -> Some o | _ -> None
-    //    let ofTaggedTemplateExpression v: CallLikeExpression = v |> U5.Case3
-    //    let isTaggedTemplateExpression (v: CallLikeExpression) = match v with U5.Case3 _ -> true | _ -> false
-    //    let asTaggedTemplateExpression (v: CallLikeExpression) = match v with U5.Case3 o -> Some o | _ -> None
-    //    let ofDecorator v: CallLikeExpression = v |> U5.Case4
-    //    let isDecorator (v: CallLikeExpression) = match v with U5.Case4 _ -> true | _ -> false
-    //    let asDecorator (v: CallLikeExpression) = match v with U5.Case4 o -> Some o | _ -> None
-    //    let ofJsxOpeningLikeElement v: CallLikeExpression = v |> U5.Case5
-    //    let isJsxOpeningLikeElement (v: CallLikeExpression) = match v with U5.Case5 _ -> true | _ -> false
-    //    let asJsxOpeningLikeElement (v: CallLikeExpression) = match v with U5.Case5 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] AsExpression =
         inherit Expression
         abstract kind: SyntaxKind with get, set
@@ -2877,15 +2419,6 @@ module Ts =
 
     type AssertionExpression =
         U2<TypeAssertion, AsExpression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module AssertionExpression =
-    //    let ofTypeAssertion v: AssertionExpression = v |> U2.Case1
-    //    let isTypeAssertion (v: AssertionExpression) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asTypeAssertion (v: AssertionExpression) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofAsExpression v: AssertionExpression = v |> U2.Case2
-    //    let isAsExpression (v: AssertionExpression) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asAsExpression (v: AssertionExpression) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] NonNullExpression =
         inherit LeftHandSideExpression
@@ -2908,41 +2441,11 @@ module Ts =
     type JsxOpeningLikeElement =
         U2<JsxSelfClosingElement, JsxOpeningElement>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module JsxOpeningLikeElement =
-    //    let ofJsxSelfClosingElement v: JsxOpeningLikeElement = v |> U2.Case1
-    //    let isJsxSelfClosingElement (v: JsxOpeningLikeElement) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asJsxSelfClosingElement (v: JsxOpeningLikeElement) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofJsxOpeningElement v: JsxOpeningLikeElement = v |> U2.Case2
-    //    let isJsxOpeningElement (v: JsxOpeningLikeElement) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asJsxOpeningElement (v: JsxOpeningLikeElement) = match v with U2.Case2 o -> Some o | _ -> None
-
     type JsxAttributeLike =
         U2<JsxAttribute, JsxSpreadAttribute>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module JsxAttributeLike =
-    //    let ofJsxAttribute v: JsxAttributeLike = v |> U2.Case1
-    //    let isJsxAttribute (v: JsxAttributeLike) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asJsxAttribute (v: JsxAttributeLike) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofJsxSpreadAttribute v: JsxAttributeLike = v |> U2.Case2
-    //    let isJsxSpreadAttribute (v: JsxAttributeLike) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asJsxSpreadAttribute (v: JsxAttributeLike) = match v with U2.Case2 o -> Some o | _ -> None
-
     type JsxTagNameExpression =
         U3<Identifier, ThisExpression, JsxTagNamePropertyAccess>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module JsxTagNameExpression =
-    //    let ofIdentifier v: JsxTagNameExpression = v |> U3.Case1
-    //    let isIdentifier (v: JsxTagNameExpression) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asIdentifier (v: JsxTagNameExpression) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofThisExpression v: JsxTagNameExpression = v |> U3.Case2
-    //    let isThisExpression (v: JsxTagNameExpression) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asThisExpression (v: JsxTagNameExpression) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofJsxTagNamePropertyAccess v: JsxTagNameExpression = v |> U3.Case3
-    //    let isJsxTagNamePropertyAccess (v: JsxTagNameExpression) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asJsxTagNamePropertyAccess (v: JsxTagNameExpression) = match v with U3.Case3 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] JsxTagNamePropertyAccess =
         inherit PropertyAccessExpression
@@ -3020,24 +2523,6 @@ module Ts =
     type JsxChild =
         U5<JsxText, JsxExpression, JsxElement, JsxSelfClosingElement, JsxFragment>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module JsxChild =
-    //    let ofJsxText v: JsxChild = v |> U5.Case1
-    //    let isJsxText (v: JsxChild) = match v with U5.Case1 _ -> true | _ -> false
-    //    let asJsxText (v: JsxChild) = match v with U5.Case1 o -> Some o | _ -> None
-    //    let ofJsxExpression v: JsxChild = v |> U5.Case2
-    //    let isJsxExpression (v: JsxChild) = match v with U5.Case2 _ -> true | _ -> false
-    //    let asJsxExpression (v: JsxChild) = match v with U5.Case2 o -> Some o | _ -> None
-    //    let ofJsxElement v: JsxChild = v |> U5.Case3
-    //    let isJsxElement (v: JsxChild) = match v with U5.Case3 _ -> true | _ -> false
-    //    let asJsxElement (v: JsxChild) = match v with U5.Case3 o -> Some o | _ -> None
-    //    let ofJsxSelfClosingElement v: JsxChild = v |> U5.Case4
-    //    let isJsxSelfClosingElement (v: JsxChild) = match v with U5.Case4 _ -> true | _ -> false
-    //    let asJsxSelfClosingElement (v: JsxChild) = match v with U5.Case4 o -> Some o | _ -> None
-    //    let ofJsxFragment v: JsxChild = v |> U5.Case5
-    //    let isJsxFragment (v: JsxChild) = match v with U5.Case5 _ -> true | _ -> false
-    //    let asJsxFragment (v: JsxChild) = match v with U5.Case5 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] Statement =
         inherit Node
         abstract _statementBrand: obj option with get, set
@@ -3067,21 +2552,6 @@ module Ts =
 
     type BlockLike =
         U4<SourceFile, Block, ModuleBlock, CaseOrDefaultClause>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BlockLike =
-    //    let ofSourceFile v: BlockLike = v |> U4.Case1
-    //    let isSourceFile (v: BlockLike) = match v with U4.Case1 _ -> true | _ -> false
-    //    let asSourceFile (v: BlockLike) = match v with U4.Case1 o -> Some o | _ -> None
-    //    let ofBlock v: BlockLike = v |> U4.Case2
-    //    let isBlock (v: BlockLike) = match v with U4.Case2 _ -> true | _ -> false
-    //    let asBlock (v: BlockLike) = match v with U4.Case2 o -> Some o | _ -> None
-    //    let ofModuleBlock v: BlockLike = v |> U4.Case3
-    //    let isModuleBlock (v: BlockLike) = match v with U4.Case3 _ -> true | _ -> false
-    //    let asModuleBlock (v: BlockLike) = match v with U4.Case3 o -> Some o | _ -> None
-    //    let ofCaseOrDefaultClause v: BlockLike = v |> U4.Case4
-    //    let isCaseOrDefaultClause (v: BlockLike) = match v with U4.Case4 _ -> true | _ -> false
-    //    let asCaseOrDefaultClause (v: BlockLike) = match v with U4.Case4 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] Block =
         inherit Statement
@@ -3124,15 +2594,6 @@ module Ts =
     type ForInitializer =
         U2<VariableDeclarationList, Expression>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ForInitializer =
-    //    let ofVariableDeclarationList v: ForInitializer = v |> U2.Case1
-    //    let isVariableDeclarationList (v: ForInitializer) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asVariableDeclarationList (v: ForInitializer) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofExpression v: ForInitializer = v |> U2.Case2
-    //    let isExpression (v: ForInitializer) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asExpression (v: ForInitializer) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] ForStatement =
         inherit IterationStatement
         abstract kind: SyntaxKind with get, set
@@ -3142,15 +2603,6 @@ module Ts =
 
     type ForInOrOfStatement =
         U2<ForInStatement, ForOfStatement>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ForInOrOfStatement =
-    //    let ofForInStatement v: ForInOrOfStatement = v |> U2.Case1
-    //    let isForInStatement (v: ForInOrOfStatement) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asForInStatement (v: ForInOrOfStatement) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofForOfStatement v: ForInOrOfStatement = v |> U2.Case2
-    //    let isForOfStatement (v: ForInOrOfStatement) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asForOfStatement (v: ForInOrOfStatement) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] ForInStatement =
         inherit IterationStatement
@@ -3177,15 +2629,6 @@ module Ts =
 
     type BreakOrContinueStatement =
         U2<BreakStatement, ContinueStatement>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BreakOrContinueStatement =
-    //    let ofBreakStatement v: BreakOrContinueStatement = v |> U2.Case1
-    //    let isBreakStatement (v: BreakOrContinueStatement) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asBreakStatement (v: BreakOrContinueStatement) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofContinueStatement v: BreakOrContinueStatement = v |> U2.Case2
-    //    let isContinueStatement (v: BreakOrContinueStatement) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asContinueStatement (v: BreakOrContinueStatement) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] ReturnStatement =
         inherit Statement
@@ -3227,15 +2670,6 @@ module Ts =
     type CaseOrDefaultClause =
         U2<CaseClause, DefaultClause>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module CaseOrDefaultClause =
-    //    let ofCaseClause v: CaseOrDefaultClause = v |> U2.Case1
-    //    let isCaseClause (v: CaseOrDefaultClause) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asCaseClause (v: CaseOrDefaultClause) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofDefaultClause v: CaseOrDefaultClause = v |> U2.Case2
-    //    let isDefaultClause (v: CaseOrDefaultClause) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asDefaultClause (v: CaseOrDefaultClause) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] LabeledStatement =
         inherit Statement
         inherit JSDocContainer
@@ -3265,56 +2699,11 @@ module Ts =
     type ObjectTypeDeclaration =
         U3<ClassLikeDeclaration, InterfaceDeclaration, TypeLiteralNode>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ObjectTypeDeclaration =
-    //    let ofClassLikeDeclaration v: ObjectTypeDeclaration = v |> U3.Case1
-    //    let isClassLikeDeclaration (v: ObjectTypeDeclaration) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asClassLikeDeclaration (v: ObjectTypeDeclaration) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofInterfaceDeclaration v: ObjectTypeDeclaration = v |> U3.Case2
-    //    let isInterfaceDeclaration (v: ObjectTypeDeclaration) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asInterfaceDeclaration (v: ObjectTypeDeclaration) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofTypeLiteralNode v: ObjectTypeDeclaration = v |> U3.Case3
-    //    let isTypeLiteralNode (v: ObjectTypeDeclaration) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asTypeLiteralNode (v: ObjectTypeDeclaration) = match v with U3.Case3 o -> Some o | _ -> None
-
     type DeclarationWithTypeParameters =
         U4<DeclarationWithTypeParameterChildren, JSDocTypedefTag, JSDocCallbackTag, JSDocSignature>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module DeclarationWithTypeParameters =
-    //    let ofDeclarationWithTypeParameterChildren v: DeclarationWithTypeParameters = v |> U4.Case1
-    //    let isDeclarationWithTypeParameterChildren (v: DeclarationWithTypeParameters) = match v with U4.Case1 _ -> true | _ -> false
-    //    let asDeclarationWithTypeParameterChildren (v: DeclarationWithTypeParameters) = match v with U4.Case1 o -> Some o | _ -> None
-    //    let ofJSDocTypedefTag v: DeclarationWithTypeParameters = v |> U4.Case2
-    //    let isJSDocTypedefTag (v: DeclarationWithTypeParameters) = match v with U4.Case2 _ -> true | _ -> false
-    //    let asJSDocTypedefTag (v: DeclarationWithTypeParameters) = match v with U4.Case2 o -> Some o | _ -> None
-    //    let ofJSDocCallbackTag v: DeclarationWithTypeParameters = v |> U4.Case3
-    //    let isJSDocCallbackTag (v: DeclarationWithTypeParameters) = match v with U4.Case3 _ -> true | _ -> false
-    //    let asJSDocCallbackTag (v: DeclarationWithTypeParameters) = match v with U4.Case3 o -> Some o | _ -> None
-    //    let ofJSDocSignature v: DeclarationWithTypeParameters = v |> U4.Case4
-    //    let isJSDocSignature (v: DeclarationWithTypeParameters) = match v with U4.Case4 _ -> true | _ -> false
-    //    let asJSDocSignature (v: DeclarationWithTypeParameters) = match v with U4.Case4 o -> Some o | _ -> None
-
     type DeclarationWithTypeParameterChildren =
         U5<SignatureDeclaration, ClassLikeDeclaration, InterfaceDeclaration, TypeAliasDeclaration, JSDocTemplateTag>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module DeclarationWithTypeParameterChildren =
-    //    let ofSignatureDeclaration v: DeclarationWithTypeParameterChildren = v |> U5.Case1
-    //    let isSignatureDeclaration (v: DeclarationWithTypeParameterChildren) = match v with U5.Case1 _ -> true | _ -> false
-    //    let asSignatureDeclaration (v: DeclarationWithTypeParameterChildren) = match v with U5.Case1 o -> Some o | _ -> None
-    //    let ofClassLikeDeclaration v: DeclarationWithTypeParameterChildren = v |> U5.Case2
-    //    let isClassLikeDeclaration (v: DeclarationWithTypeParameterChildren) = match v with U5.Case2 _ -> true | _ -> false
-    //    let asClassLikeDeclaration (v: DeclarationWithTypeParameterChildren) = match v with U5.Case2 o -> Some o | _ -> None
-    //    let ofInterfaceDeclaration v: DeclarationWithTypeParameterChildren = v |> U5.Case3
-    //    let isInterfaceDeclaration (v: DeclarationWithTypeParameterChildren) = match v with U5.Case3 _ -> true | _ -> false
-    //    let asInterfaceDeclaration (v: DeclarationWithTypeParameterChildren) = match v with U5.Case3 o -> Some o | _ -> None
-    //    let ofTypeAliasDeclaration v: DeclarationWithTypeParameterChildren = v |> U5.Case4
-    //    let isTypeAliasDeclaration (v: DeclarationWithTypeParameterChildren) = match v with U5.Case4 _ -> true | _ -> false
-    //    let asTypeAliasDeclaration (v: DeclarationWithTypeParameterChildren) = match v with U5.Case4 o -> Some o | _ -> None
-    //    let ofJSDocTemplateTag v: DeclarationWithTypeParameterChildren = v |> U5.Case5
-    //    let isJSDocTemplateTag (v: DeclarationWithTypeParameterChildren) = match v with U5.Case5 _ -> true | _ -> false
-    //    let asJSDocTemplateTag (v: DeclarationWithTypeParameterChildren) = match v with U5.Case5 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] ClassLikeDeclarationBase =
         inherit NamedDeclaration
@@ -3329,7 +2718,7 @@ module Ts =
         inherit ClassLikeDeclarationBase
         inherit DeclarationStatement
         abstract kind: SyntaxKind with get, set
-        /// May be undefined in `export default class { ... }`. 
+        /// May be undefined in `export default class { ... }`.
         abstract name: Identifier option with get, set
 
     type [<AllowNullLiteral>] ClassExpression =
@@ -3339,15 +2728,6 @@ module Ts =
 
     type ClassLikeDeclaration =
         U2<ClassDeclaration, ClassExpression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ClassLikeDeclaration =
-    //    let ofClassDeclaration v: ClassLikeDeclaration = v |> U2.Case1
-    //    let isClassDeclaration (v: ClassLikeDeclaration) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asClassDeclaration (v: ClassLikeDeclaration) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofClassExpression v: ClassLikeDeclaration = v |> U2.Case2
-    //    let isClassExpression (v: ClassLikeDeclaration) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asClassExpression (v: ClassLikeDeclaration) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] ClassElement =
         inherit NamedDeclaration
@@ -3402,26 +2782,8 @@ module Ts =
     type ModuleName =
         U2<Identifier, StringLiteral>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ModuleName =
-    //    let ofIdentifier v: ModuleName = v |> U2.Case1
-    //    let isIdentifier (v: ModuleName) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asIdentifier (v: ModuleName) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofStringLiteral v: ModuleName = v |> U2.Case2
-    //    let isStringLiteral (v: ModuleName) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asStringLiteral (v: ModuleName) = match v with U2.Case2 o -> Some o | _ -> None
-
     type ModuleBody =
         U2<NamespaceBody, JSDocNamespaceBody>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ModuleBody =
-    //    let ofNamespaceBody v: ModuleBody = v |> U2.Case1
-    //    let isNamespaceBody (v: ModuleBody) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asNamespaceBody (v: ModuleBody) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofJSDocNamespaceBody v: ModuleBody = v |> U2.Case2
-    //    let isJSDocNamespaceBody (v: ModuleBody) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asJSDocNamespaceBody (v: ModuleBody) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] ModuleDeclaration =
         inherit DeclarationStatement
@@ -3434,15 +2796,6 @@ module Ts =
     type NamespaceBody =
         U2<ModuleBlock, NamespaceDeclaration>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module NamespaceBody =
-    //    let ofModuleBlock v: NamespaceBody = v |> U2.Case1
-    //    let isModuleBlock (v: NamespaceBody) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asModuleBlock (v: NamespaceBody) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofNamespaceDeclaration v: NamespaceBody = v |> U2.Case2
-    //    let isNamespaceDeclaration (v: NamespaceBody) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asNamespaceDeclaration (v: NamespaceBody) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] NamespaceDeclaration =
         inherit ModuleDeclaration
         abstract name: Identifier with get, set
@@ -3450,15 +2803,6 @@ module Ts =
 
     type JSDocNamespaceBody =
         U2<Identifier, JSDocNamespaceDeclaration>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module JSDocNamespaceBody =
-    //    let ofIdentifier v: JSDocNamespaceBody = v |> U2.Case1
-    //    let isIdentifier (v: JSDocNamespaceBody) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asIdentifier (v: JSDocNamespaceBody) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofJSDocNamespaceDeclaration v: JSDocNamespaceBody = v |> U2.Case2
-    //    let isJSDocNamespaceDeclaration (v: JSDocNamespaceBody) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asJSDocNamespaceDeclaration (v: JSDocNamespaceBody) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] JSDocNamespaceDeclaration =
         inherit ModuleDeclaration
@@ -3474,15 +2818,6 @@ module Ts =
 
     type ModuleReference =
         U2<EntityName, ExternalModuleReference>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ModuleReference =
-    //    let ofEntityName v: ModuleReference = v |> U2.Case1
-    //    let isEntityName (v: ModuleReference) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asEntityName (v: ModuleReference) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofExternalModuleReference v: ModuleReference = v |> U2.Case2
-    //    let isExternalModuleReference (v: ModuleReference) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asExternalModuleReference (v: ModuleReference) = match v with U2.Case2 o -> Some o | _ -> None
 
     /// One of:
     /// - import x = require("mod");
@@ -3506,20 +2841,11 @@ module Ts =
         abstract kind: SyntaxKind with get, set
         abstract parent: U2<SourceFile, ModuleBlock> with get, set
         abstract importClause: ImportClause option with get, set
-        /// If this is not a StringLiteral it will be a grammar error. 
+        /// If this is not a StringLiteral it will be a grammar error.
         abstract moduleSpecifier: Expression with get, set
 
     type NamedImportBindings =
         U2<NamespaceImport, NamedImports>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module NamedImportBindings =
-    //    let ofNamespaceImport v: NamedImportBindings = v |> U2.Case1
-    //    let isNamespaceImport (v: NamedImportBindings) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asNamespaceImport (v: NamedImportBindings) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofNamedImports v: NamedImportBindings = v |> U2.Case2
-    //    let isNamedImports (v: NamedImportBindings) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asNamedImports (v: NamedImportBindings) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] ImportClause =
         inherit NamedDeclaration
@@ -3544,9 +2870,9 @@ module Ts =
         inherit JSDocContainer
         abstract kind: SyntaxKind with get, set
         abstract parent: U2<SourceFile, ModuleBlock> with get, set
-        /// Will not be assigned in the case of `export * from "foo";` 
+        /// Will not be assigned in the case of `export * from "foo";`
         abstract exportClause: NamedExports option with get, set
-        /// If this is not a StringLiteral it will be a grammar error. 
+        /// If this is not a StringLiteral it will be a grammar error.
         abstract moduleSpecifier: Expression option with get, set
 
     type [<AllowNullLiteral>] NamedImports =
@@ -3564,15 +2890,6 @@ module Ts =
     type NamedImportsOrExports =
         U2<NamedImports, NamedExports>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module NamedImportsOrExports =
-    //    let ofNamedImports v: NamedImportsOrExports = v |> U2.Case1
-    //    let isNamedImports (v: NamedImportsOrExports) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asNamedImports (v: NamedImportsOrExports) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofNamedExports v: NamedImportsOrExports = v |> U2.Case2
-    //    let isNamedExports (v: NamedImportsOrExports) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asNamedExports (v: NamedImportsOrExports) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] ImportSpecifier =
         inherit NamedDeclaration
         abstract kind: SyntaxKind with get, set
@@ -3589,15 +2906,6 @@ module Ts =
 
     type ImportOrExportSpecifier =
         U2<ImportSpecifier, ExportSpecifier>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module ImportOrExportSpecifier =
-    //    let ofImportSpecifier v: ImportOrExportSpecifier = v |> U2.Case1
-    //    let isImportSpecifier (v: ImportOrExportSpecifier) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asImportSpecifier (v: ImportOrExportSpecifier) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofExportSpecifier v: ImportOrExportSpecifier = v |> U2.Case2
-    //    let isExportSpecifier (v: ImportOrExportSpecifier) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asExportSpecifier (v: ImportOrExportSpecifier) = match v with U2.Case2 o -> Some o | _ -> None
 
     /// This is either an `export =` or an `export default` declaration.
     /// Unless `isExportEquals` is set, this node was parsed as an `export default`.
@@ -3679,21 +2987,6 @@ module Ts =
 
     type JSDocTypeReferencingNode =
         U4<JSDocVariadicType, JSDocOptionalType, JSDocNullableType, JSDocNonNullableType>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module JSDocTypeReferencingNode =
-    //    let ofJSDocVariadicType v: JSDocTypeReferencingNode = v |> U4.Case1
-    //    let isJSDocVariadicType (v: JSDocTypeReferencingNode) = match v with U4.Case1 _ -> true | _ -> false
-    //    let asJSDocVariadicType (v: JSDocTypeReferencingNode) = match v with U4.Case1 o -> Some o | _ -> None
-    //    let ofJSDocOptionalType v: JSDocTypeReferencingNode = v |> U4.Case2
-    //    let isJSDocOptionalType (v: JSDocTypeReferencingNode) = match v with U4.Case2 _ -> true | _ -> false
-    //    let asJSDocOptionalType (v: JSDocTypeReferencingNode) = match v with U4.Case2 o -> Some o | _ -> None
-    //    let ofJSDocNullableType v: JSDocTypeReferencingNode = v |> U4.Case3
-    //    let isJSDocNullableType (v: JSDocTypeReferencingNode) = match v with U4.Case3 _ -> true | _ -> false
-    //    let asJSDocNullableType (v: JSDocTypeReferencingNode) = match v with U4.Case3 o -> Some o | _ -> None
-    //    let ofJSDocNonNullableType v: JSDocTypeReferencingNode = v |> U4.Case4
-    //    let isJSDocNonNullableType (v: JSDocTypeReferencingNode) = match v with U4.Case4 _ -> true | _ -> false
-    //    let asJSDocNonNullableType (v: JSDocTypeReferencingNode) = match v with U4.Case4 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] JSDoc =
         inherit Node
@@ -3787,7 +3080,7 @@ module Ts =
         abstract parent: JSDoc with get, set
         abstract name: EntityName with get, set
         abstract typeExpression: JSDocTypeExpression option with get, set
-        /// Whether the property name came before the type -- non-standard for JSDoc, but Typescript-like 
+        /// Whether the property name came before the type -- non-standard for JSDoc, but Typescript-like
         abstract isNameFirst: bool with get, set
         abstract isBracketed: bool with get, set
 
@@ -3803,7 +3096,7 @@ module Ts =
         inherit JSDocType
         abstract kind: SyntaxKind with get, set
         abstract jsDocPropertyTags: ResizeArray<JSDocPropertyLikeTag> option with get, set
-        /// If true, then this type literal represents an *array* of its type. 
+        /// If true, then this type literal represents an *array* of its type.
         abstract isArrayType: bool option with get, set
 
     type [<RequireQualifiedAccess>] FlowFlags =
@@ -3882,15 +3175,6 @@ module Ts =
     type FlowType =
         U2<Type, IncompleteType>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module FlowType =
-    //    let ofType v: FlowType = v |> U2.Case1
-    //    let isType (v: FlowType) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asType (v: FlowType) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofIncompleteType v: FlowType = v |> U2.Case2
-    //    let isIncompleteType (v: FlowType) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asIncompleteType (v: FlowType) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] IncompleteType =
         abstract flags: TypeFlags with get, set
         abstract ``type``: Type with get, set
@@ -3964,29 +3248,8 @@ module Ts =
     type UnparsedSourceText =
         U2<UnparsedPrepend, UnparsedTextLike>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module UnparsedSourceText =
-    //    let ofUnparsedPrepend v: UnparsedSourceText = v |> U2.Case1
-    //    let isUnparsedPrepend (v: UnparsedSourceText) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asUnparsedPrepend (v: UnparsedSourceText) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofUnparsedTextLike v: UnparsedSourceText = v |> U2.Case2
-    //    let isUnparsedTextLike (v: UnparsedSourceText) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asUnparsedTextLike (v: UnparsedSourceText) = match v with U2.Case2 o -> Some o | _ -> None
-
     type UnparsedNode =
         U3<UnparsedPrologue, UnparsedSourceText, UnparsedSyntheticReference>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module UnparsedNode =
-    //    let ofUnparsedPrologue v: UnparsedNode = v |> U3.Case1
-    //    let isUnparsedPrologue (v: UnparsedNode) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asUnparsedPrologue (v: UnparsedNode) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofUnparsedSourceText v: UnparsedNode = v |> U3.Case2
-    //    let isUnparsedSourceText (v: UnparsedNode) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asUnparsedSourceText (v: UnparsedNode) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofUnparsedSyntheticReference v: UnparsedNode = v |> U3.Case3
-    //    let isUnparsedSyntheticReference (v: UnparsedNode) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asUnparsedSyntheticReference (v: UnparsedNode) = match v with U3.Case3 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] UnparsedSection =
         inherit Node
@@ -4084,7 +3347,7 @@ module Ts =
         abstract getOptionsDiagnostics: ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         abstract getGlobalDiagnostics: ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         abstract getSyntacticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<DiagnosticWithLocation>
-        /// The first time this is called, it will return global diagnostics (no location). 
+        /// The first time this is called, it will return global diagnostics (no location).
         abstract getSemanticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         abstract getDeclarationDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<DiagnosticWithLocation>
         abstract getConfigFileParsingDiagnostics: unit -> ResizeArray<Diagnostic>
@@ -4118,25 +3381,25 @@ module Ts =
         abstract transformBundle: node: Bundle -> Bundle
 
     type [<AllowNullLiteral>] CustomTransformers =
-        /// Custom transformers to evaluate before built-in .js transformations. 
+        /// Custom transformers to evaluate before built-in .js transformations.
         abstract before: ResizeArray<U2<TransformerFactory<SourceFile>, CustomTransformerFactory>> option with get, set
-        /// Custom transformers to evaluate after built-in .js transformations. 
+        /// Custom transformers to evaluate after built-in .js transformations.
         abstract after: ResizeArray<U2<TransformerFactory<SourceFile>, CustomTransformerFactory>> option with get, set
-        /// Custom transformers to evaluate after built-in .d.ts transformations. 
+        /// Custom transformers to evaluate after built-in .d.ts transformations.
         abstract afterDeclarations: ResizeArray<U2<TransformerFactory<U2<Bundle, SourceFile>>, CustomTransformerFactory>> option with get, set
 
     type [<AllowNullLiteral>] SourceMapSpan =
-        /// Line number in the .js file. 
+        /// Line number in the .js file.
         abstract emittedLine: float with get, set
-        /// Column number in the .js file. 
+        /// Column number in the .js file.
         abstract emittedColumn: float with get, set
-        /// Line number in the .ts file. 
+        /// Line number in the .ts file.
         abstract sourceLine: float with get, set
-        /// Column number in the .ts file. 
+        /// Column number in the .ts file.
         abstract sourceColumn: float with get, set
-        /// Optional name (index into names array) associated with this span. 
+        /// Optional name (index into names array) associated with this span.
         abstract nameIndex: float option with get, set
-        /// .ts file (index into sources array) associated with this span 
+        /// .ts file (index into sources array) associated with this span
         abstract sourceIndex: float with get, set
 
     type [<RequireQualifiedAccess>] ExitStatus =
@@ -4149,7 +3412,7 @@ module Ts =
 
     type [<AllowNullLiteral>] EmitResult =
         abstract emitSkipped: bool with get, set
-        /// Contains declaration emit diagnostics 
+        /// Contains declaration emit diagnostics
         abstract diagnostics: ResizeArray<Diagnostic> with get, set
         abstract emittedFiles: ResizeArray<string> option with get, set
 
@@ -4168,21 +3431,21 @@ module Ts =
         abstract getNullableType: ``type``: Type * flags: TypeFlags -> Type
         abstract getNonNullableType: ``type``: Type -> Type
         abstract getTypeArguments: ``type``: TypeReference -> ResizeArray<Type>
-        /// Note that the resulting nodes cannot be checked. 
+        /// Note that the resulting nodes cannot be checked.
         abstract typeToTypeNode: ``type``: Type * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> TypeNode option
-        /// Note that the resulting nodes cannot be checked. 
+        /// Note that the resulting nodes cannot be checked.
         abstract signatureToSignatureDeclaration: signature: Signature * kind: SyntaxKind * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> obj option
-        /// Note that the resulting nodes cannot be checked. 
+        /// Note that the resulting nodes cannot be checked.
         abstract indexInfoToIndexSignatureDeclaration: indexInfo: IndexInfo * kind: IndexKind * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> IndexSignatureDeclaration option
-        /// Note that the resulting nodes cannot be checked. 
+        /// Note that the resulting nodes cannot be checked.
         abstract symbolToEntityName: symbol: Symbol * meaning: SymbolFlags * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> EntityName option
-        /// Note that the resulting nodes cannot be checked. 
+        /// Note that the resulting nodes cannot be checked.
         abstract symbolToExpression: symbol: Symbol * meaning: SymbolFlags * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> Expression option
-        /// Note that the resulting nodes cannot be checked. 
+        /// Note that the resulting nodes cannot be checked.
         abstract symbolToTypeParameterDeclarations: symbol: Symbol * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> ResizeArray<TypeParameterDeclaration> option
-        /// Note that the resulting nodes cannot be checked. 
+        /// Note that the resulting nodes cannot be checked.
         abstract symbolToParameterDeclaration: symbol: Symbol * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> ParameterDeclaration option
-        /// Note that the resulting nodes cannot be checked. 
+        /// Note that the resulting nodes cannot be checked.
         abstract typeParameterToDeclaration: parameter: TypeParameter * ?enclosingDeclaration: Node * ?flags: NodeBuilderFlags -> TypeParameterDeclaration option
         abstract getSymbolsInScope: location: Node * meaning: SymbolFlags -> ResizeArray<Symbol>
         abstract getSymbolAtLocation: node: Node -> Symbol option
@@ -4221,7 +3484,7 @@ module Ts =
         abstract isUnknownSymbol: symbol: Symbol -> bool
         abstract getConstantValue: node: U3<EnumMember, PropertyAccessExpression, ElementAccessExpression> -> U2<string, float> option
         abstract isValidPropertyAccess: node: U3<PropertyAccessExpression, QualifiedName, ImportTypeNode> * propertyName: string -> bool
-        /// Follow all aliases to get the original symbol. 
+        /// Follow all aliases to get the original symbol.
         abstract getAliasedSymbol: symbol: Symbol -> Symbol
         abstract getExportsOfModule: moduleSymbol: Symbol -> ResizeArray<Symbol>
         abstract getJsxIntrinsicTagNamesAt: location: Node -> ResizeArray<Symbol>
@@ -4338,21 +3601,6 @@ module Ts =
     type TypePredicate =
         U4<ThisTypePredicate, IdentifierTypePredicate, AssertsThisTypePredicate, AssertsIdentifierTypePredicate>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module TypePredicate =
-    //    let ofThisTypePredicate v: TypePredicate = v |> U4.Case1
-    //    let isThisTypePredicate (v: TypePredicate) = match v with U4.Case1 _ -> true | _ -> false
-    //    let asThisTypePredicate (v: TypePredicate) = match v with U4.Case1 o -> Some o | _ -> None
-    //    let ofIdentifierTypePredicate v: TypePredicate = v |> U4.Case2
-    //    let isIdentifierTypePredicate (v: TypePredicate) = match v with U4.Case2 _ -> true | _ -> false
-    //    let asIdentifierTypePredicate (v: TypePredicate) = match v with U4.Case2 o -> Some o | _ -> None
-    //    let ofAssertsThisTypePredicate v: TypePredicate = v |> U4.Case3
-    //    let isAssertsThisTypePredicate (v: TypePredicate) = match v with U4.Case3 _ -> true | _ -> false
-    //    let asAssertsThisTypePredicate (v: TypePredicate) = match v with U4.Case3 o -> Some o | _ -> None
-    //    let ofAssertsIdentifierTypePredicate v: TypePredicate = v |> U4.Case4
-    //    let isAssertsIdentifierTypePredicate (v: TypePredicate) = match v with U4.Case4 _ -> true | _ -> false
-    //    let asAssertsIdentifierTypePredicate (v: TypePredicate) = match v with U4.Case4 o -> Some o | _ -> None
-
     type [<RequireQualifiedAccess>] SymbolFlags =
         | None = 0
         | FunctionScopedVariable = 1
@@ -4452,16 +3700,7 @@ module Ts =
     type __String =
         U2<obj, InternalSymbolName>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module __String =
-    //    let ofObj v: __String = v |> U2.Case1
-    //    let isObj (v: __String) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asObj (v: __String) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofInternalSymbolName v: __String = v |> U2.Case2
-    //    let isInternalSymbolName (v: __String) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asInternalSymbolName (v: __String) = match v with U2.Case2 o -> Some o | _ -> None
-
-    /// ReadonlyMap where keys are `__String`s. 
+    /// ReadonlyMap where keys are `__String`s.
     type [<AllowNullLiteral>] ReadonlyUnderscoreEscapedMap<'T> =
         abstract get: key: __String -> 'T option
         abstract has: key: __String -> bool
@@ -4471,7 +3710,7 @@ module Ts =
         abstract values: unit -> Iterator<'T>
         abstract entries: unit -> Iterator<__String * 'T>
 
-    /// Map where keys are `__String`s. 
+    /// Map where keys are `__String`s.
     type [<AllowNullLiteral>] UnderscoreEscapedMap<'T> =
         inherit ReadonlyUnderscoreEscapedMap<'T>
         abstract set: key: __String * value: 'T -> UnderscoreEscapedMap<'T>
@@ -4532,18 +3771,6 @@ module Ts =
 
     type DestructuringPattern =
         U3<BindingPattern, ObjectLiteralExpression, ArrayLiteralExpression>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module DestructuringPattern =
-    //    let ofBindingPattern v: DestructuringPattern = v |> U3.Case1
-    //    let isBindingPattern (v: DestructuringPattern) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asBindingPattern (v: DestructuringPattern) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofObjectLiteralExpression v: DestructuringPattern = v |> U3.Case2
-    //    let isObjectLiteralExpression (v: DestructuringPattern) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asObjectLiteralExpression (v: DestructuringPattern) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofArrayLiteralExpression v: DestructuringPattern = v |> U3.Case3
-    //    let isArrayLiteralExpression (v: DestructuringPattern) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asArrayLiteralExpression (v: DestructuringPattern) = match v with U3.Case3 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] Type =
         abstract flags: TypeFlags with get, set
@@ -4624,7 +3851,7 @@ module Ts =
         inherit Type
         abstract objectFlags: ObjectFlags with get, set
 
-    /// Class and interface types (ObjectFlags.Class and ObjectFlags.Interface). 
+    /// Class and interface types (ObjectFlags.Class and ObjectFlags.Interface).
     type [<AllowNullLiteral>] InterfaceType =
         inherit ObjectType
         abstract typeParameters: ResizeArray<TypeParameter> option with get, set
@@ -4634,18 +3861,6 @@ module Ts =
 
     type BaseType =
         U3<ObjectType, IntersectionType, TypeVariable>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module BaseType =
-    //    let ofObjectType v: BaseType = v |> U3.Case1
-    //    let isObjectType (v: BaseType) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asObjectType (v: BaseType) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofIntersectionType v: BaseType = v |> U3.Case2
-    //    let isIntersectionType (v: BaseType) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asIntersectionType (v: BaseType) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofTypeVariable v: BaseType = v |> U3.Case3
-    //    let isTypeVariable (v: BaseType) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asTypeVariable (v: BaseType) = match v with U3.Case3 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] InterfaceTypeWithDeclaredMembers =
         inherit InterfaceType
@@ -4700,18 +3915,6 @@ module Ts =
     type StructuredType =
         U3<ObjectType, UnionType, IntersectionType>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module StructuredType =
-    //    let ofObjectType v: StructuredType = v |> U3.Case1
-    //    let isObjectType (v: StructuredType) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asObjectType (v: StructuredType) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofUnionType v: StructuredType = v |> U3.Case2
-    //    let isUnionType (v: StructuredType) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asUnionType (v: StructuredType) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofIntersectionType v: StructuredType = v |> U3.Case3
-    //    let isIntersectionType (v: StructuredType) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asIntersectionType (v: StructuredType) = match v with U3.Case3 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] EvolvingArrayType =
         inherit ObjectType
         abstract elementType: Type with get, set
@@ -4733,15 +3936,6 @@ module Ts =
 
     type TypeVariable =
         U2<TypeParameter, IndexedAccessType>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module TypeVariable =
-    //    let ofTypeParameter v: TypeVariable = v |> U2.Case1
-    //    let isTypeParameter (v: TypeVariable) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asTypeParameter (v: TypeVariable) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofIndexedAccessType v: TypeVariable = v |> U2.Case2
-    //    let isIndexedAccessType (v: TypeVariable) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asIndexedAccessType (v: TypeVariable) = match v with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] IndexType =
         inherit InstantiableType
@@ -4837,7 +4031,7 @@ module Ts =
 
     type [<AllowNullLiteral>] Diagnostic =
         inherit DiagnosticRelatedInformation
-        /// May store more in future. For now, this will simply be `true` to indicate when a diagnostic is an unused-identifier diagnostic. 
+        /// May store more in future. For now, this will simply be `true` to indicate when a diagnostic is an unused-identifier diagnostic.
         abstract reportsUnnecessary: TypeLiteral_03 option with get, set
         abstract source: string option with get, set
         abstract relatedInformation: ResizeArray<DiagnosticRelatedInformation> option with get, set
@@ -4870,52 +4064,17 @@ module Ts =
         abstract name: string with get, set
 
     type [<AllowNullLiteral>] ProjectReference =
-        /// A normalized path on disk 
+        /// A normalized path on disk
         abstract path: string with get, set
-        /// The path as the user originally wrote it 
+        /// The path as the user originally wrote it
         abstract originalPath: string option with get, set
-        /// True if the output of this reference should be prepended to the output of this project. Only valid for --outFile compilations 
+        /// True if the output of this reference should be prepended to the output of this project. Only valid for --outFile compilations
         abstract prepend: bool option with get, set
-        /// True if it is intended that this reference form a circularity 
+        /// True if it is intended that this reference form a circularity
         abstract circular: bool option with get, set
 
     type CompilerOptionsValue =
         U8<string, float, bool, ResizeArray<U2<string, float>>, ResizeArray<string>, MapLike<ResizeArray<string>>, ResizeArray<PluginImport>, ResizeArray<ProjectReference>> option
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module CompilerOptionsValue =
-    //    let ofStringOption v: CompilerOptionsValue = v |> Option.map U8.Case1
-    //    let ofString v: CompilerOptionsValue = v |> U8.Case1 |> Some
-    //    let isString (v: CompilerOptionsValue) = match v with None -> false | Some o -> match o with U8.Case1 _ -> true | _ -> false
-    //    let asString (v: CompilerOptionsValue) = match v with None -> None | Some o -> match o with U8.Case1 o -> Some o | _ -> None
-    //    let ofFloatOption v: CompilerOptionsValue = v |> Option.map U8.Case2
-    //    let ofFloat v: CompilerOptionsValue = v |> U8.Case2 |> Some
-    //    let isFloat (v: CompilerOptionsValue) = match v with None -> false | Some o -> match o with U8.Case2 _ -> true | _ -> false
-    //    let asFloat (v: CompilerOptionsValue) = match v with None -> None | Some o -> match o with U8.Case2 o -> Some o | _ -> None
-    //    let ofBoolOption v: CompilerOptionsValue = v |> Option.map U8.Case3
-    //    let ofBool v: CompilerOptionsValue = v |> U8.Case3 |> Some
-    //    let isBool (v: CompilerOptionsValue) = match v with None -> false | Some o -> match o with U8.Case3 _ -> true | _ -> false
-    //    let asBool (v: CompilerOptionsValue) = match v with None -> None | Some o -> match o with U8.Case3 o -> Some o | _ -> None
-    //    let ofCase4Option v: CompilerOptionsValue = v |> Option.map U8.Case4
-    //    let ofCase4 v: CompilerOptionsValue = v |> U8.Case4 |> Some
-    //    let isCase4 (v: CompilerOptionsValue) = match v with None -> false | Some o -> match o with U8.Case4 _ -> true | _ -> false
-    //    let asCase4 (v: CompilerOptionsValue) = match v with None -> None | Some o -> match o with U8.Case4 o -> Some o | _ -> None
-    //    let ofStringArrayOption v: CompilerOptionsValue = v |> Option.map U8.Case5
-    //    let ofStringArray v: CompilerOptionsValue = v |> U8.Case5 |> Some
-    //    let isStringArray (v: CompilerOptionsValue) = match v with None -> false | Some o -> match o with U8.Case5 _ -> true | _ -> false
-    //    let asStringArray (v: CompilerOptionsValue) = match v with None -> None | Some o -> match o with U8.Case5 o -> Some o | _ -> None
-    //    let ofMapLikeOption v: CompilerOptionsValue = v |> Option.map U8.Case6
-    //    let ofMapLike v: CompilerOptionsValue = v |> U8.Case6 |> Some
-    //    let isMapLike (v: CompilerOptionsValue) = match v with None -> false | Some o -> match o with U8.Case6 _ -> true | _ -> false
-    //    let asMapLike (v: CompilerOptionsValue) = match v with None -> None | Some o -> match o with U8.Case6 o -> Some o | _ -> None
-    //    let ofPluginImportArrayOption v: CompilerOptionsValue = v |> Option.map U8.Case7
-    //    let ofPluginImportArray v: CompilerOptionsValue = v |> U8.Case7 |> Some
-    //    let isPluginImportArray (v: CompilerOptionsValue) = match v with None -> false | Some o -> match o with U8.Case7 _ -> true | _ -> false
-    //    let asPluginImportArray (v: CompilerOptionsValue) = match v with None -> None | Some o -> match o with U8.Case7 o -> Some o | _ -> None
-    //    let ofProjectReferenceArrayOption v: CompilerOptionsValue = v |> Option.map U8.Case8
-    //    let ofProjectReferenceArray v: CompilerOptionsValue = v |> U8.Case8 |> Some
-    //    let isProjectReferenceArray (v: CompilerOptionsValue) = match v with None -> false | Some o -> match o with U8.Case8 _ -> true | _ -> false
-    //    let asProjectReferenceArray (v: CompilerOptionsValue) = match v with None -> None | Some o -> match o with U8.Case8 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] CompilerOptions =
         abstract allowJs: bool option with get, set
@@ -4996,7 +4155,7 @@ module Ts =
         abstract traceResolution: bool option with get, set
         abstract resolveJsonModule: bool option with get, set
         abstract types: ResizeArray<string> option with get, set
-        /// Paths used to compute primary types search locations 
+        /// Paths used to compute primary types search locations
         abstract typeRoots: ResizeArray<string> option with get, set
         abstract esModuleInterop: bool option with get, set
         abstract useDefineForClassFields: bool option with get, set
@@ -5029,7 +4188,7 @@ module Ts =
         | LineFeed = 1
 
     type [<AllowNullLiteral>] LineAndCharacter =
-        /// 0-based. 
+        /// 0-based.
         abstract line: float with get, set
         abstract character: float with get, set
 
@@ -5060,7 +4219,7 @@ module Ts =
         | Standard = 0
         | JSX = 1
 
-    /// Either a parsed command line or a parsed tsconfig.json 
+    /// Either a parsed command line or a parsed tsconfig.json
     type [<AllowNullLiteral>] ParsedCommandLine =
         abstract options: CompilerOptions with get, set
         abstract typeAcquisition: TypeAcquisition option with get, set
@@ -5103,9 +4262,9 @@ module Ts =
     /// 
     /// Prefer to return a `ResolvedModuleFull` so that the file type does not have to be inferred.
     type [<AllowNullLiteral>] ResolvedModule =
-        /// Path of the file the module was resolved to. 
+        /// Path of the file the module was resolved to.
         abstract resolvedFileName: string with get, set
-        /// True if `resolvedFileName` comes from `node_modules`. 
+        /// True if `resolvedFileName` comes from `node_modules`.
         abstract isExternalLibraryImport: bool option with get, set
 
     /// ResolvedModule with an explicitly provided `extension` property.
@@ -5128,7 +4287,7 @@ module Ts =
         /// Name of a submodule within this package.
         /// May be "".
         abstract subModuleName: string with get, set
-        /// Version of the package, e.g. "1.2.3" 
+        /// Version of the package, e.g. "1.2.3"
         abstract version: string with get, set
 
     type [<StringEnum>] [<RequireQualifiedAccess>] Extension =
@@ -5147,7 +4306,7 @@ module Ts =
         abstract primary: bool with get, set
         abstract resolvedFileName: string option with get, set
         abstract packageId: PackageId option with get, set
-        /// True if `resolvedFileName` comes from `node_modules`. 
+        /// True if `resolvedFileName` comes from `node_modules`.
         abstract isExternalLibraryImport: bool option with get, set
 
     type [<AllowNullLiteral>] ResolvedTypeReferenceDirectiveWithFailedLookupLocations =
@@ -5241,27 +4400,27 @@ module Ts =
         | EmbeddedStatement = 5
 
     type [<AllowNullLiteral>] TransformationContext =
-        /// Gets the compiler options supplied to the transformer. 
+        /// Gets the compiler options supplied to the transformer.
         abstract getCompilerOptions: unit -> CompilerOptions
-        /// Starts a new lexical environment. 
+        /// Starts a new lexical environment.
         abstract startLexicalEnvironment: unit -> unit
-        /// Suspends the current lexical environment, usually after visiting a parameter list. 
+        /// Suspends the current lexical environment, usually after visiting a parameter list.
         abstract suspendLexicalEnvironment: unit -> unit
-        /// Resumes a suspended lexical environment, usually before visiting a function body. 
+        /// Resumes a suspended lexical environment, usually before visiting a function body.
         abstract resumeLexicalEnvironment: unit -> unit
-        /// Ends a lexical environment, returning any declarations. 
+        /// Ends a lexical environment, returning any declarations.
         abstract endLexicalEnvironment: unit -> ResizeArray<Statement> option
-        /// Hoists a function declaration to the containing scope. 
+        /// Hoists a function declaration to the containing scope.
         abstract hoistFunctionDeclaration: node: FunctionDeclaration -> unit
-        /// Hoists a variable declaration to the containing scope. 
+        /// Hoists a variable declaration to the containing scope.
         abstract hoistVariableDeclaration: node: Identifier -> unit
-        /// Records a request for a non-scoped emit helper in the current context. 
+        /// Records a request for a non-scoped emit helper in the current context.
         abstract requestEmitHelper: helper: EmitHelper -> unit
-        /// Gets and resets the requested non-scoped emit helpers. 
+        /// Gets and resets the requested non-scoped emit helpers.
         abstract readEmitHelpers: unit -> ResizeArray<EmitHelper> option
-        /// Enables expression substitutions in the pretty printer for the provided SyntaxKind. 
+        /// Enables expression substitutions in the pretty printer for the provided SyntaxKind.
         abstract enableSubstitution: kind: SyntaxKind -> unit
-        /// Determines whether expression substitutions are enabled for the provided node. 
+        /// Determines whether expression substitutions are enabled for the provided node.
         abstract isSubstitutionEnabled: node: Node -> bool
         /// Hook used by transformers to substitute expressions just before they
         /// are emitted by the pretty printer.
@@ -5283,9 +4442,9 @@ module Ts =
         abstract onEmitNode: (EmitHint -> Node -> (EmitHint -> Node -> unit) -> unit) with get, set
 
     type [<AllowNullLiteral>] TransformationResult<'T> =
-        /// Gets the transformed source files. 
+        /// Gets the transformed source files.
         abstract transformed: ResizeArray<'T> with get, set
-        /// Gets diagnostics for the transformation. 
+        /// Gets diagnostics for the transformation.
         abstract diagnostics: ResizeArray<DiagnosticWithLocation> option with get, set
         /// <summary>Gets a substitute for a node, if one is available; otherwise, returns the original node.</summary>
         /// <param name="hint">A hint as to the intended usage of the node.</param>
@@ -5310,17 +4469,6 @@ module Ts =
 
     type VisitResult<'T> =
         U2<'T, ResizeArray<'T>> option
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module VisitResult =
-    //    let ofTOption v: VisitResult<'T> = v |> Option.map U2.Case1
-    //    let ofT v: VisitResult<'T> = v |> U2.Case1 |> Some
-    //    let isT (v: VisitResult<'T>) = match v with None -> false | Some o -> match o with U2.Case1 _ -> true | _ -> false
-    //    let asT (v: VisitResult<'T>) = match v with None -> None | Some o -> match o with U2.Case1 o -> Some o | _ -> None
-    //    let ofTArrayOption v: VisitResult<'T> = v |> Option.map U2.Case2
-    //    let ofTArray v: VisitResult<'T> = v |> U2.Case2 |> Some
-    //    let isTArray (v: VisitResult<'T>) = match v with None -> false | Some o -> match o with U2.Case2 _ -> true | _ -> false
-    //    let asTArray (v: VisitResult<'T>) = match v with None -> None | Some o -> match o with U2.Case2 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] Printer =
         /// <summary>Print a node and its subtree as-is, without any emit transformations.</summary>
@@ -5462,12 +4610,12 @@ module Ts =
         abstract includeAutomaticOptionalChainCompletions: bool option
         abstract includeCompletionsWithInsertText: bool option
         abstract importModuleSpecifierPreference: U2<string, string> option
-        /// Determines whether we import `foo/index.ts` as "foo", "foo/index", or "foo/index.js" 
+        /// Determines whether we import `foo/index.ts` as "foo", "foo/index", or "foo/index.js"
         abstract importModuleSpecifierEnding: U3<string, string, string> option
         abstract allowTextChangesInNewFiles: bool option
         abstract providePrefixAndSuffixTextForRename: bool option
 
-    /// Represents a bigint literal value without requiring bigint support 
+    /// Represents a bigint literal value without requiring bigint support
     type [<AllowNullLiteral>] PseudoBigInt =
         abstract negative: bool with get, set
         abstract base10Value: string with get, set
@@ -5507,7 +4655,7 @@ module Ts =
         abstract deleteFile: path: string -> unit
         /// A good implementation is node.js' `crypto.createHash`. (https://nodejs.org/api/crypto.html#crypto_crypto_createhash_algorithm)
         abstract createHash: data: string -> string
-        /// This must be cryptographically secure. Only implement this method using `crypto.createHash("sha256")`. 
+        /// This must be cryptographically secure. Only implement this method using `crypto.createHash("sha256")`.
         abstract createSHA256Hash: data: string -> string
         abstract getMemoryUsage: unit -> float
         abstract exit: ?exitCode: float -> unit
@@ -5563,21 +4711,6 @@ module Ts =
 
     type TemplateLiteralToken =
         U4<NoSubstitutionTemplateLiteral, TemplateHead, TemplateMiddle, TemplateTail>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module TemplateLiteralToken =
-    //    let ofNoSubstitutionTemplateLiteral v: TemplateLiteralToken = v |> U4.Case1
-    //    let isNoSubstitutionTemplateLiteral (v: TemplateLiteralToken) = match v with U4.Case1 _ -> true | _ -> false
-    //    let asNoSubstitutionTemplateLiteral (v: TemplateLiteralToken) = match v with U4.Case1 o -> Some o | _ -> None
-    //    let ofTemplateHead v: TemplateLiteralToken = v |> U4.Case2
-    //    let isTemplateHead (v: TemplateLiteralToken) = match v with U4.Case2 _ -> true | _ -> false
-    //    let asTemplateHead (v: TemplateLiteralToken) = match v with U4.Case2 o -> Some o | _ -> None
-    //    let ofTemplateMiddle v: TemplateLiteralToken = v |> U4.Case3
-    //    let isTemplateMiddle (v: TemplateLiteralToken) = match v with U4.Case3 _ -> true | _ -> false
-    //    let asTemplateMiddle (v: TemplateLiteralToken) = match v with U4.Case3 o -> Some o | _ -> None
-    //    let ofTemplateTail v: TemplateLiteralToken = v |> U4.Case4
-    //    let isTemplateTail (v: TemplateLiteralToken) = match v with U4.Case4 _ -> true | _ -> false
-    //    let asTemplateTail (v: TemplateLiteralToken) = match v with U4.Case4 o -> Some o | _ -> None
 
     type [<AllowNullLiteral>] DiagnosticReporter =
         [<Emit "$0($1...)">] abstract Invoke: diagnostic: Diagnostic -> unit
@@ -5636,19 +4769,9 @@ module Ts =
         abstract writeByteOrderMark: bool with get, set
         abstract text: string with get, set
 
-    // type AffectedFileResult<'T> =
-    //     U2<obj, obj> option
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module AffectedFileResult =
-    //    let ofResultOption v: AffectedFileResult<'T> = v |> Option.map U2.Case1
-    //    let ofResult v: AffectedFileResult<'T> = v |> U2.Case1 |> Some
-    //    let isResult (v: AffectedFileResult<'T>) = match v with None -> false | Some o -> match o with U2.Case1 _ -> true | _ -> false
-    //    let asResult (v: AffectedFileResult<'T>) = match v with None -> None | Some o -> match o with U2.Case1 o -> Some o | _ -> None
-    //    let ofAffectedOption v: AffectedFileResult<'T> = v |> Option.map U2.Case2
-    //    let ofAffected v: AffectedFileResult<'T> = v |> U2.Case2 |> Some
-    //    let isAffected (v: AffectedFileResult<'T>) = match v with None -> false | Some o -> match o with U2.Case2 _ -> true | _ -> false
-    //    let asAffected (v: AffectedFileResult<'T>) = match v with None -> None | Some o -> match o with U2.Case2 o -> Some o | _ -> None
+    type AffectedFileResult<'T> =
+        // U2<obj, obj> option
+        interface end
 
     type [<AllowNullLiteral>] BuilderProgramHost =
         /// return true if file names are treated with case sensitivity
@@ -5706,7 +4829,16 @@ module Ts =
         inherit BuilderProgram
         /// Gets the semantic diagnostics from the program for the next affected file and caches it
         /// Returns undefined if the iteration is complete
-        // abstract getSemanticDiagnosticsOfNextAffectedFile: ?cancellationToken: CancellationToken * ?ignoreSourceFile: (SourceFile -> bool) -> AffectedFileResult<ResizeArray<Diagnostic>>
+        abstract getSemanticDiagnosticsOfNextAffectedFile: ?cancellationToken: CancellationToken * ?ignoreSourceFile: (SourceFile -> bool) -> AffectedFileResult<ResizeArray<Diagnostic>>
+
+    /// The builder that can handle the changes in program and iterate through changed file to emit the files
+    /// The semantic diagnostics are cached per file and managed by clearing for the changed/affected files
+    type [<AllowNullLiteral>] EmitAndSemanticDiagnosticsBuilderProgram =
+        inherit SemanticDiagnosticsBuilderProgram
+        /// Emits the next affected file's emit result (EmitResult and sourceFiles emitted) or returns undefined if iteration is complete
+        /// The first of writeFile if provided, writeFile of BuilderProgramHost if provided, writeFile of compiler host
+        /// in that order would be used to write the files
+        abstract emitNextAffectedFile: ?writeFile: WriteFileCallback * ?cancellationToken: CancellationToken * ?emitOnlyDtsFiles: bool * ?customTransformers: CustomTransformers -> AffectedFileResult<EmitResult>
 
     type [<AllowNullLiteral>] ReadBuildProgramHost =
         abstract useCaseSensitiveFileNames: unit -> bool
@@ -5727,17 +4859,17 @@ module Ts =
     type [<AllowNullLiteral>] CreateProgram<'T> =
         [<Emit "$0($1...)">] abstract Invoke: rootNames: ResizeArray<string> option * options: CompilerOptions option * ?host: CompilerHost * ?oldProgram: 'T * ?configFileParsingDiagnostics: ResizeArray<Diagnostic> * ?projectReferences: ResizeArray<ProjectReference> -> 'T
 
-    /// Host that has watch functionality used in --watch mode 
+    /// Host that has watch functionality used in --watch mode
     type [<AllowNullLiteral>] WatchHost =
-        /// If provided, called with Diagnostic message that informs about change in watch status 
+        /// If provided, called with Diagnostic message that informs about change in watch status
         abstract onWatchStatusChange: diagnostic: Diagnostic * newLine: string * options: CompilerOptions * ?errorCount: float -> unit
-        /// Used to watch changes in source files, missing files needed to update the program or config file 
+        /// Used to watch changes in source files, missing files needed to update the program or config file
         abstract watchFile: path: string * callback: FileWatcherCallback * ?pollingInterval: float -> FileWatcher
-        /// Used to watch resolved module's failed lookup locations, config file specs, type roots where auto type reference directives are added 
+        /// Used to watch resolved module's failed lookup locations, config file specs, type roots where auto type reference directives are added
         abstract watchDirectory: path: string * callback: DirectoryWatcherCallback * ?recursive: bool -> FileWatcher
-        /// If provided, will be used to set delayed compilation, so that multiple changes in short span are compiled together 
+        /// If provided, will be used to set delayed compilation, so that multiple changes in short span are compiled together
         abstract setTimeout: callback: (ResizeArray<obj option> -> unit) * ms: float * [<ParamArray>] args: ResizeArray<obj option> -> obj option
-        /// If provided, will be used to reset existing delayed compilation 
+        /// If provided, will be used to reset existing delayed compilation
         abstract clearTimeout: timeoutId: obj option -> unit
 
     type [<AllowNullLiteral>] ProgramHost<'T> =
@@ -5755,55 +4887,55 @@ module Ts =
         /// Use to read file text for source files and
         /// if resolveModuleNames is not provided (complier is in charge of module resolution) then module files as well
         abstract readFile: path: string * ?encoding: string -> string option
-        /// If provided, used for module resolution as well as to handle directory structure 
+        /// If provided, used for module resolution as well as to handle directory structure
         abstract directoryExists: path: string -> bool
-        /// If provided, used in resolutions as well as handling directory structure 
+        /// If provided, used in resolutions as well as handling directory structure
         abstract getDirectories: path: string -> ResizeArray<string>
-        /// If provided, used to cache and handle directory structure modifications 
+        /// If provided, used to cache and handle directory structure modifications
         abstract readDirectory: path: string * ?extensions: ResizeArray<string> * ?exclude: ResizeArray<string> * ?``include``: ResizeArray<string> * ?depth: float -> ResizeArray<string>
-        /// Symbol links resolution 
+        /// Symbol links resolution
         abstract realpath: path: string -> string
-        /// If provided would be used to write log about compilation 
+        /// If provided would be used to write log about compilation
         abstract trace: s: string -> unit
-        /// If provided is used to get the environment variable 
+        /// If provided is used to get the environment variable
         abstract getEnvironmentVariable: name: string -> string option
-        /// If provided, used to resolve the module names, otherwise typescript's default module resolution 
+        /// If provided, used to resolve the module names, otherwise typescript's default module resolution
         abstract resolveModuleNames: moduleNames: ResizeArray<string> * containingFile: string * reusedNames: ResizeArray<string> option * redirectedReference: ResolvedProjectReference option * options: CompilerOptions -> ResizeArray<ResolvedModule option>
-        /// If provided, used to resolve type reference directives, otherwise typescript's default resolution 
+        /// If provided, used to resolve type reference directives, otherwise typescript's default resolution
         abstract resolveTypeReferenceDirectives: typeReferenceDirectiveNames: ResizeArray<string> * containingFile: string * redirectedReference: ResolvedProjectReference option * options: CompilerOptions -> ResizeArray<ResolvedTypeReferenceDirective option>
 
     type [<AllowNullLiteral>] WatchCompilerHost<'T> =
         inherit ProgramHost<'T>
         inherit WatchHost
-        /// If provided, callback to invoke after every new program creation 
+        /// If provided, callback to invoke after every new program creation
         abstract afterProgramCreate: program: 'T -> unit
 
     /// Host to create watch with root files and options
     type [<AllowNullLiteral>] WatchCompilerHostOfFilesAndCompilerOptions<'T> =
         inherit WatchCompilerHost<'T>
-        /// root files to use to generate program 
+        /// root files to use to generate program
         abstract rootFiles: ResizeArray<string> with get, set
-        /// Compiler options 
+        /// Compiler options
         abstract options: CompilerOptions with get, set
-        /// Project References 
+        /// Project References
         abstract projectReferences: ResizeArray<ProjectReference> option with get, set
 
     /// Host to create watch with config file
     type [<AllowNullLiteral>] WatchCompilerHostOfConfigFile<'T> =
         inherit WatchCompilerHost<'T>
         inherit ConfigFileDiagnosticsReporter
-        /// Name of the config file to compile 
+        /// Name of the config file to compile
         abstract configFileName: string with get, set
-        /// Options to extend 
+        /// Options to extend
         abstract optionsToExtend: CompilerOptions option with get, set
         /// Used to generate source file names from the config file and its include, exclude, files rules
         /// and also to cache the directory stucture
         abstract readDirectory: path: string * ?extensions: ResizeArray<string> * ?exclude: ResizeArray<string> * ?``include``: ResizeArray<string> * ?depth: float -> ResizeArray<string>
 
     type [<AllowNullLiteral>] Watch<'T> =
-        /// Synchronize with host and get updated program 
+        /// Synchronize with host and get updated program
         abstract getProgram: unit -> 'T
-        /// Closes the watch 
+        /// Closes the watch
         abstract close: unit -> unit
 
     /// Creates the watch what generates program using the config file
@@ -5813,7 +4945,7 @@ module Ts =
     /// Creates the watch that generates program using the root files and compiler options
     type [<AllowNullLiteral>] WatchOfFilesAndCompilerOptions<'T> =
         inherit Watch<'T>
-        /// Updates the root files in the program, only if this is not config file compilation 
+        /// Updates the root files in the program, only if this is not config file compilation
         abstract updateRootFileNames: fileNames: ResizeArray<string> -> unit
 
     type [<AllowNullLiteral>] BuildOptions =
@@ -5854,7 +4986,7 @@ module Ts =
         abstract clean: ?project: string -> ExitStatus
         abstract buildReferences: project: string * ?cancellationToken: CancellationToken -> ExitStatus
         abstract cleanReferences: ?project: string -> ExitStatus
-        // abstract getNextInvalidatedProject: ?cancellationToken: CancellationToken -> InvalidatedProject<'T> option
+        abstract getNextInvalidatedProject: ?cancellationToken: CancellationToken -> InvalidatedProject<'T> option
 
     type [<RequireQualifiedAccess>] InvalidatedProjectKind =
         | Build = 0
@@ -5887,7 +5019,16 @@ module Ts =
         abstract getSyntacticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
         abstract getAllDependencies: sourceFile: SourceFile -> ResizeArray<string>
         abstract getSemanticDiagnostics: ?sourceFile: SourceFile * ?cancellationToken: CancellationToken -> ResizeArray<Diagnostic>
-        // abstract getSemanticDiagnosticsOfNextAffectedFile: ?cancellationToken: CancellationToken * ?ignoreSourceFile: (SourceFile -> bool) -> AffectedFileResult<ResizeArray<Diagnostic>>
+        abstract getSemanticDiagnosticsOfNextAffectedFile: ?cancellationToken: CancellationToken * ?ignoreSourceFile: (SourceFile -> bool) -> AffectedFileResult<ResizeArray<Diagnostic>>
+        abstract emit: ?targetSourceFile: SourceFile * ?writeFile: WriteFileCallback * ?cancellationToken: CancellationToken * ?emitOnlyDtsFiles: bool * ?customTransformers: CustomTransformers -> EmitResult option
+
+    type [<AllowNullLiteral>] UpdateBundleProject<'T> =
+        inherit InvalidatedProjectBase
+        abstract kind: InvalidatedProjectKind
+        abstract emit: ?writeFile: WriteFileCallback * ?customTransformers: CustomTransformers -> U2<EmitResult, BuildInvalidedProject<'T>> option
+
+    type InvalidatedProject<'T> =
+        U3<UpdateOutputFileStampsProject, BuildInvalidedProject<'T>, UpdateBundleProject<'T>>
 
     module Server =
 
@@ -5992,9 +5133,9 @@ module Ts =
     /// snapshot is observably immutable. i.e. the same calls with the same parameters will return
     /// the same values.
     type [<AllowNullLiteral>] IScriptSnapshot =
-        /// Gets a portion of the script snapshot specified by [start, end). 
+        /// Gets a portion of the script snapshot specified by [start, end).
         abstract getText: start: float * ``end``: float -> string
-        /// Gets the length of this script snapshot. 
+        /// Gets the length of this script snapshot.
         abstract getLength: unit -> float
         /// Gets the TextChangeRange that describe how the text changed between this text and
         /// an older version.  This information is used by the incremental parser to determine
@@ -6002,7 +5143,7 @@ module Ts =
         /// change range cannot be determined.  However, in that case, incremental parsing will
         /// not happen and the entire document will be re - parsed.
         abstract getChangeRange: oldSnapshot: IScriptSnapshot -> TextChangeRange option
-        /// Releases all resources held by this script snapshot 
+        /// Releases all resources held by this script snapshot
         abstract dispose: unit -> unit
 
     module ScriptSnapshot =
@@ -6063,7 +5204,7 @@ module Ts =
     type [<AllowNullLiteral>] LanguageService =
         abstract cleanupSemanticCache: unit -> unit
         abstract getSyntacticDiagnostics: fileName: string -> ResizeArray<DiagnosticWithLocation>
-        /// The first time this is called, it will return global diagnostics (no location). 
+        /// The first time this is called, it will return global diagnostics (no location).
         abstract getSemanticDiagnostics: fileName: string -> ResizeArray<Diagnostic>
         abstract getSuggestionDiagnostics: fileName: string -> ResizeArray<DiagnosticWithLocation>
         abstract getCompilerOptionsDiagnostics: unit -> ResizeArray<Diagnostic>
@@ -6135,59 +5276,36 @@ module Ts =
     type OrganizeImportsScope =
         CombinedCodeFixScope
 
-    // type [<StringEnum>] [<RequireQualifiedAccess>] CompletionsTriggerCharacter =
-    //     "." | "\"" | "'" | "`" | "/" | "@" | "<"
-    //     // | [<CompiledName ".">] _
-    //     // | [<CompiledName "">] Empty
-    //     // | [<CompiledName "">] Empty
-    //     // | `
-    //     // | /
-    //     // | @
-    //     // | <
+    type [<StringEnum>] [<RequireQualifiedAccess>] CompletionsTriggerCharacter =
+        | [<CompiledName ".">] Dot
+        | [<CompiledName "\"">] DoubleQuoute
+        | [<CompiledName "'">] Quote
+        | [<CompiledName "`">] Backtick
+        | [<CompiledName "/">] Slash
+        | [<CompiledName "@">] At
+        | [<CompiledName "<">] LessThan
 
     type [<AllowNullLiteral>] GetCompletionsAtPositionOptions =
         inherit UserPreferences
         /// If the editor is asking for completions because a certain character was typed
         /// (as opposed to when the user explicitly requested them) this should be set.
-        // abstract triggerCharacter: CompletionsTriggerCharacter option with get, set
+        abstract triggerCharacter: CompletionsTriggerCharacter option with get, set
         abstract includeExternalModuleExports: bool option with get, set
         abstract includeInsertTextCompletions: bool option with get, set
 
-    // type [<StringEnum>] [<RequireQualifiedAccess>] SignatureHelpTriggerCharacter =
-    //    "," | "(" | "<";
-    //     | ,
-    //     | (
-    //     | <
+    type [<StringEnum>] [<RequireQualifiedAccess>] SignatureHelpTriggerCharacter =
+        | [<CompiledName ",">] Comma
+        | [<CompiledName "(">] LeftParens
+        | [<CompiledName "<">] LessThan
 
-    // type SignatureHelpRetriggerCharacter =
-    //     U2<SignatureHelpTriggerCharacter, string>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module SignatureHelpRetriggerCharacter =
-    //    let ofSignatureHelpTriggerCharacter v: SignatureHelpRetriggerCharacter = v |> U2.Case1
-    //    let isSignatureHelpTriggerCharacter (v: SignatureHelpRetriggerCharacter) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asSignatureHelpTriggerCharacter (v: SignatureHelpRetriggerCharacter) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofCase2 v: SignatureHelpRetriggerCharacter = v |> U2.Case2
-    //    let isCase2 (v: SignatureHelpRetriggerCharacter) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asCase2 (v: SignatureHelpRetriggerCharacter) = match v with U2.Case2 o -> Some o | _ -> None
+    type SignatureHelpRetriggerCharacter =
+        U2<SignatureHelpTriggerCharacter, string>
 
     type [<AllowNullLiteral>] SignatureHelpItemsOptions =
         abstract triggerReason: SignatureHelpTriggerReason option with get, set
 
     type SignatureHelpTriggerReason =
         U3<SignatureHelpInvokedReason, SignatureHelpCharacterTypedReason, SignatureHelpRetriggeredReason>
-
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module SignatureHelpTriggerReason =
-    //    let ofSignatureHelpInvokedReason v: SignatureHelpTriggerReason = v |> U3.Case1
-    //    let isSignatureHelpInvokedReason (v: SignatureHelpTriggerReason) = match v with U3.Case1 _ -> true | _ -> false
-    //    let asSignatureHelpInvokedReason (v: SignatureHelpTriggerReason) = match v with U3.Case1 o -> Some o | _ -> None
-    //    let ofSignatureHelpCharacterTypedReason v: SignatureHelpTriggerReason = v |> U3.Case2
-    //    let isSignatureHelpCharacterTypedReason (v: SignatureHelpTriggerReason) = match v with U3.Case2 _ -> true | _ -> false
-    //    let asSignatureHelpCharacterTypedReason (v: SignatureHelpTriggerReason) = match v with U3.Case2 o -> Some o | _ -> None
-    //    let ofSignatureHelpRetriggeredReason v: SignatureHelpTriggerReason = v |> U3.Case3
-    //    let isSignatureHelpRetriggeredReason (v: SignatureHelpTriggerReason) = match v with U3.Case3 _ -> true | _ -> false
-    //    let asSignatureHelpRetriggeredReason (v: SignatureHelpTriggerReason) = match v with U3.Case3 o -> Some o | _ -> None
 
     /// Signals that the user manually requested signature help.
     /// The language service will unconditionally attempt to provide a result.
@@ -6200,7 +5318,7 @@ module Ts =
     type [<AllowNullLiteral>] SignatureHelpCharacterTypedReason =
         abstract kind: string with get, set
         /// Character that was responsible for triggering signature help.
-        // abstract triggerCharacter: SignatureHelpTriggerCharacter with get, set
+        abstract triggerCharacter: SignatureHelpTriggerCharacter with get, set
 
     /// Signals that this signature help request came from typing a character or moving the cursor.
     /// This should only occur if a signature help session was already active and the editor needs to see if it should adjust.
@@ -6209,7 +5327,7 @@ module Ts =
     type [<AllowNullLiteral>] SignatureHelpRetriggeredReason =
         abstract kind: string with get, set
         /// Character that was responsible for triggering signature help.
-        // abstract triggerCharacter: SignatureHelpRetriggerCharacter option with get, set
+        abstract triggerCharacter: SignatureHelpRetriggerCharacter option with get, set
 
     type [<AllowNullLiteral>] ApplyCodeActionCommandResult =
         abstract successMessage: string with get, set
@@ -6239,16 +5357,16 @@ module Ts =
     /// Node in a tree of nested declarations in a file.
     /// The top node is always a script or module node.
     type [<AllowNullLiteral>] NavigationTree =
-        /// Name of the declaration, or a short description, e.g. "<class>". 
+        /// Name of the declaration, or a short description, e.g. "<class>".
         abstract text: string with get, set
         abstract kind: ScriptElementKind with get, set
-        /// ScriptElementKindModifier separated by commas, e.g. "public,abstract" 
+        /// ScriptElementKindModifier separated by commas, e.g. "public,abstract"
         abstract kindModifiers: string with get, set
         /// Spans of the nodes that generated this declaration.
         /// There will be more than one if this is the result of merging.
         abstract spans: ResizeArray<TextSpan> with get, set
         abstract nameSpan: TextSpan option with get, set
-        /// Present if non-empty 
+        /// Present if non-empty
         abstract childItems: ResizeArray<NavigationTree> option with get, set
 
     type [<AllowNullLiteral>] TodoCommentDescriptor =
@@ -6270,9 +5388,9 @@ module Ts =
         abstract isNewFile: bool option with get, set
 
     type [<AllowNullLiteral>] CodeAction =
-        /// Description of the code action to display in the UI of the editor 
+        /// Description of the code action to display in the UI of the editor
         abstract description: string with get, set
-        /// Text changes to apply to each file as part of the code action 
+        /// Text changes to apply to each file as part of the code action
         abstract changes: ResizeArray<FileTextChanges> with get, set
         /// If the user accepts the code fix, the editor should send the action back in a `applyAction` request.
         /// This allows the language service to have side effects (e.g. installing dependencies) upon a code fix.
@@ -6280,7 +5398,7 @@ module Ts =
 
     type [<AllowNullLiteral>] CodeFixAction =
         inherit CodeAction
-        /// Short name to identify the fix, for use by telemetry. 
+        /// Short name to identify the fix, for use by telemetry.
         abstract fixName: string with get, set
         /// If present, one may call 'getCombinedCodeFix' with this fixId.
         /// This may be omitted to indicate that the code fix can't be applied in a group.
@@ -6332,7 +5450,7 @@ module Ts =
 
     type [<AllowNullLiteral>] TextInsertion =
         abstract newText: string with get, set
-        /// The position in newText the caret should point to after the insertion. 
+        /// The position in newText the caret should point to after the insertion.
         abstract caretOffset: float with get, set
 
     type [<AllowNullLiteral>] DocumentSpan =
@@ -6519,15 +5637,6 @@ module Ts =
     type RenameInfo =
         U2<RenameInfoSuccess, RenameInfoFailure>
 
-    // [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    // module RenameInfo =
-    //    let ofRenameInfoSuccess v: RenameInfo = v |> U2.Case1
-    //    let isRenameInfoSuccess (v: RenameInfo) = match v with U2.Case1 _ -> true | _ -> false
-    //    let asRenameInfoSuccess (v: RenameInfo) = match v with U2.Case1 o -> Some o | _ -> None
-    //    let ofRenameInfoFailure v: RenameInfo = v |> U2.Case2
-    //    let isRenameInfoFailure (v: RenameInfo) = match v with U2.Case2 _ -> true | _ -> false
-    //    let asRenameInfoFailure (v: RenameInfo) = match v with U2.Case2 o -> Some o | _ -> None
-
     type [<AllowNullLiteral>] RenameInfoSuccess =
         abstract canRename: obj with get, set
         /// File or directory to rename.
@@ -6579,7 +5688,7 @@ module Ts =
         abstract argumentCount: float with get, set
 
     type [<AllowNullLiteral>] CompletionInfo =
-        /// Not true for all global completions. This will be true if the enclosing scope matches a few syntax kinds. See `isSnippetScope`. 
+        /// Not true for all global completions. This will be true if the enclosing scope matches a few syntax kinds. See `isSnippetScope`.
         abstract isGlobalCompletion: bool with get, set
         abstract isMemberCompletion: bool with get, set
         /// true when the current location also allows for a new identifier
@@ -6611,11 +5720,11 @@ module Ts =
         abstract source: ResizeArray<SymbolDisplayPart> option with get, set
 
     type [<AllowNullLiteral>] OutliningSpan =
-        /// The span of the document to actually collapse. 
+        /// The span of the document to actually collapse.
         abstract textSpan: TextSpan with get, set
-        /// The span of the document to display when the user hovers over the collapsed span. 
+        /// The span of the document to display when the user hovers over the collapsed span.
         abstract hintSpan: TextSpan with get, set
-        /// The text to display in the editor for the collapsed region. 
+        /// The text to display in the editor for the collapsed region.
         abstract bannerText: string with get, set
         /// Whether or not this region should be automatically collapsed when
         /// the 'Collapse to Definitions' command is invoked.
@@ -6854,42 +5963,13 @@ module Ts =
         abstract diagnostics: ResizeArray<Diagnostic> option with get, set
         abstract sourceMapText: string option with get, set
 
-    type [<AllowNullLiteral>] TypeLiteral_03 =
-        interface end
+    type [<AllowNullLiteral>] TypeLiteral_01<'T> =
+        abstract value: 'T with get, set
+        abstract ``done``: obj option with get, set
 
     type [<AllowNullLiteral>] TypeLiteral_02 =
         abstract value: obj with get, set
         abstract ``done``: obj with get, set
 
-    type [<AllowNullLiteral>] TypeLiteral_01<'T> =
-        abstract value: 'T with get, set
-        abstract ``done``: obj option with get, set
-
-// /// The builder that can handle the changes in program and iterate through changed file to emit the files
-// /// The semantic diagnostics are cached per file and managed by clearing for the changed/affected files
-// type [<AllowNullLiteral>] EmitAndSemanticDiagnosticsBuilderProgram =
-//     inherit SemanticDiagnosticsBuilderProgram
-//     /// Emits the next affected file's emit result (EmitResult and sourceFiles emitted) or returns undefined if iteration is complete
-//     /// The first of writeFile if provided, writeFile of BuilderProgramHost if provided, writeFile of compiler host
-//     /// in that order would be used to write the files
-//     // abstract emitNextAffectedFile: ?writeFile: WriteFileCallback * ?cancellationToken: CancellationToken * ?emitOnlyDtsFiles: bool * ?customTransformers: CustomTransformers -> AffectedFileResult<EmitResult>
-
-// type [<AllowNullLiteral>] UpdateBundleProject<'T> =
-//     inherit InvalidatedProjectBase
-//     abstract kind: InvalidatedProjectKind
-//     abstract emit: ?writeFile: WriteFileCallback * ?customTransformers: CustomTransformers -> U2<EmitResult, BuildInvalidedProject<'T>> option
-
-// type InvalidatedProject<'T> =
-//     U3<UpdateOutputFileStampsProject, BuildInvalidedProject<'T>, UpdateBundleProject<'T>>
-
-// [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-// module InvalidatedProject =
-//     let ofUpdateOutputFileStampsProject v: InvalidatedProject<'T> = v |> U3.Case1
-//     let isUpdateOutputFileStampsProject (v: InvalidatedProject<'T>) = match v with U3.Case1 _ -> true | _ -> false
-//     let asUpdateOutputFileStampsProject (v: InvalidatedProject<'T>) = match v with U3.Case1 o -> Some o | _ -> None
-//     let ofBuildInvalidedProject v: InvalidatedProject<'T> = v |> U3.Case2
-//     let isBuildInvalidedProject (v: InvalidatedProject<'T>) = match v with U3.Case2 _ -> true | _ -> false
-//     let asBuildInvalidedProject (v: InvalidatedProject<'T>) = match v with U3.Case2 o -> Some o | _ -> None
-//     let ofUpdateBundleProject v: InvalidatedProject<'T> = v |> U3.Case3
-//     let isUpdateBundleProject (v: InvalidatedProject<'T>) = match v with U3.Case3 _ -> true | _ -> false
-//     let asUpdateBundleProject (v: InvalidatedProject<'T>) = match v with U3.Case3 o -> Some o | _ -> None
+    type [<AllowNullLiteral>] TypeLiteral_03 =
+        interface end

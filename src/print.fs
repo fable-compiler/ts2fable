@@ -218,7 +218,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                 sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
                 for cs in en.Cases do
                     let nm = cs.Name
-                    let v = cs.Value |> Option.defaultValue nm
+                    let v = (cs.Value |> Option.defaultValue nm).Replace("\"", "\\\"")
                     let unm = createEnumName nm
                     let line = ResizeArray()
                     if nameEqualsDefaultFableValue unm v then

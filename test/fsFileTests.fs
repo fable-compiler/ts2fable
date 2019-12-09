@@ -193,12 +193,13 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test-compile/React.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existLeastOneByName "ReactNode" (fun tp ->
-                match tp with 
-                | FsType.Module md -> 
-                    md.HelperLines  |> List.exists(fun l -> l.Contains("Microsoft.FSharp.Core.Option.map"))
-                | _ -> false
-            )
+            |> existLeastOneByName "ReactNode" FsType.isMapped
+            // (fun tp ->
+            //     match tp with 
+            //     | FsType.Module md -> 
+            //         md.HelperLines  |> List.exists(fun l -> l.Contains("Microsoft.FSharp.Core.Option.map"))
+            //     | _ -> false
+            // )
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/pull/170

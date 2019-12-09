@@ -279,6 +279,7 @@ type FsType =
 
 [<RequireQualifiedAccess>]
 module FsType =
+    let isMapped tp = match tp with | FsType.Mapped _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
