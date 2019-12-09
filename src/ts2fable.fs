@@ -9,16 +9,16 @@ let argv =
     yargs
         .usage("Usage: ts2fable some.d.ts src/Some.fs")
         .command(U2.Case1 "$0 [files..]", "")
-        .demandOption(U2.Case1 "files", "")
+        .demandOption(U2.Case1 "files", !^"")
         .option("files", jsOptions<Yargs.Options>(fun o ->
             o.alias <- Some !^"f"
             o.description <- Some "input ts files and output fs file"
-            o.``type`` <- U5.Case1 "array" |> Some
+            o.``type`` <- U3.Case1 "array" |> Some
         ))
         .option("exports", jsOptions<Yargs.Options>(fun o ->
             o.alias <- Some !^"e"
             o.description <- Some "export types from files that contain the string"
-            o.``type`` <- U5.Case1 "array" |> Some
+            o.``type`` <- U3.Case1 "array" |> Some
         ))
         .help()
         .argv
