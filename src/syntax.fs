@@ -376,6 +376,32 @@ let rec getFullName (tp: FsType) =
     | FsType.File fl -> fl.FileName
     | _ -> getName tp
 
+let getTypeName (tp: FsType) =
+    match tp with
+    | FsType.Interface t -> t.GetType().ToString()
+    | FsType.Function t -> t.GetType().ToString()
+    | FsType.Property t -> t.GetType().ToString()
+    | FsType.Variable t -> t.GetType().ToString()
+    | FsType.Module t -> t.GetType().ToString()
+    | FsType.Enum t -> t.GetType().ToString()
+    | FsType.Param t -> t.GetType().ToString()
+    | FsType.Alias t -> t.GetType().ToString()
+    | FsType.File t -> t.GetType().ToString()
+    | FsType.Generic t -> t.GetType().ToString()
+    | FsType.Mapped t -> t.GetType().ToString()
+    | FsType.Import t -> t.GetType().ToString()
+    | FsType.Array t -> t.GetType().ToString()
+    | FsType.ExportAssignment t -> t.GetType().ToString()
+    | FsType.GenericParameterDefaults t -> t.GetType().ToString()
+    | FsType.None as t -> t.GetType().ToString() + ".None"
+    | FsType.TODO as t -> t.GetType().ToString() + ".TODO"
+    | FsType.StringLiteral t -> t.GetType().ToString()
+    | FsType.This as t -> t.GetType().ToString() + ".This"
+    | FsType.Tuple t -> t.GetType().ToString()
+    | FsType.TypeLiteral t -> t.GetType().ToString()
+    | FsType.Union t -> t.GetType().ToString()
+    | FsType.FileOut t -> t.GetType().ToString()
+
 let getAccessibility (tp: FsType) : FsAccessibility option =
     match tp with
     | FsType.Interface it -> it.Accessibility

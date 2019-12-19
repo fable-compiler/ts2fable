@@ -293,17 +293,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.NumberKeyword -> simpleType "float"
     | SyntaxKind.BooleanKeyword -> simpleType "bool"
     | SyntaxKind.UnionType ->
-        let un = t :?> UnionTypeNode
-        let typs = un.types |> List.ofSeq
-        let isOption (t:TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
-        {
-            Option = typs |> List.exists isOption
-            Types =
-                let ts = typs |> List.filter (isOption >> not) |> List.map (readTypeNode checker)
-                if ts.Length = 0 then [simpleType "obj"]
-                else ts
-        }
-        |> FsType.Union
+        readUnionType checker (t :?> UnionTypeNode)
     | SyntaxKind.AnyKeyword ->
         {
             Option = true // any allows null or undefined
@@ -385,6 +375,44 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | _ ->
         printfn "unsupported TypeNode kind: %A" t.kind
         FsType.TODO
+
+and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
+    let unTypes = un.types |> List.ofSeq
+    let isOptionType (t: TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
+    let isLiteralType (t: TypeNode) = t.kind = SyntaxKind.LiteralType
+    let isOptional = unTypes |> List.exists isOptionType
+    let getEnumCaseType (t: LiteralTypeNode) =
+        match !!t.literal?kind with
+        | SyntaxKind.NumericLiteral -> FsEnumCaseType.Numeric
+        | SyntaxKind.StringLiteral -> FsEnumCaseType.String
+        | _ -> FsEnumCaseType.Unknown
+    let makeEnumCase (t: LiteralTypeNode) =
+        let name = !!t.literal?getText() |> removeQuotes
+        { Name = name; Type = getEnumCaseType t; Value = Some name }
+    let makeEnum name cases =
+        { Name = name; Cases = cases } |> FsType.Enum
+    let isKindOf kind (t: TypeNode) =
+        if isLiteralType t then
+            let lt = t :?> LiteralTypeNode
+            if !!lt.literal?kind = kind then Some (makeEnumCase lt)
+            else None
+        else None
+    let nonOptionalTypes = unTypes |> List.filter (isOptionType >> not)
+    let enumCases, restCases = nonOptionalTypes |> List.partition isLiteralType
+    let stringCases = enumCases |> List.choose (isKindOf SyntaxKind.StringLiteral)
+    let numericCases = enumCases |> List.choose (isKindOf SyntaxKind.NumericLiteral)
+    let restTypes = restCases |> List.map (readTypeNode checker)
+    let stringTypes =
+        if List.isEmpty stringCases then []
+        else [ makeEnum "StringEnum" stringCases ]
+    let numericTypes =
+        if List.isEmpty numericCases then []
+        else [ makeEnum "NumericEnum" numericCases ]
+    let unionTypes = List.concat [restTypes; stringTypes; numericTypes]
+    match unionTypes with
+    | [] -> simpleType "obj"
+    | [FsType.Enum _] -> FsType.TypeLiteral { Members = unionTypes } // wrapped in type literal so it can be extracted
+    | _ -> FsType.Union { Option = isOptional; Types = unionTypes }
 
 let readParameterDeclaration (checker: TypeChecker) (iParam:int) (pd: ParameterDeclaration): FsParam =
     let stringLiteral =

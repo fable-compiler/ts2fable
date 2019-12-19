@@ -74,17 +74,15 @@ let lowerFirst (input: string): string =
 let isIdentifier (input: string) =
     let isLetterOrDigitOrUnderscore c = Char.IsLetterOrDigit c || (c = '_')
     if String.IsNullOrWhiteSpace input then false
-    else
-        if Char.IsDigit input.[0] then "N" + input else input
-        |> Seq.forall isLetterOrDigitOrUnderscore
+    else Seq.forall isLetterOrDigitOrUnderscore input
 
 let createEnumName (s: string) =
     let replaceChar c = if Char.IsLetterOrDigit c then c else '_'
     let s = s |> String.map replaceChar
     if String.IsNullOrWhiteSpace s then "Empty"
     else
-        if isIdentifier s then capitalize s else "``" + s + "``"
-        //s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+        let nm = s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+        if isIdentifier nm then nm else "``" + nm + "``"
 
 // by default Fable lowercases the first letter of the name for the value
 let nameEqualsDefaultFableValue (name: string) (value: string): bool =
