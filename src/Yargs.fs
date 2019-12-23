@@ -25,9 +25,9 @@ type [<AllowNullLiteral>] DetailedArguments =
     /// Populated with an error object if an exception occurred during parsing.
     abstract error: Error option with get, set
     /// The inferred list of aliases built by combining lists in opts.alias.
-    abstract aliases: TypeLiteral_03 with get, set
+    abstract aliases: DetailedArgumentsAliases with get, set
     /// Any new aliases added via camel-case expansion.
-    abstract newAliases: TypeLiteral_04 with get, set
+    abstract newAliases: DetailedArgumentsNewAliases with get, set
     /// The configuration loaded from the yargs stanza in package.json.
     abstract configuration: Configuration with get, set
 
@@ -112,7 +112,7 @@ module Yargs =
         /// <param name="func">Called with two arguments, the parsed `argv` hash and an array of options and their aliases.
         /// If `func` throws or returns a non-truthy value, show the thrown error, usage information, and exit.</param>
         /// <param name="global">Indicates whether `check()` should be enabled both at the top-level and for each sub-command.</param>
-        abstract check: func: (Arguments<'T> -> TypeLiteral_01 -> obj option) * ?``global``: bool -> Argv<'T>
+        abstract check: func: (Arguments<'T> -> ArgvCheck -> obj option) * ?``global``: bool -> Argv<'T>
         /// Limit valid values for key to a predefined set of choices, given as an array or as an individual value.
         /// If this method is called multiple times, all enumerated values will be merged together.
         /// Choices are generally strings or numbers, and value matching is case-sensitive.
@@ -163,9 +163,9 @@ module Yargs =
         abstract completion: cmd: string * ?func: AsyncCompletionFunction -> Argv<'T>
         abstract completion: cmd: string * ?func: SyncCompletionFunction -> Argv<'T>
         abstract completion: cmd: string * ?func: PromiseCompletionFunction -> Argv<'T>
-        abstract completion: cmd: string * ?description: U2<string, obj> * ?func: AsyncCompletionFunction -> Argv<'T>
-        abstract completion: cmd: string * ?description: U2<string, obj> * ?func: SyncCompletionFunction -> Argv<'T>
-        abstract completion: cmd: string * ?description: U2<string, obj> * ?func: PromiseCompletionFunction -> Argv<'T>
+        abstract completion: cmd: string * ?description: string * ?func: AsyncCompletionFunction -> Argv<'T>
+        abstract completion: cmd: string * ?description: string * ?func: SyncCompletionFunction -> Argv<'T>
+        abstract completion: cmd: string * ?description: string * ?func: PromiseCompletionFunction -> Argv<'T>
         /// Tells the parser that if the option specified by `key` is passed in, it should be interpreted as a path to a JSON config file.
         /// The file is loaded and parsed, and its properties are set as arguments.
         /// Because the file is loaded using Node's require(), the filename MUST end in `.json` to be interpreted correctly.
@@ -191,7 +191,7 @@ module Yargs =
         /// Optionally, `description` can also be provided and will take precedence over displaying the value in the usage instructions.
         abstract ``default``: key: 'K * value: 'V * ?description: string -> Argv<obj>
         abstract ``default``: defaults: 'D * ?description: string -> Argv<obj>
-        abstract demand: key: U2<'K, ResizeArray<'K>> * ?msg: U2<string, obj> -> Argv<Defined<'T, 'K>>
+        abstract demand: key: U2<'K, ResizeArray<'K>> * ?msg: string -> Argv<Defined<'T, 'K>>
         abstract demand: key: U2<string, ResizeArray<string>> * ?required: bool -> Argv<'T>
         abstract demand: positionals: float * msg: string -> Argv<'T>
         abstract demand: positionals: float * ?required: bool -> Argv<'T>
@@ -199,8 +199,8 @@ module Yargs =
         /// <param name="key">If is a string, show the usage information and exit if key wasn't specified in `process.argv`.
         /// If is an array, demand each element.</param>
         /// <param name="msg">If string is given, it will be printed when the argument is missing, instead of the standard error message.</param>
-        abstract demandOption: key: U2<'K, ResizeArray<'K>> * ?msg: U2<string, obj> -> Argv<Defined<'T, 'K>>
-        // abstract demandOption: key: U2<'K, ResizeArray<'K>> * ?msg: U2<string, obj> -> Argv<obj>
+        abstract demandOption: key: U2<'K, ResizeArray<'K>> * ?msg: string -> Argv<Defined<'T, 'K>>
+        // abstract demandOption: key: U2<'K, ResizeArray<'K>> * ?msg: string -> Argv<obj>
         abstract demandOption: key: U2<string, ResizeArray<string>> * ?demand: bool -> Argv<'T>
         /// Demand in context of commands.
         /// You can demand a minimum and a maximum number a user can have within your program, as well as provide corresponding error messages if either of the demands is not met.
@@ -319,7 +319,7 @@ module Yargs =
         /// If the arguments have not been parsed, this property is `false`.
         /// 
         /// If the arguments have been parsed, this contain detailed parsed arguments.
-        abstract parsed: U2<DetailedArguments, obj> with get, set
+        abstract parsed: DetailedArguments with get, set
         /// Allows to configure advanced yargs features.
         abstract parserConfiguration: configuration: obj -> Argv<'T>
         /// <summary>Similar to `config()`, indicates that yargs should interpret the object from the specified key in package.json as a configuration object.</summary>
@@ -330,14 +330,14 @@ module Yargs =
         abstract positional: key: 'K * opt: 'O -> Argv<obj>
         /// Should yargs provide suggestions regarding similar commands if no matching command is found?
         abstract recommendCommands: unit -> Argv<'T>
-        abstract require: key: U2<'K, ResizeArray<'K>> * ?msg: U2<string, obj> -> Argv<Defined<'T, 'K>>
+        abstract require: key: U2<'K, ResizeArray<'K>> * ?msg: string -> Argv<Defined<'T, 'K>>
         abstract require: key: string * msg: string -> Argv<'T>
         abstract require: key: string * required: bool -> Argv<'T>
         abstract require: keys: ResizeArray<float> * msg: string -> Argv<'T>
         abstract require: keys: ResizeArray<float> * required: bool -> Argv<'T>
         abstract require: positionals: float * required: bool -> Argv<'T>
         abstract require: positionals: float * msg: string -> Argv<'T>
-        abstract required: key: U2<'K, ResizeArray<'K>> * ?msg: U2<string, obj> -> Argv<Defined<'T, 'K>>
+        abstract required: key: U2<'K, ResizeArray<'K>> * ?msg: string -> Argv<Defined<'T, 'K>>
         abstract required: key: string * msg: string -> Argv<'T>
         abstract required: key: string * required: bool -> Argv<'T>
         abstract required: keys: ResizeArray<float> * msg: string -> Argv<'T>
@@ -467,7 +467,7 @@ module Yargs =
         /// function, provide a custom config parsing function, see `config()`
         abstract configParser: (string -> obj) option with get, set
         /// string or object, require certain keys not to be set, see `conflicts()`
-        abstract conflicts: U3<string, ReadonlyArray<string>, TypeLiteral_02> option with get, set
+        abstract conflicts: U3<string, ReadonlyArray<string>, OptionsConflicts> option with get, set
         /// boolean, interpret option as a count of boolean flags, see `count()`
         abstract count: bool option with get, set
         /// value, set a default value for the option, see `default()`
@@ -490,7 +490,7 @@ module Yargs =
         /// don't display option in help output.
         abstract hidden: bool option with get, set
         /// string or object, require certain keys to be set, see `implies()`
-        abstract implies: U3<string, ReadonlyArray<string>, TypeLiteral_02> option with get, set
+        abstract implies: U3<string, ReadonlyArray<string>, OptionsConflicts> option with get, set
         /// number, specify how many arguments should be consumed for the option, see `nargs()`
         abstract nargs: float option with get, set
         /// boolean, apply path.normalize() to the option, see `normalize()`
@@ -505,7 +505,7 @@ module Yargs =
         abstract skipValidation: bool option with get, set
         /// boolean, interpret option as a string, see `string()`
         abstract string: bool option with get, set
-        abstract ``type``: U3<string, string, PositionalOptionsType> option with get, set
+        abstract ``type``: U2<PositionalOptionsType, string> option with get, set
 
     type [<AllowNullLiteral>] PositionalOptions =
         /// string or array of strings, see `alias()`
@@ -515,7 +515,7 @@ module Yargs =
         /// function, coerce or transform parsed command line values into another value, see `coerce()`
         abstract coerce: (obj option -> obj option) option with get, set
         /// string or object, require certain keys not to be set, see `conflicts()`
-        abstract conflicts: U3<string, ReadonlyArray<string>, TypeLiteral_02> option with get, set
+        abstract conflicts: U3<string, ReadonlyArray<string>, OptionsConflicts> option with get, set
         /// value, set a default value for the option, see `default()`
         abstract ``default``: obj option with get, set
         /// string, the option description for help content, see `describe()`
@@ -525,7 +525,7 @@ module Yargs =
         /// string, the option description for help content, see `describe()`
         abstract description: string option with get, set
         /// string or object, require certain keys to be set, see `implies()`
-        abstract implies: U3<string, ReadonlyArray<string>, TypeLiteral_02> option with get, set
+        abstract implies: U3<string, ReadonlyArray<string>, OptionsConflicts> option with get, set
         /// boolean, apply path.normalize() to the option, see normalize()
         abstract normalize: bool option with get, set
         abstract ``type``: PositionalOptionsType option with get, set
@@ -568,7 +568,7 @@ module Yargs =
         /// string (or array of strings) that executes this command when given on the command line, first string may contain positional args
         abstract command: U2<ReadonlyArray<string>, string> option with get, set
         /// string used as the description for the command in help text, use `false` for a hidden command
-        abstract describe: U2<string, obj> option with get, set
+        abstract describe: string option with get, set
         /// a function which will be passed the parsed argv.
         abstract handler: (Arguments<'U> -> unit) with get, set
 
@@ -585,7 +585,7 @@ module Yargs =
         CommandBuilder<obj, obj>
 
     type CommandBuilder<'T, 'U> =
-        U2<obj, (Argv<'T> -> Argv<'U>)>
+        U2<Options, (Argv<'T> -> Argv<'U>)>
 
     type [<AllowNullLiteral>] SyncCompletionFunction =
         [<Emit "$0($1...)">] abstract Invoke: current: string * argv: obj option -> ResizeArray<string>
@@ -603,21 +603,21 @@ module Yargs =
         [<Emit "$0($1...)">] abstract Invoke: args: Arguments<'T> -> unit
 
     type Choices =
-        ReadonlyArray<U3<string, float, obj> option>
+        ReadonlyArray<U2<string, float> option>
 
     type [<StringEnum>] [<RequireQualifiedAccess>] PositionalOptionsType =
         | Boolean
         | Number
         | String
 
-    type [<AllowNullLiteral>] TypeLiteral_01 =
+    type [<AllowNullLiteral>] ArgvCheck =
         [<Emit "$0[$1]{{=$2}}">] abstract Item: alias: string -> string with get, set
 
-    type [<AllowNullLiteral>] TypeLiteral_02 =
+    type [<AllowNullLiteral>] OptionsConflicts =
         [<Emit "$0[$1]{{=$2}}">] abstract Item: key: string -> U2<string, ReadonlyArray<string>> with get, set
 
-type [<AllowNullLiteral>] TypeLiteral_03 =
+type [<AllowNullLiteral>] DetailedArgumentsAliases =
     [<Emit "$0[$1]{{=$2}}">] abstract Item: alias: string -> ResizeArray<string> with get, set
 
-type [<AllowNullLiteral>] TypeLiteral_04 =
+type [<AllowNullLiteral>] DetailedArgumentsNewAliases =
     [<Emit "$0[$1]{{=$2}}">] abstract Item: alias: string -> bool with get, set

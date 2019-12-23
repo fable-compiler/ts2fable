@@ -16,13 +16,12 @@ open Node.Api
 
 module Common = ts2fable.Transform
 
-let fixFile = Common.fixFile
 let fixNamespace (f: FsFile): FsFile =
     Common.fixNamespace f |> fun f ->
         match f.Kind with
         | FsFileKind.Index -> f
         | FsFileKind.Extra extra ->
-        f |> fixFile (fun tp ->
+        f |> Common.fixFile (fun ns tp ->
             match tp with
             | FsType.Import im ->
                 match im with

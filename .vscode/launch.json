@@ -28,6 +28,18 @@
         ],
         "sourceMaps": true,
         "outFiles": ["${workspaceRoot}/*/*.js"]
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Run Mocha Tests",
+        "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+        "args": [
+            "--no-timeouts",
+            "--colors",
+            "${workspaceFolder}/build"
+        ],
+        "internalConsoleOptions": "openOnSessionStart"
       }
   ]
 }

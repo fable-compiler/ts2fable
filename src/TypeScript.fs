@@ -732,7 +732,7 @@ module Ts =
         abstract updateCommaList: node: CommaListExpression * elements: ResizeArray<Expression> -> CommaListExpression
         abstract createBundle: sourceFiles: ResizeArray<SourceFile> * ?prepends: ResizeArray<U2<UnparsedSource, InputFiles>> -> Bundle
         abstract createUnparsedSourceFile: text: string -> UnparsedSource
-        abstract createUnparsedSourceFile: inputFile: InputFiles * ``type``: U2<string, string> * ?stripInternal: bool -> UnparsedSource
+        abstract createUnparsedSourceFile: inputFile: InputFiles * ``type``: CreateUnparsedSourceFileType * ?stripInternal: bool -> UnparsedSource
         abstract createUnparsedSourceFile: text: string * mapPath: string option * map: string option -> UnparsedSource
         abstract createInputFiles: javascriptText: string * declarationText: string -> InputFiles
         abstract createInputFiles: readFileText: (string -> string option) * javascriptPath: string * javascriptMapPath: string option * declarationPath: string * declarationMapPath: string option * buildInfoPath: string option -> InputFiles
@@ -946,6 +946,10 @@ module Ts =
         abstract options: TypeAcquisition with get, set
         abstract errors: ResizeArray<Diagnostic> with get, set
 
+    type [<StringEnum>] [<RequireQualifiedAccess>] CreateUnparsedSourceFileType =
+        | Js
+        | Dts
+
     /// Type of objects whose values are all of the same type.
     /// The `in` and `for-in` operators can *not* be safely used,
     /// since `Object.prototype` may be modified by outside code.
@@ -954,11 +958,11 @@ module Ts =
 
     type [<AllowNullLiteral>] SortedReadonlyArray<'T> =
         // inherit ReadonlyArray<'T>
-        abstract  __sortedArrayBrand: obj option with get, set
+        abstract `` __sortedArrayBrand``: obj option with get, set
 
     type [<AllowNullLiteral>] SortedArray<'T> =
         // inherit Array<'T>
-        abstract  __sortedArrayBrand: obj option with get, set
+        abstract `` __sortedArrayBrand``: obj option with get, set
 
     /// ES6 Map interface, only read methods included.
     type [<AllowNullLiteral>] ReadonlyMap<'T> =
@@ -979,7 +983,7 @@ module Ts =
 
     /// ES6 Iterator type.
     type [<AllowNullLiteral>] Iterator<'T> =
-        abstract next: unit -> U2<TypeLiteral_01<'T>, TypeLiteral_02>
+        abstract next: unit -> U2<IteratorNext<'T>, IteratorNext>
 
     /// Array that is only intended to be pushed to, never read.
     type [<AllowNullLiteral>] Push<'T> =
@@ -4017,7 +4021,7 @@ module Ts =
         abstract category: DiagnosticCategory with get, set
         abstract code: float with get, set
         abstract message: string with get, set
-        abstract reportsUnnecessary: TypeLiteral_03 option with get, set
+        abstract reportsUnnecessary: DiagnosticMessageReportsUnnecessary option with get, set
 
     /// A linked list of formatted diagnostic messages to be used as part of a multiline message.
     /// It is built from the bottom up, leaving the head to be the "main" diagnostic.
@@ -4032,7 +4036,7 @@ module Ts =
     type [<AllowNullLiteral>] Diagnostic =
         inherit DiagnosticRelatedInformation
         /// May store more in future. For now, this will simply be `true` to indicate when a diagnostic is an unused-identifier diagnostic.
-        abstract reportsUnnecessary: TypeLiteral_03 option with get, set
+        abstract reportsUnnecessary: DiagnosticMessageReportsUnnecessary option with get, set
         abstract source: string option with get, set
         abstract relatedInformation: ResizeArray<DiagnosticRelatedInformation> option with get, set
 
@@ -4605,13 +4609,13 @@ module Ts =
 
     type [<AllowNullLiteral>] UserPreferences =
         abstract disableSuggestions: bool option
-        abstract quotePreference: U3<string, string, string> option
+        abstract quotePreference: UserPreferencesQuotePreference option
         abstract includeCompletionsForModuleExports: bool option
         abstract includeAutomaticOptionalChainCompletions: bool option
         abstract includeCompletionsWithInsertText: bool option
-        abstract importModuleSpecifierPreference: U2<string, string> option
+        abstract importModuleSpecifierPreference: UserPreferencesImportModuleSpecifierPreference option
         /// Determines whether we import `foo/index.ts` as "foo", "foo/index", or "foo/index.js"
-        abstract importModuleSpecifierEnding: U3<string, string, string> option
+        abstract importModuleSpecifierEnding: UserPreferencesImportModuleSpecifierEnding option
         abstract allowTextChangesInNewFiles: bool option
         abstract providePrefixAndSuffixTextForRename: bool option
 
@@ -4770,8 +4774,7 @@ module Ts =
         abstract text: string with get, set
 
     type AffectedFileResult<'T> =
-        // U2<obj, obj> option
-        interface end
+        U2<'T, U2<SourceFile, Program>> option
 
     type [<AllowNullLiteral>] BuilderProgramHost =
         /// return true if file names are treated with case sensitivity
@@ -5278,11 +5281,11 @@ module Ts =
 
     type [<StringEnum>] [<RequireQualifiedAccess>] CompletionsTriggerCharacter =
         | [<CompiledName ".">] Dot
-        | [<CompiledName "\"">] DoubleQuoute
-        | [<CompiledName "'">] Quote
+        | [<CompiledName "\"">] Quotation
+        | [<CompiledName "'">] Apostrophe
         | [<CompiledName "`">] Backtick
         | [<CompiledName "/">] Slash
-        | [<CompiledName "@">] At
+        | [<CompiledName "@">] AtSign
         | [<CompiledName "<">] LessThan
 
     type [<AllowNullLiteral>] GetCompletionsAtPositionOptions =
@@ -5402,7 +5405,7 @@ module Ts =
         abstract fixName: string with get, set
         /// If present, one may call 'getCombinedCodeFix' with this fixId.
         /// This may be omitted to indicate that the code fix can't be applied in a group.
-        abstract fixId: TypeLiteral_03 option with get, set
+        abstract fixId: DiagnosticMessageReportsUnnecessary option with get, set
         abstract fixAllDescription: string option with get, set
 
     type [<AllowNullLiteral>] CombinedCodeActions =
@@ -5502,7 +5505,7 @@ module Ts =
         abstract name: string with get, set
         abstract kind: ScriptElementKind with get, set
         abstract kindModifiers: string with get, set
-        abstract matchKind: U4<string, string, string, string> with get, set
+        abstract matchKind: NavigateToItemMatchKind with get, set
         abstract isCaseSensitive: bool with get, set
         abstract fileName: string with get, set
         abstract textSpan: TextSpan with get, set
@@ -5963,13 +5966,33 @@ module Ts =
         abstract diagnostics: ResizeArray<Diagnostic> option with get, set
         abstract sourceMapText: string option with get, set
 
-    type [<AllowNullLiteral>] TypeLiteral_01<'T> =
+    type [<AllowNullLiteral>] IteratorNext<'T> =
         abstract value: 'T with get, set
         abstract ``done``: obj option with get, set
 
-    type [<AllowNullLiteral>] TypeLiteral_02 =
+    type [<AllowNullLiteral>] IteratorNext =
         abstract value: obj with get, set
         abstract ``done``: obj with get, set
 
-    type [<AllowNullLiteral>] TypeLiteral_03 =
+    type [<AllowNullLiteral>] DiagnosticMessageReportsUnnecessary =
         interface end
+
+    type [<StringEnum>] [<RequireQualifiedAccess>] UserPreferencesQuotePreference =
+        | Auto
+        | Double
+        | Single
+
+    type [<StringEnum>] [<RequireQualifiedAccess>] UserPreferencesImportModuleSpecifierPreference =
+        | Relative
+        | [<CompiledName "non-relative">] Non_relative
+
+    type [<StringEnum>] [<RequireQualifiedAccess>] UserPreferencesImportModuleSpecifierEnding =
+        | Minimal
+        | Index
+        | Js
+
+    type [<StringEnum>] [<RequireQualifiedAccess>] NavigateToItemMatchKind =
+        | Exact
+        | Prefix
+        | Substring
+        | CamelCase

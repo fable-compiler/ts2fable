@@ -76,9 +76,11 @@ let isIdentifier (input: string) =
     if String.IsNullOrWhiteSpace input then false
     else Seq.forall isLetterOrDigitOrUnderscore input
 
+let asIdentifier (input: string) =
+    input |> String.map (fun c -> if Char.IsLetterOrDigit c then c else '_')
+
 let createEnumName (s: string) =
-    let replaceChar c = if Char.IsLetterOrDigit c then c else '_'
-    let s = s |> String.map replaceChar
+    let s = s |> asIdentifier
     if String.IsNullOrWhiteSpace s then "Empty"
     else
         let nm = s |> createEnumNameParts |> List.map capitalize |> String.concat ""
@@ -123,6 +125,19 @@ let escapeWord (s: string) =
         else
             s
 
+let escapeProperty (s: string) =
+    if String.IsNullOrEmpty s then ""
+    else
+        if Keywords.reserved.Contains s
+            || Keywords.keywords.Contains s
+            || not (isIdentifier s)
+            || isDigit (s.Substring(0,1))
+            || s.Equals "_"
+        then
+            sprintf "``%s``" s
+        else
+            s
+
 let fixModuleName (s: string) =
     let s = s.Replace("'","") // remove single quotes
     let s = capitalize s
@@ -142,6 +157,11 @@ let removeQuotes (s: string) =
         if (c = '\"' || c = ''')
         then s.Trim(c)
         else s
+
+let makePartName (s: string) =
+    let parts = s.Trim('`') |> createModuleNameParts
+    let name = parts  |> List.map capitalize |> String.concat ""
+    name |> asIdentifier
 
 // gets the JavaScript module name
 // intended for use by SourceFile.fileName which has slashes normalized
