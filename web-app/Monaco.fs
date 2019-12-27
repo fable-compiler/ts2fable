@@ -5,8 +5,8 @@ open Fable.Core
 open Fable.Core.JS
 open Browser.Types
 
-type RegExp = obj
-exception Error
+type Error = System.Exception
+type RegExp = System.Text.RegularExpressions.Regex
 
 let [<Import("*","monaco-editor")>] monaco: Monaco.IExports = jsNative
 

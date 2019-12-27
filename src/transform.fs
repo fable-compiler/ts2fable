@@ -1238,13 +1238,37 @@ let fixFloatAlias (f: FsFile): FsFile =
     )
 
 
+let abbrevTypes =
+    [
+    "Array",         "type Array<'T> = System.Collections.Generic.IList<'T>"
+    "ReadonlyArray", "type ReadonlyArray<'T> = System.Collections.Generic.IReadOnlyList<'T>"
+    "ReadonlySet",   "type ReadonlySet<'T> = Set<'T>"
+    "ReadonlyMap",   "type ReadonlyMap<'K, 'V> = Map<'K, 'V>"
+    "RegExp",        "type RegExp = System.Text.RegularExpressions.Regex"
+    "Error",         "type Error = System.Exception"
+    "Function",      "type Function = System.Action"
+    "Symbol",        "type Symbol = obj"
+    "TemplateStringsArray", "type TemplateStringsArray = System.Collections.Generic.IReadOnlyList<string>"
+    ] |> Map.ofList
+
 let fixFsFileOut fo =
 
-    let isBrowser =
+    let mappedTypes =
         fo.Files
         |> getAllTypes
         |> List.choose FsType.asMapped
+        |> List.distinct
+
+    let isBrowser =
+        mappedTypes
         |> List.exists(fun mp -> mp.Name.StartsWith "HTML")
+
+    let abbrevTypes =
+        mappedTypes
+        |> List.filter (fun mp -> abbrevTypes |> Map.containsKey mp.Name)
+        |> List.map (fun mp -> abbrevTypes |> Map.find mp.Name)
+        |> List.distinct
+        |> List.sort
 
     let fixHelperLines (f: FsFile) =
         f |> fixFile (fun ns tp ->
@@ -1252,12 +1276,12 @@ let fixFsFileOut fo =
             | FsType.Module md ->
                 { md with
                     HelperLines =
-                        md.HelperLines |> List.map(fun l ->
+                        md.HelperLines |> List.map (fun l ->
                             l.Replace("Option.map","Microsoft.FSharp.Core.Option.map")
                 ) } |> FsType.Module
-
             | _ -> tp )
 
+    let fo = { fo with AbbrevTypes = abbrevTypes }
     if isBrowser then
         { fo with
             Opens = fo.Opens @ ["Browser.Types"]

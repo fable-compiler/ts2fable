@@ -3,16 +3,18 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="TypeScript.fs" />
+    <!-- <Compile Include="TypeScript.fs" /> -->
     <Compile Include="Node.fs" />
-    <Compile Include="Yargs.fs" />
+    <!-- <Compile Include="Yargs.fs" /> -->
 
-    <Compile Include="VSCode.fs" />
+    <!-- <Compile Include="VSCode.fs" /> -->
     <Compile Include="IziToast.fs" />
     <!-- <Compile Include="Electron.fs" /> -->
     <Compile Include="React.fs" />
+    <!-- <Compile Include="ReactNative.fs" /> -->
     <Compile Include="Mocha.fs" />
-    <!-- <Compile Include="Chai.fs" /> -->
+    <!-- <Compile Include="Monaco.fs" /> -->
+    <Compile Include="Chai.fs" />
     <Compile Include="Chalk.fs" />
     <Compile Include="SubscribableEvent.fs" />
     <Compile Include="SyncTasks.fs" />

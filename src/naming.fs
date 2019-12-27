@@ -2,15 +2,8 @@ module ts2fable.Naming
 
 open System
 
-let stringContainsAny (a: string) (b: string list) : bool =
+let stringContainsAny (a: string) (b: string list) =
     b |> List.exists a.Contains
-let (|Capital|_|) (letter: string)=
-    let capitals = [ 'A' .. 'Z' ] |> Seq.map string
-    match Seq.contains letter capitals with
-    | true -> Some letter
-    | false -> None
-    // Char.IsUpper https://github.com/fable-compiler/Fable/issues/1236
-    // if letter.Length = 1 && Char.IsUpper letter.[0] then Some letter else None
 
 let replace (pattern:string) (destPattern:string) (text: string) =
     text.Replace(pattern,destPattern)
@@ -33,16 +26,15 @@ module ModuleName =
         | Normal -> moduleName2
         | Parts parts -> moduleName2 |> sprintf "./%s"
 
-let private digits = [ '0' .. '9' ] |> Seq.map string
-
-let isDigit digit = Seq.contains digit digits
+let (|Capital|_|) (letter: string) =
+    if String.IsNullOrWhiteSpace letter then None
+    elif Char.IsUpper (letter, 0) then Some letter
+    else None
 
 let (|Digit|_|) (digit: string) =
-    match isDigit digit with
-    | true -> Some digit
-    | false -> None
-    // Char.IsNumber https://github.com/fable-compiler/Fable/issues/1237
-    // if digit.Length = 1 && Char.IsNumber digit.[0] then Some digit else None
+    if String.IsNullOrWhiteSpace digit then None
+    elif Char.IsDigit (digit, 0) then Some digit
+    else None
 
 let createEnumNameParts (name: string) =
     let tokens = Seq.map string name
@@ -72,9 +64,12 @@ let lowerFirst (input: string): string =
     else sprintf "%c%s" (Char.ToLower input.[0]) (input.Substring 1)
 
 let isIdentifier (input: string) =
-    let isLetterOrDigitOrUnderscore c = Char.IsLetterOrDigit c || (c = '_')
     if String.IsNullOrWhiteSpace input then false
-    else Seq.forall isLetterOrDigitOrUnderscore input
+    else
+        let isLetterOrDigitOrUnderscore c = Char.IsLetterOrDigit c || (c = '_')
+        Seq.forall isLetterOrDigitOrUnderscore input
+            && not (input = "_")
+            && not (Char.IsDigit (input, 0))
 
 let asIdentifier (input: string) =
     input |> String.map (fun c -> if Char.IsLetterOrDigit c then c else '_')
@@ -116,8 +111,7 @@ let escapeWord (s: string) =
         if Keywords.reserved.Contains s
             || Keywords.keywords.Contains s
             || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
-            // || Char.IsNumber s.[0] then // TODO https://github.com/fable-compiler/Fable/issues/1237
-            || isDigit (s.Substring(0,1))
+            || (s.Length > 0 && Char.IsDigit (s, 0))
             || s.Substring(0,1).IndexOfAny [|'.';'['|] <> -1 // starts with
             || s.Equals "_"
         then
@@ -131,8 +125,6 @@ let escapeProperty (s: string) =
         if Keywords.reserved.Contains s
             || Keywords.keywords.Contains s
             || not (isIdentifier s)
-            || isDigit (s.Substring(0,1))
-            || s.Equals "_"
         then
             sprintf "``%s``" s
         else

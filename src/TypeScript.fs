@@ -4,6 +4,11 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
+type Array<'T> = System.Collections.Generic.IList<'T>
+type ReadonlyArray<'T> = System.Collections.Generic.IReadOnlyList<'T>
+type ReadonlyMap<'K, 'V> = Map<'K, 'V>
+type Symbol = obj
+
 let [<Import("*","typescript")>] ts: Ts.IExports = jsNative
 
 type [<AllowNullLiteral>] IExports =
@@ -957,11 +962,11 @@ module Ts =
         [<Emit "$0[$1]{{=$2}}">] abstract Item: index: string -> 'T with get, set
 
     type [<AllowNullLiteral>] SortedReadonlyArray<'T> =
-        // inherit ReadonlyArray<'T>
+        inherit ReadonlyArray<'T>
         abstract `` __sortedArrayBrand``: obj option with get, set
 
     type [<AllowNullLiteral>] SortedArray<'T> =
-        // inherit Array<'T>
+        inherit Array<'T>
         abstract `` __sortedArrayBrand``: obj option with get, set
 
     /// ES6 Map interface, only read methods included.
@@ -1459,7 +1464,7 @@ module Ts =
         U7<VariableDeclaration, ParameterDeclaration, BindingElement, PropertySignature, PropertyDeclaration, PropertyAssignment, EnumMember>
 
     type [<AllowNullLiteral>] NodeArray<'T> =
-        // inherit ReadonlyArray<'T>
+        inherit ReadonlyArray<'T>
         inherit TextRange
         abstract hasTrailingComma: bool option with get, set
 

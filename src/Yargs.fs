@@ -4,12 +4,12 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("*","yargs")>] yargs: Yargs.Argv = jsNative
+type Array<'T> = System.Collections.Generic.IList<'T>
+type Error = System.Exception
+type ReadonlyArray<'T> = System.Collections.Generic.IReadOnlyList<'T>
+type RegExp = System.Text.RegularExpressions.Regex
 
-type Array<'T> = 'T[]
-type ReadonlyArray<'T> = 'T[]
-type RegExp = obj
-exception Error
+let [<Import("*","yargs")>] yargs: Yargs.Argv = jsNative
 
 type [<AllowNullLiteral>] Arguments =
     /// Non-option arguments

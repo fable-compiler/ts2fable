@@ -1,2 +1,4 @@
 Fable.Core
-Fable.Import.Browser
+Fable.Browser.Css
+Fable.Browser.Dom
+Fable.Browser.Svg
