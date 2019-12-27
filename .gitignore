@@ -1,6 +1,5 @@
 /public
 /src/*.txt
-package-lock.json
 output/**/*.js
 src/typescript2.fs
 *.tgz
@@ -265,3 +264,4 @@ paket-files/
 
 web-app/output/
 web-app/public/
+out/

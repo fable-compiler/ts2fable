@@ -2,7 +2,7 @@
 module rec f5
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("*","test")>] react: React.IExports = jsNative
 
@@ -14,7 +14,7 @@ module React =
 module JSX =
 
     type [<AllowNullLiteral>] ElementAttributesProperty =
-        abstract props: TypeLiteral_01 with get, set
+        abstract props: ElementAttributesPropertyProps with get, set
 
-    type [<AllowNullLiteral>] TypeLiteral_01 =
+    type [<AllowNullLiteral>] ElementAttributesPropertyProps =
         interface end

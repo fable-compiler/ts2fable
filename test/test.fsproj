@@ -1,9 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\ts2fable.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="functionTests.fs" />
     <Compile Include="fsFileTests.fs" />
     <Compile Include="test.fs" />
@@ -11,5 +14,9 @@
   <ItemGroup>
     <None Include="fragments\**" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Core" Version="3.1.4" />
+  </ItemGroup>
+  <!-- <Import Project="..\.paket\Paket.Restore.targets" /> -->
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

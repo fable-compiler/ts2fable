@@ -2,7 +2,7 @@
 module rec f3
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 type ComponentLifecycle = React.ComponentLifecycle
 type ComponentClass = React.ComponentClass

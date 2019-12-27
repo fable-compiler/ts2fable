@@ -6,13 +6,12 @@ open Fable.Core.JsInterop
 open ts2fable.Naming
 open TypeScript
 open TypeScript.Ts
-open Node
+open Node.Api
 open ts2fable.Read
 open ts2fable.node.Write
 open ts2fable.Transform
 open ts2fable.Print
 open System.Collections.Generic
-open Node.Fs
 open ts2fable.Keywords
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
@@ -194,12 +193,13 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test-compile/React.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existLeastOneByName "ReactNode" (fun tp ->
-                match tp with 
-                | FsType.Module md -> 
-                    md.HelperLines  |> List.exists(fun l -> l.Contains("Microsoft.FSharp.Core.Option.map"))
-                | _ -> false
-            )
+            |> existLeastOneByName "ReactNode" FsType.isMapped
+            // (fun tp ->
+            //     match tp with 
+            //     | FsType.Module md -> 
+            //         md.HelperLines  |> List.exists(fun l -> l.Contains("Microsoft.FSharp.Core.Option.map"))
+            //     | _ -> false
+            // )
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/pull/170

@@ -16,23 +16,28 @@ open Fable
 let getAllTypesFromFile fsFile =
     let tps = List []
     fsFile
-    |> fixFile (fun tp -> 
+    |> fixFile (fun ns tp ->
         tp |> tps.Add
         tp
     ) |> ignore
     tps |> List.ofSeq
 
 let getAllTypes fsFiles =
-    fsFiles |> List.collect getAllTypesFromFile  
+    fsFiles |> List.collect getAllTypesFromFile
 
 /// recursively fix all the FsType childen and allow the caller to decide how deep to recurse.
-let rec fixTypeEx (doFix:FsType->bool) (fix: FsType -> FsType) (tp: FsType): FsType =
-    
-    let fixType = fixTypeEx doFix
+let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType) (tp: FsType): FsType =
+
+    let ns =
+        match tp with
+        | FsType.Module _ -> ns
+        | _ -> ns + (getName tp |> makePartName)
+
+    let fixType = fixTypeEx ns doFix fix
 
     let fixModule (a: FsModule): FsModule =
         { a with
-            Types = a.Types |> List.map (fixType fix)
+            Types = a.Types |> List.map fixType
         }
 
     let fixFile (f: FsFile): FsFile =
@@ -43,10 +48,10 @@ let rec fixTypeEx (doFix:FsType->bool) (fix: FsType -> FsType) (tp: FsType): FsT
     let fixParam (a: FsParam): FsParam =
         let b =
             { a with
-                Type = fixType fix a.Type
+                Type = fixType a.Type
             }
-            |> FsType.Param |> fix
-        match b with
+            |> FsType.Param
+        match fix ns b with
         | FsType.Param c -> c
         | _ -> failwithf "param must be mapped to param"
 
@@ -55,62 +60,62 @@ let rec fixTypeEx (doFix:FsType->bool) (fix: FsType -> FsType) (tp: FsType): FsT
     | tp when (not (doFix tp)) -> tp
     | FsType.Interface it ->
         { it with
-            TypeParameters = it.TypeParameters |> List.map (fixType fix)
-            Inherits = it.Inherits |> List.map (fixType fix)
-            Members = it.Members |> List.map (fixType fix)
+            TypeParameters = it.TypeParameters |> List.map fixType
+            Inherits = it.Inherits |> List.map fixType
+            Members = it.Members |> List.map fixType
         }
         |> FsType.Interface
     | FsType.TypeLiteral tl ->
         { tl with
-            Members = tl.Members |> List.map (fixType fix)
+            Members = tl.Members |> List.map fixType
         }
         |> FsType.TypeLiteral
     | FsType.Property pr ->
         { pr with
             Index = Option.map fixParam pr.Index
-            Type = fixType fix pr.Type
+            Type = fixType pr.Type
         }
-        |> FsType.Property 
+        |> FsType.Property
     | FsType.Param pr ->
         { pr with
-            Type = fixType fix pr.Type
+            Type = fixType pr.Type
         }
         |> FsType.Param
     | FsType.Array ar ->
-        fixType fix ar |> FsType.Array
+        fixType ar |> FsType.Array
     | FsType.Function fn ->
         { fn with
-            TypeParameters = fn.TypeParameters |> List.map (fixType fix)
+            TypeParameters = fn.TypeParameters |> List.map fixType
             Params = fn.Params |> List.map fixParam
-            ReturnType = fixType fix fn.ReturnType
+            ReturnType = fixType fn.ReturnType
         }
         |> FsType.Function
     | FsType.Union un ->
         { un with
-            Types = un.Types |> List.map (fixType fix)
+            Types = un.Types |> List.map fixType
         }
         |> FsType.Union
     | FsType.Alias al ->
         { al with
-            Type = fixType fix al.Type
-            TypeParameters = al.TypeParameters |> List.map (fixType fix)
+            Type = fixType al.Type
+            TypeParameters = al.TypeParameters |> List.map fixType
         }
         |> FsType.Alias
     | FsType.Generic gn ->
         { gn with
-            Type = fixType fix gn.Type
-            TypeParameters = gn.TypeParameters |> List.map (fixType fix)
+            Type = fixType gn.Type
+            TypeParameters = gn.TypeParameters |> List.map fixType
         }
         |> FsType.Generic
     | FsType.Tuple tp ->
         { tp with
-            Types = tp.Types |> List.map (fixType fix)
+            Types = tp.Types |> List.map fixType
         }
         |> FsType.Tuple
     | FsType.Module md ->
         fixModule md
         |> FsType.Module
-     | FsType.File f ->
+    | FsType.File f ->
         fixFile f
         |> FsType.File
     | FsType.FileOut fo ->
@@ -120,7 +125,7 @@ let rec fixTypeEx (doFix:FsType->bool) (fix: FsType -> FsType) (tp: FsType): FsT
         |> FsType.FileOut
     | FsType.Variable vb ->
         { vb with
-            Type = fixType fix vb.Type
+            Type = fixType vb.Type
         }
         |> FsType.Variable
 
@@ -132,29 +137,30 @@ let rec fixTypeEx (doFix:FsType->bool) (fix: FsType -> FsType) (tp: FsType): FsT
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
     | FsType.Import _ -> tp
-    | FsType.GenericParameterDefaults gpd -> 
-        { gpd with Default = fixType fix gpd.Default }
+    | FsType.GenericParameterDefaults gpd ->
+        { gpd with Default = fixType gpd.Default }
         |> FsType.GenericParameterDefaults
-    |> fun t -> if doFix(t) then fix(t) else t // current type
+    |> fun t -> if doFix(t) then fix ns t else t // current type
 
 /// recursively fix all the FsType childen
-let fixType (fix: FsType -> FsType) (tp: FsType): FsType = fixTypeEx (fun _ -> true) fix tp
+let fixType ns (fix: string->FsType->FsType) (tp: FsType): FsType =
+    fixTypeEx ns (fun _ -> true) fix tp
 
 /// recursively fix all the FsType childen for the given FsFile and allow the caller to decide how deep to recurse.
-let fixFileEx (doFix:FsType->bool) (fix: FsType -> FsType) (f: FsFile): FsFile =
-
+let fixFileEx (doFix:FsType->bool) (fix: string->FsType->FsType) (f: FsFile): FsFile =
     { f with
-        Modules = 
-            f.Modules 
-            |> List.map FsType.Module 
-            |> List.map (fixTypeEx doFix fix) 
+        Modules =
+            f.Modules
+            |> List.map FsType.Module
+            |> List.map (fixTypeEx "" doFix fix)
             |> List.choose FsType.asModule
     }
 
 /// recursively fix all the FsType childen for the given FsFile
-let fixFile (fix: FsType -> FsType) (f: FsFile): FsFile = fixFileEx (fun _ -> true) fix f
+let fixFile (fix: string->FsType->FsType) (f: FsFile): FsFile =
+    fixFileEx (fun _ -> true) fix f
 
-let mergeTypes(tps: FsType list): FsType list =
+let mergeTypes (tps: FsType list): FsType list =
     let index = Dictionary<string,int>()
     let list = List<FsType>()
     for b in tps do
@@ -176,11 +182,11 @@ let mergeTypes(tps: FsType list): FsType list =
             else
                 list.Add b
                 index.Add(bi.Name, list.Count-1)
-        | _ -> 
+        | _ ->
             list.Add b
     list |> List.ofSeq
 
-let mergeModules(tps: FsType list): FsType list =
+let mergeModules (tps: FsType list): FsType list =
     let index = Dictionary<string,int>()
     let list = List<FsType>()
 
@@ -191,7 +197,7 @@ let mergeModules(tps: FsType list): FsType list =
                 { md with
                     Types = md.Types |> mergeTypes |> mergeModules // submodules
                 }
-            
+
             if index.ContainsKey md.Name then
                 let i = index.[md.Name]
                 let a = (list.[i] |> FsType.asModule).Value
@@ -204,12 +210,12 @@ let mergeModules(tps: FsType list): FsType list =
                 md2 |> FsType.Module |> list.Add |> ignore
                 index.Add(md2.Name, list.Count-1)
         | _ -> list.Add tp |> ignore
-    
+
     list |> List.ofSeq
 
 let mergeModulesInFile (f: FsFile): FsFile =
     { f with
-        Modules = 
+        Modules =
             f.Modules
             |> List.ofSeq
             |> List.map FsType.Module
@@ -227,7 +233,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     let typesChildExport = ResizeArray<FsType>()
     let typesOther = ResizeArray<FsType>()
     let variablesForParent = ResizeArray<FsVariable>()
-    
+
     let variables = HashSet<FsVariable>()
     let exportAssignments = HashSet<string>()
     md.Types |> List.iter(fun tp ->
@@ -240,16 +246,16 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
-            let ns = 
-                if md.Name = "" then ns 
-                else 
+            let ns =
+                if md.Name = "" then ns
+                else
                     let parts =
                         let name = md.Name.Replace("'","")
-                        match name with 
+                        match name with
                         | ModuleName.Normal -> [name]
                         | ModuleName.Parts parts -> parts |> List.filter((<>) ".")
                     ns @ parts
-                    
+
             let smd, vars = createIExportsModule ns smd
             for v in vars do
                 if v.Export.IsSome then v |> variables.Add |> ignore
@@ -259,9 +265,9 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
             if vb.HasDeclare then
                 if md.Name = "" then
                     { vb with
-                        Export = 
+                        Export =
                             { IsGlobal = engines.Contains ns.[0]
-                              Selector = 
+                              Selector =
                                 if String.Compare(vb.Name,ns.[0],true) = 0 then "*"
                                 else vb.Name
                               Path = ns.[0] } |> Some
@@ -271,7 +277,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 else
                     if vb.IsGlobal then
                         typesGlobal.Add tp
-                    else 
+                    else
                         typesInIExports.Add tp
             else
                 typesInIExports.Add tp
@@ -301,7 +307,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         if ns.Length = 0 then "*"
         else md.Name.Replace("'","")
     let path =
-        if ns.Length = 0 then 
+        if ns.Length = 0 then
             md.Name.Replace("'","")
         else ns |> String.concat "/"
 
@@ -360,7 +366,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     // add exports assignments
     // make sure there are no conflicting globals already
     let globalNames = typesGlobal |> Seq.map getName |> Set.ofSeq
-    
+
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
@@ -392,9 +398,9 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
     newMd, variablesForParent |> List.ofSeq
 
 let createIExports (f: FsFile): FsFile =
-    
+
     { f with
-        Modules = 
+        Modules =
             f.Modules
             |> List.ofSeq
             |> List.map (fun md ->
@@ -403,31 +409,31 @@ let createIExports (f: FsFile): FsFile =
             )
     }
 
-let fixTic (typeParameters: FsType list) (tp: FsType) =
+let fixTic ns (typeParameters: FsType list) (tp: FsType) =
     if typeParameters.Length = 0 then
         tp
     else
         let set = typeParameters |> Set.ofList
-        let fix (t: FsType): FsType =
+        let fix ns (t: FsType): FsType =
             match t with
             | FsType.Mapped mp ->
                 if set.Contains t then
                     { mp with Name = sprintf "'%s" mp.Name } |> FsType.Mapped
                 else t
             | _ -> t
-        fixType fix tp
+        fixType ns fix tp
 
 let addTicForGenericFunctions(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Function fn ->
-            fixTic fn.TypeParameters tp
+            fixTic ns fn.TypeParameters tp
         | _ -> tp
     )
 
 // https://github.com/Microsoft/TypeScript/blob/master/doc/spec.md#18-overloading-on-string-parameters
 let fixOverloadingOnStringParameters(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Function fn ->
             if fn.HasStringLiteralParams then
@@ -461,7 +467,7 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
     )
 
 let fixNodeArray(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Generic gn ->
             match gn.Type with
@@ -474,7 +480,7 @@ let fixNodeArray(f: FsFile): FsFile =
     )
 
 let fixReadonlyArray(f: FsFile): FsFile =
-    let fix (tp: FsType): FsType =
+    let fix ns (tp: FsType): FsType =
         match tp with
         | FsType.Generic gn ->
             match gn.Type with
@@ -486,14 +492,14 @@ let fixReadonlyArray(f: FsFile): FsFile =
         | _ -> tp
 
     // only replace in functions
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
-        | FsType.Function _ -> fixType fix tp
+        | FsType.Function _ -> fixType ns fix tp
         | _ -> tp
     )
 
 let fixEscapeWords(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Mapped mp ->
             { mp with Name = escapeWord mp.Name } |> FsType.Mapped
@@ -502,7 +508,7 @@ let fixEscapeWords(f: FsFile): FsFile =
         | FsType.Function fn ->
             { fn with Name = fn.Name |> Option.map escapeWord } |> FsType.Function
         | FsType.Property pr ->
-            { pr with Name = escapeWord pr.Name } |> FsType.Property
+            { pr with Name = escapeProperty pr.Name } |> FsType.Property
         | FsType.Interface it ->
             { it with Name = escapeWord it.Name } |> FsType.Interface
         | FsType.Module md ->
@@ -518,7 +524,7 @@ let fixDateTime(f: FsFile): FsFile =
     let replaceName name =
         if String.Equals("Date", name) then "DateTime" else name
 
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Mapped mp ->
             { mp with Name = replaceName mp.Name } |> FsType.Mapped
@@ -528,7 +534,7 @@ let fixDateTime(f: FsFile): FsFile =
 let fixEnumReferences (f: FsFile): FsFile =
     // get a list of enum names
     let list = List<string>()
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Enum en ->
             list.Add en.Name |> ignore
@@ -538,7 +544,7 @@ let fixEnumReferences (f: FsFile): FsFile =
 
     // use those as the references
     let set = Set.ofSeq list
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Mapped mp ->
             if mp.Name.Contains "." then
@@ -552,11 +558,11 @@ let fixEnumReferences (f: FsFile): FsFile =
     )
 
 let fixDuplicatesInUnion (f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Union un ->
             let set = HashSet<_>()
-            let tps = un.Types |> List.choose (fun tp -> 
+            let tps = un.Types |> List.choose (fun tp ->
                     if set.Contains tp then
                         None
                     else
@@ -566,26 +572,26 @@ let fixDuplicatesInUnion (f: FsFile): FsFile =
             if tps.Length > 8 then
                 // printfn "union has %d types, > 8, so setting as obj %A" tps.Length un
                 simpleType "obj"
-            else 
+            else
                 { un with Types = tps } |> FsType.Union
         | _ -> tp
     )
 
 let addTicForGenericTypes(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
-        | FsType.Interface it -> fixTic it.TypeParameters tp
-        | FsType.Alias al -> fixTic al.TypeParameters tp
+        | FsType.Interface it -> fixTic ns it.TypeParameters tp
+        | FsType.Alias al -> fixTic ns al.TypeParameters tp
         | _ -> tp
     )
 
 /// replaces `this` with a reference to the interface type
 let fixThis(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Interface it ->
 
-            let replaceThis tp = 
+            let replaceThis ns tp =
                 match tp with
                 | FsType.This ->
                     {
@@ -596,14 +602,14 @@ let fixThis(f: FsFile): FsFile =
                 | _ -> tp
 
             { it with
-                Members = it.Members |> List.map (fixType replaceThis)
+                Members = it.Members |> List.map (fixType ns replaceThis)
             }
             |> FsType.Interface
         | _ -> tp
     )
 
 let fixStatic(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Module md ->
             { md with
@@ -634,9 +640,10 @@ let fixStatic(f: FsFile): FsFile =
             |> FsType.Module
         | _ -> tp
     )
-let hasTodo (tp: FsType) =
+
+let hasTodo ns (tp: FsType) =
     let mutable has = false
-    tp |> fixType (fun t ->
+    tp |> fixType ns  (fun ns t ->
         match t with
         | FsType.TODO ->
             has <- true
@@ -646,13 +653,13 @@ let hasTodo (tp: FsType) =
     has
 
 let removeTodoMembers(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Interface it ->
             { it with
                 // Members = it.Members |> List.filter (not << hasTodo)
                 Members = it.Members |> List.filter (fun mb ->
-                    if hasTodo mb then
+                    if hasTodo ns mb then
                         printfn "removing member with TODO: %s.%s" (getName tp) (getName mb)
                         false
                     else true
@@ -663,7 +670,7 @@ let removeTodoMembers(f: FsFile): FsFile =
     )
 
 let removeTypeParamsFromStatic(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Interface it ->
             { it with
@@ -678,7 +685,7 @@ let addConstructors  (f: FsFile): FsFile =
     // we are importing classes as interfaces
     // we need of list of classes with constructors
     let list = List<_>()
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Interface it ->
             if it.IsClass && it.HasConstructor then
@@ -691,7 +698,7 @@ let addConstructors  (f: FsFile): FsFile =
     let map = list |> Seq.map(fun it -> it.FullName, it) |> dict
 
     // use those as the references
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Interface it ->
             if it.IsClass then
@@ -708,7 +715,7 @@ let addConstructors  (f: FsFile): FsFile =
                         )
 
                     match parent with
-                    | Some pt -> 
+                    | Some pt ->
                         // copy the constructors from the parent
                         { it with Members = pt.Constructors @ it.Members } |> FsType.Interface
 
@@ -733,7 +740,7 @@ let addConstructors  (f: FsFile): FsFile =
     )
 
 let removeInternalModules(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Module md ->
             { md with
@@ -749,7 +756,7 @@ let removeInternalModules(f: FsFile): FsFile =
     )
 
 let removePrivatesFromClasses(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Interface c when c.IsClass ->
             { c with
@@ -760,7 +767,7 @@ let removePrivatesFromClasses(f: FsFile): FsFile =
     )
 
 let removeDuplicateFunctions(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Interface it ->
             let set = HashSet<_>()
@@ -783,13 +790,13 @@ let removeDuplicateFunctions(f: FsFile): FsFile =
     )
 
 let removeDuplicateOptions(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Property pr when pr.Option ->
-            match pr.Type with 
+            match pr.Type with
             | FsType.Union un when un.Option ->
-                { pr with 
-                    Type = { un  with Option = false } |> FsType.Union 
+                { pr with
+                    Type = { un  with Option = false } |> FsType.Union
                 }
                 |> FsType.Property
             | _ -> tp
@@ -820,14 +827,14 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
             when (t = t2) -> true
         // here we could check if the alias is another alias to option, but that seems like an unlikely pattern
         | _ -> false
-        
 
-    f |> fixFile (fun tp ->
+
+    f |> fixFile (fun ns tp ->
 
         match tp with
         | FsType.Param pr when pr.Optional ->
 
-            match pr.Type with 
+            match pr.Type with
             // case 1: simple
             | FsType.Union { Option = true; Types = [ t ] } -> { pr with Type = t } |> FsType.Param
             // not tested: I assume this is hit with (?p : int | string | null)
@@ -837,17 +844,17 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
             | FsType.Generic { Type = FsType.Mapped { Name = name; FullName = "" }; TypeParameters = [ t ] }
                 when (isAliasToOption name) ->
                     { pr with Type = t } |> FsType.Param
-                
+
             | _ -> tp
 
         | _ -> tp
     )
 
 let extractTypeLiterals(f: FsFile): FsFile =
-    
+
     /// the goal is to create interface types with 'pretty' names like '$(Class)$(Method)Return'.
     let extractTypeLiterals_pass1 (f: FsFile): FsFile =
-      f |> fixFile (fun tp ->
+      f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Module md ->
 
@@ -909,11 +916,11 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                         sprintf "%s%s" itName (capitalize pmName) |> newTypeName
                                                     else
                                                         sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
-                                                
+
                                                 materializeInterfaceType name tl.Members
                                                 { prm with Type = simpleType name }
                                             | _ -> prm
-                                        
+
                                         let mapReturnType (tp:FsType) =
                                             match tp with
                                             | FsType.TypeLiteral tl ->
@@ -921,7 +928,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                     let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
                                                     let fnName = fn.Name.Value.Replace("`","")
                                                     sprintf "%s%sReturn" itName (capitalize fnName) |> newTypeName
-                                                
+
                                                 materializeInterfaceType name tl.Members
                                                 simpleType name
                                             | _ -> tp
@@ -936,22 +943,22 @@ let extractTypeLiterals(f: FsFile): FsFile =
                             |> FsType.Interface
 
                         [it2] @ (List.ofSeq newTypes) // append new types
-                    | FsType.Alias al -> 
-                        match al.Type with 
-                        | FsType.Union un -> 
-                            let un2 = 
-                                { un with 
-                                    Types = 
+                    | FsType.Alias al ->
+                        match al.Type with
+                        | FsType.Union un ->
+                            let un2 =
+                                { un with
+                                    Types =
                                         let tps = List<FsType>()
-                                        un.Types |> List.iter(fun tp -> 
-                                            match tp with 
+                                        un.Types |> List.iter(fun tp ->
+                                            match tp with
                                             | FsType.TypeLiteral tl -> tl.Members |> tps.AddRange
                                             | _ -> tp |> tps.Add
                                         )
-                                        tps |> List.ofSeq    
+                                        tps |> List.ofSeq
                                 }
-                            {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton 
-                        | FsType.TypeLiteral tl -> 
+                            {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton
+                        | FsType.TypeLiteral tl ->
                             {
                                 Comments = []
                                 IsStatic = false
@@ -962,15 +969,15 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                 Members = tl.Members
                                 TypeParameters = al.TypeParameters
                                 Accessibility = None
-                            } |> FsType.Interface |> List.singleton                                
-                        | _ -> [tp]                       
+                            } |> FsType.Interface |> List.singleton
+                        | _ -> [tp]
                     | _ -> [tp]
                 )
             }
             |> FsType.Module
         | _ -> tp
     )
-    
+
     /// type literals can occur in many places, and it is kinda hard to account for all of them in the first pass.
     /// so do a second pass, and just replace them with interfaces with a not quite so pretty name.
     /// Note: in an ideal world with enough time, this pass would not find anything, and all TLs would be accounted for in the first pass with pretty names.
@@ -979,7 +986,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
         let extractFromModule (m:FsModule) : FsModule =
 
             let fixModuleEx doFix fix (m:FsModule) : FsModule =
-                match fixTypeEx doFix fix (FsType.Module m) with
+                match fixTypeEx "" doFix fix (FsType.Module m) with
                 | FsType.Module m2 -> m2
                 | x -> failwithf "Impossible: %A" x
 
@@ -988,12 +995,12 @@ let extractTypeLiterals(f: FsFile): FsFile =
                  m |> fixModuleEx (function FsType.Module m2 when (m2 <> m) -> false | _ -> true) fix
 
             let replacedTypeLiterals = Dictionary<FsTypeLiteral, FsInterface>()
-            let replaceLiteral (tl:FsTypeLiteral) : FsInterface =
+            let replaceLiteral ns (tl:FsTypeLiteral) : FsInterface =
                 let build() =
-                    let name = sprintf "TypeLiteral_%02i" i
+                    let name = ns //sprintf "TypeLiteral_%02i" i
                     i <- i + 1
                     let generics = HashSet<FsType>()
-                    FsType.TypeLiteral tl |> fixType (fun t ->
+                    FsType.TypeLiteral tl |> fixType ns  (fun ns t ->
                         match t with
                         // REVIEW: better detection for generics?
                         | FsType.Mapped({Name = name}) when (name.StartsWith "'") ->
@@ -1023,11 +1030,11 @@ let extractTypeLiterals(f: FsFile): FsFile =
 
             m
             // 1: replace occurences of TypeLiterals with references to the generated types
-            |> fixOneModule (fun tp ->
+            |> fixOneModule (fun ns tp ->
                 match tp with
                 | FsType.TypeLiteral tl ->
 
-                    let extractedInterface = replaceLiteral tl
+                    let extractedInterface = replaceLiteral ns tl
                     match extractedInterface.TypeParameters with
                     | [ ] ->
                         simpleType (extractedInterface.Name)
@@ -1039,8 +1046,8 @@ let extractTypeLiterals(f: FsFile): FsFile =
                 let generatedTypes = replacedTypeLiterals |> Seq.map (fun kv -> FsType.Interface kv.Value) |> Seq.toList
                 { m with Types = m.Types @ generatedTypes }
             )
-        
-        f |> fixFile (fun t -> match t with FsType.Module m -> FsType.Module (extractFromModule m) | _ -> t)
+
+        f |> fixFile  (fun ns t -> match t with FsType.Module m -> FsType.Module (extractFromModule m) | _ -> t)
 
 
     // run both passes
@@ -1049,11 +1056,11 @@ let extractTypeLiterals(f: FsFile): FsFile =
     |> extractTypeLiterals_pass2
 
 let addAliasUnionHelpers(f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Module md ->
             { md with
-                Types = 
+                Types =
                     (md.Types |> List.collect(fun tp2 ->
                         match tp2 with
                         | FsType.Alias al ->
@@ -1105,7 +1112,7 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
     )
 
 let fixNamespace (f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Mapped mp ->
             { mp with Name = fixNamespaceString mp.Name } |> FsType.Mapped
@@ -1118,9 +1125,9 @@ let fixNamespace (f: FsFile): FsFile =
                 }
                 |> FsImport.Module
             | FsImport.Type imtp ->
-                { imtp with 
-                    SpecifiedModule = 
-                        match f.Kind with 
+                { imtp with
+                    SpecifiedModule =
+                        match f.Kind with
                         | FsFileKind.Index ->
                             fixModuleName imtp.SpecifiedModule
                         | FsFileKind.Extra _ -> imtp.SpecifiedModule
@@ -1131,11 +1138,11 @@ let fixNamespace (f: FsFile): FsFile =
     )
 
 let aliasToInterfacePartly (f: FsFile): FsFile =
-    let compileAliasHasOnlyFunctionToInterface f = 
-        f |> fixFile (fun tp ->
-            match tp with 
+    let compileAliasHasOnlyFunctionToInterface f =
+        f |> fixFile (fun ns tp ->
+            match tp with
             | FsType.Alias al ->
-                match al.Type with 
+                match al.Type with
                 | FsType.Function f ->
                     {
                         Comments = f.Comments
@@ -1148,17 +1155,17 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                         TypeParameters = al.TypeParameters
                         Accessibility = None
                     } |> FsType.Interface
-                | _ -> tp    
-            | _ -> tp     
-    )  
+                | _ -> tp
+            | _ -> tp
+    )
 
-    let compileAliasHasIntersectionToInterface f = 
-        f |> fixFile(fun tp ->
-            match tp with 
+    let compileAliasHasIntersectionToInterface f =
+        f |> fixFile (fun ns tp ->
+            match tp with
             | FsType.Alias al ->
-                match al.Type with 
+                match al.Type with
                 | FsType.Tuple tu ->
-                    match tu.Kind with 
+                    match tu.Kind with
                     | FsTupleKind.Intersection ->
                         {
                             Comments = []
@@ -1172,16 +1179,16 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                             Accessibility = None
                         } |> FsType.Interface
                     | _ -> tp
-                | _ -> tp        
-            | _ -> tp    
+                | _ -> tp
+            | _ -> tp
         )
 
-    let compileAliasHasMappedToInterface f = 
-        f |> fixFile (fun tp ->
-            match tp with 
-            | FsType.Alias al -> 
-                match al.Type with 
-                | FsType.Tuple tu when tu.Kind = FsTupleKind.Mapped -> 
+    let compileAliasHasMappedToInterface f =
+        f |> fixFile (fun ns tp ->
+            match tp with
+            | FsType.Alias al ->
+                match al.Type with
+                | FsType.Tuple tu when tu.Kind = FsTupleKind.Mapped ->
                     {
                         Comments = []
                         IsStatic = false
@@ -1192,23 +1199,23 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                         Members = []
                         TypeParameters = al.TypeParameters
                         Accessibility = None
-                    } |> FsType.Interface  
+                    } |> FsType.Interface
                 | _ -> tp
-            | _ -> tp                          
+            | _ -> tp
         )
 
     //we don't want to print intersection and mapped types, so compile them to simpleType "obj"
-    let flatten f = 
-        f |> fixFile(fun tp ->
-            match tp with 
+    let flatten f =
+        f |> fixFile (fun ns tp ->
+            match tp with
             | FsType.Tuple tu ->
-                match tu.Kind with 
+                match tu.Kind with
                 | FsTupleKind.Intersection | FsTupleKind.Mapped -> simpleType "obj"
                 | _ -> tp
             | _ -> tp
-        )    
+        )
 
-    f 
+    f
     |> compileAliasHasOnlyFunctionToInterface
     |> compileAliasHasIntersectionToInterface
     |> compileAliasHasMappedToInterface
@@ -1216,8 +1223,8 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
 
 /// babylonjs contains 'type float = number;', which creates invalid f# output (type float = float)
 let fixFloatAlias (f: FsFile): FsFile =
-    f |> fixFile(fun tp ->
-        match tp with 
+    f |> fixFile (fun ns tp ->
+        match tp with
         | FsType.Module m ->
             let floatNumberAlias =
                 m.Types
@@ -1228,69 +1235,69 @@ let fixFloatAlias (f: FsFile): FsFile =
             | Some a -> FsType.Module { m with Types = m.Types |> List.except [ a ] }
             | None -> tp
         | _ -> tp
-    )    
-    
+    )
 
-let fixFsFileOut fo = 
-    
+
+let fixFsFileOut fo =
+
     let isBrowser =
         fo.Files
-        |> getAllTypes 
-        |> List.choose FsType.asMapped 
+        |> getAllTypes
+        |> List.choose FsType.asMapped
         |> List.exists(fun mp -> mp.Name.StartsWith "HTML")
-    
+
     let fixHelperLines (f: FsFile) =
-        f |> fixFile (fun tp ->
-            match tp with 
-            | FsType.Module md -> 
+        f |> fixFile (fun ns tp ->
+            match tp with
+            | FsType.Module md ->
                 { md with
-                    HelperLines =                 
-                        md.HelperLines |> List.map(fun l -> 
+                    HelperLines =
+                        md.HelperLines |> List.map(fun l ->
                             l.Replace("Option.map","Microsoft.FSharp.Core.Option.map")
                 ) } |> FsType.Module
 
             | _ -> tp )
 
-    if isBrowser then 
-        { fo with 
-            Opens = fo.Opens @ ["Fable.Import.Browser"]
+    if isBrowser then
+        { fo with
+            Opens = fo.Opens @ ["Browser.Types"]
             Files = fo.Files |> List.map fixHelperLines }
-    else fo        
+    else fo
 
 let extractGenericParameterDefaults (f: FsFile): FsFile =
-    let fix f = 
-        let extractAliasesFromGenericParameterDefaults name tps = 
+    let fix f =
+        let extractAliasesFromGenericParameterDefaults name tps =
             let aliases = List<FsAlias>()
 
             tps |> List.choose FsType.asGenericParameterDefaults
                 |> List.iteri(fun i _ ->
                     {
                         Name = name
-                        Type = 
+                        Type =
                             {
                                 Type = simpleType name
-                                TypeParameters = 
+                                TypeParameters =
                                     (tps.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
                                     @ tps.[i+1 ..]
                             } |> FsType.Generic
-                        TypeParameters = tps.[i+1 ..]    
+                        TypeParameters = tps.[i+1 ..]
                     } |> aliases.Add
-                )    
-            aliases |> List.ofSeq |> List.map FsType.Alias 
-               
-        f |> fixFile(fun tp ->
-            match tp with 
+                )
+            aliases |> List.ofSeq |> List.map FsType.Alias
+
+        f |> fixFile (fun ns tp ->
+            match tp with
             | FsType.Module md ->
-                { md with 
-                    Types = 
+                { md with
+                    Types =
                         let tps = List<FsType>()
                         md.Types |> List.iter(fun tp ->
-                            match tp with 
-                            | FsType.Interface it -> 
+                            match tp with
+                            | FsType.Interface it ->
                                 it.TypeParameters
                                 |> extractAliasesFromGenericParameterDefaults it.Name
                                 |> tps.AddRange
-                                
+
                                 tp |> tps.Add
                             | FsType.Alias al ->
                                 al.TypeParameters
@@ -1302,55 +1309,55 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                         )
 
                         tps |> List.ofSeq
-                        
+
                 } |> FsType.Module
-            | _ -> tp 
+            | _ -> tp
         )
-        
+
     let flatten f =
-        f |> fixFile(fun tp ->
-            match tp with 
-            | FsType.GenericParameterDefaults gpd -> 
+        f |> fixFile (fun ns tp ->
+            match tp with
+            | FsType.GenericParameterDefaults gpd ->
                 { Name = gpd.Name; FullName = gpd.FullName } |> FsType.Mapped
-            | _ -> tp 
-    )           
-    
-    f 
+            | _ -> tp
+    )
+
+    f
     |> fix
     |> flatten
 
 let fixTypesHasESKeywords  (f: FsFile): FsFile =
-    f |> fixFile (fun tp ->
+    f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Generic gn ->
-            esKeywords 
-            |> Set.contains (getName tp) 
-            |> function 
+            esKeywords
+            |> Set.contains (getName tp)
+            |> function
                 | true -> { gn with Type = simpleType "obj"; TypeParameters = []} |> FsType.Generic
-                | _ -> 
-                    { gn with 
+                | _ ->
+                    { gn with
                         TypeParameters = gn.TypeParameters |> List.map(fun tp2 ->
-                        match tp2 with 
-                        | FsType.Mapped mp -> 
+                        match tp2 with
+                        | FsType.Mapped mp ->
                             if esKeywords.Contains mp.Name then simpleType "obj"
                             else tp2
-                        | _ -> tp2    
+                        | _ -> tp2
                     )
                     } |> FsType.Generic
         | _ -> tp
-    )    
+    )
 
 let extractTypesInGlobalModules  (f: FsFile): FsFile =
-    { f with 
+    { f with
         Modules = f.Modules |> List.map(fun md ->
             let tps = List []
-            md.Types |> List.iter(fun tp -> 
-                match tp with 
-                | FsType.Module md2 -> 
+            md.Types |> List.iter(fun tp ->
+                match tp with
+                | FsType.Module md2 ->
                     if md2.Name = "global" then md2.Types |> tps.AddRange
                     else tp |> tps.Add
-                | _ -> tp |> tps.Add  
+                | _ -> tp |> tps.Add
             )
-            { md with Types = tps |> List.ofSeq }    
-        ) 
+            { md with Types = tps |> List.ofSeq }
+        )
     }

@@ -4,14 +4,14 @@ open System
 
 let stringContainsAny (a: string) (b: string list) : bool =
     b |> List.exists a.Contains
-let (|Capital|_|) (letter: string)= 
+let (|Capital|_|) (letter: string)=
     let capitals = [ 'A' .. 'Z' ] |> Seq.map string
     match Seq.contains letter capitals with
     | true -> Some letter
     | false -> None
     // Char.IsUpper https://github.com/fable-compiler/Fable/issues/1236
     // if letter.Length = 1 && Char.IsUpper letter.[0] then Some letter else None
-    
+
 let replace (pattern:string) (destPattern:string) (text: string) =
     text.Replace(pattern,destPattern)
 
@@ -22,47 +22,45 @@ module ModuleName =
 
     let (|Normal|Parts|) (moduleName: string) =
         let moduleName2 = forwordSlash moduleName
-        if moduleName2.Contains "/" then 
+        if moduleName2.Contains "/" then
             let parts = moduleName2.Split('/') |> List.ofSeq
             Parts parts
-        else Normal  
+        else Normal
 
     let normalize moduleName =
         let moduleName2 = forwordSlash moduleName
-        match moduleName2 with 
-        | Normal -> moduleName2  
-        | Parts parts -> moduleName2 |> sprintf "./%s"    
+        match moduleName2 with
+        | Normal -> moduleName2
+        | Parts parts -> moduleName2 |> sprintf "./%s"
 
 let private digits = [ '0' .. '9' ] |> Seq.map string
 
 let isDigit digit = Seq.contains digit digits
 
-let (|Digit|_|) (digit: string) = 
+let (|Digit|_|) (digit: string) =
     match isDigit digit with
     | true -> Some digit
     | false -> None
     // Char.IsNumber https://github.com/fable-compiler/Fable/issues/1237
     // if digit.Length = 1 && Char.IsNumber digit.[0] then Some digit else None
 
-
-    
-let createEnumNameParts (name: string) = 
+let createEnumNameParts (name: string) =
     let tokens = Seq.map string name
-    let rec splitParts part parts  = 
+    let rec splitParts part parts  =
         function
         | [] -> part :: parts
-        | Digit n :: rest when 
+        | Digit n :: rest when
             // Append N to beginning only if enum starts with digit
             List.isEmpty parts
-            && part = "" -> splitParts ("N" + n) parts rest 
+            && part = "" -> splitParts ("N" + n) parts rest
         | Capital letter :: rest when part = "" -> splitParts letter parts rest
         | Capital letter :: rest -> splitParts letter (part :: parts) rest
         | "-" :: rest -> splitParts "" (part :: parts) rest
         | "." :: rest -> splitParts "_" (part :: parts) rest
         | token :: rest ->  splitParts (part + token) parts rest
-    tokens 
+    tokens
     |> List.ofSeq
-    |> splitParts "" []  
+    |> splitParts "" []
     |> List.rev
 
 let capitalize (input: string): string =
@@ -73,43 +71,67 @@ let lowerFirst (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
     else sprintf "%c%s" (Char.ToLower input.[0]) (input.Substring 1)
 
-let createEnumName s =
+let isIdentifier (input: string) =
+    let isLetterOrDigitOrUnderscore c = Char.IsLetterOrDigit c || (c = '_')
+    if String.IsNullOrWhiteSpace input then false
+    else Seq.forall isLetterOrDigitOrUnderscore input
+
+let asIdentifier (input: string) =
+    input |> String.map (fun c -> if Char.IsLetterOrDigit c then c else '_')
+
+let createEnumName (s: string) =
     if String.IsNullOrWhiteSpace s then "Empty"
-    else s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+    else
+        // let s = s |> asIdentifier
+        let nm = s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+        if isIdentifier nm then nm else "``" + nm.Replace("`", "'") + "``"
 
 // by default Fable lowercases the first letter of the name for the value
 let nameEqualsDefaultFableValue (name: string) (value: string): bool =
     let defaultFableValue =
-        sprintf "%s%s" 
+        sprintf "%s%s"
             (name.Substring(0,1).ToLower())
             (name.Substring(1))
     defaultFableValue.Equals value
 
-let createModuleNameParts (name: string) = 
+let createModuleNameParts (name: string) =
 
     let tokens = Seq.map string name
-    let rec splitParts part parts  = 
+    let rec splitParts part parts  =
         function
         | [] -> part :: parts
         | "-" :: rest -> splitParts "" (part :: parts) rest
         | "/" :: rest -> splitParts "" (part :: parts) rest
         | "." :: rest -> splitParts "" (part :: parts) rest
         | token :: rest ->  splitParts (part + token) parts rest
-    tokens 
+    tokens
     |> List.ofSeq
-    |> splitParts "" []  
+    |> splitParts "" []
     |> List.rev
 
 let escapeWord (s: string) =
     if String.IsNullOrEmpty s then ""
     else
         let s = s.Replace("'","") // remove single quotes
-        if Keywords.reserved.Contains s 
+        if Keywords.reserved.Contains s
             || Keywords.keywords.Contains s
             || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
             // || Char.IsNumber s.[0] then // TODO https://github.com/fable-compiler/Fable/issues/1237
             || isDigit (s.Substring(0,1))
             || s.Substring(0,1).IndexOfAny [|'.';'['|] <> -1 // starts with
+            || s.Equals "_"
+        then
+            sprintf "``%s``" s
+        else
+            s
+
+let escapeProperty (s: string) =
+    if String.IsNullOrEmpty s then ""
+    else
+        if Keywords.reserved.Contains s
+            || Keywords.keywords.Contains s
+            || not (isIdentifier s)
+            || isDigit (s.Substring(0,1))
             || s.Equals "_"
         then
             sprintf "``%s``" s
@@ -128,9 +150,18 @@ let fixModuleName (s: string) =
         else s
     s
 
-let removeQuotes (s:string): string =
-    if isNull s then ""
-    else s.Replace("\"","").Replace("'","")
+let removeQuotes (s: string) =
+    if String.IsNullOrEmpty s then ""
+    else
+        let c = s.[0]
+        if (c = '\"' || c = ''')
+        then s.Trim(c)
+        else s
+
+let makePartName (s: string) =
+    let parts = s.Trim('`') |> createModuleNameParts
+    let name = parts  |> List.map capitalize |> String.concat ""
+    name |> asIdentifier
 
 // gets the JavaScript module name
 // intended for use by SourceFile.fileName which has slashes normalized
@@ -142,7 +173,7 @@ let getJsModuleName (path: string): string =
                 let inm = path.LastIndexOf "node_modules"
                 if inm = -1 then x
                 else x.Substring(inm+13)
-            |> fun x -> 
+            |> fun x ->
                 let is = x.LastIndexOf "@"
                 if is = -1 then x
                 else x.Substring(is)
@@ -151,13 +182,14 @@ let getJsModuleName (path: string): string =
                     |> List.ofArray
                     |> List.filter (fun s -> s <> "index.d.ts" && s <> "types")
 
-    let out = 
-        match parts with 
-            | "@types"::x::xs -> 
+    let out =
+        match parts with
+            | "@types"::x::xs ->
                 let xs' = x.Replace("__", "/") :: xs
                 String.Join("/", xs')
-            | x::xs when x.StartsWith "@" -> 
+            | x::xs when x.StartsWith "@" ->
                 String.Join("/", x :: xs)
+            // TODO: Shouldn't this be List.last instead?
             | xs -> List.head xs
     out.Replace(".ts","").Replace(".d","")
 

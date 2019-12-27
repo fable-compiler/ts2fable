@@ -2,7 +2,7 @@
 module rec Stage.PrivateCtor
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("*","test")>] babylon: BABYLON.IExports = jsNative
 
@@ -19,7 +19,7 @@ module BABYLON =
     /// Expected FS output: 'Stage' with 'registerStep' and 'clear', 'StageStatic' with the static Create method
     /// **********
     type [<AllowNullLiteral>] Stage<'T> =
-        inherit Array<TypeLiteral_01<'T>>
+        inherit Array<StageArray<'T>>
         /// <summary>Registers a step in an ordered way in the targeted stage.</summary>
         /// <param name="index">Defines the position to register the step in</param>
         /// <param name="component">Defines the component attached to the step</param>
@@ -36,7 +36,7 @@ module BABYLON =
         /// Creates a new Stage.
         abstract Create: unit -> Stage<'T>
 
-    type [<AllowNullLiteral>] TypeLiteral_01<'T> =
+    type [<AllowNullLiteral>] StageArray<'T> =
         abstract index: float with get, set
         abstract ``component``: ISceneComponent with get, set
         abstract action: 'T with get, set

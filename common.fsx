@@ -22,26 +22,16 @@ let versionFromGlobalJson : DotNet.CliInstallOptions -> DotNet.CliInstallOptions
         { o with Version = DotNet.Version (DotNet.getSDKVersionFromGlobalJson()) }
     )
 
-let dotnetSdk = lazy DotNet.install versionFromGlobalJson
-let inline dtntWorkDir wd =
-    DotNet.Options.lift dotnetSdk.Value
-    >> DotNet.Options.withWorkingDirectory wd
-
-let run' timeout (cmd:string) dir args  =
-    if Process.execSimple (fun info ->
-        { info with
-            FileName = cmd
-            WorkingDirectory =
-                if not (String.IsNullOrWhiteSpace dir) then dir else info.WorkingDirectory
-            Arguments = args
-        }
-    ) timeout <> 0 then
+let run cmd dir args =
+    let result =
+        CreateProcess.fromRawCommandLine cmd args
+        |> CreateProcess.withWorkingDirectory dir
+        |> Proc.run
+    if result.ExitCode <> 0 then
         failwithf "Error while running '%s' with args: %s " cmd args
 
-let run = run' System.TimeSpan.MaxValue
-
 let platformTool tool =
-    Process.tryFindFileOnPath tool
+    ProcessUtils.tryFindFileOnPath tool
     |> function Some t -> t | _ -> failwithf "%s not found" tool
 
 let npmTool = platformTool "npm"
@@ -58,17 +48,13 @@ let testDir = "./test"
 let cliProj = cliDir</>"ts2fable.fsproj"
 let version = Environment.environVarOrDefault "APPVEYOR_REPO_TAG_NAME" BuildServer.buildVersion
 let isAppveyor = String.isNotNullOrEmpty BuildServer.appVeyorBuildVersion
-let node args =
-    run nodeTool "./" args
 
-let npm args =
-    run npmTool "./" args
+let node args = run nodeTool "./" args
+let npm args = run npmTool "./" args
+let git args = run gitTool "./" args
 
-let git args =
-    run gitTool "./" args
-
-Target.create "YarnInstall" (fun _ ->
-    Yarn.install id
+Target.create "NpmInstall" (fun _ ->
+    npm "install"
 )
 
 Target.create "Restore" (fun _ ->
@@ -79,13 +65,7 @@ Target.create "Restore" (fun _ ->
 )
 
 Target.create "BuildCli" (fun _ ->
-    let result =
-        DotNet.exec
-            (dtntWorkDir toolDir)
-            "fable"
-            "webpack --port free -- --config webpack.config.cli.js"
-
-    if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
+    npm "run build-cli"
 )
 
 
@@ -120,7 +100,7 @@ Target.create "RunCli" (fun _ ->
                 "test-compile/Protobuf.fs"
             ]
         ts2fable ["node_modules/synctasks/dist/SyncTasks.d.ts";"test-compile/SyncTasks.fs"]
-        ts2fable ["node_modules/subscribableevent/dist/SubscribableEvent.d.ts";"test-compile/SubscribableEvent.fs"]
+        ts2fable ["node_modules/subscribableevent/dist-types/SubscribableEvent.d.ts";"test-compile/SubscribableEvent.fs"]
         ts2fable
             [
                 "node_modules/office-ui-fabric-react/lib/index.d.ts"
@@ -135,7 +115,7 @@ Target.create "RunCli" (fun _ ->
                 "test-compile/ReactXP.fs"
                 "-e"
                 "reactxp"
-            ]    
+            ]
     ]
     |> Async.Parallel
     |> Async.RunSynchronously
@@ -152,13 +132,7 @@ Target.create "BuildTestCompile" (fun _ ->
 )
 
 Target.create "BuildTest" (fun _ ->
-    let result =
-        DotNet.exec
-            (dtntWorkDir toolDir)
-            "fable"
-            "webpack --port free -- --config webpack.config.test.js"
-
-    if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
+    npm "run build-test"
 )
 
 Target.create "RunTest" (fun _ ->
@@ -170,14 +144,14 @@ Target.create "RunTest" (fun _ ->
     else
         node <| sprintf "%s %s" mochaPath (buildDir</>"test.js" |> Path.getFullName)
 )
-            
+
 Target.create "PushToExports" (fun _ ->
 
     let configGitAuthorization() =
         Choco.install id "openssl.light"
         Choco.install id "openssh"
 
-        let sshDir = (Fake.SystemHelper.Environment.GetFolderPath Fake.SystemHelper.Environment.UserProfile)</>".ssh"
+        let sshDir = (Environment.GetFolderPath Environment.SpecialFolder.UserProfile)</>".ssh"
 
         Directory.create sshDir
 
@@ -248,7 +222,7 @@ Target.create "PushForComparision" (fun _ ->
             sprintf "commit -m comparision" 
             |> git
             |> ignore
-            
+
         git "remote remove upstream"
         git "remote add upstream git@github.com:fable-compiler/ts2fable-exports.git"
         git "fetch upstream"
@@ -257,22 +231,18 @@ Target.create "PushForComparision" (fun _ ->
         stageAll repositoryDir
         try 
             commit()
-        with ex -> printf "%A" ex        
+        with ex -> printf "%A" ex
         git "push origin -f"
 )
 
 Target.create "Cli.Publish" (fun _ ->
     if (isAppveyor) then
-        let result =
-            DotNet.exec
-                (dtntWorkDir toolDir)
-                "fable"
-                (sprintf "yarn-fable-splitter -- %s  --config %s --port free" cliProj (toolDir</>"splitter.config.js"))
-        if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
+        npm "run build"
+
         node (toolDir</>"build-update.package.js")
         node (toolDir</>"add-shebang.js")
 
-        Yarn.exec (sprintf "version --new-version %s --no-git-tag-version" version) id
+        npm (sprintf "version %s --allow-same-version --no-git-tag-version" version)
         npm "pack"
 
         let repoName = Environment.environVar "appveyor_repo_name"
@@ -281,33 +251,21 @@ Target.create "Cli.Publish" (fun _ ->
 
         if repoName = "fable-compiler/ts2fable" && repoBranch = "master" && String.isNullOrEmpty prHeadRepoName then
             let line = sprintf "//registry.npmjs.org/:_authToken=%s\n" <| Environment.environVar "npmauthtoken"
-            let npmrc = (Fake.SystemHelper.Environment.GetFolderPath Fake.SystemHelper.Environment.UserProfile)</>".npmrc"
+            let npmrc = (Environment.GetFolderPath Environment.SpecialFolder.UserProfile)</>".npmrc"
             File.writeNew npmrc [line]
             npm "whoami"
             if not <| version.Contains("-build") then
-                Yarn.exec (sprintf "publish ts2fable-%s.tgz --new-version %s" version version) id
+                npm (sprintf "publish ts2fable-%s.tgz --new-version %s" version version)
             else
-                Yarn.exec (sprintf "publish ts2fable-%s.tgz --new-version %s --tag next" version version) id
+                npm (sprintf "publish ts2fable-%s.tgz --new-version %s --tag next" version version)
 )
 
 Target.create "WatchTest" (fun _ ->
-    let result =
-        DotNet.exec
-            (dtntWorkDir toolDir)
-            "fable"
-            "webpack --port free -- --config webpack.config.test.js -w"
-
-    if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
+    npm "run watch-test"
 )
 
 Target.create "WatchCli" (fun _ ->
-    let result =
-        DotNet.exec
-            (dtntWorkDir toolDir)
-            "fable"
-            "webpack --port free -- --config webpack.config.cli.js -w"
-
-    if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
+    npm "run watch-cli"
 )
 
 Target.create "CliTest" ignore
@@ -327,28 +285,16 @@ Target.create "CopyMonacoModules" (fun _ ->
 )
 
 Target.create "WebApp.Build" (fun _ ->
-    let result =
-        DotNet.exec
-            (dtntWorkDir "web-app")
-            "fable"
-            "webpack --port free -- -p"
-
-    if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
+    npm "run webapp-build"
 )
 
 Target.create "WebApp.Watch" (fun _ ->
-    let result =
-        DotNet.exec
-            (dtntWorkDir "web-app")
-            "fable"
-            "webpack-dev-server --port free -- -w"
-
-    if not result.OK then failwithf "dotnet fable failed with code %i" result.ExitCode
+    npm "run webapp-watch"
 )
 
 Target.create "WebApp.Publish" (fun _ ->
     if (isAppveyor) then
-        Yarn.exec (sprintf "version --new-version %s --no-git-tag-version" version) id
+        npm (sprintf "version %s --no-git-tag-version" version)
 
         let repoName = Environment.environVar "appveyor_repo_name"
         let repoBranch = Environment.environVar "appveyor_repo_branch"
@@ -372,62 +318,79 @@ Target.create "WebApp.Publish" (fun _ ->
 )
 
 Target.create "WebApp.Setup" ignore
+
 Target.create "Watch" (fun _ ->
     let watchCli =
         async {
-            DotNet.exec
-                (dtntWorkDir toolDir)
-                "fable"
-                "webpack --port free -- --config webpack.config.cli.js -w"
-            |> ignore            
+            npm "run watch-cli"
         }
     let watchTest =
         async {
-            DotNet.exec
-                (dtntWorkDir toolDir)
-                "fable"
-                "webpack --port free -- --config webpack.config.test.js -w"
-            |> ignore            
+            npm "run watch-test"
         }
     [watchCli;watchTest]
     |> Async.Parallel
     |> Async.RunSynchronously
-    |> ignore    
-        
+    |> ignore
+
 )
 
-"CliTest"
-    <== [ "BuildCli"
-          "RunCli"
-          "BuildTestCompile" ]
+"NpmInstall"
+    ==> "Restore"
+    ==> "BuildCli"
+    ==> "RunCli"
+    // ==> "BuildTestCompile"
+    ==> "CliTest"
+
+// "CliTest"
+//     <== [ "BuildCli"
+//           "RunCli"
+//           "BuildTestCompile" ]
+
+"NpmInstall"
+    ==> "Restore"
+    ==> "BuildTest"
+    ==> "RunTest"
+    ==> "CliTest"
+    ==> "BuildAll"
+
+// "BuildAll"
+//     <== [ "NpmInstall"
+//           "Restore"
+//           "BuildTest"
+//           "RunTest"
+//           "CliTest" ]
 
 "BuildAll"
-    <== [ "YarnInstall"
-          "Restore"
-          "BuildTest"
-          "RunTest"
-          "CliTest" ]
+    ==> "PushToExports"
+    ==> "WebApp.Publish"
+    ==> "Cli.Publish"
+    ==> "Deploy"
 
-"Deploy"
-    <== [ "BuildAll"
-          "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
-          "WebApp.Publish"
-          "Cli.Publish" ]
+// "Deploy"
+//     <== [ "BuildAll"
+//           "PushToExports"   //https://github.com/fable-compiler/ts2fable-exports
+//           "WebApp.Publish"
+//           "Cli.Publish" ]
 
-"WebApp.Setup"
-    <== [ "YarnInstall"
-          "Restore"
-          "CopyMonacoModules" ]
+"NpmInstall"
+    ==> "Restore"
+    ==> "CopyMonacoModules"
+    ==> "WebApp.Setup"
+
+// "WebApp.Setup"
+//     <== [ "NpmInstall"
+//           "Restore"
+//           "CopyMonacoModules" ]
 
 "WebApp.Setup"
     ==> "WebApp.Build"
     ==> "WebApp.Publish"
-    
+
 "WebApp.Setup"
-    ==> "WebApp.Watch" 
+    ==> "WebApp.Watch"
 
 "PushForComparision"
-    <==
-         [ "RunCli"
-           "BuildTestCompile" 
-           "RunTest" ] 
+    <== [ "RunCli"
+          "BuildTestCompile"
+          "RunTest" ]

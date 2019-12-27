@@ -2,7 +2,7 @@
 module rec f4
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 type DetailedHTMLFactory = React.DetailedHTMLFactory
 type DialogHTMLAttributes = React.DialogHTMLAttributes

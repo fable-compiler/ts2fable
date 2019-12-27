@@ -4,14 +4,11 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\paket-files\webapp\fable-compiler\ts2fable-exports\Monaco.fs">
-      <Paket>True</Paket>
-      <Link>paket-files/Monaco.fs</Link>
-    </Compile>
+    <ProjectReference Include="..\src\ts2fable.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\ts2fable.fsproj" />
     <Compile Include="Samples.fs" />
+    <Compile Include="Monaco.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

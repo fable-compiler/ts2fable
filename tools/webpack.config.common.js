@@ -48,7 +48,7 @@ function forceGet(obj, path, errorMsg) {
 function getModuleRules(isProduction) {
   var babelOptions = fableUtils.resolveBabelOptions({
     presets: [
-      ["env", { "targets": { "browsers": "> 1%" }, "modules": false }]
+      ["@babel/preset-env", { "targets": { "browsers": "> 1%" }, "modules": false }]
     ],
   });
 

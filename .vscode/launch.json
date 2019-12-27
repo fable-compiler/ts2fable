@@ -18,7 +18,7 @@
         "request": "launch",
         "name": "Launch Cli",
         "protocol": "inspector",
-        "program": "${workspaceRoot}/build/ts2fable.js",
+        "program": "${workspaceRoot}/dist/ts2fable.js",
         "args":[
           "${workspaceRoot}/node_modules/office-ui-fabric-react/lib/index.d.ts",
           "${workspaceRoot}/test-compile/OfficeReact.fs",
@@ -29,5 +29,17 @@
         "sourceMaps": true,
         "outFiles": ["${workspaceRoot}/*/*.js"]
       },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Run Mocha Tests",
+        "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+        "args": [
+            "--no-timeouts",
+            "--colors",
+            "${workspaceFolder}/build"
+        ],
+        "internalConsoleOptions": "openOnSessionStart"
+      }
   ]
 }

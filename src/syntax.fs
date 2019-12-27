@@ -35,12 +35,12 @@ type FsTypeLiteral =
         Members: FsType list
     }
 
-type FsGenericParameterDefaults = 
+type FsGenericParameterDefaults =
     {
         Default: FsType
         Name: string
         FullName: string
-    }        
+    }
 
 [<RequireQualifiedAccess>]
 type FsEnumCaseType =
@@ -222,17 +222,17 @@ type FsVariable =
         IsStatic: bool
         Accessibility : FsAccessibility option
     }
-    
+
 with
     member x.IsGlobal = x.Export.IsSome && x.Export.Value.IsGlobal
-    override x.Equals(y) = 
-        match y with 
+    override x.Equals(y) =
+        match y with
         | :? FsVariable as other -> x.Name = other.Name
         | _ -> false
     override x.GetHashCode() = hash x.Name
-    interface System.IComparable with 
-        member x.CompareTo y = 
-            match y with 
+    interface System.IComparable with
+        member x.CompareTo y =
+            match y with
             | :? FsVariable as vb -> compare x.Name vb.Name
             | _ -> invalidArg "y" "cannot compare values of different types"
 
@@ -244,10 +244,10 @@ type FsMapped =
     }
 
 let simpleType name: FsType =
-    { 
+    {
         // Namespace = []
         Name = name
-        FullName = name 
+        FullName = name
     }
     |> FsType.Mapped
 
@@ -279,6 +279,7 @@ type FsType =
 
 [<RequireQualifiedAccess>]
 module FsType =
+    let isMapped tp = match tp with | FsType.Mapped _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
@@ -313,9 +314,9 @@ with
 
 [<RequireQualifiedAccess>]
 type FsFileKind =
-    | Index 
+    | Index
     | Extra of string(*relative path to index file*)
-    
+
 
 type FsFile =
     {
@@ -359,9 +360,9 @@ let rec getName (tp: FsType) =
     | FsType.Generic gn -> getName gn.Type
     | FsType.Mapped mp -> mp.Name
     | FsType.Import im ->
-        match im with 
+        match im with
         | FsImport.Type imtp -> imtp.ImportSpecifier.Name
-        | _ -> "" 
+        | _ -> ""
     | FsType.Array ar ->
         let name = getName ar
         if name = "" then "" else sprintf "%sArray" name
@@ -374,7 +375,33 @@ let rec getFullName (tp: FsType) =
     | FsType.Generic gn -> getFullName gn.Type
     | FsType.File fl -> fl.FileName
     | _ -> getName tp
-  
+
+let getTypeName (tp: FsType) =
+    match tp with
+    | FsType.Interface t -> t.GetType().ToString()
+    | FsType.Function t -> t.GetType().ToString()
+    | FsType.Property t -> t.GetType().ToString()
+    | FsType.Variable t -> t.GetType().ToString()
+    | FsType.Module t -> t.GetType().ToString()
+    | FsType.Enum t -> t.GetType().ToString()
+    | FsType.Param t -> t.GetType().ToString()
+    | FsType.Alias t -> t.GetType().ToString()
+    | FsType.File t -> t.GetType().ToString()
+    | FsType.Generic t -> t.GetType().ToString()
+    | FsType.Mapped t -> t.GetType().ToString()
+    | FsType.Import t -> t.GetType().ToString()
+    | FsType.Array t -> t.GetType().ToString()
+    | FsType.ExportAssignment t -> t.GetType().ToString()
+    | FsType.GenericParameterDefaults t -> t.GetType().ToString()
+    | FsType.None as t -> t.GetType().ToString() + ".None"
+    | FsType.TODO as t -> t.GetType().ToString() + ".TODO"
+    | FsType.StringLiteral t -> t.GetType().ToString()
+    | FsType.This as t -> t.GetType().ToString() + ".This"
+    | FsType.Tuple t -> t.GetType().ToString()
+    | FsType.TypeLiteral t -> t.GetType().ToString()
+    | FsType.Union t -> t.GetType().ToString()
+    | FsType.FileOut t -> t.GetType().ToString()
+
 let getAccessibility (tp: FsType) : FsAccessibility option =
     match tp with
     | FsType.Interface it -> it.Accessibility

@@ -2,7 +2,7 @@
 module rec duplicatedVariableExports
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("*","reactxp")>] reactXP: ReactXP.IExports = jsNative
 
@@ -37,8 +37,6 @@ module ReactXP =
         abstract UserPresence: RXInterfaces.UserPresence
         abstract View: obj
         abstract WebView: RXInterfaces.WebViewConstructor
-        abstract createElement: obj
-        abstract Children: React.ReactChildren
         abstract __spread: obj option
 
     type Accessibility =

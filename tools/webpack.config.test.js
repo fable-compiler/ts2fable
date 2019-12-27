@@ -18,7 +18,10 @@ module.exports = {
       path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
   },
   module: {
-    rules: common.getModuleRules()
+    rules: [{
+            test: /\.fs(x|proj)?$/,
+            use: "fable-loader"
+        }]
   },
   resolve: {
     modules: [common.config.nodeModulesDir]

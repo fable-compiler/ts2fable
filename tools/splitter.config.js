@@ -1,5 +1,5 @@
 const path = require("path");
-const fableUtils = require("fable-utils");
+// const fableUtils = require("fable-utils");
 var common = require("./webpack.config.common");
 
 function resolve(filePath) {
@@ -10,7 +10,7 @@ function resolve(filePath) {
 module.exports = {
   entry: common.config.cliEntry,
   outDir: common.config.distDir,
-  babel: fableUtils.resolveBabelOptions({
-    plugins: ["transform-es2015-modules-commonjs"],
-  }),
+  babel: {
+    plugins: ["@babel/plugin-transform-modules-commonjs"],
+  },
 }

@@ -2,7 +2,7 @@
 module rec SceneLoader.ImportMeshAsync
 open System
 open Fable.Core
-open Fable.Import.JS
+open Fable.Core.JS
 
 let [<Import("*","test")>] babylon: BABYLON.IExports = jsNative
 
@@ -40,9 +40,9 @@ module BABYLON =
         /// Test:
         /// 1) the callback 'onProgress' should not be Option<Option<_>>. Instead it should be an optional parameter of type function.
         /// 2) the return value should be Promise<Interface>, not Promise<obj>. (Currently it generates 'TypeLiteral_01', would be great if it generated a better-named interface like 'SceneLoaderImportMeshAsyncReturn')
-        abstract ImportMeshAsync: meshNames: obj option * rootUrl: string * ?sceneFilename: string * ?scene: Scene * ?onProgress: (SceneLoaderProgressEvent -> unit) * ?pluginExtension: string -> Promise<TypeLiteral_01>
+        abstract ImportMeshAsync: meshNames: obj option * rootUrl: string * ?sceneFilename: string * ?scene: Scene * ?onProgress: (SceneLoaderProgressEvent -> unit) * ?pluginExtension: string -> Promise<SceneLoaderStaticImportMeshAsyncPromise>
 
-    type [<AllowNullLiteral>] TypeLiteral_01 =
+    type [<AllowNullLiteral>] SceneLoaderStaticImportMeshAsyncPromise =
         abstract meshes: ResizeArray<AbstractMesh> with get, set
         abstract particleSystems: ResizeArray<IParticleSystem> with get, set
         abstract skeletons: ResizeArray<Skeleton> with get, set
