@@ -273,7 +273,7 @@ Target.create "Deploy" ignore
 Target.create "BuildAll" ignore
 
 // Web App
-let jsLibsOutput = "web-app" </> "public" </> "libs"
+let jsLibsOutput = "web-app" </> "output" </> "libs"
 
 Target.create "CopyMonacoModules" (fun _ ->
     let requireJsOutput = jsLibsOutput </> "requirejs"
