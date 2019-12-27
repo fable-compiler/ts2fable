@@ -255,9 +255,9 @@ Target.create "Cli.Publish" (fun _ ->
             File.writeNew npmrc [line]
             npm "whoami"
             if not <| version.Contains("-build") then
-                npm (sprintf "publish ts2fable-%s.tgz --new-version %s" version version)
+                npm (sprintf "publish ts2fable-%s.tgz" version)
             else
-                npm (sprintf "publish ts2fable-%s.tgz --new-version %s --tag next" version version)
+                npm (sprintf "publish ts2fable-%s.tgz --tag next" version)
 )
 
 Target.create "WatchTest" (fun _ ->
