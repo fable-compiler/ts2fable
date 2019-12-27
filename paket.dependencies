@@ -1,8 +1,8 @@
 source https://nuget.org/api/v2
 storage:none
 
-clitool dotnet-fable
 nuget Fable.Core
+nuget Fable.Node
 nuget Fable.Import.Browser
 
 group netcorebuild
@@ -31,11 +31,9 @@ group WebApp
     nuget Fable.Elmish.Browser
     nuget Fable.Elmish.Debugger
     nuget Fable.Elmish.HMR
-    nuget Fable.PowerPack
+    nuget Fable.FontAwesome.Free
+    nuget Fable.Promise
     nuget Fable.React
-    nuget Fulma prerelease
-    nuget Fulma.Extensions prerelease
+    nuget Fulma
+    nuget Fulma.Extensions.Wikiki.PageLoader
 
-    github fable-compiler/ts2fable-exports:dev Monaco.fs
-
-    clitool dotnet-fable

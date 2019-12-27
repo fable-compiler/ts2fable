@@ -1,2 +1,2 @@
-dotnet restore dotnet-fake.proj
+dotnet tool restore
 dotnet fake %*

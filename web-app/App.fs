@@ -1,13 +1,13 @@
 module App.Main
 
-open Elmish
-open Fable.Import
 open Fable.Core
+open Elmish
 open Monaco
+// open Monaco.Monaco.Languages
 open ts2fable.Write
 open TypeScript
-open Monaco.Monaco.Languages
 open TypeScript.Ts
+
 type EditorState =
     | Loading
     | Loaded
@@ -49,11 +49,11 @@ let update msg model =
         { model with FSharpCode =
                         ts2fable model.HtmlCode }, Cmd.none
 
-open Fable.Helpers.React
-open Fable.Helpers.React.Props
+open Fable.React
+open Fable.React.Props
 open Fulma
-open Fulma.Extensions
-open Fulma.FontAwesome
+open Fulma.Extensions.Wikiki
+// open Fable.FontAwesome
 open Monaco.Monaco
 
 module Monaco =
@@ -73,7 +73,7 @@ module Monaco =
         | EditorDidMount of (Monaco.Editor.IEditor * Monaco.IExports -> unit)
         | RequireConfig of obj
 
-    let inline editor (props: Props list) : React.ReactElement =
+    let inline editor (props: Props list) : ReactElement =
         ofImport "default" "react-monaco-editor" (keyValueList CaseRules.LowerFirst props) []
 
 module Editor =
@@ -87,7 +87,7 @@ module Editor =
         | IsReadOnly of bool
         | EditorDidMount of (unit -> unit)
 
-    let inline editor (props: Props list) : React.ReactElement =
+    let inline editor (props: Props list) : ReactElement =
         ofImport "default" "./js/Editor.js" (keyValueList CaseRules.LowerFirst props) []
 
 module CopyButton =
@@ -97,7 +97,7 @@ module CopyButton =
     type Props =
         | Value of string
 
-    let inline copyButtton (props: Props list) : React.ReactElement =
+    let inline copyButtton (props: Props list) : ReactElement =
         ofImport "default" "./js/CopyButton.js" (keyValueList CaseRules.LowerFirst props) []
 
 let private navbarItem text sampleCode dispatch =
@@ -124,8 +124,8 @@ let private navbar dispatch =
             [ Navbar.Item.div [ ]
                 [ Button.a [ Button.Props [ Href "https://github.com/fable-compiler/ts2fable" ]
                              Button.Color IsDark ]
-                    [ Icon.faIcon [ ]
-                        [ Fa.icon Fa.I.Github ]
+                    [ //Icon.icon [ ]
+                      //  [ Fa.icon Fa.I.Github ]
                       span [ ]
                         [ str "Github" ] ] ] ] ]
 
@@ -178,7 +178,7 @@ open Elmish.HMR
 
 Program.mkProgram init update view
 #if DEBUG
-|> Program.withHMR
+|> Program.withConsoleTrace
 #endif
-|> Program.withReact "elmish-app"
+|> Program.withReactBatched "elmish-app"
 |> Program.run

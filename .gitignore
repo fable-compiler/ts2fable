@@ -1,6 +1,5 @@
 /public
 /src/*.txt
-package-lock.json
 output/**/*.js
 src/typescript2.fs
 *.tgz

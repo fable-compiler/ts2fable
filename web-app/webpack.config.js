@@ -1,6 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
-const fableUtils = require("fable-utils");
+// const fableUtils = require("fable-utils");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -10,20 +10,20 @@ function resolve(filePath) {
     return path.join(__dirname, filePath)
 }
 
-var babelOptions = fableUtils.resolveBabelOptions({
+var babelOptions = {
     presets: [
-        ["env", {
-            "targets": {
-                "browsers": ["last 2 versions"]
-            },
-            "modules": false
-        }],
-        "react"
+        // ["@babel/preset-env", {
+        //     "targets": {
+        //         "browsers": ["last 2 versions"]
+        //     },
+        //     "modules": false
+        // }],
+        "@babel/preset-react",
     ],
     plugins: [
-        "transform-class-properties"
+        "@babel/plugin-proposal-class-properties"
     ]
-});
+};
 
 var isProduction = process.argv.indexOf("-p") >= 0;
 console.log("Bundling for " + (isProduction ? "production" : "development") + "...");
@@ -41,13 +41,13 @@ module.exports = {
     entry: isProduction ? // We don't use the same entry for dev and production, to make HMR over style quicker for dev env
         {
             app: [
-                "babel-polyfill",
+                "@babel/polyfill",
                 resolve('./ts2fable-web-app.fsproj'),
                 resolve('sass/main.scss')
             ]
         } : {
             app: [
-                "babel-polyfill",
+                "@babel/polyfill",
                 resolve('./ts2fable-web-app.fsproj')
             ],
             style: [

@@ -80,11 +80,11 @@ let asIdentifier (input: string) =
     input |> String.map (fun c -> if Char.IsLetterOrDigit c then c else '_')
 
 let createEnumName (s: string) =
-    let s = s |> asIdentifier
     if String.IsNullOrWhiteSpace s then "Empty"
     else
+        // let s = s |> asIdentifier
         let nm = s |> createEnumNameParts |> List.map capitalize |> String.concat ""
-        if isIdentifier nm then nm else "``" + nm + "``"
+        if isIdentifier nm then nm else "``" + nm.Replace("`", "'") + "``"
 
 // by default Fable lowercases the first letter of the name for the value
 let nameEqualsDefaultFableValue (name: string) (value: string): bool =

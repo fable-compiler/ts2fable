@@ -1260,7 +1260,7 @@ let fixFsFileOut fo =
 
     if isBrowser then
         { fo with
-            Opens = fo.Opens @ ["Fable.Import.Browser"]
+            Opens = fo.Opens @ ["Browser.Types"]
             Files = fo.Files |> List.map fixHelperLines }
     else fo
 
