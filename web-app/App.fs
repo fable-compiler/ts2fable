@@ -3,7 +3,6 @@ module App.Main
 open Fable.Core
 open Elmish
 open Monaco
-// open Monaco.Monaco.Languages
 open ts2fable.Write
 open TypeScript
 open TypeScript.Ts

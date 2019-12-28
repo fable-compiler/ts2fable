@@ -331,6 +331,7 @@ type FsFileOut =
         Namespace: string
         Opens: string list
         Files: FsFile list
+        AbbrevTypes: string list
     }
 
 let isStatic (tp: FsType) =

@@ -188,6 +188,7 @@ module internal Bridge =
                     "Fable.Core.JS"
                 ]
             Files = fsFiles
+            AbbrevTypes = []
         }
         |> fixFsFileOut
 

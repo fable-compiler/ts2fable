@@ -339,7 +339,7 @@ Target.create "Watch" (fun _ ->
     ==> "Restore"
     ==> "BuildCli"
     ==> "RunCli"
-    // ==> "BuildTestCompile"
+    ==> "BuildTestCompile"
     ==> "CliTest"
 
 // "CliTest"

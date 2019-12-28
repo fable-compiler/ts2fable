@@ -3,7 +3,8 @@ open ts2fable.Naming
 
 let printType (tp: FsType): string =
     match tp with
-    | FsType.Mapped mp -> mp.Name
+    | FsType.Mapped mp ->
+        mp.Name
     | FsType.Array at ->
         sprintf "ResizeArray<%s>" (printType at)
     | FsType.Union un ->
@@ -298,7 +299,11 @@ let printFsFile version (file: FsFileOut): ResizeArray<string> =
     for opn in file.Opens do
         sprintf "open %s" opn |> lines.Add
 
-    sprintf "" |> lines.Add
+    if not (List.isEmpty file.AbbrevTypes) then
+        lines.Add ""
+        file.AbbrevTypes |> List.iter lines.Add
+
+    lines.Add ""
     for f in file.Files do
         f.Modules
             |> List.filter (fun md -> md.Types.Length > 0)
