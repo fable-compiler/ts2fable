@@ -4325,13 +4325,10 @@ module Ts =
     type [<AllowNullLiteral>] CompilerHost =
         inherit ModuleResolutionHost
         abstract getSourceFile: (string -> SourceFile option) with get, set
-        // abstract getSourceFile: fileName: string * languageVersion: ScriptTarget * ?onError: (string -> unit) * ?shouldCreateNewSourceFile: bool -> SourceFile option
         abstract getSourceFileByPath: fileName: string * path: Path * languageVersion: ScriptTarget * ?onError: (string -> unit) * ?shouldCreateNewSourceFile: bool -> SourceFile option
         abstract getCancellationToken: unit -> CancellationToken
-        // abstract getDefaultLibFileName: options: CompilerOptions -> string
         abstract getDefaultLibFileName: (CompilerOptions -> string) with get, set
         abstract getDefaultLibLocation: unit -> string
-        // abstract writeFile: WriteFileCallback with get, set
         abstract writeFile: ((string * string) -> unit) with get, set
         abstract getCurrentDirectory: (unit -> string) with get, set
         abstract getCanonicalFileName: (string -> string) with get, set
@@ -5989,7 +5986,7 @@ module Ts =
 
     type [<StringEnum>] [<RequireQualifiedAccess>] UserPreferencesImportModuleSpecifierPreference =
         | Relative
-        | [<CompiledName "non-relative">] Non_relative
+        | [<CompiledName "non-relative">] NonRelative
 
     type [<StringEnum>] [<RequireQualifiedAccess>] UserPreferencesImportModuleSpecifierEnding =
         | Minimal

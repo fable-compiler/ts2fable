@@ -4,7 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="node/fileSystem.fs" />
-    <Compile Include="Yargs.fs" />
     <Compile Include="TypeScript.fs" />
     <Compile Include="keywords.fs" />
     <Compile Include="naming.fs" />
