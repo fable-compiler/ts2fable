@@ -4,7 +4,6 @@ open Fable.Core
 open Fable.Core.JsInterop
 open TypeScript
 open TypeScript.Ts
-open Yargs
 open Node.Api
 
 open ts2fable.Naming

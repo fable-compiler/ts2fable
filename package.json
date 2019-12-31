@@ -41,8 +41,7 @@
   },
   "homepage": "https://github.com/fable-compiler/ts2fable#readme",
   "dependencies": {
-    "typescript": "^3.7.3",
-    "yargs": "^15.0.2"
+    "typescript": "^3.7.4"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
@@ -99,11 +98,11 @@
     "react-resize-detector": "^3.0.1",
     "reactxp": "^1.0.2",
     "requirejs": "^2.3.5",
-    "rollup": "^1.27.8",
+    "rollup": "^1.27.14",
     "sass-loader": "^7.0.3",
     "style-loader": "^0.21.0",
     "vscode": "^1.1.36",
-    "webpack": "^4.41.4",
+    "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.10.1"
   },
