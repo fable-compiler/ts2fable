@@ -27,7 +27,7 @@ ts2fable node_modules/office-ui-fabric-react/lib/index.d.ts test-compile/OfficeR
 ```
 
 You can find more information about how to interact with JavaScript
-from F# [here](https://github.com/fable-compiler/Fable/blob/master/docs/source/docs/interacting.md).
+from F# [here](https://fable.io/docs/communicate/js-from-fable.html).
 Please note the parser is not perfect and some tweaking by hand may be needed. Please submit bugs as [issues on GitHub](https://github.com/fable-compiler/ts2fable/issues).
 
 ### Online Version
