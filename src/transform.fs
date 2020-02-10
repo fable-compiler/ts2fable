@@ -982,7 +982,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
     /// so do a second pass, and just replace them with interfaces with a not quite so pretty name.
     /// Note: in an ideal world with enough time, this pass would not find anything, and all TLs would be accounted for in the first pass with pretty names.
     let extractTypeLiterals_pass2 (f: FsFile): FsFile =
-        let mutable i = 1 // the name of the type literal ("TypeLiteral_%02i"): use one counter over all modules.
+        // let mutable i = 1 // the name of the type literal ("TypeLiteral_%02i"): use one counter over all modules.
         let extractFromModule (m:FsModule) : FsModule =
 
             let fixModuleEx doFix fix (m:FsModule) : FsModule =
@@ -995,10 +995,18 @@ let extractTypeLiterals(f: FsFile): FsFile =
                  m |> fixModuleEx (function FsType.Module m2 when (m2 <> m) -> false | _ -> true) fix
 
             let replacedTypeLiterals = Dictionary<FsTypeLiteral, FsInterface>()
+            let uniqueNames = Dictionary<string, int>()
             let replaceLiteral ns (tl:FsTypeLiteral) : FsInterface =
                 let build() =
-                    let name = ns //sprintf "TypeLiteral_%02i" i
-                    i <- i + 1
+                    // let name = sprintf "TypeLiteral_%02i" i
+                    // i <- i + 1
+                    let name =
+                        if uniqueNames.ContainsKey(ns) then
+                            uniqueNames.[ns] <- uniqueNames.[ns] + 1
+                            sprintf "%s%i" ns uniqueNames.[ns]
+                        else
+                            uniqueNames.[ns] <- 1
+                            ns
                     let generics = HashSet<FsType>()
                     FsType.TypeLiteral tl |> fixType ns  (fun ns t ->
                         match t with
