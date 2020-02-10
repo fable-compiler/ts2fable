@@ -1,5 +1,5 @@
 os: Visual Studio 2019
-version: 0.7.0-build.{build}
+version: 0.8.0-build.{build}
 install:
   # Get the latest stable version of .NET Core
   - cmd: choco install dotnetcore-sdk --no-progress
