@@ -12,7 +12,7 @@
   "scripts": {
     "__postinstall": "node ./node_modules/vscode/bin/install",
     "__build": "fable-splitter ./src/ts2fable.fsproj -c ./tools/splitter.config.js",
-    "build": "fable-splitter ./src/ts2fable.fsproj -o ./out",
+    "build": "fable-splitter ./src/ts2fable.fsproj -c ./tools/splitter.config.js -o ./out",
     "postbuild": "rollup ./out/ts2fable.js --file ./dist/ts2fable.js --format umd --name ts2fable",
     "build-cli": "webpack --config ./tools/webpack.config.cli.js",
     "build-test": "webpack --config ./tools/webpack.config.test.js",
