@@ -41,7 +41,7 @@
   },
   "homepage": "https://github.com/fable-compiler/ts2fable#readme",
   "dependencies": {
-    "typescript": "^3.7.4"
+    "typescript": "3.7.4"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
