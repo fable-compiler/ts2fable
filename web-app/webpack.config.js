@@ -80,7 +80,7 @@ module.exports = {
                 filename: 'style.[hash].css'
             }),
             new CopyWebpackPlugin([
-                { from: './public' }
+                { from: './output' }
             ]),
             // ensure that we get a production build of any dependencies
             // this is primarily for React, where this removes 179KB from the bundle
@@ -99,7 +99,7 @@ module.exports = {
         ]
     },
     devServer: {
-        contentBase: resolve('./public/'),
+        contentBase: resolve('./output/'),
         publicPath: "/",
         port: 8080,
         hot: true,
