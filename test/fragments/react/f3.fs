@@ -8,11 +8,11 @@ type ComponentLifecycle = React.ComponentLifecycle
 type ComponentClass = React.ComponentClass
 type StatelessComponent = React.StatelessComponent
 
-type Component<'S> =
-    Component<obj, 'S>
-
 type Component =
     Component<obj, obj>
+
+type Component<'P> =
+    Component<'P, obj>
 
 type [<AllowNullLiteral>] Component<'P, 'S> =
     inherit ComponentLifecycle<'P, 'S>
