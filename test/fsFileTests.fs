@@ -385,3 +385,7 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/issues/314
     it "regression #314 inline destruct" <| fun _ ->
         runRegressionTest "#314-inline-destruct"
+
+    // https://github.com/fable-compiler/ts2fable/issues/352
+    it "regression #352 generic type parameter default" <| fun _ ->
+        runRegressionTest "#352-generic-type-parameter-default"
