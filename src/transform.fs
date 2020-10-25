@@ -1301,20 +1301,43 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
         let extractAliasesFromGenericParameterDefaults name tps =
             let aliases = List<FsAlias>()
 
-            tps |> List.choose FsType.asGenericParameterDefaults
-                |> List.iteri(fun i _ ->
+            tps
+            |> List.iteri (fun i t ->
+                match t with
+                | FsType.GenericParameterDefaults _ ->
                     {
                         Name = name
                         Type =
                             {
                                 Type = simpleType name
                                 TypeParameters =
-                                    (tps.[0 .. i] |> List.map(fun _ -> simpleType "obj"))
-                                    @ tps.[i+1 ..]
-                            } |> FsType.Generic
-                        TypeParameters = tps.[i+1 ..]
-                    } |> aliases.Add
-                )
+                                    tps.[0..(i-1)]
+                                    @
+                                    (
+                                        tps.[i..]
+                                        |> List.map (fun p ->
+                                            match p with
+                                            | FsType.GenericParameterDefaults d ->
+                                                match d.Default with
+                                                  // `A & B` gets compiled as tuple `A * B` -> prevent
+                                                | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
+                                                    None
+                                                  // `{}`
+                                                | FsType.TypeLiteral _ ->
+                                                    None
+                                                | t -> Some t
+                                            | _ -> None
+                                            |> Option.defaultWith (fun _ -> simpleType "obj")
+                                        )
+                                    )
+                            }
+                            |> FsType.Generic
+                        TypeParameters = tps.[0..(i-1)]
+                    }
+                    |> aliases.Add
+                | _ -> ()
+            )
+
             aliases |> List.ofSeq |> List.map FsType.Alias
 
         f |> fixFile (fun ns tp ->
