@@ -139,6 +139,7 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
     | FsType.Import _ -> tp
     | FsType.GenericTypeParameter gtp ->
         { gtp with
+            Constraint = gtp.Constraint |> Option.map fixType
             Default = gtp.Default |> Option.map fixType
         }
         |> FsType.GenericTypeParameter
