@@ -47,6 +47,8 @@ let printType (tp: FsType): string =
     | FsType.Enum en ->
         printfn "unextracted printType %s: %s" (getTypeName tp) (getName tp)
         printEnumType en
+    | FsType.GenericTypeParameter gtp ->
+        gtp.Name
 
     // | FsType.Alias _ -> "obj"
     // | FsType.ExportAssignment _ -> "obj"

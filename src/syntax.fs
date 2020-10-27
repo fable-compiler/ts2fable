@@ -35,11 +35,11 @@ type FsTypeLiteral =
         Members: FsType list
     }
 
-type FsGenericParameterDefaults =
+type FsGenericTypeParameter =
     {
-        Default: FsType
         Name: string
-        FullName: string
+        Constraint: FsType option
+        Default: FsType option
     }
 
 [<RequireQualifiedAccess>]
@@ -275,7 +275,7 @@ type FsType =
     | This
     | Import of FsImport
     | TypeLiteral of FsTypeLiteral
-    | GenericParameterDefaults of FsGenericParameterDefaults
+    | GenericTypeParameter of FsGenericTypeParameter
 
 [<RequireQualifiedAccess>]
 module FsType =
@@ -297,7 +297,7 @@ module FsType =
     let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
     let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
     let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
-    let asGenericParameterDefaults (tp: FsType) = match tp with | FsType.GenericParameterDefaults v -> Some v | _ -> None
+    let asGenericTypeParameter (tp: FsType) = match tp with | FsType.GenericTypeParameter v -> Some v | _ -> None
 
 type FsModule =
     {
@@ -393,7 +393,7 @@ let getTypeName (tp: FsType) =
     | FsType.Import t -> t.GetType().ToString()
     | FsType.Array t -> t.GetType().ToString()
     | FsType.ExportAssignment t -> t.GetType().ToString()
-    | FsType.GenericParameterDefaults t -> t.GetType().ToString()
+    | FsType.GenericTypeParameter t -> t.GetType().ToString()
     | FsType.None as t -> t.GetType().ToString() + ".None"
     | FsType.TODO as t -> t.GetType().ToString() + ".TODO"
     | FsType.StringLiteral t -> t.GetType().ToString()
@@ -419,7 +419,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     | FsType.Import _
     | FsType.Array _
     | FsType.ExportAssignment _
-    | FsType.GenericParameterDefaults _
+    | FsType.GenericTypeParameter _
     | FsType.None
     | FsType.TODO
     | FsType.StringLiteral _

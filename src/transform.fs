@@ -137,9 +137,11 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
     | FsType.Import _ -> tp
-    | FsType.GenericParameterDefaults gpd ->
-        { gpd with Default = fixType gpd.Default }
-        |> FsType.GenericParameterDefaults
+    | FsType.GenericTypeParameter gtp ->
+        { gtp with
+            Default = gtp.Default |> Option.map fixType
+        }
+        |> FsType.GenericTypeParameter
     |> fun t -> if doFix(t) then fix ns t else t // current type
 
 /// recursively fix all the FsType childen
@@ -413,13 +415,20 @@ let fixTic ns (typeParameters: FsType list) (tp: FsType) =
     if typeParameters.Length = 0 then
         tp
     else
-        let set = typeParameters |> Set.ofList
+        let set =
+            typeParameters
+            |> List.choose FsType.asGenericTypeParameter
+            |> List.map (fun gtp -> gtp.Name)
+            |> Set.ofList
+        let formatTic = sprintf "'%s"
         let fix ns (t: FsType): FsType =
             match t with
-            | FsType.Mapped mp ->
-                if set.Contains t then
-                    { mp with Name = sprintf "'%s" mp.Name } |> FsType.Mapped
-                else t
+            | FsType.Mapped mp when set.Contains mp.Name ->
+                { mp with Name = formatTic mp.Name }
+                |> FsType.Mapped
+            | FsType.GenericTypeParameter p when set.Contains p.Name ->
+                { p with Name = formatTic p.Name }
+                |> FsType.GenericTypeParameter
             | _ -> t
         fixType ns fix tp
 
@@ -823,8 +832,8 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
         )
         match typFromName with
         // simple: the alias is itself a union with option
-        | Some (FsType.Alias { Type = FsType.Union { Option = true; Types = [ t ] }; TypeParameters = [ t2 ] })
-            when (t = t2) -> true
+        | Some (FsType.Alias { Type = FsType.Union { Option = true; Types = [ FsType.Mapped mp ] }; TypeParameters = [ FsType.GenericTypeParameter gtp ] })
+           when mp.Name = gtp.Name -> true
         // here we could check if the alias is another alias to option, but that seems like an unlikely pattern
         | _ -> false
 
@@ -1302,9 +1311,11 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
             let aliases = List<FsAlias>()
 
             tps
-            |> List.iteri (fun i t ->
-                match t with
-                | FsType.GenericParameterDefaults _ ->
+            |> List.choose FsType.asGenericTypeParameter
+            |> List.iteri (fun i gtp ->
+                match gtp.Default with
+                | None -> ()
+                | Some _ ->
                     {
                         Name = name
                         Type =
@@ -1315,10 +1326,11 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                                     @
                                     (
                                         tps.[i..]
+                                        |> List.choose FsType.asGenericTypeParameter
                                         |> List.map (fun p ->
-                                            match p with
-                                            | FsType.GenericParameterDefaults d ->
-                                                match d.Default with
+                                            match p.Default with
+                                            | Some d ->
+                                                match d with
                                                   // `A & B` gets compiled as tuple `A * B` -> prevent
                                                 | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
                                                     None
@@ -1335,7 +1347,6 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                         TypeParameters = tps.[0..(i-1)]
                     }
                     |> aliases.Add
-                | _ -> ()
             )
 
             aliases |> List.ofSeq |> List.map FsType.Alias
@@ -1369,17 +1380,19 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
             | _ -> tp
         )
 
-    let flatten f =
-        f |> fixFile (fun ns tp ->
-            match tp with
-            | FsType.GenericParameterDefaults gpd ->
-                { Name = gpd.Name; FullName = gpd.FullName } |> FsType.Mapped
-            | _ -> tp
-    )
+    // ~= mark default as handled
+    let removeDefaults =
+        fixFile (fun ns ->
+            function
+            | FsType.GenericTypeParameter gtp when Option.isSome gtp.Default ->
+                { gtp with Default = None }
+                |> FsType.GenericTypeParameter
+            | t -> t
+        )
 
     f
     |> fix
-    |> flatten
+    |> removeDefaults
 
 let fixTypesHasESKeywords  (f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->
