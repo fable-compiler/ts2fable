@@ -1224,14 +1224,18 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
 
     //we don't want to print intersection and mapped types, so compile them to simpleType "obj"
     let flatten f =
-        f |> fixFile (fun ns tp ->
-            match tp with
-            | FsType.Tuple tu ->
-                match tu.Kind with
-                | FsTupleKind.Intersection | FsTupleKind.Mapped -> simpleType "obj"
+        // FsTupleKind.Intersection -> `A & B` -> valid for generic type parameter constraints
+        f
+        |> fixFileEx
+            (function FsType.GenericTypeParameter _ -> false | _ -> true)
+            (fun ns tp ->
+                match tp with
+                | FsType.Tuple tu ->
+                    match tu.Kind with
+                    | FsTupleKind.Intersection | FsTupleKind.Mapped -> simpleType "obj"
+                    | _ -> tp
                 | _ -> tp
-            | _ -> tp
-        )
+            )
 
     f
     |> compileAliasHasOnlyFunctionToInterface
@@ -1394,6 +1398,67 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
     f
     |> fix
     |> removeDefaults
+
+let private sealedTypes = 
+    [
+        "string"
+        "float"
+        "bool"
+        "ReadonlySet"
+        "ReadonlyMap"
+        "Function"
+    ] 
+    |> Set.ofList
+let removeInvalidGenericConstraints (f: FsFile): FsFile =
+    // remove unsupported constraints like `A | B`
+    let rec removeUnsupportedType (c: FsType) =
+        match c with
+          // actual tupe or generic type parameter name
+        | FsType.Mapped _ -> Some c
+          // generic type 
+        | FsType.Generic _ -> Some c
+          // `A & B & C` -> only remove unsupported, keep others
+        | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
+            match tp.Types |> List.choose removeUnsupportedType with
+            | [] -> None
+            | tys ->
+                { tp with Types = tys }
+                |> FsType.Tuple
+                |> Some
+          // `A | B`
+        | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection -> None
+          // inline interface `extends { f(args: ...): void }`
+        | FsType.TypeLiteral _ -> None
+        | _ -> None
+
+    // cannot use sealed type as constraint
+    let rec removeSealed (c: FsType) =
+        match c with
+        | FsType.Mapped mp when sealedTypes.Contains mp.Name ->
+            None
+        | FsType.Generic g when removeSealed g.Type |> Option.isNone ->
+            None
+        | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
+            match tp.Types |> List.choose removeSealed with
+            | [] -> None
+            | tys ->
+                { tp with Types = tys }
+                |> FsType.Tuple
+                |> Some
+        | _ -> Some c
+
+    f |> fixFile (fun _ ->
+        function
+        | FsType.GenericTypeParameter ({Constraint = Some c} as gp) ->
+            { gp with
+                Constraint =
+                    c
+                    |> removeUnsupportedType
+                    |> Option.bind removeSealed
+            }
+            |> FsType.GenericTypeParameter
+        | t -> t
+    )
 
 let fixTypesHasESKeywords  (f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->

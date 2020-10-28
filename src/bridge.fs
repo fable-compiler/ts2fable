@@ -124,6 +124,7 @@ module internal Bridge =
         |> mergeModulesInFile
         |> aliasToInterfacePartly
         |> extractGenericParameterDefaults
+        |> removeInvalidGenericConstraints
         |> fixTypesHasESKeywords
         |> extractTypesInGlobalModules
         |> addConstructors
