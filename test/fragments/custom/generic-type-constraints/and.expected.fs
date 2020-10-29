@@ -22,3 +22,6 @@ type [<AllowNullLiteral>] And2<'T when 'T :> A and 'T :> B and 'T :> C<A> and 'T
 
 type [<AllowNullLiteral>] And3<'T, 'U when 'T :> A and 'U :> B and 'U :> C<'T>> =
     interface end
+
+type [<AllowNullLiteral>] And4<'T when 'T :> C<obj>> =
+    interface end

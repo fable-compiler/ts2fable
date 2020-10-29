@@ -1224,18 +1224,44 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
 
     //we don't want to print intersection and mapped types, so compile them to simpleType "obj"
     let flatten f =
-        // FsTupleKind.Intersection -> `A & B` -> valid for generic type parameter constraints
+        // FsTupleKind.Intersection { Kind = Intersection } -> `A & B` 
+        // -> valid for generic type parameter constraints
+        //    (but only as direct constraint)
+        //    * `extends A & B` -> keep tuple
+        //    * `extends MyType<A & B>` -> remove tuple
+
+        let flattenTuple ns tp =
+            match tp with
+            | FsType.Tuple tu ->
+                match tu.Kind with
+                | FsTupleKind.Intersection | FsTupleKind.Mapped -> simpleType "obj"
+                | _ -> tp
+            | _ -> tp
+
+        let rec flattenNestedTuple ns tp =
+            match tp with
+            | FsType.Tuple tu when tu.Kind = FsTupleKind.Intersection ->
+                { tu with
+                    Types = tu.Types |> List.map (flattenNestedTuple ns)
+                }
+                |> FsType.Tuple
+            | _ -> fixType ns flattenTuple tp
+
         f
         |> fixFileEx
-            (function FsType.GenericTypeParameter _ -> false | _ -> true)
-            (fun ns tp ->
+            (function FsType.GenericTypeParameter { Constraint = Some _ } -> false | _ -> true)
+            flattenTuple
+        |> fixFile
+           (fun ns tp ->
                 match tp with
-                | FsType.Tuple tu ->
-                    match tu.Kind with
-                    | FsTupleKind.Intersection | FsTupleKind.Mapped -> simpleType "obj"
-                    | _ -> tp
+                | FsType.GenericTypeParameter ({ Constraint = Some c; Default = d } as gtp) ->
+                    { gtp with
+                        Constraint = c |> flattenNestedTuple ns |> Some
+                        Default = d |> Option.map (flattenTuple ns)
+                    }
+                    |> FsType.GenericTypeParameter
                 | _ -> tp
-            )
+           )
 
     f
     |> compileAliasHasOnlyFunctionToInterface
