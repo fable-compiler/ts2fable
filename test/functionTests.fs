@@ -134,6 +134,40 @@ describe "getJsModuleName tests" <| fun _ ->
         getJsModuleName "node_modules/izitoast/dist/izitoast/izitoast.d.ts"
         |> equal "izitoast"
 
+    it "just file name" <| fun _ ->
+        getJsModuleName "izitoast.d.ts"
+        |> equal "izitoast"
+
+    it "izitoast in parent dir" <| fun _ ->
+        getJsModuleName "../izitoast.d.ts"
+        |> equal "izitoast"
+
+    it "izitoast in current dir" <| fun _ ->
+        getJsModuleName "./izitoast.d.ts"
+        |> equal "izitoast"
+
+    let currentDirName = Node.Api.path.basename(Node.Api.``process``.cwd())
+
+    it "just index.d.ts" <| fun _ ->
+        getJsModuleName "index.d.ts"
+        |> equal currentDirName
+
+    it "index.d.ts in current dir" <| fun _ ->
+        getJsModuleName "./index.d.ts"
+        |> equal currentDirName
+
+    it "index.d.ts in current dir via parent dir" <| fun _ ->
+        getJsModuleName (sprintf "../%s/index.d.ts" currentDirName)
+        |> equal currentDirName
+    
+    it "scoped package" <| fun _ ->
+        getJsModuleName "node_modules/@slack/client"
+        |> equal "@slack/client"
+
+    it "scoped package in @types" <| fun _ ->
+        getJsModuleName "node_modules/@types/slack__client"
+        |> equal "@slack/client"
+
 
 describe "fixModuleName tests" <| fun _ ->
 
