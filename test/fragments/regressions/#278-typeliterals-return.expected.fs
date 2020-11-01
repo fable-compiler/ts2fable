@@ -4,7 +4,7 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("TypeLiteralsAsReturnValue","test")>] typeLiteralsAsReturnValue: TypeLiteralsAsReturnValue.IExports = jsNative
+let [<Import("TypeLiteralsAsReturnValue","#278-typeliterals-return")>] typeLiteralsAsReturnValue: TypeLiteralsAsReturnValue.IExports = jsNative
 
 module TypeLiteralsAsReturnValue =
 

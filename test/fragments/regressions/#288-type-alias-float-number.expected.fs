@@ -4,7 +4,7 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("TypeAloasFloatNumber","test")>] typeAloasFloatNumber: TypeAloasFloatNumber.IExports = jsNative
+let [<Import("TypeAloasFloatNumber","#288-type-alias-float-number")>] typeAloasFloatNumber: TypeAloasFloatNumber.IExports = jsNative
 
 module TypeAloasFloatNumber =
 

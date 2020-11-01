@@ -4,8 +4,8 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("UnwrapOptions","test")>] unwrapOptions: UnwrapOptions.IExports = jsNative
-let [<Import("UnwrapOptionsAlias","test")>] unwrapOptionsAlias: UnwrapOptionsAlias.IExports = jsNative
+let [<Import("UnwrapOptions","#277-unwrap-options")>] unwrapOptions: UnwrapOptions.IExports = jsNative
+let [<Import("UnwrapOptionsAlias","#277-unwrap-options")>] unwrapOptionsAlias: UnwrapOptionsAlias.IExports = jsNative
 
 module UnwrapOptions =
 

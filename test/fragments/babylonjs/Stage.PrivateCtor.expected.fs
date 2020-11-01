@@ -6,7 +6,7 @@ open Fable.Core.JS
 
 type Array<'T> = System.Collections.Generic.IList<'T>
 
-let [<Import("*","test")>] babylon: BABYLON.IExports = jsNative
+let [<Import("*","Stage.PrivateCtor")>] babylon: BABYLON.IExports = jsNative
 
 module BABYLON =
 
