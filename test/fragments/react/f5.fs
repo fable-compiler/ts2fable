@@ -4,7 +4,7 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("*","test")>] react: React.IExports = jsNative
+let [<Import("*","f5")>] react: React.IExports = jsNative
 
 module React =
 

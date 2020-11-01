@@ -36,7 +36,7 @@ module __web_Accessibility =
         [<Emit "new $0($1...)">] abstract Create: unit -> Accessibility
 
 module __web_ReactXP =
-    let [<Import("*","test/web/ReactXP")>] reactXP: ReactXP.IExports = jsNative
+    let [<Import("*","ReactXP/web/ReactXP")>] reactXP: ReactXP.IExports = jsNative
 
     module ReactXP =
 

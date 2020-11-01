@@ -4,7 +4,7 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("*","test")>] monaco: Monaco.IExports = jsNative
+let [<Import("*","variableInModule")>] monaco: Monaco.IExports = jsNative
 
 module Monaco =
 

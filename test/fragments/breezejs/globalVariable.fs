@@ -4,7 +4,7 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("FilterQueryOp","test")>] FilterQueryOp: FilterQueryOp = jsNative
+let [<Import("FilterQueryOp","globalVariable")>] FilterQueryOp: FilterQueryOp = jsNative
 
 type [<AllowNullLiteral>] FilterQueryOp =
     inherit Core.IEnum
