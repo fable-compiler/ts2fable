@@ -120,7 +120,7 @@ describe "getJsModuleName tests" <| fun _ ->
         
     it "reactxp relative path" <| fun _ ->
         getJsModuleName "node_modules/reactxp/dist/web/ReactXP.d.ts"
-        |> equal "reactxp"            
+        |> equal "ReactXP" //todo: file name (`ReactXP`) or dir name (`reactxp`)
 
     it "node relative path" <| fun _ ->
         getJsModuleName "node_modules/@types/node/index.d.ts"

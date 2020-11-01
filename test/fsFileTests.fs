@@ -157,7 +157,7 @@ describe "transform tests" <| fun _ ->
                         match FsType.asVariable tp with 
                         | Some vb -> 
                             match vb.Export with 
-                            | Some ex -> ex.Path = "test/web/ReactXP"
+                            | Some ex -> ex.Path = "ReactXP/web/ReactXP"
                             | None -> false
                         | None -> false
                     ) 
