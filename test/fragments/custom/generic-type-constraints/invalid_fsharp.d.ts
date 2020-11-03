@@ -105,3 +105,16 @@ export module TypeAndExtendedTypeForSameParameter {
     // The type 'Aext' does not match the type 'A'
   }
 }
+
+export module TypeParamterDefault {
+  interface C<T> { value: T }
+
+  interface T1<T extends C<any> = C<string>> {} 
+  // generates 
+  // ```fsharp
+  // type [<AllowNullLiteral>] T1<'T when 'T :> C<obj option>> = interface end
+  // type T1 = T1<C<string>>
+  //           ^^^^^^^^^^^^^
+  //           The type 'obj option' does not match the type 'string'
+  // ```
+}
