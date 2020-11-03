@@ -4,7 +4,7 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("PrivateMembersTests","test")>] privateMembersTests: PrivateMembersTests.IExports = jsNative
+let [<Import("PrivateMembersTests","#275-private-members")>] privateMembersTests: PrivateMembersTests.IExports = jsNative
 
 module PrivateMembersTests =
 

@@ -159,6 +159,8 @@ let makePartName (s: string) =
 // intended for use by SourceFile.fileName which has slashes normalized
 // TODO implement all of https://github.com/ajafff/tsutils/issues/14#issuecomment-345544684
 let getJsModuleName (path: string): string =
+    // use absolute path to prevent issues with short, relative paths (like just `index.d.ts`)
+    let path = Node.Api.path.resolve(path)
     let parts =
         path
             |> fun x ->
@@ -170,19 +172,22 @@ let getJsModuleName (path: string): string =
                 if is = -1 then x
                 else x.Substring(is)
             |> fun x ->
-                x.Split '/'
+                x.Split([|Node.Api.path.sep|], StringSplitOptions.None)
                     |> List.ofArray
                     |> List.filter (fun s -> s <> "index.d.ts" && s <> "types")
 
     let out =
         match parts with
             | "@types"::x::xs ->
-                let xs' = x.Replace("__", "/") :: xs
+                let xs' =
+                    if x.Contains("__") then
+                        ("@" + x.Replace("__", "/")) :: xs
+                    else
+                        x :: xs
                 String.Join("/", xs')
             | x::xs when x.StartsWith "@" ->
                 String.Join("/", x :: xs)
-            // TODO: Shouldn't this be List.last instead?
-            | xs -> List.head xs
+            | xs -> List.last xs
     out.Replace(".ts","").Replace(".d","")
 
 let primatives = ["string"; "obj"; "unit"; "float"; "bool"] |> Set.ofList

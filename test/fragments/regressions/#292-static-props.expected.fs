@@ -4,7 +4,7 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
-let [<Import("StaticTests","test")>] staticTests: StaticTests.IExports = jsNative
+let [<Import("StaticTests","#292-static-props")>] staticTests: StaticTests.IExports = jsNative
 
 module StaticTests =
 

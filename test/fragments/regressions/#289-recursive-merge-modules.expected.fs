@@ -6,7 +6,7 @@ open Fable.Core.JS
 
 
 module Outer =
-    let [<Import("Inner","test/Outer")>] inner: Inner.IExports = jsNative
+    let [<Import("Inner","#289-recursive-merge-modules/Outer")>] inner: Inner.IExports = jsNative
 
     module Inner =
 
