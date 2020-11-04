@@ -8,5 +8,5 @@ type Component = React.Component
 type ComponentState = React.ComponentState
 type ComponentClass = React.ComponentClass
 
-type [<AllowNullLiteral>] ClassType<'P, 'T, 'C> =
+type [<AllowNullLiteral>] ClassType<'P, 'T, 'C when 'T :> Component<'P, ComponentState> and 'C :> ComponentClass<'P>> =
     interface end

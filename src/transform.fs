@@ -137,9 +137,12 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
     | FsType.StringLiteral _ -> tp
     | FsType.This -> tp
     | FsType.Import _ -> tp
-    | FsType.GenericParameterDefaults gpd ->
-        { gpd with Default = fixType gpd.Default }
-        |> FsType.GenericParameterDefaults
+    | FsType.GenericTypeParameter gtp ->
+        { gtp with
+            Constraint = gtp.Constraint |> Option.map fixType
+            Default = gtp.Default |> Option.map fixType
+        }
+        |> FsType.GenericTypeParameter
     |> fun t -> if doFix(t) then fix ns t else t // current type
 
 /// recursively fix all the FsType childen
@@ -413,13 +416,20 @@ let fixTic ns (typeParameters: FsType list) (tp: FsType) =
     if typeParameters.Length = 0 then
         tp
     else
-        let set = typeParameters |> Set.ofList
+        let set =
+            typeParameters
+            |> List.choose FsType.asGenericTypeParameter
+            |> List.map (fun gtp -> gtp.Name)
+            |> Set.ofList
+        let formatTic = sprintf "'%s"
         let fix ns (t: FsType): FsType =
             match t with
-            | FsType.Mapped mp ->
-                if set.Contains t then
-                    { mp with Name = sprintf "'%s" mp.Name } |> FsType.Mapped
-                else t
+            | FsType.Mapped mp when set.Contains mp.Name ->
+                { mp with Name = formatTic mp.Name }
+                |> FsType.Mapped
+            | FsType.GenericTypeParameter p when set.Contains p.Name ->
+                { p with Name = formatTic p.Name }
+                |> FsType.GenericTypeParameter
             | _ -> t
         fixType ns fix tp
 
@@ -823,8 +833,8 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
         )
         match typFromName with
         // simple: the alias is itself a union with option
-        | Some (FsType.Alias { Type = FsType.Union { Option = true; Types = [ t ] }; TypeParameters = [ t2 ] })
-            when (t = t2) -> true
+        | Some (FsType.Alias { Type = FsType.Union { Option = true; Types = [ FsType.Mapped mp ] }; TypeParameters = [ FsType.GenericTypeParameter gtp ] })
+           when mp.Name = gtp.Name -> true
         // here we could check if the alias is another alias to option, but that seems like an unlikely pattern
         | _ -> false
 
@@ -1214,14 +1224,44 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
 
     //we don't want to print intersection and mapped types, so compile them to simpleType "obj"
     let flatten f =
-        f |> fixFile (fun ns tp ->
+        // FsTupleKind.Intersection { Kind = Intersection } -> `A & B` 
+        // -> valid for generic type parameter constraints
+        //    (but only as direct constraint)
+        //    * `extends A & B` -> keep tuple
+        //    * `extends MyType<A & B>` -> remove tuple
+
+        let flattenTuple ns tp =
             match tp with
             | FsType.Tuple tu ->
                 match tu.Kind with
                 | FsTupleKind.Intersection | FsTupleKind.Mapped -> simpleType "obj"
                 | _ -> tp
             | _ -> tp
-        )
+
+        let rec flattenNestedTuple ns tp =
+            match tp with
+            | FsType.Tuple tu when tu.Kind = FsTupleKind.Intersection ->
+                { tu with
+                    Types = tu.Types |> List.map (flattenNestedTuple ns)
+                }
+                |> FsType.Tuple
+            | _ -> fixType ns flattenTuple tp
+
+        f
+        |> fixFileEx
+            (function FsType.GenericTypeParameter { Constraint = Some _ } -> false | _ -> true)
+            flattenTuple
+        |> fixFile
+           (fun ns tp ->
+                match tp with
+                | FsType.GenericTypeParameter ({ Constraint = Some c; Default = d } as gtp) ->
+                    { gtp with
+                        Constraint = c |> flattenNestedTuple ns |> Some
+                        Default = d |> Option.map (flattenTuple ns)
+                    }
+                    |> FsType.GenericTypeParameter
+                | _ -> tp
+           )
 
     f
     |> compileAliasHasOnlyFunctionToInterface
@@ -1302,9 +1342,11 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
             let aliases = List<FsAlias>()
 
             tps
-            |> List.iteri (fun i t ->
-                match t with
-                | FsType.GenericParameterDefaults _ ->
+            |> List.choose FsType.asGenericTypeParameter
+            |> List.iteri (fun i gtp ->
+                match gtp.Default with
+                | None -> ()
+                | Some _ ->
                     {
                         Name = name
                         Type =
@@ -1315,10 +1357,11 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                                     @
                                     (
                                         tps.[i..]
+                                        |> List.choose FsType.asGenericTypeParameter
                                         |> List.map (fun p ->
-                                            match p with
-                                            | FsType.GenericParameterDefaults d ->
-                                                match d.Default with
+                                            match p.Default with
+                                            | Some d ->
+                                                match d with
                                                   // `A & B` gets compiled as tuple `A * B` -> prevent
                                                 | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
                                                     None
@@ -1335,7 +1378,6 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                         TypeParameters = tps.[0..(i-1)]
                     }
                     |> aliases.Add
-                | _ -> ()
             )
 
             aliases |> List.ofSeq |> List.map FsType.Alias
@@ -1369,17 +1411,80 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
             | _ -> tp
         )
 
-    let flatten f =
-        f |> fixFile (fun ns tp ->
-            match tp with
-            | FsType.GenericParameterDefaults gpd ->
-                { Name = gpd.Name; FullName = gpd.FullName } |> FsType.Mapped
-            | _ -> tp
-    )
+    // ~= mark default as handled
+    let removeDefaults =
+        fixFile (fun ns ->
+            function
+            | FsType.GenericTypeParameter gtp when Option.isSome gtp.Default ->
+                { gtp with Default = None }
+                |> FsType.GenericTypeParameter
+            | t -> t
+        )
 
     f
     |> fix
-    |> flatten
+    |> removeDefaults
+
+let private sealedTypes = 
+    [
+        "string"
+        "float"
+        "bool"
+        "ReadonlySet"
+        "ReadonlyMap"
+        "Function"
+    ] 
+    |> Set.ofList
+let removeInvalidGenericConstraints (f: FsFile): FsFile =
+    // remove unsupported constraints like `A | B`
+    let rec removeUnsupportedType (c: FsType) =
+        match c with
+          // actual tupe or generic type parameter name
+        | FsType.Mapped _ -> Some c
+          // generic type 
+        | FsType.Generic _ -> Some c
+          // `A & B & C` -> only remove unsupported, keep others
+        | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
+            match tp.Types |> List.choose removeUnsupportedType with
+            | [] -> None
+            | tys ->
+                { tp with Types = tys }
+                |> FsType.Tuple
+                |> Some
+          // `A | B`
+        | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection -> None
+          // inline interface `extends { f(args: ...): void }`
+        | FsType.TypeLiteral _ -> None
+        | _ -> None
+
+    // cannot use sealed type as constraint
+    let rec removeSealed (c: FsType) =
+        match c with
+        | FsType.Mapped mp when sealedTypes.Contains mp.Name ->
+            None
+        | FsType.Generic g when removeSealed g.Type |> Option.isNone ->
+            None
+        | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
+            match tp.Types |> List.choose removeSealed with
+            | [] -> None
+            | tys ->
+                { tp with Types = tys }
+                |> FsType.Tuple
+                |> Some
+        | _ -> Some c
+
+    f |> fixFile (fun _ ->
+        function
+        | FsType.GenericTypeParameter ({Constraint = Some c} as gp) ->
+            { gp with
+                Constraint =
+                    c
+                    |> removeUnsupportedType
+                    |> Option.bind removeSealed
+            }
+            |> FsType.GenericTypeParameter
+        | t -> t
+    )
 
 let fixTypesHasESKeywords  (f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->

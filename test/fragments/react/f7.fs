@@ -6,5 +6,5 @@ open Fable.Core.JS
 
 type SyntheticEvent = React.SyntheticEvent
 
-type [<AllowNullLiteral>] EventHandler<'E> =
+type [<AllowNullLiteral>] EventHandler<'E when 'E :> SyntheticEvent<obj option>> =
     abstract bivarianceHack: ``event``: 'E -> unit

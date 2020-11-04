@@ -17,13 +17,7 @@ let printType (tp: FsType): string =
             sprintf ">%s" (if un.Option then " option" else "") |> line.Add
             line |> String.concat ""
     | FsType.Generic g ->
-        let line = ResizeArray()
-        sprintf "%s" (printType g.Type) |> line.Add
-        if g.TypeParameters.Length > 0 then
-            "<" |> line.Add
-            g.TypeParameters |> List.map printType |> String.concat ", " |> line.Add
-            ">" |> line.Add
-        line |> String.concat ""
+        printGeneric g
     | FsType.Function ft ->
         let line = ResizeArray()
         let typs =
@@ -47,6 +41,8 @@ let printType (tp: FsType): string =
     | FsType.Enum en ->
         printfn "unextracted printType %s: %s" (getTypeName tp) (getName tp)
         printEnumType en
+    | FsType.GenericTypeParameter gtp ->
+        gtp.Name
 
     // | FsType.Alias _ -> "obj"
     // | FsType.ExportAssignment _ -> "obj"
@@ -65,6 +61,15 @@ let printType (tp: FsType): string =
     | _ ->
         printfn "unsupported printType %s: %s" (getTypeName tp) (getName tp)
         "obj"
+
+let printGeneric (g: FsGenericType): string =
+    let line = ResizeArray()
+    sprintf "%s" (printType g.Type) |> line.Add
+    if g.TypeParameters.Length > 0 then
+        "<" |> line.Add
+        g.TypeParameters |> List.map printType |> String.concat ", " |> line.Add
+        ">" |> line.Add
+    line |> String.concat ""
 
 let printEnumType (en: FsEnum): string =
     match en.Type with
@@ -85,6 +90,8 @@ let printFunction (fn: FsFunction): string =
         sprintf  "[<Emit \"%s\">] " emit |> line.Add
 
     sprintf "abstract %s" fn.Name.Value |> line.Add
+
+    // parameters
     let prms =
         fn.Params |> List.map(fun p ->
             if p.ParamArray then
@@ -104,6 +111,11 @@ let printFunction (fn: FsFunction): string =
     else
         sprintf ": %s" (prms |> String.concat " * ") |> line.Add
     sprintf " -> %s" (printType fn.ReturnType) |> line.Add
+
+    // generic type parameter constraints
+    printGenericTypeConstraints fn.TypeParameters
+    |> line.Add
+
     line |> String.concat ""
 
 let printProperty (pr: FsProperty): string =
@@ -121,12 +133,55 @@ let printProperty (pr: FsProperty): string =
         (if pr.Option then " option" else "")
         (if pr.IsReadonly then "" else " with get, set")
 
+let printGenericTypeConstraint (p: FsGenericTypeParameter): string option =
+    match p.Constraint with
+    | None -> None
+    | Some c ->
+        let formatConstraint = sprintf "%s :> %s" p.Name >> Some
+        let rec printConstraint =
+            function
+              // actual type or generic parameter name: `MyType`, `T`
+            | FsType.Mapped mp ->
+                formatConstraint mp.Name
+              // generic type: `MyType<...>
+            | FsType.Generic g ->
+                printGeneric g
+                |> formatConstraint
+              // and: `MyType1 & MyType2` (ts), `'T :> MyType1 and 'T :> MyType2` (F#)
+            | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
+                tp.Types
+                |> List.choose printConstraint
+                |> function
+                   | [] -> None
+                   | cs ->
+                        cs
+                        |> String.concat " and "
+                        |> Some
+            | _ -> None
+        printConstraint c
+let printGenericTypeConstraints (tps: FsType list): string =
+    tps
+    |> List.choose FsType.asGenericTypeParameter
+    |> List.choose printGenericTypeConstraint
+    |> function
+       | [] -> ""
+       | cs ->
+           sprintf " when %s" (cs |> String.concat " and ")
+
+
 let printTypeParameters (tps: FsType list): string =
     if tps.Length = 0 then ""
     else
         let line = ResizeArray()
         line.Add "<"
+
+        // first: handle type parameter names
         tps |> List.map printType |> String.concat ", " |> line.Add
+
+        // then: handle constraints
+        printGenericTypeConstraints tps
+        |> line.Add
+
         line.Add ">"
         line |> String.concat ""
 
