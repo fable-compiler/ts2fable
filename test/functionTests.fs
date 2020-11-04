@@ -110,8 +110,12 @@ describe "nameEqualsDefaultFableValue tests" <| fun _ ->
 
 describe "getJsModuleName tests" <| fun _ ->
 
-    it "chai full path" <| fun _ ->
+    it "chai windows full path" <| fun _ ->
         getJsModuleName "C:/Users/camer/fs/ts2fable/node_modules/@types/chai/index.d.ts"
+        |> equal "chai"
+
+    it "chai linux full path" <| fun _ ->
+        getJsModuleName "/home/user/fs/ts2fable/node_modules/@types/chai/index.d.ts"
         |> equal "chai"
     
     it "chalk relative path" <| fun _ ->
@@ -120,7 +124,7 @@ describe "getJsModuleName tests" <| fun _ ->
         
     it "reactxp relative path" <| fun _ ->
         getJsModuleName "node_modules/reactxp/dist/web/ReactXP.d.ts"
-        |> equal "ReactXP" //todo: file name (`ReactXP`) or dir name (`reactxp`)
+        |> equal "reactxp"
 
     it "node relative path" <| fun _ ->
         getJsModuleName "node_modules/@types/node/index.d.ts"
@@ -161,12 +165,28 @@ describe "getJsModuleName tests" <| fun _ ->
         |> equal currentDirName
     
     it "scoped package" <| fun _ ->
-        getJsModuleName "node_modules/@slack/client"
+        getJsModuleName "node_modules/@slack/client/index.d.ts"
         |> equal "@slack/client"
 
     it "scoped package in @types" <| fun _ ->
-        getJsModuleName "node_modules/@types/slack__client"
+        getJsModuleName "node_modules/@types/slack__client/index.d.ts"
         |> equal "@slack/client"
+
+    it "uri-js in node_modules" <| fun _ ->
+        getJsModuleName "node_modules/uri-js/dist/es5/uri.all.d.ts"
+        |> equal "uri-js"   // first directory after `node_modules`, NOT file name
+
+    it "uri-js in node_modules with index.d.ts" <| fun _ ->
+        getJsModuleName "node_modules/uri-js/dist/esnext/index.d.ts"
+        |> equal "uri-js"
+
+    it "no node_modules" <| fun _ ->
+        getJsModuleName "/home/user/fs/ts2fable/izitoast.d.ts"
+        |> equal "izitoast"   // NOT in `node_modules` -> file name is best guess
+
+    it "no node_modules and index.d.ts" <| fun _ ->
+        getJsModuleName "/home/user/fs/ts2fable/izitoast/index.d.ts"
+        |> equal "izitoast"   // NOT in `node_modules` and default `index.d.ts` name -> last dir name is best guess
 
 
 describe "fixModuleName tests" <| fun _ ->
