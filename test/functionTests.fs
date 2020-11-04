@@ -11,7 +11,7 @@ open ts2fable.Naming
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
-    Testing.Assert.AreEqual(expected, actual)
+    Testing.Assert.AreEqual(actual, expected)
 
 describe "my tests" <| fun _ ->
 
