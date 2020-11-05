@@ -208,6 +208,9 @@ describe "getJsModuleName tests" <| fun _ ->
         getJsModuleName "DefinitelyTyped/types/vscode/index.d.ts"
         |> equal "vscode"
 
+    it "monaco" <| fun _ ->
+        getJsModuleName "node_modules/monaco-editor/monaco.d.ts"
+        |> equal "monaco-editor"
 
 describe "fixModuleName tests" <| fun _ ->
 
