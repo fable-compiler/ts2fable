@@ -188,6 +188,26 @@ describe "getJsModuleName tests" <| fun _ ->
         getJsModuleName "/home/user/fs/ts2fable/izitoast/index.d.ts"
         |> equal "izitoast"   // NOT in `node_modules` and default `index.d.ts` name -> last dir name is best guess
 
+    it "named .d.ts in subfolder" <| fun _ ->
+        getJsModuleName "node_modules/uri-js/dist/es5/uri.all.d.ts"
+        |> equal "uri-js"
+
+    it "index.d.ts in subfolder" <| fun _ ->
+        getJsModuleName "node_modules/uri-js/dist/esnext/index.d.ts"
+        |> equal "uri-js"
+
+    it "scoped package with index.d.ts in subfolder" <| fun _ ->
+        getJsModuleName "node_modules/@slack/client/dist/index.d.ts"
+        |> equal "@slack/client"
+
+    it "scoped package with named .d.ts in subfolder" <| fun _ ->
+        getJsModuleName "node_modules/@slack/web-api/dist/errors.d.ts"
+        |> equal "@slack/web-api"
+
+    it "DefinitelyTyped" <| fun _ ->
+        getJsModuleName "DefinitelyTyped/types/vscode/index.d.ts"
+        |> equal "vscode"
+
 
 describe "fixModuleName tests" <| fun _ ->
 
