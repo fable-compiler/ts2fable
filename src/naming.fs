@@ -161,34 +161,55 @@ let makePartName (s: string) =
 let getJsModuleName (path: string): string =
     // use absolute path to prevent issues with short, relative paths (like just `index.d.ts`)
     let path = Node.Api.path.resolve(path)
-    let parts =
-        path
-            |> fun x ->
-                let inm = path.LastIndexOf "node_modules"
-                if inm = -1 then x
-                else x.Substring(inm+13)
-            |> fun x ->
-                let is = x.LastIndexOf "@"
-                if is = -1 then x
-                else x.Substring(is)
-            |> fun x ->
-                x.Split([|Node.Api.path.sep|], StringSplitOptions.None)
-                    |> List.ofArray
-                    |> List.filter (fun s -> s <> "index.d.ts" && s <> "types")
 
-    let out =
+    let parts = path.Split([|Node.Api.path.sep|], StringSplitOptions.None)
+    match parts |> Array.tryFindIndexBack ((=) "node_modules") with
+    | Some i ->
+        // inside `node_modules`
+        // packages are installed in folder `node_modules`, local & global
+        //   https://docs.npmjs.com/cli/v6/configuring-npm/folders/#node-modules
+        // two types of packages:
+        // * normal packages: directly under `node_modules`: `[...]/node_modules/PACKAGE/...`
+        // * scoped packages: grouped under a common name: `[...]/node_modules/@SCOPE/PACKAGE/...`. Module name consists of `@SCOPE/PACKAGE`
+        let parts = parts.[(i+1)..] |> List.ofArray
         match parts with
-            | "@types"::x::xs ->
-                let xs' =
-                    if x.Contains("__") then
-                        ("@" + x.Replace("__", "/")) :: xs
-                    else
-                        x :: xs
-                String.Join("/", xs')
-            | x::xs when x.StartsWith "@" ->
-                String.Join("/", x :: xs)
-            | xs -> List.last xs
-    out.Replace(".ts","").Replace(".d","")
+          // special case: `@types` scope: collection of declaration files
+          // * `@types` isn't part of the name
+          // * `__` indicates declarations for scoped packages: https://github.com/DefinitelyTyped/DefinitelyTyped#what-about-scoped-packages
+        | "@types" :: p :: _ ->
+            if p.Contains "__" then
+                "@" + p.Replace("__", "/")
+            else
+                p
+          // scoped package: `@SCOPE/PACKAGE`
+        | scope :: p :: _ when scope.StartsWith "@" ->
+            scope + "/" + p
+          // normal package: `PACKAGE`
+        | p :: _ -> p
+        | _ -> 
+            // specified path to node_modules instead of .d.ts file
+            // shouldn't happen: passed path is from actual source file handled by TS compiler
+            "node_modules"
+    | None ->
+        // outside `node_modules`
+        match parts |> Array.tryLast  with
+          // use last dir name 
+        | Some "index.d.ts" ->
+            path
+            |> Node.Api.path.dirname
+            |> Node.Api.path.basename
+          // use filename without `.d.ts` extension
+        | Some filename -> 
+            let ext = 
+                if filename.EndsWith ".d.ts" then
+                    ".d.ts"
+                else
+                    Node.Api.path.extname(filename)
+            Node.Api.path.basename(filename, ext)
+        | _ ->
+            // no path specified
+            // shouldn't happen: passed path is from actual source file handled by TS compiler
+            failwith "No path specified"
 
 let primatives = ["string"; "obj"; "unit"; "float"; "bool"] |> Set.ofList
 
