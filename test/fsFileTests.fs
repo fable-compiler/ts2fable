@@ -439,3 +439,7 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/issues/353
     it "regression #353 generic type parameter default type" <| fun _ ->
         runRegressionTest "#353-generic-type-parameter-default-type"
+
+    // https://github.com/fable-compiler/ts2fable/issues/353
+    it "regression #362 array with ParamArray" <| fun _ ->
+        runRegressionTest "#362-paramarray"

@@ -97,7 +97,9 @@ let printFunction (fn: FsFunction): string =
             if p.ParamArray then
                 sprintf "[<ParamArray>] %s%s: %s" (if p.Optional then "?" else "") p.Name
                     (   match p.Type with
-                        | FsType.Array _ -> printType p.Type
+                        | FsType.Array at ->
+                            // array instead of ResizeArray with ParamArray
+                            sprintf "%s[]" (printType at)
                         | _ ->
                             // failwithf "function with unsupported param array type: %s" f.Name.Value
                             printfn "ParamArray function is not an array type: %s" (getName(FsType.Function fn))
