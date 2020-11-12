@@ -124,7 +124,7 @@ let printProperty (pr: FsProperty): string =
     sprintf "%sabstract %s: %s%s%s%s"
         (   match pr.Kind with
             | FsPropertyKind.Regular -> ""
-            | FsPropertyKind.Index -> "[<Emit \"$0[$1]{{=$2}}\">] "
+            | FsPropertyKind.Index -> "[<EmitIndexer>] "
         )
         pr.Name
         (   match pr.Index with

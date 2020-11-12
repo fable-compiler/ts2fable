@@ -447,4 +447,6 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/issues/303
     it "regression #303 EmitConstructor" <| fun _ ->
         runRegressionTest "#303-EmitConstructor"
+    it "regression #303 EmitIndexer" <| fun _ ->
+        runRegressionTest "#303-EmitIndexer"
 
