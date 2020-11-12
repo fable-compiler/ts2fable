@@ -402,6 +402,13 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test/fragments/custom/generic-type-constraints/default.fs"
         let expected = "test/fragments/custom/generic-type-constraints/default.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
+    
+    // https://github.com/fable-compiler/ts2fable/issues/361
+    it "keyof" <| fun _ ->
+        let tsPaths = ["test/fragments/custom/keyof.d.ts"]
+        let fsPath = "test/fragments/custom/keyof.fs"
+        let expected = "test/fragments/custom/keyof.expected.fs"
+        convertAndCompareAgainstExpected tsPaths fsPath expected
 
     // https://github.com/fable-compiler/ts2fable/pull/275
     it "regression #275 remove private members" <| fun _ ->
