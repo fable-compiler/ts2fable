@@ -43,6 +43,9 @@ let printType (tp: FsType): string =
         printEnumType en
     | FsType.GenericTypeParameter gtp ->
         gtp.Name
+    | FsType.KeyOf k ->
+        printType k.Type
+        |> sprintf "KeyOf<%s>"
 
     // | FsType.Alias _ -> "obj"
     // | FsType.ExportAssignment _ -> "obj"

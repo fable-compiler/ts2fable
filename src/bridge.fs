@@ -123,6 +123,7 @@ module internal Bridge =
         |> removeInternalModules
         |> mergeModulesInFile
         |> aliasToInterfacePartly
+        |> removeKeyOfConstraint
         |> extractGenericParameterDefaults
         |> removeInvalidGenericConstraints
         |> fixTypesHasESKeywords
