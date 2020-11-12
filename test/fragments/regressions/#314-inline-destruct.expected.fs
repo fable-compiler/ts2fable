@@ -26,4 +26,4 @@ type [<AllowNullLiteral>] DoubleKeyMapDeleteP0 =
     abstract key2: 'TKey2 with get, set
 
 type [<AllowNullLiteral>] DoubleKeyMapStatic =
-    [<Emit "new $0($1...)">] abstract Create: unit -> DoubleKeyMap<'TKey1, 'TKey2, 'TValue>
+    [<EmitConstructor>] abstract Create: unit -> DoubleKeyMap<'TKey1, 'TKey2, 'TValue>

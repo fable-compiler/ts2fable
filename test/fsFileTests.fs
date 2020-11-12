@@ -443,3 +443,8 @@ describe "transform tests" <| fun _ ->
     // https://github.com/fable-compiler/ts2fable/issues/353
     it "regression #362 array with ParamArray" <| fun _ ->
         runRegressionTest "#362-paramarray"
+
+    // https://github.com/fable-compiler/ts2fable/issues/303
+    it "regression #303 EmitConstructor" <| fun _ ->
+        runRegressionTest "#303-EmitConstructor"
+

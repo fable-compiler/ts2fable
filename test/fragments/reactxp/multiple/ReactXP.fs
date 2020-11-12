@@ -19,7 +19,7 @@ module __common_Accessibility =
         abstract announceForAccessibility: announcement: string -> unit
 
     type [<AllowNullLiteral>] AccessibilityStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> Accessibility
+        [<EmitConstructor>] abstract Create: unit -> Accessibility
 
 module __web_Accessibility =
     type CommonAccessibility = __common_Accessibility.Accessibility
@@ -33,7 +33,7 @@ module __web_Accessibility =
         abstract isScreenReaderEnabled: unit -> bool
 
     type [<AllowNullLiteral>] AccessibilityStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> Accessibility
+        [<EmitConstructor>] abstract Create: unit -> Accessibility
 
 module __web_ReactXP =
     let [<Import("*","ReactXP/web/ReactXP")>] reactXP: ReactXP.IExports = jsNative

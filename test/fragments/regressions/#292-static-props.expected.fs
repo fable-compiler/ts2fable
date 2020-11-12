@@ -18,6 +18,6 @@ module StaticTests =
 
     /// this class should contain 4 properties - 2 static ones, 2 instance ones. 
     type [<AllowNullLiteral>] PropertiesClassStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> PropertiesClass
+        [<EmitConstructor>] abstract Create: unit -> PropertiesClass
         abstract staticProperty: float with get, set
         abstract publicStaticProperty: float with get, set

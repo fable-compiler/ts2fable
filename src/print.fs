@@ -83,7 +83,7 @@ let printFunction (fn: FsFunction): string =
     match fn.Kind with
     | FsFunctionKind.Regular -> ()
     | FsFunctionKind.Constructor ->
-        "[<Emit \"new $0($1...)\">] " |> line.Add
+        "[<EmitConstructor>] " |> line.Add
     | FsFunctionKind.Call ->
         "[<Emit \"$0($1...)\">] " |> line.Add
     | FsFunctionKind.StringParam emit ->

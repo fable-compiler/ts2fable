@@ -27,4 +27,4 @@ type [<AllowNullLiteral>] T3<'T when 'T :> A> =
     interface end
 
 type [<AllowNullLiteral>] T3Static =
-    [<Emit "new $0($1...)">] abstract Create: unit -> T3<'T> when 'T :> A
+    [<EmitConstructor>] abstract Create: unit -> T3<'T> when 'T :> A

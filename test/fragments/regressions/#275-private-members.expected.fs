@@ -21,7 +21,7 @@ module PrivateMembersTests =
 
     /// No explicit ctor, so an implicit one should be generated 
     type [<AllowNullLiteral>] ImplicitCtorStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> ImplicitCtor
+        [<EmitConstructor>] abstract Create: unit -> ImplicitCtor
 
     /// explicit paramless ctor, no implicit one should be generated 
     type [<AllowNullLiteral>] ExplicitCtor =
@@ -29,7 +29,7 @@ module PrivateMembersTests =
 
     /// explicit paramless ctor, no implicit one should be generated 
     type [<AllowNullLiteral>] ExplicitCtorStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> ExplicitCtor
+        [<EmitConstructor>] abstract Create: unit -> ExplicitCtor
 
     /// explicit ctor, no implicit one should be generated 
     type [<AllowNullLiteral>] ExplicitCtor2 =
@@ -37,7 +37,7 @@ module PrivateMembersTests =
 
     /// explicit ctor, no implicit one should be generated 
     type [<AllowNullLiteral>] ExplicitCtor2Static =
-        [<Emit "new $0($1...)">] abstract Create: i: float -> ExplicitCtor2
+        [<EmitConstructor>] abstract Create: i: float -> ExplicitCtor2
 
     /// explicit private ctor, no ctor should be emitted at all 
     type [<AllowNullLiteral>] PrivateCtor =
@@ -49,7 +49,7 @@ module PrivateMembersTests =
 
     /// public property named i should be emitted 
     type [<AllowNullLiteral>] PublicFieldStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> PublicField
+        [<EmitConstructor>] abstract Create: unit -> PublicField
 
     /// no field should be emitted 
     type [<AllowNullLiteral>] PrivateField =
@@ -57,4 +57,4 @@ module PrivateMembersTests =
 
     /// no field should be emitted 
     type [<AllowNullLiteral>] PrivateFieldStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> PrivateField
+        [<EmitConstructor>] abstract Create: unit -> PrivateField
