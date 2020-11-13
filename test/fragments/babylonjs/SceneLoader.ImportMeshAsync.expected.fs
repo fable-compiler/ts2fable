@@ -36,7 +36,7 @@ module BABYLON =
         interface end
 
     type [<AllowNullLiteral>] SceneLoaderStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> SceneLoader
+        [<EmitConstructor>] abstract Create: unit -> SceneLoader
         /// Test:
         /// 1) the callback 'onProgress' should not be Option<Option<_>>. Instead it should be an optional parameter of type function.
         /// 2) the return value should be Promise<Interface>, not Promise<obj>. (Currently it generates 'TypeLiteral_01', would be great if it generated a better-named interface like 'SceneLoaderImportMeshAsyncReturn')

@@ -19,4 +19,4 @@ module TypeLiteralsAsReturnValue =
         abstract i: float with get, set
 
     type [<AllowNullLiteral>] ClassStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> Class
+        [<EmitConstructor>] abstract Create: unit -> Class

@@ -18,10 +18,10 @@ module Outer =
             interface end
 
         type [<AllowNullLiteral>] C1Static =
-            [<Emit "new $0($1...)">] abstract Create: unit -> C1
+            [<EmitConstructor>] abstract Create: unit -> C1
 
         type [<AllowNullLiteral>] C2 =
             inherit C1
 
         type [<AllowNullLiteral>] C2Static =
-            [<Emit "new $0($1...)">] abstract Create: unit -> C2
+            [<EmitConstructor>] abstract Create: unit -> C2

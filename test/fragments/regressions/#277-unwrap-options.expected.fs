@@ -23,7 +23,7 @@ module UnwrapOptions =
         abstract Bar2: unit -> string option
 
     type [<AllowNullLiteral>] ClassStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> Class
+        [<EmitConstructor>] abstract Create: unit -> Class
 
 module UnwrapOptionsAlias =
 
@@ -48,4 +48,4 @@ module UnwrapOptionsAlias =
         abstract Bar3: unit -> Nullable<string> option
 
     type [<AllowNullLiteral>] ClassStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> Class
+        [<EmitConstructor>] abstract Create: unit -> Class

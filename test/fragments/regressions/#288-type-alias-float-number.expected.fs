@@ -16,4 +16,4 @@ module TypeAloasFloatNumber =
         abstract Foo: f: float -> float
 
     type [<AllowNullLiteral>] ClassStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> Class
+        [<EmitConstructor>] abstract Create: unit -> Class

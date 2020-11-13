@@ -16,7 +16,7 @@ module React =
         abstract setState: state: U2<(obj -> 'P -> U2<obj, 'S>), U2<obj, 'S>> * ?callback: (unit -> obj option) -> unit when 'K :> 'S
 
     type [<AllowNullLiteral>] ComponentStatic =
-        [<Emit "new $0($1...)">] abstract Create: unit -> Component<'P, 'S>
+        [<EmitConstructor>] abstract Create: unit -> Component<'P, 'S>
 
 type StatelessComponent =
     StatelessComponent<obj>
