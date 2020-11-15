@@ -33,13 +33,13 @@ type [<AllowNullLiteral>] C1 =
     interface end
 
 type [<AllowNullLiteral>] C1Static =
-    [<Emit "new $0($1...)">] abstract Create: unit -> C1
+    [<EmitConstructor>] abstract Create: unit -> C1
 
 type [<AllowNullLiteral>] C2<'T> =
     interface end
 
 type [<AllowNullLiteral>] C2Static =
-    [<Emit "new $0($1...)">] abstract Create: unit -> C2<'T>
+    [<EmitConstructor>] abstract Create: unit -> C2<'T>
 
 type [<AllowNullLiteral>] I3<'T> =
     abstract p1: KeyOf<'T> with get, set
@@ -63,4 +63,4 @@ type [<AllowNullLiteral>] C3<'T> =
     abstract f4: l: KeyOf<float> -> KeyOf<float>
 
 type [<AllowNullLiteral>] C3Static =
-    [<Emit "new $0($1...)">] abstract Create: k: KeyOf<'T> -> C3<'T>
+    [<EmitConstructor>] abstract Create: k: KeyOf<'T> -> C3<'T>
