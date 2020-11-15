@@ -1,18 +1,5 @@
 module rec ts2fable.Print
-open ts2fable.Naming
-
-let printDelegate (fn: FsFunction) =
-    let line = ResizeArray()
-    "delegate of " |> line.Add
-
-    let prms = printParams fn
-    if List.isEmpty prms then
-        sprintf " unit" |> line.Add
-    else
-        sprintf " %s" (prms |> String.concat " * ") |> line.Add
-    sprintf " -> %s" (printType fn.ReturnType) |> line.Add
-
-    line |> String.concat ""    
+open ts2fable.Naming   
 
 let printType (tp: FsType): string =
     match tp with
@@ -133,8 +120,8 @@ let printFunction (fn: FsFunction): string =
     sprintf " -> %s" (printType fn.ReturnType) |> line.Add
 
     // generic type parameter constraints
-    // printGenericTypeConstraints fn.TypeParameters
-    // |> line.Add
+    printGenericTypeConstraints fn.TypeParameters
+    |> line.Add
 
     line |> String.concat ""
 
@@ -302,6 +289,23 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
     // print all other types
     for tp in md.Types do
         match tp with
+        | FsType.Delegate(name, fn) ->
+            sprintf "" |> lines.Add
+            printComments lines indent fn.AllComments
+            sprintf "%stype %s%s =" indent name (printTypeParameters fn.TypeParameters) |> lines.Add
+
+            let line = ResizeArray()
+            indent + "    delegate of" |> line.Add
+
+            let prms = printParams fn
+            if List.isEmpty prms then
+                sprintf " unit" |> line.Add
+            else
+                sprintf " %s" (prms |> String.concat " * ") |> line.Add
+            sprintf " -> %s" (printType fn.ReturnType) |> line.Add
+
+            line |> String.concat "" |> lines.Add
+
         | FsType.Interface inf ->
             match inf.Members with
             | [FsType.Enum en] ->
@@ -337,11 +341,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         | FsType.Alias al ->
             sprintf "" |> lines.Add
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
-            sprintf "%s    %s" indent
-                (match al.Type with
-                 | FsType.Function fn -> printDelegate fn
-                 | t -> printType t)
-            |> lines.Add
+            sprintf "%s    %s" indent (printType al.Type) |> lines.Add            
         | FsType.Module smd ->
             printModule lines indent smd
         | FsType.Variable vb ->

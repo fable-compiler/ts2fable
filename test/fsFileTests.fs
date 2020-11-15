@@ -208,7 +208,7 @@ describe "transform tests" <| fun _ ->
         let fsPath = "test/fragments/react/f2.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existOnlyOneByName "DOMFactory" FsType.isInterface
+            |> existOnlyOneByName "DOMFactory" FsType.isDelegate
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/pull/167        
@@ -408,6 +408,13 @@ describe "transform tests" <| fun _ ->
         let tsPaths = ["test/fragments/custom/keyof.d.ts"]
         let fsPath = "test/fragments/custom/keyof.fs"
         let expected = "test/fragments/custom/keyof.expected.fs"
+        convertAndCompareAgainstExpected tsPaths fsPath expected
+
+    // https://github.com/fable-compiler/ts2fable/issues/308
+    it "delegate" <| fun _ ->
+        let tsPaths = ["test/fragments/custom/delegate.d.ts"]
+        let fsPath = "test/fragments/custom/delegate.fs"
+        let expected = "test/fragments/custom/delegate.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
 
     // https://github.com/fable-compiler/ts2fable/pull/275

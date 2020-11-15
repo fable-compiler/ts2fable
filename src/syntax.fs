@@ -167,6 +167,7 @@ type FsAlias =
         Name: string
         Type: FsType
         TypeParameters: FsType list
+        Comments: FsComment list
     }
 
 [<RequireQualifiedAccess>]
@@ -266,6 +267,7 @@ type FsType =
     | None // when it is not set
     | Mapped of FsMapped
     | Function of FsFunction
+    | Delegate of name: string * FsFunction
     | Union of FsUnion
     | Alias of FsAlias
     | Generic of FsGenericType
@@ -287,6 +289,7 @@ module FsType =
     let isMapped tp = match tp with | FsType.Mapped _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
+    let isDelegate tp = match tp with | FsType.Delegate _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isImport tp = match tp with | FsType.Import _ -> true | _ -> false
@@ -359,6 +362,7 @@ let rec getName (tp: FsType) =
     | FsType.Enum en -> en.Name
     | FsType.Param pm -> pm.Name
     | FsType.Function fn -> fn.Name |> Option.defaultValue ""
+    | FsType.Delegate(name, _) -> name
     | FsType.Property pr -> pr.Name
     | FsType.Alias al -> al.Name
     | FsType.Variable vb -> vb.Name
@@ -387,6 +391,7 @@ let getTypeName (tp: FsType) =
     match tp with
     | FsType.Interface t -> t.GetType().ToString()
     | FsType.Function t -> t.GetType().ToString()
+    | FsType.Delegate(_, t) -> t.GetType().ToString()
     | FsType.Property t -> t.GetType().ToString()
     | FsType.Variable t -> t.GetType().ToString()
     | FsType.Module t -> t.GetType().ToString()
@@ -414,6 +419,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     match tp with
     | FsType.Interface it -> it.Accessibility
     | FsType.Function fn -> fn.Accessibility
+    | FsType.Delegate(_, fn) -> fn.Accessibility
     | FsType.Property pr -> pr.Accessibility
     | FsType.Variable vb -> vb.Accessibility
     | FsType.Module _

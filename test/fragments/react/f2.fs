@@ -12,8 +12,8 @@ type HTMLAttributes = React.HTMLAttributes
 type DOMAttributes = React.DOMAttributes
 type DetailedReactHTMLElement = React.DetailedReactHTMLElement
 
-type [<AllowNullLiteral>] DOMFactory<'P, 'T when 'P :> DOMAttributes<'T> and 'T :> Element> =
-    [<Emit "$0($1...)">] abstract Invoke: ?props: obj * [<ParamArray>] children: ReactNode[] -> DOMElement<'P, 'T>
+type DOMFactory<'P, 'T when 'P :> DOMAttributes<'T> and 'T :> Element> =
+    delegate of ?props: obj * [<ParamArray>] children: ReactNode[] -> DOMElement<'P, 'T>
 
 type [<AllowNullLiteral>] DetailedHTMLFactory<'P, 'T when 'P :> HTMLAttributes<'T> and 'T :> HTMLElement> =
     inherit DOMFactory<'P, 'T>
