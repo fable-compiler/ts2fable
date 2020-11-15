@@ -1,6 +1,19 @@
 module rec ts2fable.Print
 open ts2fable.Naming
 
+let printDelegate (fn: FsFunction) =
+    let line = ResizeArray()
+    "delegate of " |> line.Add
+
+    let prms = printParams fn
+    if List.isEmpty prms then
+        sprintf " unit" |> line.Add
+    else
+        sprintf " %s" (prms |> String.concat " * ") |> line.Add
+    sprintf " -> %s" (printType fn.ReturnType) |> line.Add
+
+    line |> String.concat ""    
+
 let printType (tp: FsType): string =
     match tp with
     | FsType.Mapped mp ->
@@ -80,6 +93,23 @@ let printEnumType (en: FsEnum): string =
     | FsEnumCaseType.String -> "string"
     | FsEnumCaseType.Unknown -> "obj"
 
+let printParams (fn: FsFunction) =
+    fn.Params |> List.map(fun p ->
+        if p.ParamArray then
+            sprintf "[<ParamArray>] %s%s: %s" (if p.Optional then "?" else "") p.Name
+                (   match p.Type with
+                    | FsType.Array at ->
+                        // array instead of ResizeArray with ParamArray
+                        sprintf "%s[]" (printType at)
+                    | _ ->
+                        // failwithf "function with unsupported param array type: %s" f.Name.Value
+                        printfn "ParamArray function is not an array type: %s" (getName(FsType.Function fn))
+                        printType p.Type
+                )
+        else
+            sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name (printType p.Type)
+    )
+
 let printFunction (fn: FsFunction): string =
     let line = ResizeArray()
 
@@ -95,22 +125,7 @@ let printFunction (fn: FsFunction): string =
     sprintf "abstract %s" fn.Name.Value |> line.Add
 
     // parameters
-    let prms =
-        fn.Params |> List.map(fun p ->
-            if p.ParamArray then
-                sprintf "[<ParamArray>] %s%s: %s" (if p.Optional then "?" else "") p.Name
-                    (   match p.Type with
-                        | FsType.Array at ->
-                            // array instead of ResizeArray with ParamArray
-                            sprintf "%s[]" (printType at)
-                        | _ ->
-                            // failwithf "function with unsupported param array type: %s" f.Name.Value
-                            printfn "ParamArray function is not an array type: %s" (getName(FsType.Function fn))
-                            printType p.Type
-                    )
-            else
-                sprintf "%s%s: %s" (if p.Optional then "?" else "") p.Name (printType p.Type)
-        )
+    let prms = printParams fn
     if prms.Length = 0 then
         sprintf ": unit" |> line.Add
     else
@@ -118,8 +133,8 @@ let printFunction (fn: FsFunction): string =
     sprintf " -> %s" (printType fn.ReturnType) |> line.Add
 
     // generic type parameter constraints
-    printGenericTypeConstraints fn.TypeParameters
-    |> line.Add
+    // printGenericTypeConstraints fn.TypeParameters
+    // |> line.Add
 
     line |> String.concat ""
 
@@ -164,6 +179,7 @@ let printGenericTypeConstraint (p: FsGenericTypeParameter): string option =
                         |> Some
             | _ -> None
         printConstraint c
+
 let printGenericTypeConstraints (tps: FsType list): string =
     tps
     |> List.choose FsType.asGenericTypeParameter
@@ -172,7 +188,6 @@ let printGenericTypeConstraints (tps: FsType list): string =
        | [] -> ""
        | cs ->
            sprintf " when %s" (cs |> String.concat " and ")
-
 
 let printTypeParameters (tps: FsType list): string =
     if tps.Length = 0 then ""
@@ -322,7 +337,11 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         | FsType.Alias al ->
             sprintf "" |> lines.Add
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
-            sprintf "%s    %s" indent (printType al.Type) |> lines.Add
+            sprintf "%s    %s" indent
+                (match al.Type with
+                 | FsType.Function fn -> printDelegate fn
+                 | t -> printType t)
+            |> lines.Add
         | FsType.Module smd ->
             printModule lines indent smd
         | FsType.Variable vb ->
