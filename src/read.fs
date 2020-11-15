@@ -363,7 +363,13 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     // | ConstructorType -> FsType.TODO
     | SyntaxKind.TypeOperator ->
         let pt = t :?> TypeOperatorNode
-        readTypeNode checker pt.``type``
+        match pt.operator with
+        | SyntaxKind.KeyOfKeyword -> 
+            {
+                Type = readTypeNode checker pt.``type``
+            }
+            |> FsType.KeyOf
+        | _ -> readTypeNode checker pt.``type``
     | _ ->
         printfn "unsupported TypeNode kind: %A" t.kind
         FsType.TODO

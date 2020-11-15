@@ -143,6 +143,11 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
             Default = gtp.Default |> Option.map fixType
         }
         |> FsType.GenericTypeParameter
+    | FsType.KeyOf k ->
+        { k with
+            Type = fixType k.Type
+        }
+        |> FsType.KeyOf
     |> fun t -> if doFix(t) then fix ns t else t // current type
 
 /// recursively fix all the FsType childen
@@ -1285,6 +1290,12 @@ let fixFloatAlias (f: FsFile): FsFile =
         | _ -> tp
     )
 
+let private emitKeyOfType (fo: FsFileOut): FsFileOut =
+    if fo.Files |> getAllTypes |> List.exists FsType.isKeyOf then
+        let keyofType = "[<Erase>] type KeyOf<'T> = Key of string"
+        { fo with AbbrevTypes = keyofType :: fo.AbbrevTypes}
+    else
+        fo
 
 let abbrevTypes =
     [
@@ -1329,7 +1340,9 @@ let fixFsFileOut fo =
                 ) } |> FsType.Module
             | _ -> tp )
 
-    let fo = { fo with AbbrevTypes = abbrevTypes }
+    let fo = 
+        { fo with AbbrevTypes = abbrevTypes @ fo.AbbrevTypes }
+        |> emitKeyOfType
     if isBrowser then
         { fo with
             Opens = fo.Opens @ ["Browser.Types"]
@@ -1521,3 +1534,68 @@ let extractTypesInGlobalModules  (f: FsFile): FsFile =
             { md with Types = tps |> List.ofSeq }
         )
     }
+
+let removeKeyOfConstraint (f: FsFile): FsFile =
+    // remove type parameter `K extends keyof XXX`
+    // and replace all occurrences of `K` with `keyof XXX`
+
+    let extractKeyOfTypeParameters (tps: FsType list) =
+        let (tps, keyofs) =
+            tps
+            |> List.choose FsType.asGenericTypeParameter
+            |> List.fold (fun (tps, keyofs) tp ->
+                match tp.Constraint with
+                | Some (FsType.KeyOf { Type = t }) ->
+                    (tps, keyofs |> Map.add tp.Name t)
+                | _ -> 
+                    (tp::tps, keyofs)
+            ) ([], Map.empty)
+        
+        if keyofs |> Map.isEmpty then
+            None
+        else
+            let tps =
+                tps
+                |> List.rev
+                |> List.map FsType.GenericTypeParameter
+
+            Some (tps, keyofs)
+    
+    let replaceTypeParameters ns (keyofs: Map<string, FsType>) =
+        fixType ns (fun _ ->
+            function
+            | FsType.Mapped mp when keyofs |> Map.containsKey mp.Name ->
+                {
+                    Type = keyofs |> Map.find mp.Name
+                }
+                |> FsType.KeyOf
+            | t -> t
+        )
+    
+    let fix ns c =
+        match c with
+        | FsType.Function f ->
+            match extractKeyOfTypeParameters f.TypeParameters with
+            | None -> c
+            | Some (tps, keyofs) ->
+                { f with TypeParameters = tps }
+                |> FsType.Function
+                |> replaceTypeParameters ns keyofs
+        | FsType.Interface i -> 
+            match extractKeyOfTypeParameters i.TypeParameters with
+            | None -> c
+            | Some (tps, keyofs) ->
+                { i with TypeParameters = tps }
+                |> FsType.Interface
+                |> replaceTypeParameters ns keyofs
+        | FsType.Alias a ->
+            match extractKeyOfTypeParameters a.TypeParameters with
+            | None -> c
+            | Some (tps, keyofs) ->
+                { a with TypeParameters = tps }
+                |> FsType.Alias
+                |> replaceTypeParameters ns keyofs
+        | _ -> c
+
+    f
+    |> fixFile fix

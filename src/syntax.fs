@@ -236,6 +236,10 @@ with
             | :? FsVariable as vb -> compare x.Name vb.Name
             | _ -> invalidArg "y" "cannot compare values of different types"
 
+type FsKeyOf = {
+    Type: FsType
+}
+
 type FsMapped =
     {
         // Namespace: string list // TODO
@@ -276,6 +280,7 @@ type FsType =
     | Import of FsImport
     | TypeLiteral of FsTypeLiteral
     | GenericTypeParameter of FsGenericTypeParameter
+    | KeyOf of FsKeyOf
 
 [<RequireQualifiedAccess>]
 module FsType =
@@ -288,6 +293,7 @@ module FsType =
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
     let isAlias tp = match tp with | FsType.Alias _ -> true | _ -> false
     let isGeneric tp = match tp with | FsType.Generic _ -> true | _ -> false
+    let isKeyOf tp = match tp with | FsType.KeyOf _ -> true | _ -> false
 
     let asMapped (tp: FsType) = match tp with | FsType.Mapped v -> Some v | _ -> None
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
@@ -394,6 +400,7 @@ let getTypeName (tp: FsType) =
     | FsType.Array t -> t.GetType().ToString()
     | FsType.ExportAssignment t -> t.GetType().ToString()
     | FsType.GenericTypeParameter t -> t.GetType().ToString()
+    | FsType.KeyOf t -> t.GetType().ToString()
     | FsType.None as t -> t.GetType().ToString() + ".None"
     | FsType.TODO as t -> t.GetType().ToString() + ".TODO"
     | FsType.StringLiteral t -> t.GetType().ToString()
@@ -420,6 +427,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     | FsType.Array _
     | FsType.ExportAssignment _
     | FsType.GenericTypeParameter _
+    | FsType.KeyOf _
     | FsType.None
     | FsType.TODO
     | FsType.StringLiteral _
