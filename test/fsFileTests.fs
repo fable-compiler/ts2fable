@@ -22,6 +22,8 @@ let [<Emit("it.only($0,$1)")>] only (msg: string) (f: unit->unit): unit = jsNati
 let [<Emit("this.timeout($0)")>] timeout (duration: int): unit = jsNative
 let inline equal (expected: 'T) (actual: 'T): unit =
     Testing.Assert.AreEqual(expected, actual)
+let inline notEqual (expected: 'T) (actual: 'T): unit =
+    Testing.Assert.NotEqual(expected, actual)
 
 let testFsFilesWithExports tsPaths fsPath exports (f: FsFile list -> unit) =
 
@@ -111,25 +113,28 @@ describe "transform tests" <| fun _ ->
     let sanitizeFsFile (lines:#seq<string>) : string array =
         lines
         |> Seq.filter (not << System.String.IsNullOrWhiteSpace)
-        |> Seq.filter (fun l -> not (l.StartsWith("//")))
+        |> Seq.filter (fun l -> not (l.StartsWith("//")) || l.StartsWith("///")) // ignore normal comments, but not xml comments
         |> Seq.map (fun l -> l.TrimEnd())
         |> Seq.toArray
+    
+    let fileLinesCompare compare expected actual =
+        compare (sanitizeFsFile expected) (sanitizeFsFile actual)
 
-    let fileLinesEqual expected actual =
-        equal (sanitizeFsFile expected) (sanitizeFsFile actual)
-
-    let convertAndCompareAgainstExpected tsPaths fsPath expected =
+    let convertAndCompareAgainstExpectedWithComparison compare tsPaths fsPath expected =
         testFsFileLines tsPaths fsPath <| fun lines ->
             let expected =
                 let lines = ts2fable.node.FileSystem.readLines (expected)
                 Seq.toArray lines
-            fileLinesEqual expected lines
+            fileLinesCompare compare expected lines
+    let convertAndCompareAgainstExpected = convertAndCompareAgainstExpectedWithComparison equal
 
-    let runRegressionTest name =
+    let runRegressionTestWithComparison compare name =
         let tsPaths = [sprintf "test/fragments/regressions/%s.d.ts" name]
         let fsPath = sprintf "test/fragments/regressions/%s.fs" name
         let expected = sprintf "test/fragments/regressions/%s.expected.fs" name
-        convertAndCompareAgainstExpected tsPaths fsPath expected
+        convertAndCompareAgainstExpectedWithComparison compare tsPaths fsPath expected
+    let runRegressionTest = runRegressionTestWithComparison equal
+
 
     // https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
@@ -457,3 +462,8 @@ describe "transform tests" <| fun _ ->
     it "regression #303 EmitIndexer" <| fun _ ->
         runRegressionTest "#303-EmitIndexer"
 
+    // https://github.com/fable-compiler/ts2fable/pull/368
+    it "regression #368 compare xml comments -- pass" <| fun _ ->
+        runRegressionTest "#368-compare-xml-comments.pass"
+    it "regression #368 compare xml comments -- fail" <| fun _ ->
+        runRegressionTestWithComparison notEqual "#368-compare-xml-comments.fail"
