@@ -610,6 +610,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
     let name = d.name.getText()
     let asAlias() =
         {
+            Comments = readCommentsAtLocation checker d.name
             Name = name
             Type = tp
             TypeParameters = readTypeParameters checker d.typeParameters

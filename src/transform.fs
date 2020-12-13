@@ -90,6 +90,13 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
             ReturnType = fixType fn.ReturnType
         }
         |> FsType.Function
+    | FsType.Delegate(name, fn) ->
+        (name, { fn with
+                    TypeParameters = fn.TypeParameters |> List.map fixType
+                    Params = fn.Params |> List.map fixParam
+                    ReturnType = fixType fn.ReturnType
+                })
+        |> FsType.Delegate        
     | FsType.Union un ->
         { un with
             Types = un.Types |> List.map fixType
@@ -597,6 +604,7 @@ let addTicForGenericTypes(f: FsFile): FsFile =
         match tp with
         | FsType.Interface it -> fixTic ns it.TypeParameters tp
         | FsType.Alias al -> fixTic ns al.TypeParameters tp
+        | FsType.Delegate(_,f) -> fixTic ns f.TypeParameters tp
         | _ -> tp
     )
 
@@ -1160,24 +1168,16 @@ let fixNamespace (f: FsFile): FsFile =
         | _ -> tp
     )
 
-let aliasToInterfacePartly (f: FsFile): FsFile =
+let aliasToDelegate (f: FsFile): FsFile =
     let compileAliasHasOnlyFunctionToInterface f =
         f |> fixFile (fun ns tp ->
             match tp with
             | FsType.Alias al ->
                 match al.Type with
                 | FsType.Function f ->
-                    {
-                        Comments = f.Comments
-                        IsStatic = false
-                        IsClass = false
-                        Name = al.Name
-                        FullName = al.Name
-                        Inherits = []
-                        Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
-                        TypeParameters = al.TypeParameters
-                        Accessibility = None
-                    } |> FsType.Interface
+                    let f = { f with TypeParameters = al.TypeParameters
+                                     Comments = al.Comments @ f.Comments }
+                    FsType.Delegate(al.Name, f)
                 | _ -> tp
             | _ -> tp
     )
@@ -1361,6 +1361,7 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                 | None -> ()
                 | Some _ ->
                     {
+                        Comments = []
                         Name = name
                         Type =
                             {

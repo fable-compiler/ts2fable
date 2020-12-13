@@ -122,7 +122,7 @@ module internal Bridge =
         // |> wrapperModuleForExtralFile
         |> removeInternalModules
         |> mergeModulesInFile
-        |> aliasToInterfacePartly
+        |> aliasToDelegate
         |> removeKeyOfConstraint
         |> extractGenericParameterDefaults
         |> removeInvalidGenericConstraints
