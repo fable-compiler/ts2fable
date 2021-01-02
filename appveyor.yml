@@ -2,7 +2,7 @@ os: Visual Studio 2019
 version: 0.8.0-build.{build}
 install:
   # Get the latest stable version of .NET Core
-  - cmd: choco install dotnetcore-sdk --version 3.1.101 --no-progress
+  - cmd: choco install dotnetcore-sdk --version 3.1.404 --no-progress
   # Get the latest stable version of Node.js
   - ps: choco install nodejs --version 14.14.0 --no-progress
 
