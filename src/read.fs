@@ -106,41 +106,115 @@ let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsTy
             )
         )
 
-let readCommentLines (text: string): string list =
+let readCommentLines (text: string): FsCommentContent =
     text.Replace("\r\n","\n").Replace("\r","\n").Split [|'\n'|] |> List.ofArray
 
-let readComments (comments: List<SymbolDisplayPart>): FsComment list =
-    if comments.Count = 0 then []
+let private readCommentSummary (documentationComment: ResizeArray<SymbolDisplayPart>): FsComment option =
+    if documentationComment.Count = 0 then None
     else
-        comments |> List.ofSeq |> List.collect (fun dp ->
-            match dp.kind with
-            // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
-            | "text" -> dp.text |> readCommentLines |> List.map FsComment.SummaryLine
-            | _ -> []
-        )
+        documentationComment
+        |> List.ofSeq
+        |> List.filter (fun dp -> dp.kind = "text")  // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
+        |> List.collect (fun dp -> dp.text |> readCommentLines)
+        |> function | [] -> None | lines -> Some (FsComment.Summary lines)
 
-let readCommentTags (nd: Node) =
-    // match ts.getJSDocTags nd with
-    // | None -> List.empty
-    // | Some tags ->
-        let tags = ts.getJSDocTags nd
-        tags |> List.ofSeq |> List.collect (fun tag ->
-            match tag.kind with
-            | SyntaxKind.JSDocParameterTag ->
-                match tag.comment with
-                | None -> []
-                | Some comment -> [{ Name = ""; Description = readCommentLines comment} |> FsComment.Param]
-            | _ ->
-                // printfn "uknown comment kind tag kind %A %A" tag.kind tag.comment
-                [tag.comment |> FsComment.Unknown]
-        )
+let private readCommentTag (jsDocTag: JSDocTag): FsComment =
+    let rec getQualifiedName (name: QualifiedName) =
+        sprintf "%s.%s"
+            (getEntityName name.left)
+            (name.right.text)
+    and getEntityName (name: EntityName) =
+        // Fable can't match on EntityName
+        // > error FABLE: Cannot type test: interface "TypeScript.Ts.QualifiedName"
+        match name?kind with
+        | SyntaxKind.Identifier ->
+            let identifier: Identifier = unbox name
+            identifier.text
+        | SyntaxKind.QualifiedName ->
+            getQualifiedName (unbox name)
+        | kind -> failwithf "Invalid Syntaxkind: %A" kind
+    
+    let tag (jsDocTag: JSDocTag) = jsDocTag.tagName.text.ToLower()
+
+    let (|Tag|_|) (kind: SyntaxKind) (jsDocTag: JSDocTag) =
+        if jsDocTag.kind = kind then
+            Some ()
+        else
+            None
+    let (|TagNodeOf|_|) (names: string list) (jsDocTag: JSDocTag): string option =
+        match jsDocTag with
+        | Tag SyntaxKind.FirstJSDocTagNode when names |> List.contains (jsDocTag |> tag) ->
+            Some (jsDocTag |> tag)
+        | _ -> None
+
+    let comment =
+        jsDocTag.comment
+        |> Option.map readCommentLines
+        |> Option.defaultValue []
+
+    let mkTag name =
+        { Name = name; Content = comment }
+        |> FsComment.Tag
+
+    match jsDocTag with
+    | TagNodeOf ["summary"; "description"; "desc"] _ ->
+        comment |> FsComment.Summary
+    | Tag SyntaxKind.JSDocParameterTag ->
+        let p: JSDocParameterTag = downcast jsDocTag
+        { Name = getEntityName p.name; Content = comment }
+        |> FsComment.Param
+    | Tag SyntaxKind.JSDocReturnTag ->
+        comment |> FsComment.Returns
+    | TagNodeOf ["example"] _ ->
+        comment |> FsComment.Example
+    | TagNodeOf ["remark"; "remarks"; "note"] _ ->
+        comment |> FsComment.Remarks
+    | TagNodeOf ["default"; "defaultvalue"] _ ->
+        comment |> FsComment.Default
+    | TagNodeOf ["version"] _ ->
+        comment |> FsComment.Version
+    // requires some extracting (like leading name)
+    // -> handled in transform
+    | TagNodeOf ["typeparam"; "tparam"] _ ->
+        mkTag "typeparam"
+    | TagNodeOf ["see"] _ ->
+        mkTag "see"
+    | TagNodeOf ["throws"; "throw"; "exception"] _ ->
+        mkTag "throws"
+    | TagNodeOf ["deprecated"] _ ->
+        mkTag "deprecated"
+    
+    | Tag SyntaxKind.FirstJSDocTagNode ->
+        { Name = jsDocTag |> tag; Content = comment }
+        |> FsComment.UnknownTag
+    | _ ->
+        comment |> FsComment.Unknown
+
+let private readCommentTags (jsDocTags: ResizeArray<JSDocTag>): FsComment list =
+    if jsDocTags.Count = 0 then []
+    else
+        jsDocTags
+        |> List.ofSeq
+        |> List.map readCommentTag
+
+let readComments (documentationComment: ResizeArray<SymbolDisplayPart>) (jsDocTags: ResizeArray<JSDocTag>): FsComment list =
+    // documentationComment contains root comment
+    // jsDocTags all other tags
+    [
+        match readCommentSummary documentationComment with
+        | Some s -> yield s
+        | None -> ()
+
+        yield! readCommentTags jsDocTags
+    ]
+
 
 let readCommentsForSignatureDeclaration (checker: TypeChecker) (declaration: SignatureDeclaration): FsComment list =
     try
         match checker.getSignatureFromDeclaration declaration with
         | None -> []
         | Some signature ->
-            Some checker |> signature.getDocumentationComment |> readComments
+            readComments (signature.getDocumentationComment (Some checker)) (ts.getJSDocTags (!!declaration))
     with _ ->
         []
 
@@ -148,7 +222,10 @@ let readCommentsAtLocation (checker: TypeChecker) (nd: Node): FsComment list =
     match checker.getSymbolAtLocation nd with
     | None -> []
     | Some symbol ->
-        Some checker |> symbol.getDocumentationComment |> readComments
+        // difference between `symbol.getJsDocTags()` && `ts.getJSDocTags id.parent`
+        // * on symbol: gets unparsed tags
+        // * on ts: gets parsed tags
+        readComments (symbol.getDocumentationComment (Some checker)) (ts.getJSDocTags nd.parent)
 
 let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface =
     {
@@ -427,14 +504,6 @@ let readParameterDeclaration (checker: TypeChecker) (iParam:int) (pd: ParameterD
 
     let name = pd.name |> getBindingName |> Option.defaultValue ("p" + string iParam)
     {
-        Comment =
-            readCommentTags pd
-            |> List.tryFind FsComment.isParam
-            |> Option.map (fun comment ->
-                match comment with
-                | FsComment.Param c -> { c with Name = name} |> FsComment.Param
-                | _ -> comment
-            )
         Name = name
         Optional = pd.questionToken.IsSome
         ParamArray = pd.dotDotDotToken.IsSome
@@ -476,7 +545,7 @@ let isReadOnly (modifiers: ModifiersArray option) =
 
 let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProperty =
     {
-        Comments = readPropertyNameComments checker ps.name
+        Comments = readCommentsAtLocation checker (!!ps.name)
         Kind = FsPropertyKind.Regular
         Index = None
         Name = ps.name |> getPropertyName
@@ -490,17 +559,9 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
         Accessibility = getAccessibility ps.modifiers
     }
 
-let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): FsComment list =
-    readCommentsAtLocation checker !!pn
-    // match pn with
-    // | U4.Case1 id -> readCommentsAtLocation checker id
-    // | U4.Case2 sl -> readCommentsAtLocation checker sl
-    // | U4.Case3 nl -> readCommentsAtLocation checker nl
-    // | U4.Case4 cpn -> readCommentsAtLocation checker cpn
-
 let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): FsProperty =
     {
-        Comments = readPropertyNameComments checker pd.name
+        Comments = readCommentsAtLocation checker (!!pd.name)
         Kind = FsPropertyKind.Regular
         Index = None
         Name = pd.name |> getPropertyName

@@ -191,28 +191,65 @@ let printTypeParameters (tps: FsType list): string =
         line |> String.concat ""
 
 let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsComment list): unit =
-    if comments |> List.exists FsComment.isParam then
-        let summaryLines = comments |> List.choose FsComment.asSummaryLine
-        summaryLines |> List.iteri (fun i desc ->
-            sprintf "%s/// %s%s%s" indent
-                (if i = 0 then "<summary>" else "")
-                desc
-                (if i = summaryLines.Length - 1 then "</summary>" else "")
-            |> lines.Add
-        )
-        comments |> List.choose FsComment.asParam |> List.iter (fun comment ->
-            comment.Description |> List.iteri (fun i desc ->
-                sprintf "%s/// %s%s%s" indent
-                    (if i = 0 then sprintf "<param name=\"%s\">" comment.Name else "")
-                    desc
-                    (if i = comment.Description.Length - 1 then "</param>" else "")
-                |> lines.Add
-            )
-        )
-    else
-        comments |> List.choose FsComment.asSummaryLine |> List.iter (fun comment ->
-            sprintf "%s/// %s" indent comment |> lines.Add
-        )
+    let printLine comment =
+        sprintf "%s/// %s" indent comment |> lines.Add
+    let printLines = List.iter printLine
+
+    let printTag name attributes (content: FsCommentContent) =
+        // 0 lines  : empty tag
+        // 1 line   : tag & comment on same line
+        // otherwise: tag & comment on different lines
+
+        let nameWithAttributes =
+            match attributes with
+            | [] -> name
+            | _ ->
+                let attrs = 
+                    attributes 
+                    |> List.map (fun (name, value) -> sprintf "%s=\"%s\"" name value)
+                    |> String.concat " "
+                sprintf "%s %s" name attrs
+            
+        match content with
+        | [] -> 
+            sprintf "<%s />" nameWithAttributes
+            |> printLine
+        | [ line ] ->
+            sprintf "<%s>%s</%s>" nameWithAttributes line name
+            |> printLine
+        | _ ->
+            sprintf "<%s>" nameWithAttributes |> printLine
+            content |> printLines
+            sprintf "</%s>" name |> printLine
+
+    match comments with
+    | [] -> ()
+    | [ FsComment.Summary lines ] when lines |> List.forall (fun l -> l.Contains "<" || l.Contains ">") ->
+        // only summary
+        // -> no `<summary>` tag necessary
+        // BUT: without `<summary>` `<` and `>` are automatically escaped  (https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation#comments-without-xml-tags)
+        // -> only emit no summary iff it contains no other tags
+        lines
+        |> printLines
+    | _ ->
+        for c in comments do
+            match c with
+            | FsComment.Summary s -> printTag "summary" [] s
+            | FsComment.Param p -> printTag "param" [("name", p.Name)] p.Content
+            | FsComment.Returns r -> printTag "returns" [] r
+            | FsComment.Remarks r -> printTag "remarks" [] r
+            | FsComment.SeeAlso link -> () //todo: implement
+            | FsComment.TypeParam tp -> printTag "typeparam" [("name", tp.Name)] tp.Content
+            | FsComment.Example e -> printTag "example" [] e
+            | FsComment.Exception e -> 
+                let attrs = match e.Type with | Some ty -> [("cref", ty)] | None -> []
+                printTag "exception" attrs e.Content
+            | FsComment.Version v -> printTag "version" [] v
+            | FsComment.Default d -> printTag "default" [] d
+              // Unknown tag, but was explicitly kept (vs. `UnknownTag`) -> print too
+            | FsComment.Tag t -> printTag t.Name [] t.Content
+            | FsComment.UnknownTag _ -> ()
+            | FsComment.Unknown _ -> ()
 
 let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
     sprintf "" |> lines.Add
@@ -304,7 +341,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                     match mbr with
                     | FsType.Function f ->
                         let indent = sprintf "%s    " indent
-                        printComments lines indent f.AllComments
+                        printComments lines indent f.Comments
                         sprintf "%s%s" indent (printFunction f) |> lines.Add
                         incr nLines
                     | FsType.Property p ->
