@@ -415,6 +415,12 @@ describe "transform tests" <| fun _ ->
         let expected = "test/fragments/custom/keyof.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
 
+    it "comments/summary" <| fun _ ->
+        let tsPaths = ["test/fragments/custom/comments/summary.d.ts"]
+        let fsPath = "test/fragments/custom/comments/summary.fs"
+        let expected = "test/fragments/custom/comments/summary.expected.fs"
+        convertAndCompareAgainstExpected tsPaths fsPath expected
+
     // https://github.com/fable-compiler/ts2fable/pull/275
     it "regression #275 remove private members" <| fun _ ->
         runRegressionTest "#275-private-members"
