@@ -35,7 +35,8 @@ module BABYLON =
     /// Expected FS output: 'Stage' with 'registerStep' and 'clear', 'StageStatic' with the static Create method
     /// **********
     type [<AllowNullLiteral>] StageStatic =
-        /// Creates a new Stage.
+        /// <summary>Creates a new Stage.</summary>
+        /// <returns>A new instance of a Stage</returns>
         abstract Create: unit -> Stage<'T>
 
     type [<AllowNullLiteral>] StageArray<'T> =
