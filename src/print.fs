@@ -252,12 +252,15 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
             | FsComment.Param p -> printTag "param" [("name", p.Name)] p.Content
             | FsComment.Returns r -> printTag "returns" [] r
             | FsComment.Remarks r -> printTag "remarks" [] r
-            | FsComment.SeeAlso link -> () //todo: implement
+            | FsComment.SeeAlso link -> printTag "seealso" [((match link.Type with | HRef -> "href" | CRef -> "cref"), link.Target)] link.Content
             | FsComment.TypeParam tp -> printTag "typeparam" [("name", tp.Name)] tp.Content
             | FsComment.Example e -> printTag "example" [] e
             | FsComment.Exception e -> 
-                let attrs = match e.Type with | Some ty -> [("cref", ty)] | None -> []
-                printTag "exception" attrs e.Content
+                // exception REQUIRES a type -- otherwise it isn't shown (in VS) or produces a doc parsing error in Ionide
+                // BUT: it doesn't matter what's in the attribute...
+                // -> use empty type entry when no type specified
+                let ty = e.Type |> Option.defaultValue ""
+                printTag "exception" [("cref", ty)] e.Content
             | FsComment.Version v -> printTag "version" [] v
             | FsComment.Default d -> printTag "default" [] d
               // Unknown tag, but was explicitly kept (vs. `UnknownTag`) -> print too

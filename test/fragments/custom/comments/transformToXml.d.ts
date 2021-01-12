@@ -1,4 +1,6 @@
 /**
+ * Testing all text transformations (links & code)
+ * 
  * Simple link: https://github.com/fable-compiler/ts2fable
  * 
  * Markdown link: [ts2fable](https://github.com/fable-compiler/ts2fable)
@@ -26,6 +28,14 @@
  * * href: [ts2fable](https://github.com/fable-compiler/ts2fable) and {@link https://github.com|GitHub} 
  * * cref: [Thingy B](B) and {@link B|Thingy B}
  * 
+ * CRef with `#` (instance member) and `~` (inner member) -> convert all into `.`:
+ * `Namespace.Class.method` = {@link Namespace.Class.method}
+ * `Namespace.Class#method` = {@link Namespace.Class#method}
+ * `Namespace.Class~method` = {@link Namespace.Class~method}
+ * remove leading:
+ * `#method` = {@link method}
+ * `~method` = {@link method}
+ * 
  * Code in link:
  * [code `1+1` fsharp](https://fsharp.org)
  * 
@@ -37,21 +47,67 @@
  * `{@link https://github.com|GitHub}` 
  * ```
  */
-export interface A {}
+export interface AllTextTransformations {}
 
-//todo: add other tags -- they aren't fully transformed yet (like `typeparam` -> leading name isn't extracted yet)
 /**
  * Testing transformation in all tags
  * 
- * Root: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
+ * Root: [ts2fable](https://github.com/fable-compiler/ts2fable)
  * 
- * @summary Summary: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
- * @description Description: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
- * @remarks Remarks: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
- * @example Example: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
- * @default Default: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
- * @version Version: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
- * @param p Param: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
- * @returns Returns: [ts2fable](https://github.com/fable-compiler/ts2fable)` 
+ * @summary Summary: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @description Description: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @remarks Remarks: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @example Example: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @default Default: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @version Version: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @param p Param: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @returns Returns: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @see SomeType See: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @typeparam T TypeParam: [ts2fable](https://github.com/fable-compiler/ts2fable)
+ * @throws {Exception} Throws: [ts2fable](https://github.com/fable-compiler/ts2fable)
  */
-export interface B {}
+export interface AllTags {}
+
+/**
+ * Testing `@see` tag (-> `<seealso...`)
+ * 
+ * @see SomeType1 should be cref
+ * @see Module.SomeType2 should be cref
+ * @see https://github.com/fable-compiler/ts2fable should be href
+ * @see {@link SomeType3} should be cref
+ * @see {@link SomeType4|should be cref}
+ * @see {@link SomeType5|should be} cref
+ * @see {@link SomeType6 should be} cref
+ * @see [should be cref](SomeType7)
+ * @see [should be](SomeType8) cref
+ * @see SomeType9 should be
+ *      cref on
+ *      multiple lines
+ * @see SomeType10
+ *      should be cref
+ *      on multiple lines
+ */
+export interface SeeTag {}
+
+/**
+ * In practice (and sometimes in specs too): Separator between Name/Type and Description.
+ * Should be removed during transformation.
+ * 
+ * @param p1 some description
+ * @param p2: some description
+ * @param p3 - some description
+ * 
+ * @typeparam T1 some description
+ * @typeparam T2: some description
+ * @typeparam T3 - some description
+ */
+export interface Separator {}
+
+/**
+ * Exception Type in `@throws` is optional, but required in `<exception>`
+ * 
+ * @throws {SomeException} exception with type
+ * @throws {Module.SomeException} exception with type in module
+ * @throws exception without type
+ */
+export interface Throws {}

@@ -85,7 +85,7 @@ type FsCommentLink =
     {
         Type: FsCommentLinkType
         Target: string
-        Title: FsCommentContent
+        Content: FsCommentContent
     }
 
 type FsCommentException =
