@@ -50,6 +50,7 @@ type FsEnumCaseType =
 
 type FsEnumCase =
     {
+        Comments: FsComment list
         Name: string
         Type: FsEnumCaseType
         Value: string option
@@ -57,6 +58,7 @@ type FsEnumCase =
 
 type FsEnum =
     {
+        Comments: FsComment list
         Name: string
         Cases: FsEnumCase list
     }
@@ -184,6 +186,7 @@ type FsUnion =
 
 type FsAlias =
     {
+        Comments: FsComment list
         Name: string
         Type: FsType
         TypeParameters: FsType list
@@ -234,6 +237,7 @@ type FsExport =
 [<CustomEquality;CustomComparison>]
 type FsVariable =
     {
+        Comments: FsComment list
         Export: FsExport option
         HasDeclare: bool
         Name: string
@@ -327,6 +331,7 @@ module FsType =
 
 type FsModule =
     {
+        Comments: FsComment list
         HasDeclare: bool
         IsNamespace: bool
         Name: string

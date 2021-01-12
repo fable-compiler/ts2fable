@@ -294,7 +294,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
             if it.IsStatic then
                 // add a property for accessing the static class
                 {
-                    Comments = []
+                    Comments = it.Comments
                     Kind = FsPropertyKind.Regular
                     Index = None
                     Name = it.Name.Replace("Static","")
@@ -331,6 +331,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         if md.HasDeclare then
             if not <| md.IsNamespace then
                 {
+                    Comments = md.Comments
                     Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                     HasDeclare = true
                     Name = name
@@ -342,6 +343,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 |> variablesForParent.Add
         else
             {
+                Comments = md.Comments
                 Export = { IsGlobal = false; Selector = selector; Path = path } |> Some
                 HasDeclare = true
                 Name = name
@@ -380,6 +382,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         | FsType.Module smd ->
             if not <| globalNames.Contains smd.Name && exportAssignments.Contains smd.Name then
                 {
+                    Comments = smd.Comments
                     Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                     HasDeclare = true
                     Name = smd.Name |> lowerFirst
@@ -975,7 +978,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                             {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton
                         | FsType.TypeLiteral tl ->
                             {
-                                Comments = []
+                                Comments = al.Comments
                                 IsStatic = false
                                 IsClass = false
                                 Name = al.Name
@@ -1093,6 +1096,7 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                                     [tp2] @
                                     [
                                         {
+                                            Comments = []
                                             Attributes = ["RequireQualifiedAccess"; "CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix"]
                                             HasDeclare = false
                                             IsNamespace = false
@@ -1168,13 +1172,20 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                 match al.Type with
                 | FsType.Function f ->
                     {
-                        Comments = f.Comments
+                        Comments = al.Comments
                         IsStatic = false
                         IsClass = false
                         Name = al.Name
                         FullName = al.Name
                         Inherits = []
-                        Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
+                        Members = 
+                            { f with 
+                                Comments = al.Comments
+                                Name = Some "Invoke"
+                                Kind = FsFunctionKind.Call
+                            } 
+                            |> FsType.Function 
+                            |> List.singleton
                         TypeParameters = al.TypeParameters
                         Accessibility = None
                     } |> FsType.Interface
@@ -1191,7 +1202,7 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                     match tu.Kind with
                     | FsTupleKind.Intersection ->
                         {
-                            Comments = []
+                            Comments = al.Comments
                             IsStatic = false
                             IsClass = false
                             Name = al.Name
@@ -1213,7 +1224,7 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                 match al.Type with
                 | FsType.Tuple tu when tu.Kind = FsTupleKind.Mapped ->
                     {
-                        Comments = []
+                        Comments = al.Comments
                         IsStatic = false
                         IsClass = false
                         Name = al.Name
@@ -1351,7 +1362,7 @@ let fixFsFileOut fo =
 
 let extractGenericParameterDefaults (f: FsFile): FsFile =
     let fix f =
-        let extractAliasesFromGenericParameterDefaults name tps =
+        let extractAliasesFromGenericParameterDefaults comments name tps =
             let aliases = List<FsAlias>()
 
             tps
@@ -1361,6 +1372,8 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                 | None -> ()
                 | Some _ ->
                     {
+                        //todo: enhancement: remove defaulted (=removed) typeparams from comments
+                        Comments = comments
                         Name = name
                         Type =
                             {
@@ -1405,13 +1418,13 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                             match tp with
                             | FsType.Interface it ->
                                 it.TypeParameters
-                                |> extractAliasesFromGenericParameterDefaults it.Name
+                                |> extractAliasesFromGenericParameterDefaults it.Comments it.Name
                                 |> tps.AddRange
 
                                 tp |> tps.Add
                             | FsType.Alias al ->
                                 al.TypeParameters
-                                |> extractAliasesFromGenericParameterDefaults al.Name
+                                |> extractAliasesFromGenericParameterDefaults al.Comments al.Name
                                 |> tps.AddRange
 
                                 tp |> tps.Add

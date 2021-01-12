@@ -45,7 +45,7 @@ let getBindingName(bn: BindingName): string option =
     | SyntaxKind.ArrayBindingPattern -> None
     | _ -> failwithf "unknown Binding Name kind %A" syntaxNode.kind
 
-let readEnumCase(em: EnumMember): FsEnumCase =
+let readEnumCase (checker: TypeChecker) (em: EnumMember): FsEnumCase =
     let name = em.name |> getPropertyName
     let tp, value =
         match em.initializer with
@@ -69,6 +69,7 @@ let readEnumCase(em: EnumMember): FsEnumCase =
                     FsEnumCaseType.Unknown, None
             | _ -> failwithf "EnumCase type not supported %A %A" ep.kind name
     {
+        Comments = readCommentsAtLocation checker (!!em.name)
         Name = name
         Type = tp
         Value = value
@@ -288,6 +289,7 @@ let isNamespace (nd: Node): bool =
 let readVariable (checker: TypeChecker) (vb: VariableStatement) =
     vb.declarationList.declarations |> List.ofSeq |> List.map (fun vd ->
         {
+            Comments = readCommentsAtLocation checker (!!vd.name)
             Export = None
             HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers || hasModifier SyntaxKind.ExportKeyword vb.modifiers
             Name = vd.name |> getBindingName |> Option.defaultValue "unsupported_pattern"
@@ -299,10 +301,11 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
         |> FsType.Variable
     )
 
-let readEnum(ed: EnumDeclaration): FsEnum =
+let readEnum (checker: TypeChecker) (ed: EnumDeclaration): FsEnum =
     {
+        Comments = readCommentsAtLocation checker ed.name
         Name = ed.name.getText()
-        Cases = ed.members |> List.ofSeq |> List.map readEnumCase
+        Cases = ed.members |> List.ofSeq |> List.map (readEnumCase checker)
     }
 
 let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
@@ -463,9 +466,20 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
         | _ -> FsEnumCaseType.Unknown
     let makeEnumCase (t: LiteralTypeNode) =
         let name = !!t.literal?getText() |> removeQuotes
-        { Name = name; Type = getEnumCaseType t; Value = Some name }
+        { 
+            // comments aren't really supported for Literal Types in TS -> not available in node
+            Comments = []
+            Name = name
+            Type = getEnumCaseType t
+            Value = Some name
+        }
     let makeEnum name cases =
-        { Name = name; Cases = cases } |> FsType.Enum
+        { 
+            Comments = []
+            Name = name
+            Cases = cases 
+        } 
+        |> FsType.Enum
     let isKindOf kind (t: TypeNode) =
         if isLiteralType t then
             let lt = t :?> LiteralTypeNode
@@ -671,6 +685,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
     let name = d.name.getText()
     let asAlias() =
         {
+            Comments = readCommentsAtLocation checker d.name
             Name = name
             Type = tp
             TypeParameters = readTypeParameters checker d.typeParameters
@@ -682,9 +697,11 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
         if un.Types.Length = sls.Length then
             // It is a string literal type. Map it is a string enum.
             {
+                Comments = readCommentsAtLocation checker d.name
                 Name = name
                 Cases = sls |> List.map (fun sl ->
                     {
+                        Comments = []
                         Name = sl
                         Type = FsEnumCaseType.String
                         Value = None
@@ -758,7 +775,7 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     | SyntaxKind.InterfaceDeclaration ->
         [readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface]
     | SyntaxKind.EnumDeclaration ->
-        [readEnum (sd :?> EnumDeclaration) |> FsType.Enum]
+        [readEnum checker (sd :?> EnumDeclaration) |> FsType.Enum]
     | SyntaxKind.TypeAliasDeclaration ->
         [readAliasDeclaration checker (sd :?> TypeAliasDeclaration)]
     | SyntaxKind.ClassDeclaration ->
@@ -807,6 +824,7 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
         | _ -> printfn "unknown kind in ModuleDeclaration: %A" nd.kind
     )
     {
+        Comments = readCommentsAtLocation checker (!!md.name)
         HasDeclare = hasModifier SyntaxKind.DeclareKeyword md.modifiers
         IsNamespace = isNamespace md
         Name = readModuleName md.name
@@ -824,6 +842,7 @@ let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFil
         match file.Kind with
         | FsFileKind.Index ->
             {
+                Comments = []
                 HasDeclare = false
                 IsNamespace = false
                 Name = ""
@@ -834,6 +853,7 @@ let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFil
             }
         | FsFileKind.Extra extra ->
             {
+                Comments = []
                 HasDeclare = true
                 IsNamespace = false
                 Name = extra |> ModuleName.normalize

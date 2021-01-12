@@ -270,10 +270,12 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
 
 let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
     sprintf "" |> lines.Add
+    printComments lines indent en.Comments
     match en.Type with
     | FsEnumCaseType.Numeric ->
         sprintf "%stype [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
         for cs in en.Cases do
+            printComments lines (indent + "    ") cs.Comments
             let nm = cs.Name
             let unm = createEnumName nm
             let line = ResizeArray()
@@ -284,6 +286,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
     | FsEnumCaseType.String ->
         sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
         for cs in en.Cases do
+            printComments lines (indent + "    ") cs.Comments
             let nm = cs.Name
             let v = (cs.Value |> Option.defaultValue nm).Replace("\"", "\\\"")
             let unm = createEnumName nm
@@ -302,6 +305,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
     let indent =
         if md.Name <> "" then
             "" |> lines.Add
+            printComments lines indent md.Comments
             if md.HasAttributes then
                 sprintf "%s[<%s)>]" indent (md.Attributes |> String.concat "; " ) |> lines.Add
             sprintf "%smodule %s =" indent md.Name |> lines.Add
@@ -344,7 +348,12 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         | FsType.Interface inf ->
             match inf.Members with
             | [FsType.Enum en] ->
-                let en = { en with Name = inf.Name }
+                // type literal -> comments are in parent Alias which was transformed into Interface
+                let en = 
+                    { en with 
+                        Name = inf.Name 
+                        Comments = inf.Comments @ en.Comments
+                    }
                 printEnum lines indent en
             | _ ->
                 sprintf "" |> lines.Add
@@ -375,6 +384,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             printEnum lines indent en
         | FsType.Alias al ->
             sprintf "" |> lines.Add
+            printComments lines indent al.Comments
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
         | FsType.Module smd ->
@@ -382,6 +392,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         | FsType.Variable vb ->
             if vb.HasDeclare then
                 // sprintf "" |> lines.Add
+                printComments lines indent vb.Comments
                 sprintf "%slet %s%s: %s = jsNative" indent
                     (   match vb.Export with
                         | None -> ""

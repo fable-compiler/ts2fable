@@ -555,7 +555,6 @@ let transform (f: FsFile): FsFile =
         |> transformTags
         |> transformContent
 
-    //todo: add other types
     //todo: introduce attributes for deprecated/obsolete
     let fix ns =
         function
@@ -565,6 +564,24 @@ let transform (f: FsFile): FsFile =
         | FsType.Function f ->
             { f with Comments = transformComments f.Comments }
             |> FsType.Function
+        | FsType.Enum e ->
+            { e with
+                Comments = transformComments e.Comments
+                Cases = e.Cases |> List.map (fun c -> { c with Comments = transformComments c.Comments })
+            }
+            |> FsType.Enum
+        | FsType.Property p ->
+            { p with Comments = transformComments p.Comments }
+            |> FsType.Property
+        | FsType.Alias a ->
+            { a with Comments = transformComments a.Comments}
+            |> FsType.Alias
+        | FsType.Variable v ->
+            { v with Comments = transformComments v.Comments }
+            |> FsType.Variable
+        | FsType.Module m ->
+            { m with Comments = transformComments m.Comments }
+            |> FsType.Module
         | t -> t
 
     f

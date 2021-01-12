@@ -11,6 +11,10 @@ let [<Import("*","Stage.PrivateCtor")>] babylon: BABYLON.IExports = jsNative
 module BABYLON =
 
     type [<AllowNullLiteral>] IExports =
+        /// this was copy-pasted from babylonjs.
+        /// **********
+        /// Expected FS output: 'Stage' with 'registerStep' and 'clear', 'StageStatic' with the static Create method
+        /// **********
         abstract Stage: StageStatic
 
     type [<AllowNullLiteral>] ISceneComponent =

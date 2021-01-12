@@ -9,10 +9,15 @@ let [<Import("PrivateMembersTests","#275-private-members")>] privateMembersTests
 module PrivateMembersTests =
 
     type [<AllowNullLiteral>] IExports =
+        /// No explicit ctor, so an implicit one should be generated
         abstract ImplicitCtor: ImplicitCtorStatic
+        /// explicit paramless ctor, no implicit one should be generated
         abstract ExplicitCtor: ExplicitCtorStatic
+        /// explicit ctor, no implicit one should be generated
         abstract ExplicitCtor2: ExplicitCtor2Static
+        /// public property named i should be emitted
         abstract PublicField: PublicFieldStatic
+        /// no field should be emitted
         abstract PrivateField: PrivateFieldStatic
 
     /// No explicit ctor, so an implicit one should be generated 

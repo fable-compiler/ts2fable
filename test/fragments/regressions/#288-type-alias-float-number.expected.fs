@@ -4,8 +4,10 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
+/// it should NOT emit "type float = float"
 let [<Import("TypeAloasFloatNumber","#288-type-alias-float-number")>] typeAloasFloatNumber: TypeAloasFloatNumber.IExports = jsNative
 
+/// it should NOT emit "type float = float"
 module TypeAloasFloatNumber =
 
     type [<AllowNullLiteral>] IExports =
