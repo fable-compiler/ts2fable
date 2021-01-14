@@ -268,14 +268,51 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
             | FsComment.UnknownTag _ -> ()
             | FsComment.Unknown _ -> ()
 
+let printAttributes (lines: ResizeArray<string>) (indent: string) (attrs: FsAttributeSet list) =
+    match attrs with
+    | [] -> ()
+    | _ ->
+        let printInBrackets =
+            sprintf "%s[<%s>]" indent
+            >> lines.Add
+
+        let formatArgument (arg: FsArgument) =
+            match arg.Name with
+            | Some name -> sprintf "%s = %s" name arg.Value
+            | None -> arg.Value
+        let formatAttribute (attr: FsAttribute) =
+            let name =
+                match attr.Namespace with
+                | None -> attr.Name
+                | Some ns -> sprintf "%s.%s" ns attr.Name
+            match attr.Arguments with
+            | [] -> name
+            | args ->
+                let args = 
+                    args
+                    |> List.map formatArgument
+                    |> String.concat ", "
+                sprintf "%s(%s)" name args
+
+        for attrSet in attrs do
+            match attrs with
+            | [] -> ()
+            | _ ->
+                attrSet
+                |> List.map formatAttribute
+                |> String.concat "; "
+                |> printInBrackets
+
 let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
     sprintf "" |> lines.Add
     printComments lines indent en.Comments
+    printAttributes lines indent en.Attributes
     match en.Type with
     | FsEnumCaseType.Numeric ->
         sprintf "%stype [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
         for cs in en.Cases do
             printComments lines (indent + "    ") cs.Comments
+            printAttributes lines (indent + "    ") cs.Attributes
             let nm = cs.Name
             let unm = createEnumName nm
             let line = ResizeArray()
@@ -287,6 +324,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
         sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
         for cs in en.Cases do
             printComments lines (indent + "    ") cs.Comments
+            printAttributes lines (indent + "    ") cs.Attributes
             let nm = cs.Name
             let v = (cs.Value |> Option.defaultValue nm).Replace("\"", "\\\"")
             let unm = createEnumName nm
@@ -306,8 +344,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         if md.Name <> "" then
             "" |> lines.Add
             printComments lines indent md.Comments
-            if md.HasAttributes then
-                sprintf "%s[<%s)>]" indent (md.Attributes |> String.concat "; " ) |> lines.Add
+            printAttributes lines indent md.Attributes
             sprintf "%smodule %s =" indent md.Name |> lines.Add
             sprintf "%s    " indent
         else indent
@@ -358,6 +395,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             | _ ->
                 sprintf "" |> lines.Add
                 printComments lines indent inf.Comments
+                printAttributes lines indent inf.Attributes
                 sprintf "%stype [<AllowNullLiteral>] %s%s =" indent inf.Name (printTypeParameters inf.TypeParameters) |> lines.Add
                 let nLines = ref 0
                 for ih in inf.Inherits do
@@ -368,11 +406,13 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                     | FsType.Function f ->
                         let indent = sprintf "%s    " indent
                         printComments lines indent f.Comments
+                        printAttributes lines indent f.Attributes
                         sprintf "%s%s" indent (printFunction f) |> lines.Add
                         incr nLines
                     | FsType.Property p ->
                         let indent = sprintf "%s    " indent
                         printComments lines indent p.Comments
+                        printAttributes lines indent p.Attributes
                         sprintf "%s%s" indent (printProperty p) |> lines.Add
                         incr nLines
                     | _ ->
@@ -385,6 +425,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         | FsType.Alias al ->
             sprintf "" |> lines.Add
             printComments lines indent al.Comments
+            printAttributes lines indent al.Attributes
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
         | FsType.Module smd ->
@@ -393,6 +434,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             if vb.HasDeclare then
                 // sprintf "" |> lines.Add
                 printComments lines indent vb.Comments
+                printAttributes lines indent vb.Attributes
                 sprintf "%slet %s%s: %s = jsNative" indent
                     (   match vb.Export with
                         | None -> ""

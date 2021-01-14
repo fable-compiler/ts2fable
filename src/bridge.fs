@@ -152,6 +152,7 @@ module internal Bridge =
         |> removeDuplicateOptionsFromParameters
         |> fixFloatAlias
         |> TransformComments.transform
+        //todo: enhancement: extract Namespaces from Attributes and open
 
     let getFsFileOut bridge =
         let program = createProgram bridge

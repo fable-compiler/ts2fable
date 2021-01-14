@@ -13,6 +13,7 @@ type FsAccessibility =
 
 type FsInterface =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         IsStatic: bool // contains only static functions
         IsClass: bool
@@ -50,6 +51,7 @@ type FsEnumCaseType =
 
 type FsEnumCase =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
         Type: FsEnumCaseType
@@ -58,6 +60,7 @@ type FsEnumCase =
 
 type FsEnum =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
         Cases: FsEnumCase list
@@ -140,6 +143,7 @@ type FsFunctionKind =
 
 type FsFunction =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         Kind: FsFunctionKind
         IsStatic: bool
@@ -161,6 +165,7 @@ type FsPropertyKind =
 
 type FsProperty =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         Kind: FsPropertyKind
         Index: FsParam option
@@ -186,6 +191,7 @@ type FsUnion =
 
 type FsAlias =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
         Type: FsType
@@ -237,6 +243,7 @@ type FsExport =
 [<CustomEquality;CustomComparison>]
 type FsVariable =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         Export: FsExport option
         HasDeclare: bool
@@ -270,6 +277,41 @@ type FsMapped =
         Name: string
         FullName: string
     }
+
+type FsArgument = {
+    /// Named argument
+    Name: string option
+    /// stringyfied value  
+    /// -> includes quotation marks for string argument: `"\"MyVal\""`
+    Value: string
+}
+module FsArgument =
+    let justValue value =
+        {
+            Name = None
+            Value = value
+        }
+type FsAttribute = {
+    /// might possible be `open`ed.
+    /// 
+    /// NOT included in `Name`  
+    /// -> `System.Obsolete`: `Namespace`=`System`; `Name`=`Obsolete`
+    /// 
+    /// Place Full Name in `Name` to emit full name.
+    Namespace: string option
+    Name: string
+    Arguments: FsArgument list
+}
+module FsAttribute =
+    let fromName name =
+        {
+            Namespace = None
+            Name = name
+            Arguments = []
+        }
+/// Attributes in a single set will be placed in common brackets:
+/// `[<A(...); B(...)>]`
+type FsAttributeSet = FsAttribute list
 
 let simpleType name: FsType =
     {
@@ -337,11 +379,10 @@ type FsModule =
         Name: string
         Types: FsType list
         HelperLines: string list
-        Attributes: string list
+        Attributes: FsAttributeSet list
     }
 with
     member x.IsHelper = x.HelperLines.Length > 0
-    member x.HasAttributes = x.Attributes.Length > 0
 
 [<RequireQualifiedAccess>]
 type FsFileKind =

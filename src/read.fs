@@ -69,6 +69,7 @@ let readEnumCase (checker: TypeChecker) (em: EnumMember): FsEnumCase =
                     FsEnumCaseType.Unknown, None
             | _ -> failwithf "EnumCase type not supported %A %A" ep.kind name
     {
+        Attributes = []
         Comments = readCommentsAtLocation checker (!!em.name)
         Name = name
         Type = tp
@@ -230,6 +231,7 @@ let readCommentsAtLocation (checker: TypeChecker) (nd: Node): FsComment list =
 
 let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface =
     {
+        Attributes = []
         Comments = readCommentsAtLocation checker id.name
         IsStatic = false
         IsClass = false
@@ -261,6 +263,7 @@ let getFullNodeName (checker: TypeChecker) (nd: Node) =
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
     let fullName = getFullNodeName checker cd
     {
+        Attributes = []
         Comments = cd.name |> Option.map (readCommentsAtLocation checker) |> Option.defaultValue []
         IsStatic = false
         IsClass = true
@@ -289,6 +292,7 @@ let isNamespace (nd: Node): bool =
 let readVariable (checker: TypeChecker) (vb: VariableStatement) =
     vb.declarationList.declarations |> List.ofSeq |> List.map (fun vd ->
         {
+            Attributes = []
             Comments = readCommentsAtLocation checker (!!vd.name)
             Export = None
             HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers || hasModifier SyntaxKind.ExportKeyword vb.modifiers
@@ -303,6 +307,7 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
 
 let readEnum (checker: TypeChecker) (ed: EnumDeclaration): FsEnum =
     {
+        Attributes = []
         Comments = readCommentsAtLocation checker ed.name
         Name = ed.name.getText()
         Cases = ed.members |> List.ofSeq |> List.map (readEnumCase checker)
@@ -339,6 +344,7 @@ let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
 let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
     {
         // TODO https://github.com/fable-compiler/ts2fable/issues/68
+        Attributes = []
         Comments = []//ft.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword ft.modifiers
@@ -467,6 +473,7 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
     let makeEnumCase (t: LiteralTypeNode) =
         let name = !!t.literal?getText() |> removeQuotes
         { 
+            Attributes = []
             // comments aren't really supported for Literal Types in TS -> not available in node
             Comments = []
             Name = name
@@ -475,6 +482,7 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
         }
     let makeEnum name cases =
         { 
+            Attributes = []
             Comments = []
             Name = name
             Cases = cases 
@@ -526,6 +534,7 @@ let readParameterDeclaration (checker: TypeChecker) (iParam:int) (pd: ParameterD
 
 let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker ms
         Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
@@ -541,6 +550,7 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
 
 let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker md
         Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword md.modifiers
@@ -559,6 +569,7 @@ let isReadOnly (modifiers: ModifiersArray option) =
 
 let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProperty =
     {
+        Attributes = []
         Comments = readCommentsAtLocation checker (!!ps.name)
         Kind = FsPropertyKind.Regular
         Index = None
@@ -575,6 +586,7 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
 
 let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): FsProperty =
     {
+        Attributes = []
         Comments = readCommentsAtLocation checker (!!pd.name)
         Kind = FsPropertyKind.Regular
         Index = None
@@ -591,6 +603,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
 
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker fd
         Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
@@ -607,6 +620,7 @@ let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): Fs
 let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): FsProperty =
     let pm = readParameterDeclaration checker 0 ps.parameters.[0]
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker ps
         Kind = FsPropertyKind.Index
         Index = Some pm
@@ -623,6 +637,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
 
 let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker cs
         Kind = FsFunctionKind.Call
         IsStatic = false // TODO ?
@@ -638,6 +653,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
 
 let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSignatureDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker cs
         Kind = FsFunctionKind.Constructor
         IsStatic = true
@@ -650,6 +666,7 @@ let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSigna
 
 let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker cs
         Kind = FsFunctionKind.Constructor
         IsStatic = true
@@ -685,6 +702,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
     let name = d.name.getText()
     let asAlias() =
         {
+            Attributes = []
             Comments = readCommentsAtLocation checker d.name
             Name = name
             Type = tp
@@ -697,10 +715,12 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
         if un.Types.Length = sls.Length then
             // It is a string literal type. Map it is a string enum.
             {
+                Attributes = []
                 Comments = readCommentsAtLocation checker d.name
                 Name = name
                 Cases = sls |> List.map (fun sl ->
                     {
+                        Attributes = []
                         Comments = []
                         Name = sl
                         Type = FsEnumCaseType.String

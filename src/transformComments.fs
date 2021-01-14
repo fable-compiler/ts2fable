@@ -547,6 +547,88 @@ let private transformTags (comments: FsComment list): FsComment list =
         | c -> Some c
     )
 
+/// Extract `@deprecated` JSDoc tag from comments and convert into `Obsolete` Attribute
+/// 
+/// `None` if no `@deprecated`
+let private extractDeprecated (comments: FsComment list): (FsAttribute * FsComment list) option =
+    let isDeprecated =
+        function
+        | FsComment.Tag { Name = "deprecated" } -> true
+        | _ -> false
+    let asDeprecated =
+        function
+        | FsComment.Tag { Name = "deprecated"; Content = text } -> Some text
+        | _ -> None
+
+    let deprecated =
+        comments
+        |> List.filter isDeprecated
+
+    match deprecated with
+    | [] -> None
+    | _ ->
+        let commentsWithoutDeprecated =
+            comments
+            |> List.filter (not << isDeprecated)
+
+        let arg =
+            deprecated
+               // don't directly choose text above: tag might be specified, but text is empty
+            |> List.choose asDeprecated
+            |> List.collect id
+               // escape quotation marks
+            |> List.map (fun l -> l.Replace("\"", "\\\""))
+            |> String.concat "\n"
+
+        let attr = 
+            { FsAttribute.fromName "Obsolete" with
+                // no namespace: `open System` always emitted
+                Arguments = [
+                    FsArgument.justValue <| sprintf "\"%s\"" arg
+                ]
+            }
+
+        Some (attr, commentsWithoutDeprecated)
+
+/// Convert `@deprecated` JSDoc tags into `Obsolete` Attributes
+let private convertDeprecatedTagIntoObsoleteAttribute _ ty =
+    let (|Obsolete|_|) = extractDeprecated
+
+    match ty with
+    | FsType.Interface ({ Comments = Obsolete (attr, comments)} as i) ->
+        { i with Comments = comments; Attributes = [attr] :: i.Attributes }
+        |> FsType.Interface
+    | FsType.Function ({ Comments = Obsolete (attr, comments)} as f) ->
+        { f with Comments = comments; Attributes = [attr] :: f.Attributes }
+        |> FsType.Function
+    | FsType.Enum ({ Comments = Obsolete (attr, comments)} as e) ->
+        { e with
+            Comments = comments
+            Attributes = [attr] :: e.Attributes
+            Cases = 
+                e.Cases 
+                |> List.map (
+                    function
+                    | ({ Comments = Obsolete (attr, comments) } as c) ->
+                        { c with Comments = comments; Attributes = [attr] :: c.Attributes }
+                    | c -> c
+                   )
+        }
+        |> FsType.Enum
+    | FsType.Property ({ Comments = Obsolete (attr, comments)} as p) ->
+        { p with Comments = comments; Attributes = [attr] :: p.Attributes }
+        |> FsType.Property
+    | FsType.Alias ({ Comments = Obsolete (attr, comments)} as a) ->
+        { a with Comments = comments; Attributes = [attr] :: a.Attributes }
+        |> FsType.Alias
+    | FsType.Variable ({ Comments = Obsolete (attr, comments)} as v) ->
+        { v with Comments = comments; Attributes = [attr] :: v.Attributes }
+        |> FsType.Variable
+    | FsType.Module ({ Comments = Obsolete (attr, comments)} as m) ->
+        { m with Comments = comments; Attributes = [attr] :: m.Attributes }
+        |> FsType.Module
+    | t -> t
+
 let transform (f: FsFile): FsFile =
 
     let transformComments (comments: FsComment list) =
@@ -555,7 +637,6 @@ let transform (f: FsFile): FsFile =
         |> transformTags
         |> transformContent
 
-    //todo: introduce attributes for deprecated/obsolete
     let fix ns =
         function
         | FsType.Interface i ->
@@ -585,4 +666,5 @@ let transform (f: FsFile): FsFile =
         | t -> t
 
     f
+    |> fixFile convertDeprecatedTagIntoObsoleteAttribute
     |> fixFile fix
