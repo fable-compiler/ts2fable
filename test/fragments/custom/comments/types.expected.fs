@@ -289,10 +289,10 @@ type [<AllowNullLiteral>] SomeClassWithStaticFunction =
 /// </remarks>
 type [<AllowNullLiteral>] SomeClassWithStaticFunctionStatic =
     [<EmitConstructor>] abstract Create: unit -> SomeClassWithStaticFunction
-    /// <summary>Summary: SomeValue</summary>
+    /// <summary>Summary: SomeStaticFunction</summary>
     /// <remarks>
     /// Remarks:
-    /// SomeValue 
+    /// SomeStaticFunction 
     /// and a link: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see>
     /// </remarks>
     abstract SomeStaticFunction: unit -> unit

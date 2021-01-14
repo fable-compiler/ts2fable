@@ -296,10 +296,10 @@ export type SomeGenericType<A> = {}
 
 declare class SomeClassWithStaticFunction {
     /**
-     * Summary: SomeValue
+     * Summary: SomeStaticFunction
      *
      * @remarks Remarks:
-     * SomeValue 
+     * SomeStaticFunction 
      * and a link: {@link https://github.com/fable-compiler/ts2fable ts2fable}
      */
     static SomeStaticFunction(): void;
