@@ -45,6 +45,20 @@ Reason 2")>]
 type [<AllowNullLiteral>] C =
     interface end
 
+/// Deprecated interface with default type parameter
+/// 
+/// Both Interfaces with generic and with default should be deprecated
+[<Obsolete("Interface with default is deprecated")>]
+type D =
+    D<string>
+
+/// Deprecated interface with default type parameter
+/// 
+/// Both Interfaces with generic and with default should be deprecated
+[<Obsolete("Interface with default is deprecated")>]
+type [<AllowNullLiteral>] D<'T> =
+    interface end
+
 /// Summary: SomeInterface
 [<Obsolete("SomeInterface is deprecated")>]
 type [<AllowNullLiteral>] SomeInterface =

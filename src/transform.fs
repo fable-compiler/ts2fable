@@ -1379,7 +1379,7 @@ let fixFsFileOut fo =
 
 let extractGenericParameterDefaults (f: FsFile): FsFile =
     let fix f =
-        let extractAliasesFromGenericParameterDefaults comments name tps =
+        let extractAliasesFromGenericParameterDefaults attributes comments name tps =
             let aliases = List<FsAlias>()
 
             tps
@@ -1389,7 +1389,7 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                 | None -> ()
                 | Some _ ->
                     {
-                        Attributes = [] //todo: get attributes from other ty
+                        Attributes = attributes
                         //todo: enhancement: remove defaulted (=removed) typeparams from comments
                         Comments = comments
                         Name = name
@@ -1436,13 +1436,13 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                             match tp with
                             | FsType.Interface it ->
                                 it.TypeParameters
-                                |> extractAliasesFromGenericParameterDefaults it.Comments it.Name
+                                |> extractAliasesFromGenericParameterDefaults it.Attributes it.Comments it.Name
                                 |> tps.AddRange
 
                                 tp |> tps.Add
                             | FsType.Alias al ->
                                 al.TypeParameters
-                                |> extractAliasesFromGenericParameterDefaults al.Comments al.Name
+                                |> extractAliasesFromGenericParameterDefaults al.Attributes al.Comments al.Name
                                 |> tps.AddRange
 
                                 tp |> tps.Add

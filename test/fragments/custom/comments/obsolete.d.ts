@@ -23,6 +23,14 @@ export interface B {}
 export interface C {}
 
 /**
+ * Deprecated interface with default type parameter
+ * 
+ * Both Interfaces with generic and with default should be deprecated
+ * 
+ * @deprecated Interface with default is deprecated
+ */
+export interface D<T = string> {}
+/**
  * Summary: SomeFunction
  * 
  * @deprecated SomeFunction is deprecated
