@@ -6,8 +6,10 @@ open Fable.Core.JS
 
 
 module Outer =
+    /// It should generate one module Outer.Inner with two interfaces C1 and C2
     let [<Import("Inner","#289-recursive-merge-modules/Outer")>] inner: Inner.IExports = jsNative
 
+    /// It should generate one module Outer.Inner with two interfaces C1 and C2
     module Inner =
 
         type [<AllowNullLiteral>] IExports =

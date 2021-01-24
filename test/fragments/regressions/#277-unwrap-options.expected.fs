@@ -30,6 +30,7 @@ module UnwrapOptionsAlias =
     type [<AllowNullLiteral>] IExports =
         abstract Class: ClassStatic
 
+    /// Alias type for value that can be null
     type Nullable<'T> =
         'T option
 

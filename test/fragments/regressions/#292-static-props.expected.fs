@@ -9,6 +9,7 @@ let [<Import("StaticTests","#292-static-props")>] staticTests: StaticTests.IExpo
 module StaticTests =
 
     type [<AllowNullLiteral>] IExports =
+        /// this class should contain 4 properties - 2 static ones, 2 instance ones.
         abstract PropertiesClass: PropertiesClassStatic
 
     /// this class should contain 4 properties - 2 static ones, 2 instance ones. 

@@ -45,7 +45,7 @@ let getBindingName(bn: BindingName): string option =
     | SyntaxKind.ArrayBindingPattern -> None
     | _ -> failwithf "unknown Binding Name kind %A" syntaxNode.kind
 
-let readEnumCase(em: EnumMember): FsEnumCase =
+let readEnumCase (checker: TypeChecker) (em: EnumMember): FsEnumCase =
     let name = em.name |> getPropertyName
     let tp, value =
         match em.initializer with
@@ -69,6 +69,8 @@ let readEnumCase(em: EnumMember): FsEnumCase =
                     FsEnumCaseType.Unknown, None
             | _ -> failwithf "EnumCase type not supported %A %A" ep.kind name
     {
+        Attributes = []
+        Comments = readCommentsAtLocation checker (!!em.name)
         Name = name
         Type = tp
         Value = value
@@ -106,41 +108,115 @@ let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsTy
             )
         )
 
-let readCommentLines (text: string): string list =
+let readCommentLines (text: string): FsCommentContent =
     text.Replace("\r\n","\n").Replace("\r","\n").Split [|'\n'|] |> List.ofArray
 
-let readComments (comments: List<SymbolDisplayPart>): FsComment list =
-    if comments.Count = 0 then []
+let private readCommentSummary (documentationComment: ResizeArray<SymbolDisplayPart>): FsComment option =
+    if documentationComment.Count = 0 then None
     else
-        comments |> List.ofSeq |> List.collect (fun dp ->
-            match dp.kind with
-            // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
-            | "text" -> dp.text |> readCommentLines |> List.map FsComment.SummaryLine
-            | _ -> []
-        )
+        documentationComment
+        |> List.ofSeq
+        |> List.filter (fun dp -> dp.kind = "text")  // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
+        |> List.collect (fun dp -> dp.text |> readCommentLines)
+        |> function | [] -> None | lines -> Some (FsComment.Summary lines)
 
-let readCommentTags (nd: Node) =
-    // match ts.getJSDocTags nd with
-    // | None -> List.empty
-    // | Some tags ->
-        let tags = ts.getJSDocTags nd
-        tags |> List.ofSeq |> List.collect (fun tag ->
-            match tag.kind with
-            | SyntaxKind.JSDocParameterTag ->
-                match tag.comment with
-                | None -> []
-                | Some comment -> [{ Name = ""; Description = readCommentLines comment} |> FsComment.Param]
-            | _ ->
-                // printfn "uknown comment kind tag kind %A %A" tag.kind tag.comment
-                [tag.comment |> FsComment.Unknown]
-        )
+let private readCommentTag (jsDocTag: JSDocTag): FsComment =
+    let rec getQualifiedName (name: QualifiedName) =
+        sprintf "%s.%s"
+            (getEntityName name.left)
+            (name.right.text)
+    and getEntityName (name: EntityName) =
+        // Fable can't match on EntityName
+        // > error FABLE: Cannot type test: interface "TypeScript.Ts.QualifiedName"
+        match name?kind with
+        | SyntaxKind.Identifier ->
+            let identifier: Identifier = unbox name
+            identifier.text
+        | SyntaxKind.QualifiedName ->
+            getQualifiedName (unbox name)
+        | kind -> failwithf "Invalid Syntaxkind: %A" kind
+    
+    let tag (jsDocTag: JSDocTag) = jsDocTag.tagName.text.ToLower()
+
+    let (|Tag|_|) (kind: SyntaxKind) (jsDocTag: JSDocTag) =
+        if jsDocTag.kind = kind then
+            Some ()
+        else
+            None
+    let (|TagNodeOf|_|) (names: string list) (jsDocTag: JSDocTag): string option =
+        match jsDocTag with
+        | Tag SyntaxKind.FirstJSDocTagNode when names |> List.contains (jsDocTag |> tag) ->
+            Some (jsDocTag |> tag)
+        | _ -> None
+
+    let comment =
+        jsDocTag.comment
+        |> Option.map readCommentLines
+        |> Option.defaultValue []
+
+    let mkTag name =
+        { Name = name; Content = comment }
+        |> FsComment.Tag
+
+    match jsDocTag with
+    | TagNodeOf ["summary"; "description"; "desc"] _ ->
+        comment |> FsComment.Summary
+    | Tag SyntaxKind.JSDocParameterTag ->
+        let p: JSDocParameterTag = downcast jsDocTag
+        { Name = getEntityName p.name; Content = comment }
+        |> FsComment.Param
+    | Tag SyntaxKind.JSDocReturnTag ->
+        comment |> FsComment.Returns
+    | TagNodeOf ["example"] _ ->
+        comment |> FsComment.Example
+    | TagNodeOf ["remark"; "remarks"; "note"] _ ->
+        comment |> FsComment.Remarks
+    | TagNodeOf ["default"; "defaultvalue"] _ ->
+        comment |> FsComment.Default
+    | TagNodeOf ["version"] _ ->
+        comment |> FsComment.Version
+    // requires some extracting (like leading name)
+    // -> handled in transform
+    | TagNodeOf ["typeparam"; "tparam"] _ ->
+        mkTag "typeparam"
+    | TagNodeOf ["see"] _ ->
+        mkTag "see"
+    | TagNodeOf ["throws"; "throw"; "exception"] _ ->
+        mkTag "throws"
+    | TagNodeOf ["deprecated"] _ ->
+        mkTag "deprecated"
+    
+    | Tag SyntaxKind.FirstJSDocTagNode ->
+        { Name = jsDocTag |> tag; Content = comment }
+        |> FsComment.UnknownTag
+    | _ ->
+        comment |> FsComment.Unknown
+
+let private readCommentTags (jsDocTags: ResizeArray<JSDocTag>): FsComment list =
+    if jsDocTags.Count = 0 then []
+    else
+        jsDocTags
+        |> List.ofSeq
+        |> List.map readCommentTag
+
+let readComments (documentationComment: ResizeArray<SymbolDisplayPart>) (jsDocTags: ResizeArray<JSDocTag>): FsComment list =
+    // documentationComment contains root comment
+    // jsDocTags all other tags
+    [
+        match readCommentSummary documentationComment with
+        | Some s -> yield s
+        | None -> ()
+
+        yield! readCommentTags jsDocTags
+    ]
+
 
 let readCommentsForSignatureDeclaration (checker: TypeChecker) (declaration: SignatureDeclaration): FsComment list =
     try
         match checker.getSignatureFromDeclaration declaration with
         | None -> []
         | Some signature ->
-            Some checker |> signature.getDocumentationComment |> readComments
+            readComments (signature.getDocumentationComment (Some checker)) (ts.getJSDocTags (!!declaration))
     with _ ->
         []
 
@@ -148,10 +224,14 @@ let readCommentsAtLocation (checker: TypeChecker) (nd: Node): FsComment list =
     match checker.getSymbolAtLocation nd with
     | None -> []
     | Some symbol ->
-        Some checker |> symbol.getDocumentationComment |> readComments
+        // difference between `symbol.getJsDocTags()` && `ts.getJSDocTags id.parent`
+        // * on symbol: gets unparsed tags
+        // * on ts: gets parsed tags
+        readComments (symbol.getDocumentationComment (Some checker)) (ts.getJSDocTags nd.parent)
 
 let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface =
     {
+        Attributes = []
         Comments = readCommentsAtLocation checker id.name
         IsStatic = false
         IsClass = false
@@ -183,6 +263,7 @@ let getFullNodeName (checker: TypeChecker) (nd: Node) =
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
     let fullName = getFullNodeName checker cd
     {
+        Attributes = []
         Comments = cd.name |> Option.map (readCommentsAtLocation checker) |> Option.defaultValue []
         IsStatic = false
         IsClass = true
@@ -211,6 +292,8 @@ let isNamespace (nd: Node): bool =
 let readVariable (checker: TypeChecker) (vb: VariableStatement) =
     vb.declarationList.declarations |> List.ofSeq |> List.map (fun vd ->
         {
+            Attributes = []
+            Comments = readCommentsAtLocation checker (!!vd.name)
             Export = None
             HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers || hasModifier SyntaxKind.ExportKeyword vb.modifiers
             Name = vd.name |> getBindingName |> Option.defaultValue "unsupported_pattern"
@@ -222,10 +305,12 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
         |> FsType.Variable
     )
 
-let readEnum(ed: EnumDeclaration): FsEnum =
+let readEnum (checker: TypeChecker) (ed: EnumDeclaration): FsEnum =
     {
+        Attributes = []
+        Comments = readCommentsAtLocation checker ed.name
         Name = ed.name.getText()
-        Cases = ed.members |> List.ofSeq |> List.map readEnumCase
+        Cases = ed.members |> List.ofSeq |> List.map (readEnumCase checker)
     }
 
 let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
@@ -259,6 +344,7 @@ let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
 let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
     {
         // TODO https://github.com/fable-compiler/ts2fable/issues/68
+        Attributes = []
         Comments = []//ft.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword ft.modifiers
@@ -386,9 +472,22 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
         | _ -> FsEnumCaseType.Unknown
     let makeEnumCase (t: LiteralTypeNode) =
         let name = !!t.literal?getText() |> removeQuotes
-        { Name = name; Type = getEnumCaseType t; Value = Some name }
+        { 
+            Attributes = []
+            // comments aren't really supported for Literal Types in TS -> not available in node
+            Comments = []
+            Name = name
+            Type = getEnumCaseType t
+            Value = Some name
+        }
     let makeEnum name cases =
-        { Name = name; Cases = cases } |> FsType.Enum
+        { 
+            Attributes = []
+            Comments = []
+            Name = name
+            Cases = cases 
+        } 
+        |> FsType.Enum
     let isKindOf kind (t: TypeNode) =
         if isLiteralType t then
             let lt = t :?> LiteralTypeNode
@@ -427,14 +526,6 @@ let readParameterDeclaration (checker: TypeChecker) (iParam:int) (pd: ParameterD
 
     let name = pd.name |> getBindingName |> Option.defaultValue ("p" + string iParam)
     {
-        Comment =
-            readCommentTags pd
-            |> List.tryFind FsComment.isParam
-            |> Option.map (fun comment ->
-                match comment with
-                | FsComment.Param c -> { c with Name = name} |> FsComment.Param
-                | _ -> comment
-            )
         Name = name
         Optional = pd.questionToken.IsSome
         ParamArray = pd.dotDotDotToken.IsSome
@@ -443,6 +534,7 @@ let readParameterDeclaration (checker: TypeChecker) (iParam:int) (pd: ParameterD
 
 let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker ms
         Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
@@ -458,6 +550,7 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
 
 let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker md
         Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword md.modifiers
@@ -476,7 +569,8 @@ let isReadOnly (modifiers: ModifiersArray option) =
 
 let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProperty =
     {
-        Comments = readPropertyNameComments checker ps.name
+        Attributes = []
+        Comments = readCommentsAtLocation checker (!!ps.name)
         Kind = FsPropertyKind.Regular
         Index = None
         Name = ps.name |> getPropertyName
@@ -490,17 +584,10 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
         Accessibility = getAccessibility ps.modifiers
     }
 
-let readPropertyNameComments (checker: TypeChecker) (pn: PropertyName): FsComment list =
-    readCommentsAtLocation checker !!pn
-    // match pn with
-    // | U4.Case1 id -> readCommentsAtLocation checker id
-    // | U4.Case2 sl -> readCommentsAtLocation checker sl
-    // | U4.Case3 nl -> readCommentsAtLocation checker nl
-    // | U4.Case4 cpn -> readCommentsAtLocation checker cpn
-
 let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): FsProperty =
     {
-        Comments = readPropertyNameComments checker pd.name
+        Attributes = []
+        Comments = readCommentsAtLocation checker (!!pd.name)
         Kind = FsPropertyKind.Regular
         Index = None
         Name = pd.name |> getPropertyName
@@ -516,6 +603,7 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
 
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker fd
         Kind = FsFunctionKind.Regular
         IsStatic = hasModifier SyntaxKind.StaticKeyword fd.modifiers
@@ -532,6 +620,7 @@ let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): Fs
 let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): FsProperty =
     let pm = readParameterDeclaration checker 0 ps.parameters.[0]
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker ps
         Kind = FsPropertyKind.Index
         Index = Some pm
@@ -548,6 +637,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
 
 let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker cs
         Kind = FsFunctionKind.Call
         IsStatic = false // TODO ?
@@ -563,6 +653,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
 
 let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSignatureDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker cs
         Kind = FsFunctionKind.Constructor
         IsStatic = true
@@ -575,6 +666,7 @@ let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSigna
 
 let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaration): FsFunction =
     {
+        Attributes = []
         Comments = readCommentsForSignatureDeclaration checker cs
         Kind = FsFunctionKind.Constructor
         IsStatic = true
@@ -610,6 +702,8 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
     let name = d.name.getText()
     let asAlias() =
         {
+            Attributes = []
+            Comments = readCommentsAtLocation checker d.name
             Name = name
             Type = tp
             TypeParameters = readTypeParameters checker d.typeParameters
@@ -621,9 +715,13 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
         if un.Types.Length = sls.Length then
             // It is a string literal type. Map it is a string enum.
             {
+                Attributes = []
+                Comments = readCommentsAtLocation checker d.name
                 Name = name
                 Cases = sls |> List.map (fun sl ->
                     {
+                        Attributes = []
+                        Comments = []
                         Name = sl
                         Type = FsEnumCaseType.String
                         Value = None
@@ -697,7 +795,7 @@ let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
     | SyntaxKind.InterfaceDeclaration ->
         [readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface]
     | SyntaxKind.EnumDeclaration ->
-        [readEnum (sd :?> EnumDeclaration) |> FsType.Enum]
+        [readEnum checker (sd :?> EnumDeclaration) |> FsType.Enum]
     | SyntaxKind.TypeAliasDeclaration ->
         [readAliasDeclaration checker (sd :?> TypeAliasDeclaration)]
     | SyntaxKind.ClassDeclaration ->
@@ -746,6 +844,7 @@ let rec readModuleDeclaration checker (md: ModuleDeclaration): FsModule =
         | _ -> printfn "unknown kind in ModuleDeclaration: %A" nd.kind
     )
     {
+        Comments = readCommentsAtLocation checker (!!md.name)
         HasDeclare = hasModifier SyntaxKind.DeclareKeyword md.modifiers
         IsNamespace = isNamespace md
         Name = readModuleName md.name
@@ -763,6 +862,7 @@ let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFil
         match file.Kind with
         | FsFileKind.Index ->
             {
+                Comments = []
                 HasDeclare = false
                 IsNamespace = false
                 Name = ""
@@ -773,6 +873,7 @@ let readSourceFile (checker: TypeChecker) (sf: SourceFile) (file: FsFile): FsFil
             }
         | FsFileKind.Extra extra ->
             {
+                Comments = []
                 HasDeclare = true
                 IsNamespace = false
                 Name = extra |> ModuleName.normalize

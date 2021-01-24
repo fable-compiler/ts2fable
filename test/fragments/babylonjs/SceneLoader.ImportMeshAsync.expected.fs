@@ -11,6 +11,7 @@ module BABYLON =
     type [<AllowNullLiteral>] IExports =
         abstract SceneLoader: SceneLoaderStatic
 
+    /// Alias type for value that can be null
     type Nullable<'T> =
         'T option
 

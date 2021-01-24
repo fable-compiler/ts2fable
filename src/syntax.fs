@@ -1,6 +1,6 @@
 [<AutoOpen>]
 module rec ts2fable.Syntax
-
+open System.Net.Cache
 // our simplified syntax tree
 // some names inspired by the actual F# AST:
 // https://github.com/fsharp/FSharp.Compiler.Service/blob/master/src/fsharp/ast.fs
@@ -13,6 +13,7 @@ type FsAccessibility =
 
 type FsInterface =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         IsStatic: bool // contains only static functions
         IsClass: bool
@@ -50,6 +51,8 @@ type FsEnumCaseType =
 
 type FsEnumCase =
     {
+        Attributes: FsAttributeSet list
+        Comments: FsComment list
         Name: string
         Type: FsEnumCaseType
         Value: string option
@@ -57,6 +60,8 @@ type FsEnumCase =
 
 type FsEnum =
     {
+        Attributes: FsAttributeSet list
+        Comments: FsComment list
         Name: string
         Cases: FsEnumCase list
     }
@@ -69,28 +74,56 @@ with
         else
             FsEnumCaseType.Numeric
 
-type FsParamComment =
+type FsCommentLine = string
+type FsCommentContent = FsCommentLine list
+
+type FsCommentTag = 
     {
         Name: string
-        Description: string list
+        Content: FsCommentContent
+    }
+
+type FsCommentLinkType =
+    | HRef
+    | CRef
+type FsCommentLink =
+    {
+        Type: FsCommentLinkType
+        Target: string
+        Content: FsCommentContent
+    }
+
+type FsCommentException =
+    {
+        Type: string option
+        Content: FsCommentContent
     }
 
 [<RequireQualifiedAccess>]
 type FsComment =
-    | SummaryLine of string
-    | Param of FsParamComment
-    | Unknown of string option
+    | Summary of FsCommentContent
+    | Param of FsCommentTag
+    | TypeParam of FsCommentTag
+    | Returns of FsCommentContent
+    | Remarks of FsCommentContent
+    | SeeAlso of FsCommentLink
+    | Example of FsCommentContent
+    | Exception of FsCommentException
+      // non-standard tags
+    | Version of FsCommentContent
+    | Default of FsCommentContent
+      /// Used for non-standard tags
+    | Tag of FsCommentTag
+    | UnknownTag of FsCommentTag
+    | Unknown of FsCommentContent
 
 [<RequireQualifiedAccess>]
 module FsComment =
-    let isSummaryLine v = match v with | FsComment.SummaryLine _ -> true | _ -> false
-    let asSummaryLine v = match v with | FsComment.SummaryLine o -> Some o | _ -> None
-    let isParam v = match v with | FsComment.Param _ -> true | _ -> false
-    let asParam v = match v with | FsComment.Param o -> Some o | _ -> None
+    let isSummary v = match v with | FsComment.Summary _ -> true | _ -> false
+    let asSummary v = match v with | FsComment.Summary o -> Some o | _ -> None
 
 type FsParam =
     {
-        Comment: FsComment option
         Name: string
         Optional: bool
         ParamArray: bool
@@ -100,8 +133,6 @@ type FsParam =
 [<RequireQualifiedAccess>]
 module FsParam =
     let isStringLiteral (p: FsParam): bool = FsType.isStringLiteral p.Type
-    let hasComment (p: FsParam): bool = p.Comment.IsSome
-    let getComment (p: FsParam) = p.Comment
 
 [<RequireQualifiedAccess>]
 type FsFunctionKind =
@@ -112,6 +143,7 @@ type FsFunctionKind =
 
 type FsFunction =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         Kind: FsFunctionKind
         IsStatic: bool
@@ -125,12 +157,6 @@ with
     member x.HasStringLiteralParams = x.Params |> List.exists FsParam.isStringLiteral
     member x.StringLiteralParams = x.Params |> List.filter FsParam.isStringLiteral
     member x.NonStringLiteralParams = x.Params |> List.filter (not << FsParam.isStringLiteral)
-    member x.HasSummaryComments = x.Comments.Length > 0
-    member x.HasParamComments = x.Params |> List.exists FsParam.hasComment
-    member x.HasComments = x.HasSummaryComments || x.HasParamComments
-    member x.SummaryLineComments = x.Comments |> List.choose FsComment.asSummaryLine
-    member x.ParamComments = x.Params |> List.map FsParam.getComment |> List.choose id
-    member x.AllComments = x.Comments @ x.ParamComments
 
 [<RequireQualifiedAccess>]
 type FsPropertyKind =
@@ -139,6 +165,7 @@ type FsPropertyKind =
 
 type FsProperty =
     {
+        Attributes: FsAttributeSet list
         Comments: FsComment list
         Kind: FsPropertyKind
         Index: FsParam option
@@ -164,6 +191,8 @@ type FsUnion =
 
 type FsAlias =
     {
+        Attributes: FsAttributeSet list
+        Comments: FsComment list
         Name: string
         Type: FsType
         TypeParameters: FsType list
@@ -214,6 +243,8 @@ type FsExport =
 [<CustomEquality;CustomComparison>]
 type FsVariable =
     {
+        Attributes: FsAttributeSet list
+        Comments: FsComment list
         Export: FsExport option
         HasDeclare: bool
         Name: string
@@ -246,6 +277,41 @@ type FsMapped =
         Name: string
         FullName: string
     }
+
+type FsArgument = {
+    /// Named argument
+    Name: string option
+    /// stringyfied value  
+    /// -> includes quotation marks for string argument: `"\"MyVal\""`
+    Value: string
+}
+module FsArgument =
+    let justValue value =
+        {
+            Name = None
+            Value = value
+        }
+type FsAttribute = {
+    /// might possible be `open`ed.
+    /// 
+    /// NOT included in `Name`  
+    /// -> `System.Obsolete`: `Namespace`=`System`; `Name`=`Obsolete`
+    /// 
+    /// Place Full Name in `Name` to emit full name.
+    Namespace: string option
+    Name: string
+    Arguments: FsArgument list
+}
+module FsAttribute =
+    let fromName name =
+        {
+            Namespace = None
+            Name = name
+            Arguments = []
+        }
+/// Attributes in a single set will be placed in common brackets:
+/// `[<A(...); B(...)>]`
+type FsAttributeSet = FsAttribute list
 
 let simpleType name: FsType =
     {
@@ -307,16 +373,16 @@ module FsType =
 
 type FsModule =
     {
+        Comments: FsComment list
         HasDeclare: bool
         IsNamespace: bool
         Name: string
         Types: FsType list
         HelperLines: string list
-        Attributes: string list
+        Attributes: FsAttributeSet list
     }
 with
     member x.IsHelper = x.HelperLines.Length > 0
-    member x.HasAttributes = x.Attributes.Length > 0
 
 [<RequireQualifiedAccess>]
 type FsFileKind =

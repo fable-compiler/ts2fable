@@ -50,7 +50,24 @@ let emitFsFileOutAsLines (fsPath: string) (fsFileOut: FsFileOut) =
     let file = fs.createWriteStream (fsPath)
     let lines = List []
     for line in printFsFile Version.version fsFileOut do
-        lines.Add(line)
+        // line might contain new line:
+        // ```
+        // [<Obsolete("Foo Bar
+        // baz")>]
+        // ```
+        // -> returned in single line
+        // -> comparing with expected file fails:
+        // ```
+        // - "[<Obsolete(\"Foo Bar"
+        // - "baz\")>]"
+        // + "[<Obsolete(\"Foo Bar\nbaz\")>]"
+        // ```
+        // (`+`: actual; `-`: expected)
+
+        if line.Contains "\n" then
+            lines.AddRange(line.Split [|'\n'|])
+        else
+            lines.Add(line)
         file.write (sprintf "%s%c" line '\n') |> ignore
     file.``end``()
     lines |> List.ofSeq

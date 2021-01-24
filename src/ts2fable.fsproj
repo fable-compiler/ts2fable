@@ -12,6 +12,7 @@
     <Compile Include="node/version.fs" />
     <Compile Include="print.fs" />
     <Compile Include="transform.fs" />
+    <Compile Include="transformComments.fs" />
     <Compile Include="node/transform.fs" />
     <Compile Include="bridge.fs" />
     <Compile Include="write.fs" />

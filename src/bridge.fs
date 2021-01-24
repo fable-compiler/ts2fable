@@ -151,6 +151,8 @@ module internal Bridge =
         // |> addAliasUnionHelpers // disabled for Fable.Core 3.x
         |> removeDuplicateOptionsFromParameters
         |> fixFloatAlias
+        |> TransformComments.transform
+        //todo: enhancement: extract Namespaces from Attributes and open
 
     let getFsFileOut bridge =
         let program = createProgram bridge

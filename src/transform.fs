@@ -294,7 +294,8 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
             if it.IsStatic then
                 // add a property for accessing the static class
                 {
-                    Comments = []
+                    Attributes = []
+                    Comments = it.Comments
                     Kind = FsPropertyKind.Regular
                     Index = None
                     Name = it.Name.Replace("Static","")
@@ -331,6 +332,8 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         if md.HasDeclare then
             if not <| md.IsNamespace then
                 {
+                    Attributes = []
+                    Comments = md.Comments
                     Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                     HasDeclare = true
                     Name = name
@@ -342,6 +345,8 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                 |> variablesForParent.Add
         else
             {
+                Attributes = []
+                Comments = md.Comments
                 Export = { IsGlobal = false; Selector = selector; Path = path } |> Some
                 HasDeclare = true
                 Name = name
@@ -357,6 +362,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         else
             [
                 {
+                    Attributes = []
                     Comments = []
                     IsStatic = false
                     IsClass = false
@@ -380,6 +386,8 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         | FsType.Module smd ->
             if not <| globalNames.Contains smd.Name && exportAssignments.Contains smd.Name then
                 {
+                    Attributes = []
+                    Comments = smd.Comments
                     Export = { IsGlobal = false; Selector = "*"; Path = path } |> Some
                     HasDeclare = true
                     Name = smd.Name |> lowerFirst
@@ -737,6 +745,7 @@ let addConstructors  (f: FsFile): FsFile =
                     | None ->
                         let defaultCtr =
                             {
+                                Attributes = []
                                 Comments = []
                                 Kind = FsFunctionKind.Constructor
                                 IsStatic = true
@@ -900,6 +909,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                         let newTypes = List<FsType>()
                         let materializeInterfaceType name members =
                             let materialized = {
+                                Attributes = []
                                 Comments = []
                                 IsStatic = false
                                 IsClass = false
@@ -975,7 +985,8 @@ let extractTypeLiterals(f: FsFile): FsFile =
                             {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton
                         | FsType.TypeLiteral tl ->
                             {
-                                Comments = []
+                                Attributes = []
+                                Comments = al.Comments
                                 IsStatic = false
                                 IsClass = false
                                 Name = al.Name
@@ -1033,6 +1044,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                     ) |> ignore
 
                     let extractedInterface = {
+                        Attributes = []
                         Comments = []
                         IsStatic = false
                         IsClass = false
@@ -1093,7 +1105,13 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                                     [tp2] @
                                     [
                                         {
-                                            Attributes = ["RequireQualifiedAccess"; "CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix"]
+                                            Comments = []
+                                            Attributes = [
+                                                [
+                                                    FsAttribute.fromName "RequireQualifiedAccess"
+                                                    { Namespace = None; Name = "CompilationRepresentation"; Arguments = [ FsArgument.justValue "CompilationRepresentationFlags.ModuleSuffix" ] }
+                                                ]
+                                            ]
                                             HasDeclare = false
                                             IsNamespace = false
                                             Name = al.Name
@@ -1168,13 +1186,21 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                 match al.Type with
                 | FsType.Function f ->
                     {
-                        Comments = f.Comments
+                        Attributes = []
+                        Comments = al.Comments
                         IsStatic = false
                         IsClass = false
                         Name = al.Name
                         FullName = al.Name
                         Inherits = []
-                        Members = { f with Name = Some "Invoke"; Kind = FsFunctionKind.Call } |> FsType.Function |> List.singleton
+                        Members = 
+                            { f with 
+                                Comments = al.Comments
+                                Name = Some "Invoke"
+                                Kind = FsFunctionKind.Call
+                            } 
+                            |> FsType.Function 
+                            |> List.singleton
                         TypeParameters = al.TypeParameters
                         Accessibility = None
                     } |> FsType.Interface
@@ -1191,7 +1217,8 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                     match tu.Kind with
                     | FsTupleKind.Intersection ->
                         {
-                            Comments = []
+                            Attributes = []
+                            Comments = al.Comments
                             IsStatic = false
                             IsClass = false
                             Name = al.Name
@@ -1213,7 +1240,8 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                 match al.Type with
                 | FsType.Tuple tu when tu.Kind = FsTupleKind.Mapped ->
                     {
-                        Comments = []
+                        Attributes = []
+                        Comments = al.Comments
                         IsStatic = false
                         IsClass = false
                         Name = al.Name
@@ -1351,7 +1379,7 @@ let fixFsFileOut fo =
 
 let extractGenericParameterDefaults (f: FsFile): FsFile =
     let fix f =
-        let extractAliasesFromGenericParameterDefaults name tps =
+        let extractAliasesFromGenericParameterDefaults attributes comments name tps =
             let aliases = List<FsAlias>()
 
             tps
@@ -1361,6 +1389,9 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                 | None -> ()
                 | Some _ ->
                     {
+                        Attributes = attributes
+                        //todo: enhancement: remove defaulted (=removed) typeparams from comments
+                        Comments = comments
                         Name = name
                         Type =
                             {
@@ -1405,13 +1436,13 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                             match tp with
                             | FsType.Interface it ->
                                 it.TypeParameters
-                                |> extractAliasesFromGenericParameterDefaults it.Name
+                                |> extractAliasesFromGenericParameterDefaults it.Attributes it.Comments it.Name
                                 |> tps.AddRange
 
                                 tp |> tps.Add
                             | FsType.Alias al ->
                                 al.TypeParameters
-                                |> extractAliasesFromGenericParameterDefaults al.Name
+                                |> extractAliasesFromGenericParameterDefaults al.Attributes al.Comments al.Name
                                 |> tps.AddRange
 
                                 tp |> tps.Add
