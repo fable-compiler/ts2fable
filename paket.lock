@@ -4,34 +4,34 @@ NUGET
     Fable.Browser.Blob (1.1) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
-    Fable.Browser.Css (1.0.0-beta-001)
-      Fable.Browser.Dom (>= 1.0) - restriction: >= netstandard2.0
-      Fable.Browser.Svg (>= 1.0.0-beta-001) - restriction: >= netstandard2.0
+    Fable.Browser.Css (2.0)
+      Fable.Browser.Dom (>= 1.2) - restriction: >= netstandard2.0
+      Fable.Browser.Svg (>= 1.0) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
-    Fable.Browser.Dom (1.1)
+      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
+    Fable.Browser.Dom (2.2)
       Fable.Browser.Blob (>= 1.1) - restriction: >= netstandard2.0
-      Fable.Browser.Event (>= 1.0) - restriction: >= netstandard2.0
+      Fable.Browser.Event (>= 1.2.1) - restriction: >= netstandard2.0
       Fable.Browser.WebStorage (>= 1.0) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
-    Fable.Browser.Event (1.0) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0
+    Fable.Browser.Event (1.2.1) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
-    Fable.Browser.Svg (1.0.0-beta-001)
-      Fable.Browser.Dom (>= 1.0) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
+    Fable.Browser.Svg (2.0)
+      Fable.Browser.Dom (>= 2.0) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
     Fable.Browser.WebStorage (1.0) - restriction: >= netstandard2.0
       Fable.Browser.Event (>= 1.0) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
-    Fable.Core (3.1.4)
-      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
-    Fable.Node (1.0.2)
+    Fable.Core (3.2.4)
+      FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0
+    Fable.Node (1.2)
       Fable.Core (>= 3.1.2) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
-    FSharp.Core (4.7) - restriction: >= netstandard2.0
+      FSharp.Core (>= 5.0) - restriction: >= netstandard2.0
+    FSharp.Core (5.0.1) - restriction: >= netstandard2.0
 
 GROUP netcorebuild
 STORAGE: NONE
@@ -154,7 +154,7 @@ NUGET
     FSharp.Control.Reactive (4.5)
       FSharp.Core (>= 4.7.2)
       System.Reactive (>= 4.4.1)
-    FSharp.Core (5.0)
+    FSharp.Core (5.0.1)
     Microsoft.Build (16.8)
     Microsoft.Build.Framework (16.8)
       System.Security.Permissions (>= 4.7)
@@ -178,7 +178,7 @@ NUGET
       System.Collections.Immutable (>= 1.5)
       System.Security.Permissions (>= 4.7)
       System.Text.Encoding.CodePages (>= 4.0.1)
-    Microsoft.NETCore.Platforms (5.0)
+    Microsoft.NETCore.Platforms (5.0.1)
     Microsoft.NETCore.Targets (5.0)
     Microsoft.Win32.Registry (5.0)
       System.Buffers (>= 4.5.1)
@@ -186,27 +186,27 @@ NUGET
       System.Security.AccessControl (>= 5.0)
       System.Security.Principal.Windows (>= 5.0)
     Mono.Posix.NETStandard (1.0)
-    MSBuild.StructuredLogger (2.1.272)
+    MSBuild.StructuredLogger (2.1.303)
       Microsoft.Build (>= 16.4)
       Microsoft.Build.Framework (>= 16.4)
       Microsoft.Build.Tasks.Core (>= 16.4)
       Microsoft.Build.Utilities.Core (>= 16.4)
     Newtonsoft.Json (12.0.3)
-    NuGet.Common (5.8)
-      NuGet.Frameworks (>= 5.8)
-    NuGet.Configuration (5.8)
-      NuGet.Common (>= 5.8)
+    NuGet.Common (5.8.1)
+      NuGet.Frameworks (>= 5.8.1)
+    NuGet.Configuration (5.8.1)
+      NuGet.Common (>= 5.8.1)
       System.Security.Cryptography.ProtectedData (>= 4.4)
-    NuGet.Frameworks (5.8)
-    NuGet.Packaging (5.8)
+    NuGet.Frameworks (5.8.1)
+    NuGet.Packaging (5.8.1)
       Newtonsoft.Json (>= 9.0.1)
-      NuGet.Configuration (>= 5.8)
-      NuGet.Versioning (>= 5.8)
-      System.Security.Cryptography.Cng (>= 5.0.0-preview.3.20214.6)
-      System.Security.Cryptography.Pkcs (>= 5.0.0-preview.3.20214.6)
-    NuGet.Protocol (5.8)
-      NuGet.Packaging (>= 5.8)
-    NuGet.Versioning (5.8)
+      NuGet.Configuration (>= 5.8.1)
+      NuGet.Versioning (>= 5.8.1)
+      System.Security.Cryptography.Cng (>= 5.0)
+      System.Security.Cryptography.Pkcs (>= 5.0)
+    NuGet.Protocol (5.8.1)
+      NuGet.Packaging (>= 5.8.1)
+    NuGet.Versioning (5.8.1)
     Octokit (0.48)
     System.Buffers (4.5.1)
     System.CodeDom (5.0)
@@ -299,37 +299,37 @@ NUGET
     Fable.Browser.Blob (1.1) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
-    Fable.Browser.Dom (1.1) - restriction: >= netstandard2.0
+    Fable.Browser.Dom (2.2) - restriction: >= netstandard2.0
       Fable.Browser.Blob (>= 1.1) - restriction: >= netstandard2.0
-      Fable.Browser.Event (>= 1.0) - restriction: >= netstandard2.0
+      Fable.Browser.Event (>= 1.2.1) - restriction: >= netstandard2.0
       Fable.Browser.WebStorage (>= 1.0) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
-    Fable.Browser.Event (1.0) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0
+    Fable.Browser.Event (1.2.1) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
     Fable.Browser.WebStorage (1.0) - restriction: >= netstandard2.0
       Fable.Browser.Event (>= 1.0) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
-    Fable.Core (3.1.4)
-      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
-    Fable.Elmish (3.0.6)
+    Fable.Core (3.2.4)
+      FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0
+    Fable.Elmish (3.1)
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
-    Fable.Elmish.Browser (3.0.2)
+    Fable.Elmish.Browser (3.0.4)
       Fable.Browser.Dom (>= 1.0) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       Fable.Elmish (>= 3.0) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
-    Fable.Elmish.Debugger (3.0.3)
-      Fable.Core (>= 3.0) - restriction: >= netstandard2.0
+    Fable.Elmish.Debugger (3.2)
+      Fable.Core (>= 3.1.5) - restriction: >= netstandard2.0
       Fable.Elmish (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
-      Thoth.Json (>= 3.0) - restriction: >= netstandard2.0
-    Fable.Elmish.HMR (4.0.1)
+      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
+      Thoth.Json (>= 4.0) - restriction: >= netstandard2.0
+    Fable.Elmish.HMR (4.1)
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      Fable.Elmish.Browser (>= 3.0) - restriction: >= netstandard2.0
+      Fable.Elmish.Browser (>= 3.0.4) - restriction: >= netstandard2.0
       Fable.Elmish.React (>= 3.0.1) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
     Fable.Elmish.React (3.0.1)
@@ -340,25 +340,25 @@ NUGET
     Fable.FontAwesome (2.0) - restriction: >= netstandard2.0
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       Fable.React (>= 5.1) - restriction: >= netstandard2.0
-    Fable.FontAwesome.Free (2.0)
+    Fable.FontAwesome.Free (2.1)
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       Fable.FontAwesome (>= 2.0) - restriction: >= netstandard2.0
       Fable.React (>= 5.1) - restriction: >= netstandard2.0
-    Fable.Promise (2.0)
-      Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.5.2) - restriction: >= netstandard2.0
-    Fable.React (5.3.5)
-      Fable.Browser.Dom (>= 1.0) - restriction: >= netstandard2.0
-      Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
-    FSharp.Core (4.7) - redirects: force
-    Fulma (2.5)
+    Fable.Promise (2.2)
+      Fable.Core (>= 3.1.5) - restriction: >= netstandard2.0
+      FSharp.Core (>= 5.0) - restriction: >= netstandard2.0
+    Fable.React (7.2)
+      Fable.Browser.Dom (>= 2.0.1) - restriction: >= netstandard2.0
+      Fable.Core (>= 3.1.5) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0
+    FSharp.Core (5.0.1) - redirects: force
+    Fulma (2.10)
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       Fable.React (>= 5.1) - restriction: >= netstandard2.0
     Fulma.Extensions.Wikiki.PageLoader (2.0.1)
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       Fable.React (>= 5.1) - restriction: >= netstandard2.0
       Fulma (>= 2.1.1) - restriction: >= netstandard2.0
-    Thoth.Json (3.4.1) - restriction: >= netstandard2.0
-      Fable.Core (>= 3.0) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.6.2) - restriction: >= netstandard2.0
+    Thoth.Json (5.1) - restriction: >= netstandard2.0
+      Fable.Core (>= 3.1.6) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0

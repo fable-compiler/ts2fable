@@ -35,26 +35,45 @@ You can also try out an in-browser version [here](http://fable.io/ts2fable/)
 
 The online version will be updated automatically when commits is merged
 
+
 ## Contributing
 Succesfull [builds](https://ci.appveyor.com/project/fable-compiler/ts2fable/history) on the master branch are uploaded and tagged as `next`. You can help us test these builds by installing them with:
 ```
 yarn global add ts2fable@next
 ```
 
-### Running code from source
-
-**Windows**:
+or build directly from source:
 - `git clone https://github.com/fable-compiler/ts2fable`
-- Install all dependencies: `fake.cmd run build.fsx`
+- `cd ts2fable`
+- Compile:
+  - Windows: `./fake.cmd build`
+  - Linux: `./fake.sh build`
+- Run: 
+  - `node -require esm ./out/ts2fable.js Path/to/Declaration.d.ts Path/to/Output.fs`
+  - or: `npm ts2fable Path/to/Declaration.d.ts Path/to/Output.fs`
 
-**Unix**:
-- `git clone https://github.com/fable-compiler/ts2fable`
-- `./fake.sh run build.fsx`
+`-require esm` is needed, because fable outputs code with ES modules.  
+If you want to run ts2fable directly without esm (ECMAScript module loader): 
+* build:  `./fake.cmd build -t Cli.BuildRelease`
+* call: `node ./dist/ts2fable.js ...`
 
-**Common to all OS**
-- `dotnet restore dotnet-fake.proj`
-- In vscode, press `Ctrl+Shift+P` > Run Task > WatchTest
-- Add your test in `test/fsFileTests.fs` and prefix it with mocha `only` (See below sample)
+
+### Test Suites
+* `./test`: Mocha tests
+    * Run: `./fake.cmd build -t RunTest`
+    * Watch: `./fake.cmd build -t WatchAndRunTest`
+    * `functionTests.fs`: Test ts2fable functions
+    * `fsFileTests.fs`: Test file translation using small snippets and compare output against expected results or content
+* `./test-compile`: Translate actual TypeScript declaration files with ts2fable into F#. Then compile with F# compiler to ensure they are valid F#.
+    * Run: `./fake.cmd build -t BuildTestCompile`
+    * Setup for translation of .ts files: `./build.fsx` > Target `RunCliOnTestCompile`
+    * Setup for .NET compilation: `./test-compile/test-compile.fsproj`
+
+Run both test suites: `./fake.cmd build -t CliTest`
+
+**Debug Test**:
+* In VS Code: `Ctrl+Shift+P` > Run Task > WatchTest
+* Add your test to `./test/fsFileTests.fs` and prefix with mocha `only` (See below sample)
 
 Sample Test:
 ```fsharp
@@ -63,25 +82,18 @@ only "duplicated variable exports" <| fun _ ->
     let fsPath = "test-compile/ReactXP.fs"
     testFsFiles tsPaths fsPath  <| fun fsFiles ->
         fsFiles
-        |> getTopVarialbles
+        |> getTopVariables
         |> List.countBy(fun vb -> vb.Name)
         |> List.forall(fun (_,l) -> l = 1)
         |> equal true
 ```
-- Press F5 to debug this test
 
-## Use locally built version of TS2Fable
+* Press F5 (or launch `Run Mocha Tests`) to debug this test
 
-As above, clone then run `fake.cmd run build.fsx`.
+### Web-App
+* Start with: ` ./fake.cmd run -t WebApp.Watch`
+* Launch in Browser: `localhost:8080`
 
-Now compile the local sources:
-
-* Navigate to .tools: ``cd ./tools``
-* compile: ``dotnet fable yarn-fable-splitter -- ./src/ts2fable.fsproj --config ./tools/splitter.config.js --port free``
-
-This should have created a folder ``./dist``.
-
-You can now execute it through node: ``node ./dist/ts2fable.js C:\projects\MyCoolProject\node_modules\babylonjs\babylon.d.ts C:\projects\MyCoolProject\Bindings\BabylonJS\babylonjs.fs``
 
 ## Conventions
 

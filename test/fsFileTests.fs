@@ -43,8 +43,11 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
 
 
 // make sure tests are strict
-describe "transform tests" <| fun _ ->
-    timeout 10000
+(describe "transform tests" <| fun _ ->
+    // timeout 10000
+    // in fable 3: compiled as arrow function
+    //   -> no `this`
+    //   -> `this.timeout` doesn't work
     
     let getTypeByName name fsFiles =
         getAllTypes fsFiles
@@ -193,7 +196,7 @@ describe "transform tests" <| fun _ ->
             |> equal true
     
     // https://github.com/fable-compiler/ts2fable/issues/175
-    it "fix some Option.map to Microsoft.FSharp.Core.Option.map" <| fun _ ->
+    (it "fix some Option.map to Microsoft.FSharp.Core.Option.map" <| fun _ ->
         let tsPaths = ["node_modules/@types/react/index.d.ts"]
         let fsPath = "test-compile/React.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
@@ -206,6 +209,7 @@ describe "transform tests" <| fun _ ->
             //     | _ -> false
             // )
             |> equal true
+    )?timeout(5_000)    // timeout with default 2_000ms
 
     // https://github.com/fable-compiler/ts2fable/pull/170
     it "compile type alias has only function to interface" <| fun _ ->
@@ -488,3 +492,5 @@ describe "transform tests" <| fun _ ->
         runRegressionTest "#368-compare-xml-comments.pass"
     it "regression #368 compare xml comments -- fail" <| fun _ ->
         runRegressionTestWithComparison notEqual "#368-compare-xml-comments.fail"
+
+)?timeout(10_000)

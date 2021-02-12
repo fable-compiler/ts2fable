@@ -25,7 +25,9 @@ let parseArgs (args: string[]) =
             failwithf "TypeScript file not found: %s" tsPath
     Write.writeFile tsPaths fsPaths.Head exports
 
+#if !FABLE_COMPILER || TS2FABLE_STANDALONE
 [<EntryPoint>]
+#endif
 let main (argv: string[]): int =
     try
         if Array.contains "-v" argv || Array.contains "--version" argv

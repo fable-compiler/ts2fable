@@ -2,44 +2,20 @@
   "version": "0.2.0",
   "configurations": [
       {
-        "type": "node",
+        "type": "pwa-node",
         "request": "launch",
-        "name": "Launch Test",
-        "protocol": "inspector",
+        "name": "Run Mocha Tests",
         "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
         "args":[
+          "--require",
+          "esm",
+          "--no-timeouts",
+          "--colors",
           "${workspaceRoot}/build/test.js"
         ],
         "sourceMaps": true,
-        "outFiles": ["${workspaceRoot}/*/*.js"]
-      },
-      {
-        "type": "node",
-        "request": "launch",
-        "name": "Launch Cli",
-        "protocol": "inspector",
-        "program": "${workspaceRoot}/dist/ts2fable.js",
-        "args":[
-          "${workspaceRoot}/node_modules/office-ui-fabric-react/lib/index.d.ts",
-          "${workspaceRoot}/test-compile/OfficeReact.fs",
-          "-e",
-          "uifabric",
-          "office-ui-fabric-react"
-        ],
-        "sourceMaps": true,
-        "outFiles": ["${workspaceRoot}/*/*.js"]
-      },
-      {
-        "type": "node",
-        "request": "launch",
-        "name": "Run Mocha Tests",
-        "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-        "args": [
-            "--no-timeouts",
-            "--colors",
-            "${workspaceFolder}/build"
-        ],
-        "internalConsoleOptions": "openOnSessionStart"
+        "outFiles": ["${workspaceRoot}/*/*.js"],
+        "internalConsoleOptions": "openOnSessionStart",
       }
   ]
 }

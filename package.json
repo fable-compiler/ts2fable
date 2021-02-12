@@ -10,18 +10,8 @@
   "version": "0.0.0",
   "description": "TypeScript definition files parser for fable-compiler",
   "scripts": {
-    "__postinstall": "node ./node_modules/vscode/bin/install",
-    "__build": "fable-splitter ./src/ts2fable.fsproj -c ./tools/splitter.config.js",
-    "build": "fable-splitter ./src/ts2fable.fsproj -o ./out",
-    "postbuild": "rollup ./out/ts2fable.js --file ./dist/ts2fable.js --format umd --name ts2fable",
-    "build-cli": "webpack --config ./tools/webpack.config.cli.js",
-    "build-test": "webpack --config ./tools/webpack.config.test.js",
-    "build-test2": "fable-splitter ./test/test.fsproj -o ./build --commonjs",
-    "watch-cli": "webpack -w --config ./tools/webpack.config.cli.js",
-    "watch-test": "webpack -w --config ./tools/webpack.config.test.js",
-    "webapp-build": "webpack -p --config ./web-app/webpack.config.js",
-    "webapp-watch": "webpack-dev-server -w --config ./web-app/webpack.config.js",
-    "test": "mocha ./build/test.js"
+    "ts2fable": "node --require esm ./out/ts2fable.js",
+    "test": "mocha --require esm ./build/test.js"
   },
   "repository": {
     "type": "git",
@@ -74,11 +64,7 @@
     "css-loader": "^1.0.0",
     "electron": "^9.4.0",
     "eslint-scope": "3.7.1",
-    "fable-compiler": "^2.13.0",
-    "fable-compiler-js": "^1.3.1",
-    "fable-loader": "^2.1.9",
-    "fable-splitter": "^2.2.1",
-    "fable-utils": "^1.2.0",
+    "esm": "^3.2.25",
     "file-loader": "^1.1.11",
     "font-awesome": "^4.7.0",
     "gh-pages": "^1.2.0",
