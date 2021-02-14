@@ -209,7 +209,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             //     | _ -> false
             // )
             |> equal true
-    )?timeout(5_000)    // timeout with default 2_000ms
+    )?timeout(10_000)    // timeout with default 2_000ms
 
     // https://github.com/fable-compiler/ts2fable/pull/170
     it "compile type alias has only function to interface" <| fun _ ->
@@ -493,4 +493,4 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #368 compare xml comments -- fail" <| fun _ ->
         runRegressionTestWithComparison notEqual "#368-compare-xml-comments.fail"
 
-)?timeout(10_000)
+)?timeout(15_000)
