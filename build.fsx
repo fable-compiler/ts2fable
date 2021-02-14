@@ -121,13 +121,10 @@ module Scripts =
     let watchWebapp () =
         fable $"watch {appDir} --outDir {appTempOutDir} --sourceMaps --define DEBUG --run webpack-dev-server --watch --mode development --config {appDir}/webpack.config.js"
 
-    /// Build for CLI release.
-    /// 
-    /// First: Fable build in release mode, no sourcemaps, into `./out` with entry `ts2fable.js`
-    /// Then: Bundling with rollup into `./dist` with name `ts2fable.js`
-    let buildReleaseCli () =
+    /// Bundle existing CLI (output of `buildCli`, in `./out` with entry `ts2fable.js`) into `./dist/ts2fable.js` with rollup
+    let bundleCli () =
         // umd: Universal Module Definition
-        fable $"{cliDir} --define {CLI_BUILD_SYMBOL} --outDir {outDir} --run rollup --file {distDir}/ts2fable.js --format umd --name ts2fable {outDir}/ts2fable.js"
+        npx $"rollup --file {distDir}/ts2fable.js --format umd --name ts2fable {outDir}/ts2fable.js"
 
     
 Target.create "Clean" <| fun _ ->
@@ -333,7 +330,7 @@ Target.create "PushForComparison" <| fun _ ->
         git "push origin -f"
 
 Target.create "Cli.BuildRelease" <| fun _ -> 
-    Scripts.buildReleaseCli () 
+    Scripts.bundleCli ()
 
     // add `#! node`
     node (toolDir</>"add-shebang.js")
@@ -449,6 +446,11 @@ Target.create "WebApp.Setup" ignore
 // Watch both CLI (-> ./out) & Tests (-> ./build)
 "Prepare"
     ==> "Watch"
+
+// Cli.BuildRelease
+"Prepare"
+    ==> "BuildCli"
+    ==> "Cli.BuildRelease"
 
 // CLI Publish
 "BuildAll"
