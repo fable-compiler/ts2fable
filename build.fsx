@@ -223,10 +223,7 @@ Target.create "WatchTest" <| fun _ ->
     Scripts.watchTest ()
 
 Target.create "RunTest" <| fun _ ->
-    if isAppveyor then
-        Scripts.runTestWithReporter "mocha-appveyor-reporter"
-    else
-        Scripts.runTest ()
+    Scripts.runTest ()
 
 Target.create "WatchAndRunTest" <| fun _ ->
     Scripts.watchAndRunTest ()
