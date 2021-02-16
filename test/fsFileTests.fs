@@ -495,3 +495,7 @@ describe "transform tests" <| fun _ ->
         runRegressionTestWithComparison notEqual "#368-compare-xml-comments.fail"
     it "regression #368 compare xml comments -- indented fail" <| fun _ ->
         runRegressionTestWithComparison notEqual "#368-compare-xml-comments.indented.fail"
+
+    // https://github.com/fable-compiler/ts2fable/issues/374
+    it "string literal type argument with space" <| fun _ ->
+        runRegressionTest "#374-string-literal-type-argument-with-space"
