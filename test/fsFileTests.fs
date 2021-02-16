@@ -113,7 +113,12 @@ describe "transform tests" <| fun _ ->
     let sanitizeFsFile (lines:#seq<string>) : string array =
         lines
         |> Seq.filter (not << System.String.IsNullOrWhiteSpace)
-        |> Seq.filter (fun l -> not (l.StartsWith("//")) || l.StartsWith("///")) // ignore normal comments, but not xml comments
+        |> Seq.filter (fun l ->
+            // ignore normal comments, but not xml comments
+            (not <| l.TrimStart().StartsWith("//"))
+            ||
+            l.TrimStart().StartsWith("///")
+        )
         |> Seq.map (fun l -> l.TrimEnd())
         |> Seq.toArray
     
@@ -488,3 +493,5 @@ describe "transform tests" <| fun _ ->
         runRegressionTest "#368-compare-xml-comments.pass"
     it "regression #368 compare xml comments -- fail" <| fun _ ->
         runRegressionTestWithComparison notEqual "#368-compare-xml-comments.fail"
+    it "regression #368 compare xml comments -- indented fail" <| fun _ ->
+        runRegressionTestWithComparison notEqual "#368-compare-xml-comments.indented.fail"
