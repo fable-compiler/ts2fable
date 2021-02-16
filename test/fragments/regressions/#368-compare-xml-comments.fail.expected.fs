@@ -8,4 +8,6 @@ open Fable.Core.JS
 
 /// XML comments are compared -- additional text to fail
 type [<AllowNullLiteral>] SomeInterface =
-    interface end
+
+    /// Indented XML comments are compared
+    abstract a: unit with get, set
