@@ -479,9 +479,18 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                         "," |> kind.Add
                 )
                 ")" |> kind.Add
+                let name = 
+                    let name = String.concat "" name
+                    // replace whitespaces with `_`
+                    let name = name.Replace(' ', '_').Replace('\t', '_')
+                    // if still invalid identifier: put into double backticks
+                    if name |> isIdentifier then
+                        name
+                    else
+                        sprintf "``%s``" name
                 { fn with
                     Kind = String.concat "" kind |> FsFunctionKind.StringParam
-                    Name = String.concat "" name |> Some
+                    Name = name |> Some
                     Params = List.ofSeq prms
                 }
                 |> FsType.Function
