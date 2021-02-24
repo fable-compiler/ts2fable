@@ -31,7 +31,7 @@ from F# [here](https://fable.io/docs/communicate/js-from-fable.html).
 Please note the parser is not perfect and some tweaking by hand may be needed. Please submit bugs as [issues on GitHub](https://github.com/fable-compiler/ts2fable/issues).
 
 ### Online Version
-You can also try out an in-browser version [here](http://fable.io/ts2fable/)
+You can also try an in-browser version [here](http://fable.io/ts2fable/)
 
 The online version will be updated automatically when commits is merged
 
@@ -49,7 +49,7 @@ or build directly from source:
   - Windows: `./fake.cmd build`
   - Linux: `./fake.sh build`
 - Run: 
-  - `node -require esm ./out/ts2fable.js Path/to/Declaration.d.ts Path/to/Output.fs`
+  - `node -require esm ./build/cli/ts2fable.js Path/to/Declaration.d.ts Path/to/Output.fs`
   - or: `npm ts2fable Path/to/Declaration.d.ts Path/to/Output.fs`
 
 `-require esm` is needed, because fable outputs code with ES modules.  
