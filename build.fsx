@@ -35,10 +35,11 @@ let nodeTool = platformTool "node"
 let gitTool = platformTool "git"
 let toolDir = "./tools"
 let testCompileDir = "./test-compile"
-/// Tests compiled by fable (-> JS Modules)
 let buildDir = "./build"
+/// Tests compiled by fable (-> JS Modules)
+let testBuildDir = buildDir </> "test"
 /// CLI compiled by fable (-> JS Modules)
-let outDir = "./out"
+let cliBuildDir = buildDir </> "cli"
 /// CLI release (-> no JS Modules)
 let distDir = "./dist"
 let cliDir = "./src"
@@ -70,42 +71,42 @@ module Scripts =
     [<Literal>]
     let private CLI_BUILD_SYMBOL = "TS2FABLE_STANDALONE"
 
-    /// Build `./src` in release mode, no bundle, with sourcemaps,  into `./out`, with entry `ts2fable.js`
+    /// Build `./src` in release mode, no bundle, with sourcemaps,  into `./build/cli`, with entry `ts2fable.js`
     /// 
     /// Start with `node --require esm ./out/ts2fable.js`
     let buildCli () =
-        fable $"{cliDir} --outDir {outDir} --define {CLI_BUILD_SYMBOL} --sourceMaps"
-    /// Watch `./src` in debug mode, no bundle, with sourcemaps, into `./out`, with entry `ts2fable.js`
+        fable $"{cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --sourceMaps"
+    /// Watch `./src` in debug mode, no bundle, with sourcemaps, into `./build/cli`, with entry `ts2fable.js`
     /// 
     /// Start with `node --require esm ./out/ts2fable.js`
     let watchCli () =
-        fable $"watch {cliDir} --outDir {outDir} --define {CLI_BUILD_SYMBOL} --sourceMaps --define DEBUG"
+        fable $"watch {cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --sourceMaps --define DEBUG"
 
-    /// Build `./test` in release mode, no bundle, with sourcemaps, into `./build`, with entry `test.js`
+    /// Build `./test` in release mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`
     /// 
     /// Start with `npx mocha --require esm ./build/test.js`
     let buildTest () =
-        fable $"{testDir} --outDir {buildDir} --sourceMaps"
+        fable $"{testDir} --outDir {testBuildDir} --sourceMaps"
 
-    /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build`, with entry `test.js`.
+    /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`.
     /// 
-    /// Start with `npx mocha --require esm ./build/test.js`
+    /// Start with `npx mocha --require esm ./build/test/test.js`
     /// 
     /// Unlike `watchAndRunTest` this doesn't run tests after compilation.
     let watchTest () =
-        fable $" watch {testDir} --outDir {buildDir} --sourceMaps --define DEBUG"
+        fable $" watch {testDir} --outDir {testBuildDir} --sourceMaps --define DEBUG"
 
-    /// Run mocha tests with entry `./build/test.js`.
+    /// Run mocha tests with entry `./build/test/test.js`.
     /// 
     /// Requires building test before via `buildTest`
     let runTest () =
-        npx $"mocha --require esm {buildDir}/test.js"
+        npx $"mocha --require esm {testBuildDir}/test.js"
     let runTestWithReporter (reporter: string) =
-        npx $"mocha --require esm --reporter {reporter} {buildDir}/test.js"
+        npx $"mocha --require esm --reporter {reporter} {testBuildDir}/test.js"
 
-    /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build`, with entry `test.js` and run tests with mocha after each change
+    /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js` and run tests with mocha after each change
     let watchAndRunTest () =
-        fable $"watch {testDir} --outDir {buildDir} --sourceMaps --define DEBUG --runWatch mocha --require esm {buildDir}/test.js"
+        fable $"watch {testDir} --outDir {testBuildDir} --sourceMaps --define DEBUG --runWatch mocha --require esm {testBuildDir}/test.js"
 
     /// Build `web-app` in release mode, bundled, with sourcemap into `./web-app/output/` dir.
     /// 
@@ -121,17 +122,17 @@ module Scripts =
     let watchWebapp () =
         fable $"watch {appDir} --outDir {appTempOutDir} --sourceMaps --define DEBUG --run webpack-dev-server --watch --mode development --config {appDir}/webpack.config.js"
 
-    /// Bundle existing CLI (output of `buildCli`, in `./out` with entry `ts2fable.js`) into `./dist/ts2fable.js` with rollup
+    /// Bundle existing CLI (output of `buildCli`, in `./build/cli` with entry `ts2fable.js`) into `./dist/ts2fable.js` with rollup
     let bundleCli () =
         // umd: Universal Module Definition
-        npx $"rollup --file {distDir}/ts2fable.js --format umd --name ts2fable {outDir}/ts2fable.js"
+        npx $"rollup --file {distDir}/ts2fable.js --format umd --name ts2fable {cliBuildDir}/ts2fable.js"
 
     
 Target.create "Clean" <| fun _ ->
     execDotNet "clean" ""
     Shell.cleanDirs [
-        buildDir
-        outDir
+        cliBuildDir
+        testBuildDir
         distDir
         appOutDir
         appTempOutDir
@@ -157,7 +158,7 @@ Target.create "RunCliOnTestCompile" <| fun _ ->
     let ts2fable args =
         let args = args |> String.concat " "
         async {
-            node <| $"--require esm {outDir}/ts2fable.js {args}"
+            node <| $"--require esm {cliBuildDir}/ts2fable.js {args}"
         }
 
     [
