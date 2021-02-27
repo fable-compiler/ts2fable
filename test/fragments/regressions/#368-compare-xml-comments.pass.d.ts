@@ -1,4 +1,9 @@
 /**
  * XML comments are compared
  */
-interface SomeInterface {}
+interface SomeInterface {
+    /**
+     * Indented XML comments are compared
+     */
+    a: void;
+}

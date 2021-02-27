@@ -1,5 +1,5 @@
 // ts2fable 0.8.0
-module rec #368-compare-xml-comments.pass
+module rec #368-compare-xml-comments.fail
 open System
 open Fable.Core
 open Fable.Core.JS
@@ -8,7 +8,6 @@ open Fable.Core.JS
 
 /// XML comments are compared
 type [<AllowNullLiteral>] SomeInterface =
-    // indented comments are ignored
 
-    /// Indented XML comments are compared
+    /// Indented XML comments are compared -- additional text to fail
     abstract a: unit with get, set
