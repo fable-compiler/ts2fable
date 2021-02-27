@@ -73,18 +73,18 @@ module Scripts =
 
     /// Build `./src` in release mode, no bundle, with sourcemaps,  into `./build/cli`, with entry `ts2fable.js`
     /// 
-    /// Start with `node --require esm ./out/ts2fable.js`
+    /// Start with `node --require esm ./build/cli/ts2fable.js`
     let buildCli () =
         fable $"{cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --sourceMaps"
     /// Watch `./src` in debug mode, no bundle, with sourcemaps, into `./build/cli`, with entry `ts2fable.js`
     /// 
-    /// Start with `node --require esm ./out/ts2fable.js`
+    /// Start with `node --require esm ./build/cli/ts2fable.js`
     let watchCli () =
         fable $"watch {cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --sourceMaps --define DEBUG"
 
     /// Build `./test` in release mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`
     /// 
-    /// Start with `npx mocha --require esm ./build/test.js`
+    /// Start with `npx mocha --require esm ./build/test/test.js`
     let buildTest () =
         fable $"{testDir} --outDir {testBuildDir} --sourceMaps"
 
@@ -230,12 +230,12 @@ Target.create "Watch" <| fun _ ->
     // combines WatchCli & WatchTest
     let watchCli =
         async {
-            // into `./out`
+            // into `./build/cli`
             Scripts.watchCli ()
         }
     let watchTest =
         async {
-            // into `./build`
+            // into `./build/test`
             Scripts.watchTest ()
         }
     [watchCli;watchTest]
@@ -444,7 +444,7 @@ Target.create "WebApp.Setup" ignore
 "Prepare"
     ==> "WatchAndRunTest"
 
-// Watch both CLI (-> ./out) & Tests (-> ./build)
+// Watch both CLI (-> ./build/cli) & Tests (-> ./build/test)
 "Prepare"
     ==> "Watch"
 
