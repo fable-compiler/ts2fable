@@ -10,8 +10,8 @@
   "version": "0.0.0",
   "description": "TypeScript definition files parser for fable-compiler",
   "scripts": {
-    "ts2fable": "node --require esm ./out/ts2fable.js",
-    "test": "mocha --require esm ./build/test.js"
+    "ts2fable": "node --require esm ./build/cli/ts2fable.js",
+    "test": "mocha --require esm ./build/test/test.js"
   },
   "repository": {
     "type": "git",
