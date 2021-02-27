@@ -1,6 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- 
+      Symbol required when cli build with fable: TS2FABLE_STANDALONE
+      (Not required in .NET build)
+
+      Reason: Fable cannot handle `EntryPoint` in a referenced project
+      See https://github.com/fable-compiler/Fable/issues/2366
+    -->
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="node/fileSystem.fs" />

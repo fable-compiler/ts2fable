@@ -265,4 +265,6 @@ paket-files/
 
 web-app/output/
 web-app/public/
+web-app/temp/
 out/
+*.fs.js

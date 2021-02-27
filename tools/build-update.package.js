@@ -1,7 +1,8 @@
 // remove scripts from package.json
 const fs = require('fs');
-var common = require("./webpack.config.common");
-var json = require(common.config.jsonPath);
+const path = require("path");
+const jsonPath = path.resolve(__dirname, "../package.json");
+var json = require(jsonPath);
 json.scripts = undefined;
 json.engines = undefined;
-fs.writeFileSync(common.config.jsonPath, JSON.stringify(json, undefined, 2));
+fs.writeFileSync(jsonPath, JSON.stringify(json, undefined, 2));
