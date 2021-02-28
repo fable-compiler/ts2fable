@@ -35,6 +35,9 @@ let main (argv: string[]): int =
         if Array.length argv < 2 || Array.contains "-h" argv || Array.contains "--help" argv
         then printfn "Usage: ts2fable some.d.ts src/Some.fs"
         else parseArgs argv
+        ``process``.exitCode <- 0.0
+        0
     with ex ->
         printfn "Error: %A" ex.Message
-    0
+        ``process``.exitCode <- 1.0
+        1
