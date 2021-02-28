@@ -57,7 +57,12 @@ let createEnumNameParts (name: string) =
 
 let capitalize (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
-    else sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1)
+    else 
+        // error in fable: https://github.com/fable-compiler/Fable/issues/2398
+        //    first char is `%` -> `%c` is `%` -> exception
+        // sprintf "%c%s" (Char.ToUpper input.[0]) (input.Substring 1)
+        // workaround for now:
+        (Char.ToUpper input.[0] |> string) + (input.Substring 1)
 
 let lowerFirst (input: string): string =
     if String.IsNullOrWhiteSpace input then ""

@@ -19,6 +19,30 @@ describe "my tests" <| fun _ ->
         1 + 2
         |> equal 3
 
+describe "capitalize tests" <| fun _ ->
+    it "already capitalized" <| fun _ ->
+        capitalize "Word"
+        |> equal "Word"
+    
+    it "lowercase start" <| fun _ ->
+        capitalize "word"
+        |> equal "Word"
+
+    it "special char" <| fun _ ->
+        capitalize ">"
+        |> equal ">"
+
+    // https://github.com/fable-compiler/Fable/issues/2398
+    it "%" <| fun _ ->
+        capitalize "%"
+        |> equal "%"
+    it "%=" <| fun _ ->
+        capitalize "%="
+        |> equal "%="
+    it "=%" <| fun _ ->
+        capitalize "=%"
+        |> equal "=%"
+
 
 describe "escapeWord tests" <| fun _ ->
 
