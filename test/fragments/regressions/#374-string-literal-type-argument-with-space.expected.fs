@@ -13,6 +13,7 @@ type [<AllowNullLiteral>] A =
     // [<Emit "$0.on('Hello☕Invalid')">] abstract ``on_Hello☕Invalid``: unit -> unit
     // [<Emit "$0.on('Hello ☕ Invalid With Spaces')">] abstract ``on_Hello_☕_Invalid_With_Spaces``: unit -> unit
     [<Emit "$0.on('(╯°□°）╯︵ ┻━┻')">] abstract ``on_(╯°□°）╯︵_┻━┻``: unit -> unit
+    [<Emit "$0.on('post-require')">] abstract ``on_post-require``: unit -> unit
 
 type [<StringEnum>] [<RequireQualifiedAccess>] S =
     | [<CompiledName "Foo">] Foo

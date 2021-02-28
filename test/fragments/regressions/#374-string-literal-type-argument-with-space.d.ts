@@ -10,6 +10,7 @@ interface A {
     // on(event: "Hello☕Invalid"): void;
     // on(event: "Hello ☕ Invalid With Spaces"): void;
     on(event: "(╯°□°）╯︵ ┻━┻"): void;
+    on(event: "post-require"): void;
 }
 
 declare type S = 

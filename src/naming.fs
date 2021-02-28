@@ -113,7 +113,9 @@ let escapeWord (s: string) =
     if String.IsNullOrEmpty s then ""
     else
         let s = s.Replace("'","") // remove single quotes
-        if Keywords.reserved.Contains s
+        if s.StartsWith "``" && s.EndsWith "``" then
+            s
+        elif Keywords.reserved.Contains s
             || Keywords.keywords.Contains s
             || s.IndexOfAny [|'-';'/';'$'|] <> -1 // invalid chars
             || (s.Length > 0 && Char.IsDigit (s, 0))
