@@ -1,5 +1,5 @@
 // ts2fable 0.0.0
-module rec #292-static-props
+module rec ``#292-static-props``
 open System
 open Fable.Core
 open Fable.Core.JS

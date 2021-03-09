@@ -1,5 +1,5 @@
 // ts2fable 0.0.0
-module rec #288-type-alias-float-number
+module rec ``#288-type-alias-float-number``
 open System
 open Fable.Core
 open Fable.Core.JS

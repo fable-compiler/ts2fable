@@ -1,5 +1,5 @@
 // ts2fable 0.0.0
-module rec #314-inline-destruct
+module rec ``#314-inline-destruct``
 open System
 open Fable.Core
 open Fable.Core.JS
