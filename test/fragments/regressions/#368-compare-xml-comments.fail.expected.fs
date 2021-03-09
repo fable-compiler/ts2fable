@@ -1,5 +1,5 @@
 // ts2fable 0.8.0
-module rec #368-compare-xml-comments.fail
+module rec ``#368-compare-xml-comments.fail``
 open System
 open Fable.Core
 open Fable.Core.JS

@@ -1,5 +1,5 @@
 // ts2fable 0.8.0
-module rec sealed
+module rec ``sealed``
 open System
 open Fable.Core
 open Fable.Core.JS

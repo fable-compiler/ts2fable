@@ -1,5 +1,5 @@
 // ts2fable 0.8.0
-module rec #374-string-literal-type-argument-with-space
+module rec ``#374-string-literal-type-argument-with-space``
 open System
 open Fable.Core
 open Fable.Core.JS

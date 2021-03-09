@@ -1,5 +1,5 @@
 // ts2fable 0.8.0
-module rec #303-EmitIndexer
+module rec ``#303-EmitIndexer``
 open System
 open Fable.Core
 open Fable.Core.JS

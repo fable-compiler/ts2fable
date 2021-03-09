@@ -184,7 +184,7 @@ module internal Bridge =
         {
             // use the F# file name as the module namespace
             // TODO ensure valid name
-            Namespace = nameSpace
+            Namespace = fixRootModuleName nameSpace
             Opens =
                 [
                     "System"

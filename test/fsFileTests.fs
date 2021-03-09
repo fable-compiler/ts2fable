@@ -501,7 +501,11 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         runRegressionTestWithComparison notEqual "#368-compare-xml-comments.indented.fail"
 
     // https://github.com/fable-compiler/ts2fable/issues/374
-    it "string literal type argument with space" <| fun _ ->
+    it "regression #368 string literal type argument with space" <| fun _ ->
         runRegressionTest "#374-string-literal-type-argument-with-space"
+
+    // https://github.com/fable-compiler/ts2fable/issues/382
+    it "regression #382 package with hyphen in name produces invalid module name with hyphen" <| fun _ ->
+        runRegressionTest "#382-package-with-hyphen-in-name-produces-invalid-module-name-with-hyphen"
 
 )?timeout(15_000)

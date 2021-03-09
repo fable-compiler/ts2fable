@@ -232,3 +232,7 @@ let fixNamespaceString (name: string): string =
             let parts = parts |> List.ofArray |> List.rev
             let parts = [parts.Head] @ parts.Tail |> List.map fixModuleName
             parts |> List.rev |> String.concat "."
+
+let fixRootModuleName (name: string): string =
+    name
+    |> escapeWord

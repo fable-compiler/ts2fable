@@ -1,5 +1,5 @@
 // ts2fable 0.8.0
-module rec #362-paramarray
+module rec ``#362-paramarray``
 open System
 open Fable.Core
 open Fable.Core.JS

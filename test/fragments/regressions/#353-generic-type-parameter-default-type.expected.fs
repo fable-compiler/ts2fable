@@ -1,5 +1,5 @@
 // ts2fable 0.8.0
-module rec #353-generic-type-parameter-default-type
+module rec ``#353-generic-type-parameter-default-type``
 open System
 open Fable.Core
 open Fable.Core.JS
