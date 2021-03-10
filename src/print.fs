@@ -134,7 +134,14 @@ let printProperty (pr: FsProperty): string =
             | None -> ""
             | Some idx -> sprintf "%s: %s -> " idx.Name (printType idx.Type)
         )
-        (printType pr.Type)
+        (
+            let t = printType pr.Type
+            // if `Option<A * B>`, surround tuple with brackets (`(A * B) option`), otherwise it's emitted as `A * Option<B>` (`A * B option`)
+            match pr.Option, pr.Type |> FsType.asTuple with
+            | true, (Some { Kind = FsTupleKind.Tuple; Types = tys }) when (tys |> List.length) > 1 ->
+                sprintf "(%s)" t
+            | _ -> t
+        )
         (if pr.Option then " option" else "")
         (if pr.IsReadonly then "" else " with get, set")
 
