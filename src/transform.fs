@@ -1345,6 +1345,8 @@ let abbrevTypes =
     "Function",      "type Function = System.Action"
     "Symbol",        "type Symbol = obj"
     "TemplateStringsArray", "type TemplateStringsArray = System.Collections.Generic.IReadOnlyList<string>"
+    "ArrayLike",     "type ArrayLike<'T> = System.Collections.Generic.IList<'T>"
+    "PromiseLike",   "type PromiseLike<'T> = Fable.Core.JS.Promise<'T>"
     ] |> Map.ofList
 
 let fixFsFileOut fo =
