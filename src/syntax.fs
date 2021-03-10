@@ -360,6 +360,7 @@ module FsType =
     let isAlias tp = match tp with | FsType.Alias _ -> true | _ -> false
     let isGeneric tp = match tp with | FsType.Generic _ -> true | _ -> false
     let isKeyOf tp = match tp with | FsType.KeyOf _ -> true | _ -> false
+    let isTuple tp = match tp with | FsType.Tuple _ -> true | _ -> false
 
     let asMapped (tp: FsType) = match tp with | FsType.Mapped v -> Some v | _ -> None
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
@@ -370,6 +371,7 @@ module FsType =
     let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
     let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
     let asGenericTypeParameter (tp: FsType) = match tp with | FsType.GenericTypeParameter v -> Some v | _ -> None
+    let asTuple (tp: FsType) = match tp with | FsType.Tuple v -> Some v | _ -> None
 
 type FsModule =
     {

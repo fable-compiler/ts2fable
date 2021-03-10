@@ -504,6 +504,10 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #368 string literal type argument with space" <| fun _ ->
         runRegressionTest "#374-string-literal-type-argument-with-space"
 
+    // https://github.com/fable-compiler/ts2fable/issues/375
+    it "regression #375 optional tuple gets converted into optional second value" <| fun _ ->
+        runRegressionTest "#375-optional-tuple-gets-converted-into-optional-second-value"
+
     // https://github.com/fable-compiler/ts2fable/issues/382
     it "regression #382 package with hyphen in name produces invalid module name with hyphen" <| fun _ ->
         runRegressionTest "#382-package-with-hyphen-in-name-produces-invalid-module-name-with-hyphen"
