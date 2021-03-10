@@ -508,4 +508,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #382 package with hyphen in name produces invalid module name with hyphen" <| fun _ ->
         runRegressionTest "#382-package-with-hyphen-in-name-produces-invalid-module-name-with-hyphen"
 
+    // https://github.com/fable-compiler/ts2fable/issues/386
+    it "regression #386 TS types" <| fun _ ->
+        runRegressionTest "#386-TS-types"
+
 )?timeout(15_000)
