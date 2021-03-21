@@ -7,50 +7,9 @@ module private Text =
     open Fable.Core.DynamicExtensions
 
     module private Regex =
-        open Fable.Core
-
-        [<Emit("$0.replace($1, (...args) => $2(args))")>]
-        let private nativeReplace (text: string) (regex: Regex) (replacer: obj array -> string): string = jsNative
-
-        let private toMatch (args: obj array): Match =
-            // args: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_function_as_a_parameter
-            // match: matched substring
-            // p1, p2, ...: nth capture group string
-            // offset: offset of matched substring
-            // string: whole string examined
-            // groups: named capturing groups
-            let (m: string, ps: string array, offset: int, input: string, groups) =
-                (
-                    !!args.[0],
-                    !!args.[1 .. (args.Length - 4)],
-                    !!args.[args.Length - 3],
-                    !!args.[args.Length - 2],
-                    args.[args.Length - 1]
-                )
-
-            // create match object...
-            let m = 
-                let fields = 
-                    [
-                        "input" ==> input
-                        "index" ==> offset
-                        "length" ==> m.Length
-                        "groups" ==> groups
-                    ]
-                    @
-                    (
-                        ps
-                        |> Array.toList
-                        |> List.mapi (fun i m -> (sprintf "%i" i) ==> m)
-                    )
-                createObj fields
-
-            !!m
 
         let replaceAll (regex: Regex) (replacer: Match -> string) (input: string) =
-            // Match in replacer in `regex.Replace(input, replacer)` doesn't get groups
-            // -> use custom function & ignore all good F# stuff...
-            nativeReplace input regex (Regex.toMatch >> replacer)
+            regex.Replace(input, replacer)
 
 
     // groups cannot occur multiple times -> prepend group name
@@ -79,14 +38,15 @@ module private Text =
     /// Fable doesn't support regex named groups
     /// -> use js workaround
     let private tryNamedGroup (name: string) (m: Match): string option =
-        if m |> isNullOrUndefined then
-            None
-        else
-            let value = m?groups.[name]
-            if value |> isNullOrUndefined then
-                None
+        if m.Success then
+            let value = m.Groups.[name]
+            if value.Success then 
+                Some value.Value
             else
-                Some <| unbox value
+                None
+        else
+            None
+
 
     /// `None` if group doesn't exist or is empty (empty string)
     let private tryNotEmptyGroup (name: string) (m: Match): string option =
