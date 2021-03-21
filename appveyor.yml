@@ -4,7 +4,7 @@ install:
   # Get the latest stable version of .NET Core
   - cmd: choco install dotnetcore-sdk --version 3.1.404 --no-progress
   # Get the latest stable version of Node.js
-  - ps: Update-NodeJsInstallation 14.14.0
+  - ps: Update-NodeJsInstallation 15.12.0
   
 
 build_script:

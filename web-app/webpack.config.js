@@ -2,7 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
+const { ProvidePlugin } = require("webpack");
 
 function resolve(filePath) {
     return path.join(__dirname, filePath)
@@ -27,7 +27,10 @@ var commonPlugins = [
     new HtmlWebpackPlugin({
         filename: resolve('./output/index.html'),
         template: resolve('index.html')
-    })
+    }),
+    new ProvidePlugin({
+        process: 'process/browser', // required for path-browserify
+    }),
 ];
 
 module.exports = (env, argv) => {
@@ -55,7 +58,7 @@ module.exports = (env, argv) => {
             },
         output: {
             path: resolve('./output'),
-            filename: isProduction ? '[name].[hash].js' : '[name].js'
+            filename: isProduction ? '[name].[contenthash].js' : '[name].js'
         },
         optimization: {
             splitChunks: {
@@ -71,12 +74,13 @@ module.exports = (env, argv) => {
                         chunks: 'all'
                     }
                 }
-            }
+            },
+            moduleIds: isProduction ? undefined : "named",
         },
         plugins: isProduction ?
             commonPlugins.concat([
                 new MiniCssExtractPlugin({
-                    filename: 'style.[hash].css'
+                    filename: 'style.[contenthash].css'
                 }),
                 // ensure that we get a production build of any dependencies
                 // this is primarily for React, where this removes 179KB from the bundle
@@ -86,13 +90,15 @@ module.exports = (env, argv) => {
             ])
             : commonPlugins.concat([
                 new webpack.HotModuleReplacementPlugin(),
-                new webpack.NamedModulesPlugin()
             ]),
         resolve: {
             modules: [
                 "node_modules/",
                 resolve("./../node_modules/")
-            ]
+            ],
+            alias: {
+                path: require.resolve('path-browserify'),
+            },
         },
         devServer: {
             contentBase: resolve('./output/'),
@@ -107,13 +113,14 @@ module.exports = (env, argv) => {
                     test: /\.js$/,
                     enforce: "pre",
                     use: ["source-map-loader"],
+                    exclude: [ /typescript\.js$/ ],
                 },
                 {
                     test: /\.js$/,
                     exclude: /node_modules/,
                     use: {
                         loader: 'babel-loader',
-                        options: babelOptions
+                        options: babelOptions,
                     },
                 },
                 {
@@ -126,7 +133,7 @@ module.exports = (env, argv) => {
                 },
                 {
                     test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)(\?.*$|$)/,
-                    use: ["file-loader"]
+                    type: "asset/resource"
                 }
             ]
         }

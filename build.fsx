@@ -118,9 +118,9 @@ module Scripts =
     /// Watch `web-app` in debug mode, with sourcemaps, served via `localhost:8080`.
     /// 
     /// First: Fable in debug mode, with sourcemaps into `./web-app/temp` with entry `App.js`.
-    /// Then: Serving via `localhost:8080` with webpack-dev-server and `./web-app/webpack.config.js`
+    /// Then: Serving via `localhost:8080` with `webpack serve` (-> webpack-dev-server) and `./web-app/webpack.config.js`
     let watchWebapp () =
-        fable $"watch {appDir} --outDir {appTempOutDir} --sourceMaps --define DEBUG --run webpack-dev-server --watch --mode development --config {appDir}/webpack.config.js"
+        fable $"watch {appDir} --outDir {appTempOutDir} --sourceMaps --define DEBUG --run webpack serve --watch-content-base --mode development --config {appDir}/webpack.config.js"
 
     /// Bundle existing CLI (output of `buildCli`, in `./build/cli` with entry `ts2fable.js`) into `./dist/ts2fable.js` with rollup
     let bundleCli () =
