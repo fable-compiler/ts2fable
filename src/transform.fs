@@ -301,7 +301,7 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     Name = it.Name.Replace("Static","")
                     Option = false
                     Type = it.Name |> simpleType
-                    IsReadonly = true
+                    Accessor = ReadOnly
                     IsStatic = false
                     Accessibility = None
                 }
@@ -1641,3 +1641,63 @@ let removeKeyOfConstraint (f: FsFile): FsFile =
 
     f
     |> fixFile fix
+
+/// In TS: getter and setter are two distinct functions:
+/// ```typescript
+/// get length(): number;
+/// set length(value: number);  
+/// ```
+/// -> are read as two properties, one with `ReadOnly`, one `WriteOnly`
+/// -> merge into one `ReadWrite` property
+/// 
+/// Note: it's legal F# to split getter and setter, 
+/// but it's probably more common and clearer to merge get and set into a single property.
+let mergeReadAndWriteProperties (f: FsFile): FsFile =
+    let fix _ =
+        function
+        | FsType.Interface it ->
+            // iff valid TS declaration file:
+            // then no need to check:
+            // * Number of properties: no more than one getter and one setter allowed
+            // * Accessor of properties: no more than one getter and one setter allowed
+            // * Types: must match, no overloads possible
+            // * Visibility: must match
+
+            let convertToReadWrite =
+                it.Members
+                |> List.choose (FsType.asProperty)
+                |> List.filter (fun p -> p.Accessor <> ReadWrite)
+                |> List.groupBy (fun p -> p.Name)
+                |> List.filter (fun (_, ps) -> (ps |> List.length) > 1)
+                |> List.map fst
+                |> Set.ofList
+
+            if convertToReadWrite |> Set.isEmpty then
+                it |> FsType.Interface
+            else
+                // convert read properties to read-write, and remove write-properties
+                let members =
+                    it.Members
+                    |> List.choose (
+                        function
+                        | FsType.Property p ->
+                            if convertToReadWrite |> Set.contains p.Name then
+                                match p.Accessor with
+                                | ReadOnly -> 
+                                    { p with Accessor = ReadWrite }
+                                    |> FsType.Property
+                                    |> Some
+                                | WriteOnly -> None
+                                | _ -> None
+                            else
+                                p 
+                                |> FsType.Property
+                                |> Some
+                        | m -> Some m
+                    )
+
+                { it with Members = members }
+                |> FsType.Interface
+        | t -> t
+
+    f |> fixFile fix

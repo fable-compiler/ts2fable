@@ -579,7 +579,7 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
             match ps.``type`` with
             | None -> FsType.None
             | Some tp -> readTypeNode checker tp
-        IsReadonly = isReadOnly ps.modifiers
+        Accessor = FsAccessor.fromReadonly <| isReadOnly ps.modifiers
         IsStatic = hasModifier SyntaxKind.StaticKeyword ps.modifiers
         Accessibility = getAccessibility ps.modifiers
     }
@@ -596,9 +596,47 @@ let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): Fs
             match pd.``type`` with
             | None -> FsType.None
             | Some tp -> readTypeNode checker tp
-        IsReadonly = isReadOnly pd.modifiers
+        Accessor = FsAccessor.fromReadonly <| isReadOnly pd.modifiers
         IsStatic = hasModifier SyntaxKind.StaticKeyword pd.modifiers
         Accessibility = getAccessibility pd.modifiers
+    }
+
+let readGetAccessorDeclaration (checker: TypeChecker) (gad: GetAccessorDeclaration): FsProperty =
+    {
+        Attributes = []
+        Comments = readCommentsAtLocation checker (!!gad.name)
+        Kind = FsPropertyKind.Regular
+        Index = None
+        Name = gad.name |> getPropertyName
+        Option = gad.questionToken.IsSome
+        Type =
+            match gad.``type`` with
+            | None -> FsType.None
+            | Some tp -> readTypeNode checker tp
+        Accessor = ReadOnly
+        IsStatic = hasModifier SyntaxKind.StaticKeyword gad.modifiers
+        Accessibility = getAccessibility gad.modifiers
+    }
+let readSetAccessorDeclaration (checker: TypeChecker) (sad: SetAccessorDeclaration): FsProperty =
+    {
+        Attributes = []
+        Comments = readCommentsAtLocation checker (!!sad.name)
+        Kind = FsPropertyKind.Regular
+        Index = None
+        Name = sad.name |> getPropertyName
+        Option = sad.questionToken.IsSome
+        Type =
+            // parameter, not return type
+            //      in valid TS: EXACTLY one parameter
+            if sad.parameters.Count <> 1 then
+                FsType.None
+            else
+                let p = sad.parameters.[0]
+                let p = readParameterDeclaration checker 0 p
+                p.Type
+        Accessor = WriteOnly
+        IsStatic = hasModifier SyntaxKind.StaticKeyword sad.modifiers
+        Accessibility = getAccessibility sad.modifiers
     }
 
 let readFunctionDeclaration (checker: TypeChecker) (fd: FunctionDeclaration): FsFunction =
@@ -630,7 +668,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
             match ps.``type`` with
             | None -> FsType.None
             | Some tp -> readTypeNode checker tp
-        IsReadonly = isReadOnly ps.modifiers
+        Accessor = FsAccessor.fromReadonly <| isReadOnly ps.modifiers
         IsStatic = hasModifier SyntaxKind.StaticKeyword ps.modifiers
         Accessibility = getAccessibility ps.modifiers
     }
@@ -693,6 +731,10 @@ let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =
         readConstructorDeclaration checker (te :?> ConstructorDeclaration) |> FsType.Function
     | SyntaxKind.PropertyDeclaration ->
         readPropertyDeclaration checker (te :?> PropertyDeclaration) |> FsType.Property
+    | SyntaxKind.GetAccessor ->
+        readGetAccessorDeclaration checker (te :?> GetAccessorDeclaration) |> FsType.Property
+    | SyntaxKind.SetAccessor ->
+        readSetAccessorDeclaration checker (te :?> SetAccessorDeclaration) |> FsType.Property
     | SyntaxKind.MethodDeclaration ->
         readMethodDeclaration checker (te :?> MethodDeclaration) |> FsType.Function
     | _ -> printfn "unsupported NamedDeclaration kind: %A" te.kind; FsType.TODO
