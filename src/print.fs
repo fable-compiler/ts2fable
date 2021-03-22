@@ -143,7 +143,12 @@ let printProperty (pr: FsProperty): string =
             | _ -> t
         )
         (if pr.Option then " option" else "")
-        (if pr.IsReadonly then "" else " with get, set")
+        (
+            match pr.Accessor with
+            | ReadOnly -> ""
+            | WriteOnly -> " with set"
+            | ReadWrite -> " with get, set"
+        )
 
 let printGenericTypeConstraint (p: FsGenericTypeParameter): string option =
     match p.Constraint with

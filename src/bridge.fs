@@ -129,6 +129,7 @@ module internal Bridge =
         |> fixTypesHasESKeywords
         |> extractTypesInGlobalModules
         |> addConstructors
+        |> mergeReadAndWriteProperties
         |> removePrivatesFromClasses
         |> fixThis
         |> fixNodeArray
