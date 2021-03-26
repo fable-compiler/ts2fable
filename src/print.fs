@@ -414,18 +414,22 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                     sprintf "%s    inherit %s" indent (printType ih) |> lines.Add
                     incr nLines
                 for mbr in inf.Members do
+                    let indent = sprintf "%s    " indent
                     match mbr with
                     | FsType.Function f ->
-                        let indent = sprintf "%s    " indent
                         printComments lines indent f.Comments
                         printAttributes lines indent f.Attributes
                         sprintf "%s%s" indent (printFunction f) |> lines.Add
                         incr nLines
                     | FsType.Property p ->
-                        let indent = sprintf "%s    " indent
                         printComments lines indent p.Comments
                         printAttributes lines indent p.Attributes
                         sprintf "%s%s" indent (printProperty p) |> lines.Add
+                        incr nLines
+                    | FsType.Variable v ->
+                        printComments lines indent v.Comments
+                        printAttributes lines indent v.Attributes
+                        sprintf "%s%s" indent (printType mbr) |> lines.Add
                         incr nLines
                     | _ ->
                         sprintf "%s    %s" indent (printType mbr) |> lines.Add
