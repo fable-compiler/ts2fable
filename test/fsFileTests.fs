@@ -520,4 +520,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #348 Getter Setter" <| fun _ ->
         runRegressionTest "#348-getter-setter"
 
+    // https://github.com/fable-compiler/ts2fable/issues/394
+    it "regression #394 Comments on Variables in Modules" <| fun _ ->
+        runRegressionTest "#394-comments-on-variables-in-modules"
+
 )?timeout(15_000)
