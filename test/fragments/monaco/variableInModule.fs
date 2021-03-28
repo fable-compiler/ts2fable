@@ -9,7 +9,7 @@ let [<Import("*","variableInModule")>] monaco: Monaco.IExports = jsNative
 module Monaco =
 
     type [<AllowNullLiteral>] IExports =
-        abstract EditorType: IExportsEditorType
+        abstract EditorType: IExportsEditorType with get, set
 
     type [<AllowNullLiteral>] IDisposable =
         abstract dispose: unit -> unit

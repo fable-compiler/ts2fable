@@ -14,9 +14,9 @@ module M =
 
     type [<AllowNullLiteral>] IExports =
         /// var
-        abstract v1: float
+        abstract v1: float with get, set
         /// let
-        abstract l1: float
+        abstract l1: float with get, set
         /// const
         abstract c1: float
 
@@ -25,8 +25,8 @@ module N =
 
     type [<AllowNullLiteral>] IExports =
         /// var
-        abstract v1: float
+        abstract v1: float with get, set
         /// let
-        abstract l1: float
+        abstract l1: float with get, set
         /// const
         abstract c1: float

@@ -524,4 +524,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #394 Comments on Variables in Modules" <| fun _ ->
         runRegressionTest "#394-comments-on-variables-in-modules"
 
+    // https://github.com/fable-compiler/ts2fable/issues/393
+    it "regression #393 Mutable Variables become immutable" <| fun _ ->
+        runRegressionTest "#393-mutable-variables-become-immutable"
+
 )?timeout(15_000)
