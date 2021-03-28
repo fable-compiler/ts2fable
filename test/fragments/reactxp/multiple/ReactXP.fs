@@ -41,7 +41,7 @@ module __web_ReactXP =
     module ReactXP =
 
         type [<AllowNullLiteral>] IExports =
-            abstract __spread: obj option
+            abstract __spread: obj option with get, set
 
 module __windows_App =
     type ComponentProvider = React_native.ComponentProvider

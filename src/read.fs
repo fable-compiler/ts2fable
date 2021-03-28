@@ -284,7 +284,7 @@ let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
     | Some mds -> mds |> Seq.exists (fun md -> md.kind = kind)
 
 let isConst (nd: Node): bool =
-    (int nd.flags) ||| (int NodeFlags.Const) <> 0
+    nd.flags.HasFlag NodeFlags.Const
 
 let isNamespace (nd: Node): bool =
     nd.getChildren() |> Seq.exists (fun nd -> nd.kind = SyntaxKind.NamespaceKeyword)
@@ -298,7 +298,7 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
             HasDeclare = hasModifier SyntaxKind.DeclareKeyword vb.modifiers || hasModifier SyntaxKind.ExportKeyword vb.modifiers
             Name = vd.name |> getBindingName |> Option.defaultValue "unsupported_pattern"
             Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
-            IsConst = isConst vd
+            IsConst = isConst (vb.declarationList)  // const is specified before all declarations -> part of list
             IsStatic = hasModifier SyntaxKind.StaticKeyword vd.modifiers
             Accessibility = getAccessibility vb.modifiers
         }
