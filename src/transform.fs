@@ -939,27 +939,27 @@ let extractTypeLiterals(f: FsFile): FsFile =
                     typeNames.Add name |> ignore
                     name
 
+            let materializeInterfaceType name members (collection: ResizeArray<_>) =
+                let materialized = {
+                    Attributes = []
+                    Comments = []
+                    IsStatic = false
+                    IsClass = false
+                    Name = name
+                    FullName = name
+                    Inherits = []
+                    Members = members
+                    TypeParameters = []
+                    Accessibility = None
+                }
+                collection.Add (FsType.Interface materialized)
+
             { md with
                 Types = md.Types |> List.collect (fun tp ->
                     match tp with
                     | FsType.Interface it ->
 
-                        let newTypes = List<FsType>()
-                        let materializeInterfaceType name members =
-                            let materialized = {
-                                Attributes = []
-                                Comments = []
-                                IsStatic = false
-                                IsClass = false
-                                Name = name
-                                FullName = name
-                                Inherits = []
-                                Members = members
-                                TypeParameters = []
-                                Accessibility = None
-                            }
-                            newTypes.Add (FsType.Interface materialized)
-
+                        let newTypes = ResizeArray<FsType>()
 
                         let it2 =
                             { it with
@@ -980,7 +980,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                     else
                                                         sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
 
-                                                materializeInterfaceType name tl.Members
+                                                newTypes |> materializeInterfaceType name tl.Members
                                                 { prm with Type = simpleType name }
                                             | _ -> prm
 
@@ -992,7 +992,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                     let fnName = fn.Name.Value.Replace("`","")
                                                     sprintf "%s%sReturn" itName (capitalize fnName) |> newTypeName
 
-                                                materializeInterfaceType name tl.Members
+                                                newTypes |> materializeInterfaceType name tl.Members
                                                 simpleType name
                                             | _ -> tp
                                         { fn with
@@ -1009,20 +1009,24 @@ let extractTypeLiterals(f: FsFile): FsFile =
                     | FsType.Alias al ->
                         match al.Type with
                         | FsType.Union un ->
-                            let un2 =
+                            let newTypes = ResizeArray()
+                            let un =
                                 { un with
                                     Types =
-                                        let tps = List<FsType>()
-                                        un.Types |> List.iter(fun tp ->
-                                            match tp with
-                                            | TypeLiteralToConvert tl -> 
-                                                //todo: extract into interface
-                                                tl.Members |> tps.AddRange
-                                            | _ -> tp |> tps.Add
+                                        un.Types
+                                        |> List.mapi (fun i ->
+                                            function
+                                            | TypeLiteralToConvert tl ->
+                                                let name = 
+                                                    sprintf "%sCase%i" al.Name (i+1)
+                                                    |> newTypeName
+                                                newTypes |> materializeInterfaceType name tl.Members
+                                                simpleType name
+                                            | tp -> tp
                                         )
-                                        tps |> List.ofSeq
                                 }
-                            {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton
+                            let al = FsType.Alias {al with Type = un |> FsType.Union}
+                            [al] @ (List.ofSeq newTypes)
                         | TypeLiteralToConvert tl ->
                             {
                                 Attributes = []
