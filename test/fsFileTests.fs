@@ -560,6 +560,13 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             // -> emit `#nowarn` for `@deprecated` instead of just usage
             testNowarn "deprecated-usage" true
 
+    // https://github.com/fable-compiler/ts2fable/issues/400
+    it "type-literal" <| fun _ ->
+        let tsPaths = ["test/fragments/custom/type-literal.d.ts"]
+        let fsPath = "test/fragments/custom/type-literal.fs"
+        let expected = "test/fragments/custom/type-literal.expected.fs"
+        convertAndCompareAgainstExpected tsPaths fsPath expected
+
     // https://github.com/fable-compiler/ts2fable/pull/275
     it "regression #275 remove private members" <| fun _ ->
         runRegressionTest "#275-private-members"
@@ -650,6 +657,10 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts2fable/issues/393
     it "regression #393 Mutable Variables become immutable" <| fun _ ->
         runRegressionTest "#393-mutable-variables-become-immutable"
+
+    // https://github.com/fable-compiler/ts2fable/issues/400
+    it "regression #400 Type Literal in Union Type" <| fun _ ->
+        runRegressionTest "#400-type-literal-in-union-type"
 
     // https://github.com/fable-compiler/ts2fable/issues/401
     it "regression #401 Variable with generic type parameter" <| fun _ ->
