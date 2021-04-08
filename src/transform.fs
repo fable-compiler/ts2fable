@@ -911,7 +911,8 @@ let extractTypeLiterals(f: FsFile): FsFile =
     let MaxMembers = 4
     let (|TypeLiteralToConvert|_|) =
         function
-        | FsType.TypeLiteral tl when tl.Members.Length > MaxMembers -> Some tl
+        | FsType.TypeLiteral tl when tl.Members |> List.isEmpty || tl.Members.Length > MaxMembers -> 
+            Some tl
         | _ -> None
 
     /// the goal is to create interface types with 'pretty' names like '$(Class)$(Method)Return'.
