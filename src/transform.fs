@@ -1008,7 +1008,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                         [it2] @ (List.ofSeq newTypes) // append new types
                     | FsType.Alias al ->
                         match al.Type with
-                        | FsType.Union un ->
+                        | FsType.Union un when un.Types.Length > 1 ->
                             let newTypes = ResizeArray()
                             let un =
                                 { un with
@@ -1027,7 +1027,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                 }
                             let al = FsType.Alias {al with Type = un |> FsType.Union}
                             [al] @ (List.ofSeq newTypes)
-                        | TypeLiteralToConvert tl ->
+                        | FsType.TypeLiteral tl ->
                             {
                                 Attributes = []
                                 Comments = al.Comments
