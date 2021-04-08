@@ -400,8 +400,26 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         }
         |> FsType.Tuple
     | SyntaxKind.IndexedAccessType ->
+        // `{ bivarianceHack(instance: T | null): void }["bivarianceHack"]` (React)
+        // -> get type of `bivarianceHack`
         let ia = t :?> IndexedAccessTypeNode
-        readTypeNode checker ia.objectType
+        let indexType = readTypeNode checker ia.indexType
+        match indexType with
+        | FsType.StringLiteral name ->
+            let inner = readTypeNode checker ia.objectType
+            match inner with
+            | FsType.TypeLiteral tl ->
+                tl.Members
+                |> List.tryPick (
+                    function
+                    | FsType.Function f when f.Name = Some name ->
+                        FsType.Function f
+                        |> Some
+                    | _ -> None
+                )
+                |> Option.defaultValue FsType.TODO
+            | _ -> FsType.TODO
+        | _ -> FsType.TODO
     | SyntaxKind.TypeQuery ->
         // let tq = t :?> TypeQueryNode
         simpleType "obj"
