@@ -21,6 +21,12 @@ let [<Import("l5","type-literal")>] l5: C5 = jsNative
 let [<Import("cn1","type-literal")>] cn1: {| v1: string; v2: {| v2_1: string; v2_2: {| v2_2_1: string; v2_2_2: float; v2_2_3: string |}; v2_3: {| v2_3_1: string; v2_3_2: string |}; v2_4: string |}; v3: float |} = jsNative
 /// Nested Anon records & Interfaces
 let [<Import("cn2","type-literal")>] cn2: {| v1: string; v2: {| v2_1: string; v2_2: Cn2V2V2_2; v2_3: {| v2_3_1: string; v2_3_2: string |}; v2_4: string |}; v3: Cn2V3 |} = jsNative
+/// <summary>
+/// NOT a Anonymous Record, instead Union type (read as TypeLiteral)
+/// 
+/// source: <see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/ab5329620abcfa7ffc990d93d45165b8e51a55ca/types/mocha/index.d.ts#L165">Mocha</see>
+/// </summary>
+let [<Import("state","type-literal")>] state: State = jsNative
 
 type [<AllowNullLiteral>] IExports =
     /// neither interface nor anon record
@@ -44,6 +50,9 @@ type [<AllowNullLiteral>] IExports =
     /// Input: interface; Return: anon interface
     abstract ff2_2: v1: Ff2_2V1 -> Ff2_2Return
     abstract C1: C1Static
+    /// read as Type Literal 
+    /// BUT: Input & Output must be extracted into Union
+    abstract e1: v: IExportsE1 -> IExportsE12
 
 type [<AllowNullLiteral>] F5_5V =
     abstract v1: string with get, set
@@ -106,16 +115,16 @@ type [<AllowNullLiteral>] Union5Case2 =
     abstract v5: string with get, set
 
 /// <summary>
-/// Source: (React)[<see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87]" />
+/// Source: <see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87">React</see>
 /// 
 /// Similar to <c>fragments/react/f1</c> (but not generic)
 /// </summary>
 type UnionBivarianceHack =
     U2<string, (string option -> unit)>
 
-/// <summary>Source: (React)[<see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87]" /></summary>
+/// <summary>Source: <see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87">React</see></summary>
 type [<AllowNullLiteral>] RefCallback<'T> =
-    /// <summary>Source: (React)[<see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87]" /></summary>
+    /// <summary>Source: <see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87">React</see></summary>
     [<Emit "$0($1...)">] abstract Invoke: instance: 'T option -> unit
 
 type [<AllowNullLiteral>] I1 =
@@ -228,6 +237,12 @@ type [<AllowNullLiteral>] C1F5Return =
 type [<AllowNullLiteral>] C1Static =
     [<EmitConstructor>] abstract Create: unit -> C1
 
+/// read as Type Literal 
+/// BUT: must be printed as Union
+type [<StringEnum>] [<RequireQualifiedAccess>] E1 =
+    | [<CompiledName "Alpha">] Alpha
+    | [<CompiledName "Beta">] Beta
+
 type [<AllowNullLiteral>] C5 =
     abstract v1: string with get, set
     abstract v2: float with get, set
@@ -256,3 +271,15 @@ type [<AllowNullLiteral>] Cn2V3 =
     abstract v3_3: {| v3_3_1: string; v3_3_2: Cn2V3V3_3V3_3_2; v3_3_3: string |} with get, set
     abstract v3_4: string with get, set
     abstract v3_5: float with get, set
+
+type [<StringEnum>] [<RequireQualifiedAccess>] State =
+    | Failed
+    | Passed
+
+type [<StringEnum>] [<RequireQualifiedAccess>] IExportsE1 =
+    | [<CompiledName "Alpha">] Alpha
+    | [<CompiledName "Beta">] Beta
+
+type [<StringEnum>] [<RequireQualifiedAccess>] IExportsE12 =
+    | [<CompiledName "Gamma">] Gamma
+    | [<CompiledName "Delta">] Delta

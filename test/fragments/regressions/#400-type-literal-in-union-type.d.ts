@@ -38,8 +38,20 @@ export type Union2Union5 = string | { v1: string, v2: { v1: string, v2: number, 
 export type Union0 = string | {}
 
 /** 
- * Source: (React)[https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87]
+ * Source: [React](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87)
  * 
  * Similar to `fragments/react/f1` (but not generic) 
  */
 export type UnionBivarianceHack = string | { bivarianceHack(instance: string | null): void }["bivarianceHack"]
+
+/**
+ * Anon Record (-> everything immutable) 
+ * name: readonly, age: mutable 
+ */
+export type UnionReadonly2 = string | { readonly name: string, age: number }
+/**
+ * Interface
+ * name: readonly, age: mutable 
+ * (v3 mutable, v4 readonly, v5 mutable)
+ */
+export type UnionReadonly5 = string | { readonly name: string, age: number, v3: string, v4: string, v5: number }

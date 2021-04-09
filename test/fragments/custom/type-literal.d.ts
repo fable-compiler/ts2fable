@@ -8,13 +8,13 @@ export type Union4 = string | { v1: string, v2: number, v3: number, v4: string }
 export type Union5 = string | { v1: string, v2: number, v3: number, v4: string, v5: string }
 
 /** 
- * Source: (React)[https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87]
+ * Source: [React](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87)
  * 
  * Similar to `fragments/react/f1` (but not generic) 
  */
 export type UnionBivarianceHack = string | { bivarianceHack(instance: string | null): void }["bivarianceHack"]
 /**
- * Source: (React)[https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87]
+ * Source: [React](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87)
  */
 export type RefCallback<T> = { bivarianceHack(instance: T | null): void }["bivarianceHack"]; 
 
@@ -172,3 +172,24 @@ export class C1 {
   /** Interface */
   f5( v1: { v1: string, v2: number, v3: number, v4: string, v5: string }): { v1: string, v2: number, v3: number, v4: string, v5: string }
 }
+
+/** 
+ * NOT a Anonymous Record, instead Union type (read as TypeLiteral)
+ * 
+ * source: [Mocha](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/ab5329620abcfa7ffc990d93d45165b8e51a55ca/types/mocha/index.d.ts#L165)
+ */
+export const state: 'failed' | 'passed' | undefined
+
+/** 
+ * read as Type Literal 
+ * BUT: Input & Output must be extracted into Union
+ */
+export function e1(v: "Alpha" | "Beta"): "Gamma" | "Delta"
+
+/** 
+ * read as Type Literal 
+ * BUT: must be printed as Union
+ */
+export type E1 = 
+    | "Alpha" 
+    | "Beta" 

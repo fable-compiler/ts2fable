@@ -116,12 +116,30 @@ type [<AllowNullLiteral>] Union0Case2 =
     interface end
 
 /// <summary>
-/// Source: (React)[<see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87]" />
+/// Source: <see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87">React</see>
 /// 
 /// Similar to <c>fragments/react/f1</c> (but not generic)
 /// </summary>
 type UnionBivarianceHack =
     U2<string, (string option -> unit)>
+
+/// Anon Record (-> everything immutable) 
+/// name: readonly, age: mutable
+type UnionReadonly2 =
+    U2<string, {| name: string; age: float |}>
+
+/// Interface
+/// name: readonly, age: mutable 
+/// (v3 mutable, v4 readonly, v5 mutable)
+type UnionReadonly5 =
+    U2<string, UnionReadonly5Case2>
+
+type [<AllowNullLiteral>] UnionReadonly5Case2 =
+    abstract name: string
+    abstract age: float with get, set
+    abstract v3: string with get, set
+    abstract v4: string with get, set
+    abstract v5: float with get, set
 
 type [<AllowNullLiteral>] Union2Union5V2 =
     abstract v1: string with get, set

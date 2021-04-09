@@ -1111,14 +1111,17 @@ let extractTypeLiterals(f: FsFile): FsFile =
             m
             // 1: replace occurences of TypeLiterals with references to the generated types
             |> fixOneModule (fun ns tp ->
-                match tp with
-                | TypeLiteralToConvert tl ->
-
+                let replace (tl: FsTypeLiteral) =
                     let extractedInterface = replaceLiteral ns tl
                     match extractedInterface.TypeParameters with
                     | [ ] ->
                         simpleType (extractedInterface.Name)
                     | tp -> FsType.Generic({ Type = simpleType (extractedInterface.Name); TypeParameters = tp })
+
+                match tp with
+                | TypeLiteralToConvert tl -> replace tl
+                | FsType.TypeLiteral ({ Members = [ FsType.Enum _ ] } as tl) ->
+                    replace tl
                 | _ -> tp
             )
             // 2: append the generated types to the module
