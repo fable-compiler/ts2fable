@@ -41,10 +41,4 @@ module BABYLON =
         /// Test:
         /// 1) the callback 'onProgress' should not be Option<Option<_>>. Instead it should be an optional parameter of type function.
         /// 2) the return value should be Promise<Interface>, not Promise<obj>. (Currently it generates 'TypeLiteral_01', would be great if it generated a better-named interface like 'SceneLoaderImportMeshAsyncReturn')
-        abstract ImportMeshAsync: meshNames: obj option * rootUrl: string * ?sceneFilename: string * ?scene: Scene * ?onProgress: (SceneLoaderProgressEvent -> unit) * ?pluginExtension: string -> Promise<SceneLoaderStaticImportMeshAsyncPromise>
-
-    type [<AllowNullLiteral>] SceneLoaderStaticImportMeshAsyncPromise =
-        abstract meshes: ResizeArray<AbstractMesh> with get, set
-        abstract particleSystems: ResizeArray<IParticleSystem> with get, set
-        abstract skeletons: ResizeArray<Skeleton> with get, set
-        abstract animationGroups: ResizeArray<AnimationGroup> with get, set
+        abstract ImportMeshAsync: meshNames: obj option * rootUrl: string * ?sceneFilename: string * ?scene: Scene * ?onProgress: (SceneLoaderProgressEvent -> unit) * ?pluginExtension: string -> Promise<{| meshes: ResizeArray<AbstractMesh>; particleSystems: ResizeArray<IParticleSystem>; skeletons: ResizeArray<Skeleton>; animationGroups: ResizeArray<AnimationGroup> |}>
