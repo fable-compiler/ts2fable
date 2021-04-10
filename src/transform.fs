@@ -884,6 +884,14 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
     )
 
 let extractTypeLiterals(f: FsFile): FsFile =
+    /// Type Literals with <= members are printed as Anonymous Records,
+    /// Type Literals with >  members are converted into Interfaces
+    let MaxMembers = 4
+    let (|TypeLiteralToConvert|_|) =
+        function
+        | FsType.TypeLiteral tl when tl.Members |> List.isEmpty || tl.Members.Length > MaxMembers -> 
+            Some tl
+        | _ -> None
 
     /// the goal is to create interface types with 'pretty' names like '$(Class)$(Method)Return'.
     let extractTypeLiterals_pass1 (f: FsFile): FsFile =
@@ -910,27 +918,27 @@ let extractTypeLiterals(f: FsFile): FsFile =
                     typeNames.Add name |> ignore
                     name
 
+            let materializeInterfaceType name members (collection: ResizeArray<_>) =
+                let materialized = {
+                    Attributes = []
+                    Comments = []
+                    IsStatic = false
+                    IsClass = false
+                    Name = name
+                    FullName = name
+                    Inherits = []
+                    Members = members
+                    TypeParameters = []
+                    Accessibility = None
+                }
+                collection.Add (FsType.Interface materialized)
+
             { md with
                 Types = md.Types |> List.collect (fun tp ->
                     match tp with
                     | FsType.Interface it ->
 
-                        let newTypes = List<FsType>()
-                        let materializeInterfaceType name members =
-                            let materialized = {
-                                Attributes = []
-                                Comments = []
-                                IsStatic = false
-                                IsClass = false
-                                Name = name
-                                FullName = name
-                                Inherits = []
-                                Members = members
-                                TypeParameters = []
-                                Accessibility = None
-                            }
-                            newTypes.Add (FsType.Interface materialized)
-
+                        let newTypes = ResizeArray<FsType>()
 
                         let it2 =
                             { it with
@@ -939,7 +947,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                     | FsType.Function fn ->
                                         let mapParam (prm:FsParam) : FsParam =
                                             match prm.Type with
-                                            | FsType.TypeLiteral tl ->
+                                            | TypeLiteralToConvert tl ->
                                                 let name =
                                                     let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
                                                     let fnName = fn.Name.Value.Replace("`","")
@@ -951,19 +959,19 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                     else
                                                         sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
 
-                                                materializeInterfaceType name tl.Members
+                                                newTypes |> materializeInterfaceType name tl.Members
                                                 { prm with Type = simpleType name }
                                             | _ -> prm
 
                                         let mapReturnType (tp:FsType) =
                                             match tp with
-                                            | FsType.TypeLiteral tl ->
+                                            | TypeLiteralToConvert tl ->
                                                 let name =
                                                     let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
                                                     let fnName = fn.Name.Value.Replace("`","")
                                                     sprintf "%s%sReturn" itName (capitalize fnName) |> newTypeName
 
-                                                materializeInterfaceType name tl.Members
+                                                newTypes |> materializeInterfaceType name tl.Members
                                                 simpleType name
                                             | _ -> tp
                                         { fn with
@@ -979,19 +987,25 @@ let extractTypeLiterals(f: FsFile): FsFile =
                         [it2] @ (List.ofSeq newTypes) // append new types
                     | FsType.Alias al ->
                         match al.Type with
-                        | FsType.Union un ->
-                            let un2 =
+                        | FsType.Union un when un.Types.Length > 1 ->
+                            let newTypes = ResizeArray()
+                            let un =
                                 { un with
                                     Types =
-                                        let tps = List<FsType>()
-                                        un.Types |> List.iter(fun tp ->
-                                            match tp with
-                                            | FsType.TypeLiteral tl -> tl.Members |> tps.AddRange
-                                            | _ -> tp |> tps.Add
+                                        un.Types
+                                        |> List.mapi (fun i ->
+                                            function
+                                            | TypeLiteralToConvert tl ->
+                                                let name = 
+                                                    sprintf "%sCase%i" al.Name (i+1)
+                                                    |> newTypeName
+                                                newTypes |> materializeInterfaceType name tl.Members
+                                                simpleType name
+                                            | tp -> tp
                                         )
-                                        tps |> List.ofSeq
                                 }
-                            {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton
+                            let al = FsType.Alias {al with Type = un |> FsType.Union}
+                            [al] @ (List.ofSeq newTypes)
                         | FsType.TypeLiteral tl ->
                             {
                                 Attributes = []
@@ -1075,14 +1089,17 @@ let extractTypeLiterals(f: FsFile): FsFile =
             m
             // 1: replace occurences of TypeLiterals with references to the generated types
             |> fixOneModule (fun ns tp ->
-                match tp with
-                | FsType.TypeLiteral tl ->
-
+                let replace (tl: FsTypeLiteral) =
                     let extractedInterface = replaceLiteral ns tl
                     match extractedInterface.TypeParameters with
                     | [ ] ->
                         simpleType (extractedInterface.Name)
                     | tp -> FsType.Generic({ Type = simpleType (extractedInterface.Name); TypeParameters = tp })
+
+                match tp with
+                | TypeLiteralToConvert tl -> replace tl
+                | FsType.TypeLiteral ({ Members = [ FsType.Enum _ ] } as tl) ->
+                    replace tl
                 | _ -> tp
             )
             // 2: append the generated types to the module

@@ -46,6 +46,7 @@ let printType (tp: FsType): string =
     | FsType.KeyOf k ->
         printType k.Type
         |> sprintf "KeyOf<%s>"
+    | FsType.TypeLiteral tl -> printTypeLiteral tl
 
     // | FsType.Alias _ -> "obj"
     // | FsType.ExportAssignment _ -> "obj"
@@ -59,7 +60,6 @@ let printType (tp: FsType): string =
     // | FsType.Param _ -> "obj"
     // | FsType.This -> "obj"
     // | FsType.TODO -> "obj"
-    // | FsType.TypeLiteral tp -> "obj"
 
     | _ ->
         printfn "unsupported printType %s: %s" (getTypeName tp) (getName tp)
@@ -124,7 +124,7 @@ let printFunction (fn: FsFunction): string =
     line |> String.concat ""
 
 let printProperty (pr: FsProperty): string =
-    sprintf "%sabstract %s: %s%s%s%s"
+    sprintf "%sabstract %s: %s%s%s"
         (   match pr.Kind with
             | FsPropertyKind.Regular -> ""
             | FsPropertyKind.Index -> "[<EmitIndexer>] "
@@ -134,15 +134,7 @@ let printProperty (pr: FsProperty): string =
             | None -> ""
             | Some idx -> sprintf "%s: %s -> " idx.Name (printType idx.Type)
         )
-        (
-            let t = printType pr.Type
-            // if `Option<A * B>`, surround tuple with brackets (`(A * B) option`), otherwise it's emitted as `A * Option<B>` (`A * B option`)
-            match pr.Option, pr.Type |> FsType.asTuple with
-            | true, (Some { Kind = FsTupleKind.Tuple; Types = tys }) when (tys |> List.length) > 1 ->
-                sprintf "(%s)" t
-            | _ -> t
-        )
-        (if pr.Option then " option" else "")
+        (printOptionalType pr.Option pr.Type)
         (
             match pr.Accessor with
             | ReadOnly -> ""
@@ -201,6 +193,50 @@ let printTypeParameters (tps: FsType list): string =
 
         line.Add ">"
         line |> String.concat ""
+
+let printTypeLiteral (tl: FsTypeLiteral): string =
+    let members =
+        tl.Members
+        |> List.choose (
+            function
+            | FsType.Property p ->
+                Some (p.Name, printOptionalType p.Option p.Type)
+            | FsType.Function ({ Name = Some name } as f) ->
+                let prms =
+                    f.Params
+                    |> List.map (fun p ->
+                        printOptionalType p.Optional p.Type
+                    )
+                let prms =
+                    match prms with
+                    | [] -> "unit"
+                    | _ -> prms |> String.concat " -> "
+                let t =
+                    sprintf "%s -> %s" prms (printType f.ReturnType)
+                
+                Some (name, t)
+            | _ -> None
+        )
+
+    members
+    |> List.map (fun (name, t) -> sprintf "%s: %s" name t)
+    |> String.concat "; "
+    |> sprintf "{| %s |}"
+
+let printOptionalType (optional: bool) (t: FsType) =
+    if optional then
+        // when optional type: might need brackets arround formatted `t`:
+        // Ensure `(A * B) option` instead of `A * B option`
+        let surround = sprintf "(%s)"
+
+        let ts = printType t
+        match t with
+        | FsType.Tuple { Kind = FsTupleKind.Tuple; Types = tys } when tys.Length > 1 ->
+            surround ts
+        | _ -> ts
+        |> sprintf "%s option"
+    else
+        printType t
 
 let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsComment list): unit =
     let printLine comment =

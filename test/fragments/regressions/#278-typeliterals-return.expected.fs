@@ -13,10 +13,10 @@ module TypeLiteralsAsReturnValue =
 
     type [<AllowNullLiteral>] Class =
         /// This should generate two interfaces: 'Class' and 'ClassFooReturn'. The second should have a single property 'i'.
-        abstract Foo: unit -> ClassFooReturn
-
-    type [<AllowNullLiteral>] ClassFooReturn =
-        abstract i: float with get, set
+        /// 
+        /// ^^^^^^
+        /// That's old behaviour. Now: it generates Anonymous Record
+        abstract Foo: unit -> {| i: float |}
 
     type [<AllowNullLiteral>] ClassStatic =
         [<EmitConstructor>] abstract Create: unit -> Class
