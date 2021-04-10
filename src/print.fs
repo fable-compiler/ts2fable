@@ -233,24 +233,10 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
             sprintf "<%s>" nameWithAttributes |> printLine
             content |> printLines
             sprintf "</%s>" name |> printLine
-    
-    let containsXml (text: string) =
-        //cannot test for just < or > -> might not be xml tags like `the return value should be Option<string>`
-        // -> look for valid_ish xml doc tags
-        [
-            "<para>"
-            "<code>"
-            "<c>"
-            "<paramref name="
-            "<typeparamref name="
-            "<see href="
-            "<see cref="
-        ]
-        |> List.exists text.Contains
 
     match comments with
     | [] -> ()
-    | [ FsComment.Summary lines ] when lines |> List.forall (not << containsXml) ->
+    | [ FsComment.Summary lines ] when lines |> List.forall (not << FsComment.containsXml) ->
         // only summary
         // -> no `<summary>` tag necessary
         // BUT: without `<summary>` `<` and `>` are automatically escaped  (https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation#comments-without-xml-tags)

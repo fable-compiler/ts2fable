@@ -78,7 +78,7 @@ type [<AllowNullLiteral>] AllTextTransformations =
 type [<AllowNullLiteral>] AllTags =
     interface end
 
-/// <summary>Testing <c>@see</c> tag (-> <c><seealso...</c>)</summary>
+/// <summary>Testing <c>@see</c> tag (-> <c>&lt;seealso...</c>)</summary>
 /// <seealso cref="SomeType1">should be cref</seealso>
 /// <seealso cref="Module.SomeType2">should be cref</seealso>
 /// <seealso href="https://github.com/fable-compiler/ts2fable">should be href</seealso>
@@ -113,7 +113,7 @@ type [<AllowNullLiteral>] SeeTag =
 type [<AllowNullLiteral>] Separator =
     interface end
 
-/// <summary>Exception Type in <c>@throws</c> is optional, but required in <c><exception></c></summary>
+/// <summary>Exception Type in <c>@throws</c> is optional, but required in <c>&lt;exception></c></summary>
 /// <exception cref="SomeException"> exception with type</exception>
 /// <exception cref="Module.SomeException"> exception with type in module</exception>
 /// <exception cref="">exception without type</exception>

@@ -223,6 +223,14 @@ module private Text =
             // empty input
             None
 
+    let escapeXmlChars (text: string): string =
+        text
+            .Replace("&", "&amp;")
+            .Replace("<", "&lt;")
+            // .Replace(">", "&gt;")
+            // .Replace("\"", "&quot;")
+            // .Replace("'", "&apos;")
+
 
 /// Inline XML tags are better supported in VS, but not so well in Ionide (VSCode).
 /// Markdown comments are better supported in Ionide, but not at all in VS.
@@ -277,7 +285,6 @@ let private transformLine (line: string) =
         [ Text.transformLineToXml line ]
     | Markdown ->
         [ Text.transformLineToMarkdown line ]
-
 
 let private transformContent (comments: FsComment list) =
 
@@ -366,7 +373,6 @@ let private mergeSummaries (comments: FsComment list) =
             )
             ::
             (comments |> List.filter (not << FsComment.isSummary))
-
 
 let private transformTags (comments: FsComment list): FsComment list =
     // extract unparsed tags like typeparam or exception
@@ -507,6 +513,69 @@ let private transformTags (comments: FsComment list): FsComment list =
         | c -> Some c
     )
 
+/// MUST be called before transformation of text into xml tags!
+let private escapeXmlChars (comments: FsComment list): FsComment list =
+    // don't escape when only summary without any xml tags (-> no xml tags)
+    match comments with
+    | [ FsComment.Summary lines ] when lines |> List.forall (not << FsComment.containsXml) ->
+        // no escape necessary: not inside xml (`<summary>`)
+        comments
+    | _ ->
+        let escape = List.map Text.escapeXmlChars
+        comments
+        |> List.map (
+            function
+            | FsComment.Summary lines -> 
+                lines
+                |> escape
+                |> FsComment.Summary
+            | FsComment.Param p ->
+                { p with Content = escape p.Content }
+                |> FsComment.Param
+            | FsComment.TypeParam tp -> 
+                { tp with Content = escape tp.Content }
+                |> FsComment.TypeParam
+            | FsComment.Returns lines -> 
+                lines
+                |> escape
+                |> FsComment.Returns
+            | FsComment.Remarks lines -> 
+                lines
+                |> escape
+                |> FsComment.Remarks
+            | FsComment.SeeAlso link -> 
+                { link with 
+                    Target = Text.escapeXmlChars link.Target
+                    Content = escape link.Content
+                }
+                |> FsComment.SeeAlso
+            | FsComment.Example lines -> 
+                lines
+                |> escape
+                |> FsComment.Example
+            | FsComment.Exception ex -> 
+                { ex with
+                    Type = ex.Type |> Option.map Text.escapeXmlChars
+                    Content = escape ex.Content
+                }
+                |> FsComment.Exception
+            | FsComment.Version lines -> 
+                lines
+                |> escape
+                |> FsComment.Version
+            | FsComment.Default lines -> 
+                lines
+                |> escape
+                |> FsComment.Default
+            | FsComment.Tag tag -> 
+                { tag with
+                    Content = escape tag.Content
+                }
+                |> FsComment.Tag
+            | FsComment.UnknownTag _ as u -> u
+            | FsComment.Unknown _ as u -> u
+        )
+
 /// Extract `@deprecated` JSDoc tag from comments and convert into `Obsolete` Attribute
 /// 
 /// `None` if no `@deprecated`
@@ -595,6 +664,7 @@ let transform (f: FsFile): FsFile =
         comments
         |> mergeSummaries
         |> transformTags
+        |> escapeXmlChars
         |> transformContent
 
     let fix ns =
