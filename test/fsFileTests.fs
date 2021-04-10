@@ -528,4 +528,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #393 Mutable Variables become immutable" <| fun _ ->
         runRegressionTest "#393-mutable-variables-become-immutable"
 
+    // https://github.com/fable-compiler/ts2fable/issues/400
+    it "regression #403 Invalid Xml Comments because of unescaped chars" <| fun _ ->
+        runRegressionTest "#403-xml-comment-escape-chars"
+
 )?timeout(15_000)
