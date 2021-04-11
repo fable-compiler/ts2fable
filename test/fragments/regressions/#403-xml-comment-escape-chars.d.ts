@@ -2,7 +2,7 @@
  * Chars to escape: & <
  * Chars that might be reasonable to escape, but not needed: > ' "
  * 
- * In code environment: <c> & < > ' " </c>
+ * In code environment: ` & < > ' " `
  * 
  * In link: [search fsharp & ts2fable](https://duckduckgo.com/?q=fsharp+ts2fable&ia=web)
  */
@@ -27,3 +27,13 @@ export interface I3 { }
  * @deprecated Ok: &; not "ok"!
  */
 export interface I4 { }
+
+/**
+ * A & and link: [link](target)
+ */
+export interface I5 { }
+
+/**
+ * `And` in code: `&`
+ */
+export interface I6 { }
