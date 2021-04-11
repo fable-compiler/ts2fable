@@ -227,7 +227,7 @@ module private Text =
         text
             .Replace("&", "&amp;")
             .Replace("<", "&lt;")
-            // .Replace(">", "&gt;")
+            .Replace(">", "&gt;")
             // .Replace("\"", "&quot;")
             // .Replace("'", "&apos;")
 
@@ -515,12 +515,9 @@ let private transformTags (comments: FsComment list): FsComment list =
 
 /// MUST be called before transformation of text into xml tags!
 let private escapeXmlChars (comments: FsComment list): FsComment list =
-    // don't escape when only summary without any xml tags (-> no xml tags)
-    match comments with
-    | [ FsComment.Summary lines ] when lines |> List.forall (not << FsComment.containsXml) ->
-        // no escape necessary: not inside xml (`<summary>`)
-        comments
-    | _ ->
+    match () with
+    | Markdown -> comments
+    | Xml ->
         let escape = List.map Text.escapeXmlChars
         comments
         |> List.map (
@@ -664,8 +661,26 @@ let transform (f: FsFile): FsFile =
         comments
         |> mergeSummaries
         |> transformTags
-        |> escapeXmlChars
-        |> transformContent
+        |> fun comments ->
+            // don't escape when only summary without any xml tags (-> no xml tags)
+            // BUT: markdown & jsdoc aren't yet converted into xml -> unknown if there are xml tags
+            // BUT: escape xml char must happen before conversion to xml, because otherwise those xml tags would be escaped too
+            match comments |> FsComment.justSummary with
+            | Some _ ->
+                let transformed = comments |> transformContent
+                match transformed |> FsComment.justSummary with
+                | Some lines when lines |> List.forall (not << FsComment.containsXml) ->
+                    // just summary without any doc xml
+                    transformed
+                | _ ->
+                    // escape necessary
+                    comments
+                    |> escapeXmlChars
+                    |> transformContent
+            | _ ->
+                comments
+                |> escapeXmlChars
+                |> transformContent
 
     let fix ns =
         function

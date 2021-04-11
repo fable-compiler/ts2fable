@@ -6,7 +6,7 @@ open Fable.Core.JS
 
 
 /// <summary>
-/// Testing all text transformations (links & code)
+/// Testing all text transformations (links &amp; code)
 /// 
 /// Simple link: <see href="https://github.com/fable-compiler/ts2fable" />
 /// 
@@ -35,7 +35,7 @@ open Fable.Core.JS
 /// * href: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see> and <see href="https://github.com">GitHub</see> 
 /// * cref: <see cref="B">Thingy B</see> and <see cref="B">Thingy B</see>
 /// 
-/// CRef with <c>#</c> (instance member) and <c>~</c> (inner member) -> convert all into <c>.</c>:
+/// CRef with <c>#</c> (instance member) and <c>~</c> (inner member) -&gt; convert all into <c>.</c>:
 /// <c>Namespace.Class.method</c> = <see cref="Namespace.Class.method" />
 /// <c>Namespace.Class#method</c> = <see cref="Namespace.Class.method" />
 /// <c>Namespace.Class~method</c> = <see cref="Namespace.Class.method" />
@@ -78,7 +78,7 @@ type [<AllowNullLiteral>] AllTextTransformations =
 type [<AllowNullLiteral>] AllTags =
     interface end
 
-/// <summary>Testing <c>@see</c> tag (-> <c>&lt;seealso...</c>)</summary>
+/// <summary>Testing <c>@see</c> tag (-&gt; <c>&lt;seealso...</c>)</summary>
 /// <seealso cref="SomeType1">should be cref</seealso>
 /// <seealso cref="Module.SomeType2">should be cref</seealso>
 /// <seealso href="https://github.com/fable-compiler/ts2fable">should be href</seealso>
@@ -113,7 +113,7 @@ type [<AllowNullLiteral>] SeeTag =
 type [<AllowNullLiteral>] Separator =
     interface end
 
-/// <summary>Exception Type in <c>@throws</c> is optional, but required in <c>&lt;exception></c></summary>
+/// <summary>Exception Type in <c>@throws</c> is optional, but required in <c>&lt;exception&gt;</c></summary>
 /// <exception cref="SomeException"> exception with type</exception>
 /// <exception cref="Module.SomeException"> exception with type in module</exception>
 /// <exception cref="">exception without type</exception>

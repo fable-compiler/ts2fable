@@ -122,6 +122,11 @@ module FsComment =
     let isSummary v = match v with | FsComment.Summary _ -> true | _ -> false
     let asSummary v = match v with | FsComment.Summary o -> Some o | _ -> None
 
+    let justSummary comments =
+        match comments with
+        | [ FsComment.Summary s ] -> Some s
+        | _ -> None
+
     /// Checks if passed xml comment text contains xml comment tags
     let containsXml (text: string) =
         //cannot test for just < or > -> might not be xml tags like `the return value should be Option<string>`
