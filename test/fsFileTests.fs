@@ -492,6 +492,10 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #303 EmitIndexer" <| fun _ ->
         runRegressionTest "#303-EmitIndexer"
 
+    // https://github.com/fable-compiler/ts2fable/issues/304
+    it "regression #304 Escaped unreserved keywords" <| fun _ ->
+        runRegressionTest "#304-reserved-keywords"
+
     // https://github.com/fable-compiler/ts2fable/pull/368
     it "regression #368 compare xml comments -- pass" <| fun _ ->
         runRegressionTest "#368-compare-xml-comments.pass"
@@ -501,7 +505,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         runRegressionTestWithComparison notEqual "#368-compare-xml-comments.indented.fail"
 
     // https://github.com/fable-compiler/ts2fable/issues/374
-    it "regression #368 string literal type argument with space" <| fun _ ->
+    it "regression #374 string literal type argument with space" <| fun _ ->
         runRegressionTest "#374-string-literal-type-argument-with-space"
 
     // https://github.com/fable-compiler/ts2fable/issues/375
@@ -528,7 +532,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #393 Mutable Variables become immutable" <| fun _ ->
         runRegressionTest "#393-mutable-variables-become-immutable"
 
-    // https://github.com/fable-compiler/ts2fable/issues/400
+    // https://github.com/fable-compiler/ts2fable/issues/403
     it "regression #403 Invalid Xml Comments because of unescaped chars" <| fun _ ->
         runRegressionTest "#403-xml-comment-escape-chars"
 
