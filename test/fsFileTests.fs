@@ -470,6 +470,10 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #292 static props" <| fun _ ->
         runRegressionTest "#292-static-props"
 
+    // https://github.com/fable-compiler/ts2fable/issues/301
+    it "regression #301 Union with Parentheses" <| fun _ ->
+        runRegressionTest "#301-union-with-parens"
+
     // https://github.com/fable-compiler/ts2fable/issues/314
     it "regression #314 inline destruct" <| fun _ ->
         runRegressionTest "#314-inline-destruct"
