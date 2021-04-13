@@ -461,7 +461,16 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         FsType.TODO
 
 and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
-    let unTypes = un.types |> List.ofSeq
+    let rec removeParens (t: TypeNode) =
+        if t.kind = SyntaxKind.ParenthesizedType then
+            let t = t :?> ParenthesizedTypeNode
+            removeParens t.``type``
+        else
+            t
+    let unTypes = 
+        un.types 
+        |> Seq.map removeParens
+        |> List.ofSeq
     let isOptionType (t: TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
     let isLiteralType (t: TypeNode) = t.kind = SyntaxKind.LiteralType
     let isOptional = unTypes |> List.exists isOptionType
