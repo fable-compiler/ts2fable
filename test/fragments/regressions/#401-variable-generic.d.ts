@@ -255,3 +255,128 @@ export interface I {
     /** function */
     ff3<T>(v1: T, v2: T | string): T | number
 }
+
+export class C {
+       /** get */
+    readonly v1: string;
+
+    /** get */
+    readonly f1: (value: string) => number;
+
+    /** get */
+    readonly f2: <T>(value: T) => number;
+    /** get */
+    readonly f3: <T>(value: string) => T;
+    /** get */
+    readonly f4: <T>(value: T) => T;
+
+    /** get, set */
+    f5: <T>(value: T) => T;
+    /** get, set */
+    f6: <T>(value: T) => T;
+
+    /** get */
+    readonly f7: <T>(v1: T, v2: T) => T;
+    /** get */
+    readonly f8: <T>(v1: T | string, v2: string | number | T) => T;
+
+    /** get */
+    readonly f9: <T>(f1: ((v1: T, v2: T) => T), f2: ((v1: string | T, v2: T | number) => string | T)) => T | string
+    /** get, set */
+    f10: <T>(f1: ((v1: T, v2: T) => T), f2: ((v1: string | T, v2: T | number) => string | T)) => T | string
+
+    /** get */
+    readonly f11: <T>(v1: T, v2: T) => T;
+    /** get, set */
+    f12: <T>(v1: T, v2: T) => T;
+
+    /** 
+     * get 
+     * 
+     * T extends A
+     */
+    readonly gf1: <T extends A>(value: T) => T
+    /** 
+     * get, set
+     * 
+     * T extends A
+     */
+    gf2: <T extends A>(value: T) => T
+    /** 
+     * get 
+     * 
+     * T extends A
+     */
+    readonly gf3: <T extends A>(v1: T, v2: T) => T
+    /** 
+     * get, set
+     * 
+     * T extends A
+     */
+    gf4: <T extends A>(v1: T, v2: T) => T
+    /**
+     * get
+     * 
+     * T extends A
+     * U extends A & B
+     */
+    readonly gf5: <T extends A, U extends A & B>(v1: T, v2: U) => U
+    /**
+     * get, set
+     * 
+     * T extends A
+     * U extends A & B
+     */
+    gf6: <T extends A, U extends A & B>(v1: T, v2: U) => U
+
+    /** get */
+    readonly arrayify: <T>(obj: T | T[]) => T[];
+    
+    /** get */
+    readonly izi1: (v1: string, v2: string) => void;
+    /** get, set */
+    izi3: (v1: string, v2: string) => void;
+    /** get */
+    readonly izi4: <T>(v1: T, v2: T) => T;
+    /** get, set */
+    izi5: <T>(v1: T, v2: T) => T;
+
+    /** get */
+    readonly t1: [string, string];
+    /** get */
+    readonly ft1: <T>(vs: [T, T]) => T;
+    /** get, set */
+    ft2: <T>(vs: [T, T]) => T;
+
+    /** 
+     * get
+     * 
+     * v2 optional
+     */
+    readonly o1: <T>(v1: T, v2?: T) => T;
+    /** 
+     * get, set
+     * 
+     * v2 optional
+     */
+    o2: <T>(v1: T, v2?: T) => T;
+    /** 
+     * get
+     * 
+     * v2 optional
+     */
+    readonly o3: <T>(v1: T, v2?: [T, T]) => T;
+    /** 
+     * get, set
+     * 
+     * v2 optional
+     */
+    o4: <T>(v1: T, v2?: [T, T]) => T;
+
+    /** function */
+    ff1<T>(f: ((value: T) => T)): ((value: T) => T);
+    /** function */
+    ff2<T>(f: ((value: T) => T), v: T): string;
+    /** function */
+    ff3<T>(v1: T, v2: T | string): T | number 
+}
