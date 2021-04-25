@@ -44,6 +44,10 @@ module N =
         abstract f11: 'T -> 'T -> 'T
         /// get, set
         abstract f12: ('T -> 'T -> 'T) with get, set
+        /// get
+        abstract f13: string -> string -> string
+        /// get, set
+        abstract f14: (string -> string -> string) with get, set
         /// get 
         /// 
         /// T extends A
@@ -136,6 +140,10 @@ type [<AllowNullLiteral>] I =
     abstract f11: 'T -> 'T -> 'T
     /// get, set
     abstract f12: ('T -> 'T -> 'T) with get, set
+    /// get
+    abstract f13: string -> string -> string
+    /// get, set
+    abstract f14: (string -> string -> string) with get, set
     /// get 
     /// 
     /// T extends A
@@ -194,6 +202,30 @@ type [<AllowNullLiteral>] I =
     /// 
     /// v2 optional
     abstract o4: ('T -> ('T * 'T) option -> 'T) with get, set
+    /// get
+    /// 
+    /// optional
+    abstract opt1: string option
+    /// get, set
+    /// 
+    /// optional
+    abstract opt2: string option with get, set
+    /// get, set
+    /// 
+    /// optional
+    abstract opt4: ('T -> 'T) option with get, set
+    /// get
+    /// 
+    /// optional
+    abstract opt5: (string -> string -> string) option
+    /// get, set
+    /// 
+    /// optional
+    abstract opt7: (string -> string -> string) option with get, set
+    /// get, set
+    /// 
+    /// optional
+    abstract opt8: ('T -> 'T -> 'T) option with get, set
     /// function
     abstract ff1: f: ('T -> 'T) -> ('T -> 'T)
     /// function
@@ -228,6 +260,10 @@ type [<AllowNullLiteral>] C =
     abstract f11: 'T -> 'T -> 'T
     /// get, set
     abstract f12: ('T -> 'T -> 'T) with get, set
+    /// get
+    abstract f13: string -> string -> string
+    /// get, set
+    abstract f14: (string -> string -> string) with get, set
     /// get 
     /// 
     /// T extends A

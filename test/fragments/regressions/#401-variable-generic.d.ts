@@ -40,6 +40,11 @@ export namespace N {
     /** get, set */
     let f12: <T>(v1: T, v2: T) => T;
 
+    /** get */
+    const f13: (v1: string, v2: string) => string;
+    /** get, set */
+    let f14: (v1: string, v2: string) => string;
+
     /** 
      * get 
      * 
@@ -165,6 +170,12 @@ export interface I {
     /** get, set */
     f12: <T>(v1: T, v2: T) => T;
 
+    /** get */
+    readonly f13: (v1: string, v2: string) => string;
+    /** get, set */
+    f14: (v1: string, v2: string) => string;
+
+
     /** 
      * get 
      * 
@@ -248,6 +259,58 @@ export interface I {
      */
     o4: <T>(v1: T, v2?: [T, T]) => T;
 
+    /**
+     * get
+     * 
+     * optional
+     */
+    readonly opt1?: string;
+    /**
+     * get, set
+     * 
+     * optional
+     */
+    opt2?: string;
+    // // F#: `abstract opt2: ('T -> 'T) option`
+    // // -> The type parameter 'T is not defined.
+    // // Note: same `with get, set` is allowed (but neither `with get` nor `with set`)
+    // /**
+    //  * get
+    //  * 
+    //  * optional
+    //  */
+    // readonly opt3?: <T>(v1: T) => T;
+    /**
+     * get, set
+     * 
+     * optional
+     */
+    opt4?: <T>(v1: T) => T;
+    /**
+     * get
+     * 
+     * optional
+     */
+    readonly opt5?: (v1: string, v2: string) => string;
+    // /**
+    //  * get
+    //  * 
+    //  * optional
+    //  */
+    // readonly opt6?: <T>(v1: T, v2: T) => T;
+    /**
+     * get, set
+     * 
+     * optional
+     */
+    opt7?: (v1: string, v2: string) => string;
+    /**
+     * get, set
+     * 
+     * optional
+     */
+    opt8?: <T>(v1: T, v2: T) => T;
+
     /** function */
     ff1<T>(f: ((value: T) => T)): ((value: T) => T);
     /** function */
@@ -289,6 +352,11 @@ export class C {
     readonly f11: <T>(v1: T, v2: T) => T;
     /** get, set */
     f12: <T>(v1: T, v2: T) => T;
+
+    /** get */
+    readonly f13: (v1: string, v2: string) => string;
+    /** get, set */
+    f14: (v1: string, v2: string) => string;
 
     /** 
      * get 
