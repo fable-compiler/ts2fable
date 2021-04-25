@@ -26,8 +26,9 @@ let printType (tp: FsType): string =
         tp.Types |> List.map printType |> String.concat " * " |> line.Add
         line |> String.concat ""
     | FsType.Variable vb ->
-        //todo: remove -> into catchall instead
-        failwithf "there shouldn't be a FsVariable any more. %A" vb
+        printfn "Variable in printType that should have been converted into property: %s" (vb.Name)
+        let vtp = vb.Type |> printType
+        sprintf "abstract %s: %s%s" vb.Name vtp (if vb.IsConst then "" else " with get, set")
     | FsType.StringLiteral _ -> "string"
     | FsType.Property p -> printType p.Type
     | FsType.Enum en ->
