@@ -19,21 +19,14 @@ let printType (tp: FsType): string =
     | FsType.Generic g ->
         printGeneric g
     | FsType.Function ft ->
-        let line = ResizeArray()
-        let typs =
-            if ft.Params.Length = 0 then
-                [ simpleType "unit"; ft.ReturnType ]
-            else
-                (ft.Params |> List.map (fun p -> p.Type)) @ [ ft.ReturnType ]
-        "(" |> line.Add
-        typs |> List.map printType |> String.concat " -> " |> line.Add
-        ")"|> line.Add
-        line |> String.concat ""
+        printFunctionType ft
+        |> sprintf "(%s)"
     | FsType.Tuple tp ->
         let line = ResizeArray()
         tp.Types |> List.map printType |> String.concat " * " |> line.Add
         line |> String.concat ""
     | FsType.Variable vb ->
+        printfn "Variable in printType that should have been converted into property: %s" (vb.Name)
         let vtp = vb.Type |> printType
         sprintf "abstract %s: %s%s" vb.Name vtp (if vb.IsConst then "" else " with get, set")
     | FsType.StringLiteral _ -> "string"
@@ -64,6 +57,36 @@ let printType (tp: FsType): string =
     | _ ->
         printfn "unsupported printType %s: %s" (getTypeName tp) (getName tp)
         "obj"
+
+/// unlike `printType`, don't surround Function with brackets:
+/// * `printType`: `(string -> string)`
+/// * `printRootType`: `string -> string`
+/// Necessary for generic properties `'T -> 'T`: not valid in brackets
+let printRootType (tp: FsType): string =
+    match tp with
+    | FsType.Function f -> printFunctionType f
+    | _ -> printType tp
+
+let printFunctionType (f: FsFunction) =
+    match f.Params with
+    | [] -> sprintf "unit -> %s" (printType f.ReturnType)
+    | ps ->
+        let ps =
+            ps
+            |> List.map (fun p ->
+                let t = printType p.Type
+                if p.Optional then
+                    // this bracket isn't always necessary for example:
+                    // `const f: (value?: string) => void`
+                    // in F#: `abstract f: (string) option -> unit`
+                    // but it's easier to always put into brackets, than to discrimate 
+                    // when it's needed (tuple, function) and when not (simple type).
+                    sprintf "(%s) option" t
+                else
+                    t
+            )
+        ps @ [ printType f.ReturnType ]
+        |> String.concat " -> "
 
 let printGeneric (g: FsGenericType): string =
     let line = ResizeArray()
@@ -124,7 +147,7 @@ let printFunction (fn: FsFunction): string =
     line |> String.concat ""
 
 let printProperty (pr: FsProperty): string =
-    sprintf "%sabstract %s: %s%s%s%s"
+    sprintf "%sabstract %s: %s%s%s%s%s"
         (   match pr.Kind with
             | FsPropertyKind.Regular -> ""
             | FsPropertyKind.Index -> "[<EmitIndexer>] "
@@ -135,14 +158,37 @@ let printProperty (pr: FsProperty): string =
             | Some idx -> sprintf "%s: %s -> " idx.Name (printType idx.Type)
         )
         (
-            let t = printType pr.Type
-            // if `Option<A * B>`, surround tuple with brackets (`(A * B) option`), otherwise it's emitted as `A * Option<B>` (`A * B option`)
-            match pr.Option, pr.Type |> FsType.asTuple with
-            | true, (Some { Kind = FsTupleKind.Tuple; Types = tys }) when (tys |> List.length) > 1 ->
-                sprintf "(%s)" t
-            | _ -> t
+            let t = printRootType pr.Type
+            let optionInBrackets ty =
+                if pr.Option then
+                    match ty with
+                    // if `Option<A * B>`, surround tuple with brackets (`(A * B) option`), otherwise it's emitted as `A * Option<B>` (`A * B option`)
+                    | FsType.Tuple { Kind = FsTupleKind.Tuple; Types = tys } when (tys |> List.length) > 1 ->
+                        sprintf "(%s)" t
+                    // brackets required for function type like `(string -> string) option`
+                    | FsType.Function _ ->
+                        sprintf "(%s)" t
+                    | _ -> t
+                else
+                    t
+
+            match pr.Accessor with
+            | ReadOnly -> 
+                optionInBrackets pr.Type
+            | WriteOnly | ReadWrite ->
+                match pr.Type with
+                | FsType.Function _ -> 
+                    sprintf "(%s)" t
+                | _ -> optionInBrackets pr.Type
         )
         (if pr.Option then " option" else "")
+        (
+            // generic type parameter
+            match pr.Type with
+            | FsType.Function f when f.TypeParameters.Length > 0 ->
+                printGenericTypeConstraints f.TypeParameters
+            | _ -> ""
+        )
         (
             match pr.Accessor with
             | ReadOnly -> ""

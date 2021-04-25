@@ -251,6 +251,22 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
         | _ -> ()
     )
 
+    // convert variables in interfaces (after transformation) into properties
+    // -> no extra handling of Variables in print
+    let variableToProperty (v: FsVariable): FsProperty =
+        {
+            Attributes = v.Attributes
+            Comments = v.Comments
+            Kind = FsPropertyKind.Regular
+            Index = None
+            Name = v.Name
+            Option = false
+            Type = v.Type
+            Accessor = if v.IsConst then ReadOnly else ReadWrite
+            IsStatic = v.IsStatic
+            Accessibility = v.Accessibility
+        }
+
     md.Types |> List.iter(fun tp ->
         match tp with
         | FsType.Module smd ->
@@ -286,9 +302,15 @@ let rec createIExportsModule (ns: string list) (md: FsModule): FsModule * FsVari
                     if vb.IsGlobal then
                         typesGlobal.Add tp
                     else
-                        typesInIExports.Add tp
+                        vb
+                        |> variableToProperty
+                        |> FsType.Property
+                        |> typesInIExports.Add
             else
-                typesInIExports.Add tp
+                vb
+                |> variableToProperty
+                |> FsType.Property
+                |> typesInIExports.Add
         | FsType.Function _ -> typesInIExports.Add tp
         | FsType.Interface it ->
             if it.IsStatic then

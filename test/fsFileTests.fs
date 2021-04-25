@@ -342,7 +342,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/monaco/variableInModule.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles 
-            |> existOnlyOneByName "EditorType" FsType.isVariable
+            |> existOnlyOneByName "EditorType" FsType.isProperty
             |> equal true  
 
     it "globalClass" <| fun _ ->
@@ -535,6 +535,10 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts2fable/issues/393
     it "regression #393 Mutable Variables become immutable" <| fun _ ->
         runRegressionTest "#393-mutable-variables-become-immutable"
+
+    // https://github.com/fable-compiler/ts2fable/issues/401
+    it "regression #401 Variable with generic type parameter" <| fun _ ->
+        runRegressionTest "#401-variable-generic"
 
     // https://github.com/fable-compiler/ts2fable/issues/403
     it "regression #403 Invalid Xml Comments because of unescaped chars" <| fun _ ->
