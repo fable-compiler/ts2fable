@@ -1,8 +1,4 @@
 //todo: root variable (-> `let`)
-//todo: interface
-    //todo: optional field (`value?: ...`)
-//todo: class:
-    //todo: static
 
 export interface A { readonly name: string }
 export interface B { readonly id: number }
@@ -320,7 +316,7 @@ export interface I {
 }
 
 export class C {
-       /** get */
+    /** get */
     readonly v1: string;
 
     /** get */
@@ -447,4 +443,135 @@ export class C {
     ff2<T>(f: ((value: T) => T), v: T): string;
     /** function */
     ff3<T>(v1: T, v2: T | string): T | number 
+}
+
+/** static */
+export class CS {
+    /** get */
+    static readonly v1: string;
+
+    /** get */
+    static readonly f1: (value: string) => number;
+
+    /** get */
+    static readonly f2: <T>(value: T) => number;
+    /** get */
+    static readonly f3: <T>(value: string) => T;
+    /** get */
+    static readonly f4: <T>(value: T) => T;
+
+    /** get, set */
+    static f5: <T>(value: T) => T;
+    /** get, set */
+    static f6: <T>(value: T) => T;
+
+    /** get */
+    static readonly f7: <T>(v1: T, v2: T) => T;
+    /** get */
+    static readonly f8: <T>(v1: T | string, v2: string | number | T) => T;
+
+    /** get */
+    static readonly f9: <T>(f1: ((v1: T, v2: T) => T), f2: ((v1: string | T, v2: T | number) => string | T)) => T | string
+    /** get, set */
+    static f10: <T>(f1: ((v1: T, v2: T) => T), f2: ((v1: string | T, v2: T | number) => string | T)) => T | string
+
+    /** get */
+    static readonly f11: <T>(v1: T, v2: T) => T;
+    /** get, set */
+    static f12: <T>(v1: T, v2: T) => T;
+
+    /** get */
+    static readonly f13: (v1: string, v2: string) => string;
+    /** get, set */
+    static f14: (v1: string, v2: string) => string;
+
+    /** 
+     * get 
+     * 
+     * T extends A
+     */
+    static readonly gf1: <T extends A>(value: T) => T
+    /** 
+     * get, set
+     * 
+     * T extends A
+     */
+    static gf2: <T extends A>(value: T) => T
+    /** 
+     * get 
+     * 
+     * T extends A
+     */
+    static readonly gf3: <T extends A>(v1: T, v2: T) => T
+    /** 
+     * get, set
+     * 
+     * T extends A
+     */
+    static gf4: <T extends A>(v1: T, v2: T) => T
+    /**
+     * get
+     * 
+     * T extends A
+     * U extends A & B
+     */
+    static readonly gf5: <T extends A, U extends A & B>(v1: T, v2: U) => U
+    /**
+     * get, set
+     * 
+     * T extends A
+     * U extends A & B
+     */
+    static gf6: <T extends A, U extends A & B>(v1: T, v2: U) => U
+
+    /** get */
+    static readonly arrayify: <T>(obj: T | T[]) => T[];
+    
+    /** get */
+    static readonly izi1: (v1: string, v2: string) => void;
+    /** get, set */
+    static izi3: (v1: string, v2: string) => void;
+    /** get */
+    static readonly izi4: <T>(v1: T, v2: T) => T;
+    /** get, set */
+    static izi5: <T>(v1: T, v2: T) => T;
+
+    /** get */
+    static readonly t1: [string, string];
+    /** get */
+    static readonly ft1: <T>(vs: [T, T]) => T;
+    /** get, set */
+    static ft2: <T>(vs: [T, T]) => T;
+
+    /** 
+     * get
+     * 
+     * v2 optional
+     */
+    static readonly o1: <T>(v1: T, v2?: T) => T;
+    /** 
+     * get, set
+     * 
+     * v2 optional
+     */
+    static o2: <T>(v1: T, v2?: T) => T;
+    /** 
+     * get
+     * 
+     * v2 optional
+     */
+    static readonly o3: <T>(v1: T, v2?: [T, T]) => T;
+    /** 
+     * get, set
+     * 
+     * v2 optional
+     */
+    static o4: <T>(v1: T, v2?: [T, T]) => T;
+
+    /** function */
+    static ff1<T>(f: ((value: T) => T)): ((value: T) => T);
+    /** function */
+    static ff2<T>(f: ((value: T) => T), v: T): string;
+    /** function */
+    static ff3<T>(v1: T, v2: T | string): T | number 
 }
