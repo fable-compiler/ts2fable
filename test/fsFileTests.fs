@@ -16,6 +16,8 @@ open ts2fable.Keywords
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
+/// Focus on this test. Other thests aren't execute, just `itOnly` tests.
+let [<Global("it.only")>] itOnly (msg: string) (f: unit->unit): unit = jsNative
 
 // use only to debug single test
 let [<Emit("it.only($0,$1)")>] only (msg: string) (f: unit->unit): unit = jsNative
@@ -90,7 +92,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         |> List.head
         |> fun md -> md.Types
     
-    let getTopVarialbles fsFiles = 
+    let getTopVariables fsFiles = 
         fsFiles
         |> getTopTypes
         |> List.choose FsType.asVariable 
@@ -150,7 +152,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/reactxp/duplicatedVariableExports.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles
-            |> getTopVarialbles 
+            |> getTopVariables 
             |> List.countBy(fun vb -> vb.Name)
             |> List.forall(fun (_,l) -> l = 1)
             |> equal true
