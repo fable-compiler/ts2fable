@@ -1349,6 +1349,67 @@ let fixFloatAlias (f: FsFile): FsFile =
         | _ -> tp
     )
 
+let emitNowarn (fo: FsFileOut): FsFileOut =
+
+    // suppress warnings about XML Comments (for example for missing comments for parameter)
+    let fo =
+        let mutable hasXmlComments = false
+        let doFix _ = not hasXmlComments
+        let fix _ ty =
+            match ty |> FsType.comments with
+            | [] -> ()
+            | [ FsComment.Summary lines ] when lines |> List.forall (not << FsComment.containsXml) -> ()
+            | _ -> hasXmlComments <- true
+            ty
+
+        fo.Files
+        |> List.iter (fixFileEx doFix fix >> ignore)
+
+        if hasXmlComments then
+            let noWarn: AdditionalData = (BetweenModuleAndOpen, [ "#nowarn \"3390\" // disable warnings for invalid XML comments"])
+            { fo with 
+                AdditionalData = fo.AdditionalData @ [ noWarn ]
+            }
+        else
+            fo
+
+    // suppress warnings about usage of Obsolete things
+    // for simplicity: always emit when something is obsolete; its usage isn't as easily detectable
+    let fo =
+        let mutable hasObsolete = false
+        let doFix _ = 
+            not hasObsolete
+        let fix _ ty =
+            let obs =
+                ty
+                |> FsType.attributes
+                |> List.exists (
+                    List.exists (
+                            function
+                            | { Namespace = None; Name = "Obsolete" }
+                            | { Namespace = Some "System"; Name = "Obsolete" }
+                            | { Namespace = None; Name = "System.Obsolete" }
+                                -> true
+                            | _ -> false
+                    )
+                )
+            if obs then
+                hasObsolete <- true
+            ty
+
+        fo.Files
+        |> List.iter (fixFileEx doFix fix >> ignore)
+
+        if hasObsolete then
+            let noWarn: AdditionalData = (BetweenModuleAndOpen, [ "#nowarn \"0044\" // disable warnings for `Obsolete` usage"])
+            { fo with 
+                AdditionalData = fo.AdditionalData @ [ noWarn ]
+            }
+        else
+            fo
+
+    fo
+
 let private emitKeyOfType (fo: FsFileOut): FsFileOut =
     if fo.Files |> getAllTypes |> List.exists FsType.isKeyOf then
         let keyofType = "[<Erase>] type KeyOf<'T> = Key of string"
@@ -1404,11 +1465,16 @@ let fixFsFileOut fo =
     let fo = 
         { fo with AbbrevTypes = abbrevTypes @ fo.AbbrevTypes }
         |> emitKeyOfType
-    if isBrowser then
-        { fo with
-            Opens = fo.Opens @ ["Browser.Types"]
-            Files = fo.Files |> List.map fixHelperLines }
-    else fo
+    let fo =
+        if isBrowser then
+            { fo with
+                Opens = fo.Opens @ ["Browser.Types"]
+                Files = fo.Files |> List.map fixHelperLines }
+        else fo
+
+    let fo = emitNowarn fo
+    
+    fo
 
 let extractGenericParameterDefaults (f: FsFile): FsFile =
     let fix f =
