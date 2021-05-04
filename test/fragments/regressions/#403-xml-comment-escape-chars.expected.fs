@@ -1,5 +1,9 @@
 // ts2fable 0.0.0
 module rec ``#403-xml-comment-escape-chars``
+
+#nowarn "3390" // disable warnings for invalid XML comments
+#nowarn "0044" // disable warnings for `Obsolete` usage
+
 open System
 open Fable.Core
 open Fable.Core.JS

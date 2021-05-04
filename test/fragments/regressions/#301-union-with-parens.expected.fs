@@ -1,5 +1,8 @@
 // ts2fable 0.0.0
 module rec ``#301-union-with-parens``
+
+#nowarn "3390" // disable warnings for invalid XML comments
+
 open System
 open Fable.Core
 open Fable.Core.JS
