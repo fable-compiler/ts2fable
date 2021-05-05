@@ -194,6 +194,7 @@ module internal Bridge =
                 ]
             Files = fsFiles
             AbbrevTypes = []
+            AdditionalData = []
         }
         |> fixFsFileOut
 

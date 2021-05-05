@@ -381,6 +381,8 @@ type FsType =
 
 [<RequireQualifiedAccess>]
 module FsType =
+    open Fable.Core.JsInterop
+
     let isMapped tp = match tp with | FsType.Mapped _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
@@ -405,6 +407,23 @@ module FsType =
     let asGenericTypeParameter (tp: FsType) = match tp with | FsType.GenericTypeParameter v -> Some v | _ -> None
     let asTuple (tp: FsType) = match tp with | FsType.Tuple v -> Some v | _ -> None
     let asProperty (tp: FsType) = match tp with | FsType.Property v -> Some v | _ -> None
+
+    let private unsafeTryGetContainingField (name: string) (tp: FsType): 'a option =
+        match Reflection.FSharpValue.GetUnionFields (tp, typeof<FsType>) with
+        | (_, [|o|]) ->
+            !!o?(name)
+        | _ -> None
+
+    let comments (tp: FsType): FsComment list =
+        tp
+        |> unsafeTryGetContainingField "Comments"
+        |> Option.defaultValue []
+
+    let attributes (tp: FsType): FsAttributeSet list =
+        tp
+        |> unsafeTryGetContainingField "Attributes"
+        |> Option.defaultValue []
+
 
 type FsModule =
     {
@@ -433,12 +452,31 @@ type FsFile =
         Modules: FsModule list
     }
 
+type Line = string
+type FsAdditionalData = {
+    Top: Line list
+    BetweenModuleAndOpen: Line list
+    BetweenOpenAndTypes: Line list
+    Bottom: Line list
+}
+
+type AdditionalDataLocation =
+    | Top
+    | Bottom
+    | BetweenModuleAndOpen
+    | BetweenOpenAndTypes
+type AdditionalData = AdditionalDataLocation * (Line list)
+
 type FsFileOut =
     {
         Namespace: string
         Opens: string list
         Files: FsFile list
         AbbrevTypes: string list
+        /// Can be used to output additional text not covered by any `FsXXX` type
+        /// 
+        /// Used to print `#nowarn` or might be useful to output debug logs.
+        AdditionalData: AdditionalData list
     }
 
 let isStatic (tp: FsType) =

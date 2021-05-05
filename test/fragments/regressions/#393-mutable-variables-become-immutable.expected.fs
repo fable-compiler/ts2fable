@@ -1,5 +1,8 @@
 // ts2fable 0.0.0
 module rec ``#393-mutable-variables-become-immutable``
+
+#nowarn "3390" // disable warnings for invalid XML comments
+
 open System
 open Fable.Core
 open Fable.Core.JS

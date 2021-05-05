@@ -16,6 +16,8 @@ open ts2fable.Keywords
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
+/// Focus on this test. Other thests aren't execute, just `itOnly` tests.
+let [<Global("it.only")>] itOnly (msg: string) (f: unit->unit): unit = jsNative
 
 // use only to debug single test
 let [<Emit("it.only($0,$1)")>] only (msg: string) (f: unit->unit): unit = jsNative
@@ -90,7 +92,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         |> List.head
         |> fun md -> md.Types
     
-    let getTopVarialbles fsFiles = 
+    let getTopVariables fsFiles = 
         fsFiles
         |> getTopTypes
         |> List.choose FsType.asVariable 
@@ -150,7 +152,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/reactxp/duplicatedVariableExports.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles
-            |> getTopVarialbles 
+            |> getTopVariables 
             |> List.countBy(fun vb -> vb.Name)
             |> List.forall(fun (_,l) -> l = 1)
             |> equal true
@@ -444,6 +446,110 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/custom/comments/obsolete.fs"
         let expected = "test/fragments/custom/comments/obsolete.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
+
+    // https://github.com/fable-compiler/ts2fable/pull/409
+    let _ = 
+        let nowarnXmlComments = "#nowarn \"3390\""
+        let dataContains text (data: AdditionalData list) =
+            data
+            |> List.map snd
+            |> List.collect id
+            |> List.filter (fun d -> d.TrimStart().StartsWith text)
+            |> List.length
+            |> (=) 1    // just ONE `#nowarn`
+        let testNowarn name nowarnExcpected =
+            let tsPaths = [ sprintf "test/fragments/custom/nowarn/xml-comments/%s.d.ts" name ]
+            let fsPath = sprintf "test/fragments/custom/nowarn/xml-comments/%s.fs" name
+            let fsFileOut = getFsFileOut fsPath tsPaths []
+            // emitFsFileOut fsPath fsFileOut   // write F# file -> for debugging
+            fsFileOut.AdditionalData
+            |> dataContains nowarnXmlComments
+            |> equal nowarnExcpected
+
+        it "nowarn/xml-comments/no xml comments" <| fun _ ->
+            testNowarn "no-xml-comments" false
+
+        it "nowarn/xml-comments/XML comments but without XML tags" <| fun _ ->
+            testNowarn "xml-comments-but-no-xml-tags" false
+
+        it "nowarn/xml-comments/XML comments with summary tag" <| fun _ ->
+            testNowarn "xml-comments-with-summary-tag" true
+
+        it "nowarn/xml-comments/XML comments with param tag" <| fun _ ->
+            testNowarn "xml-comments-with-param-tag" true
+
+        it "nowarn/xml-comments/complex without XML comments" <| fun _ ->
+            testNowarn "complex-without-xml-comments" false
+
+        it "nowarn/xml-comments/complex with XML comments but no xml tags" <| fun _ ->
+            testNowarn "complex-with-xml-comments-but-no-xml-tags" false
+
+        it "nowarn/xml-comments/complex with XML comments and a single tag" <| fun _ ->
+            testNowarn "complex-with-xml-comments-with-single-tag" true
+
+        it "nowarn/xml-comments/complex with XML comments and multiple tags" <| fun _ ->
+            testNowarn "complex-with-xml-comments-with-multiple-tags" true
+
+        it "nowarn/xml-comments/ignored XML tag" <| fun _ ->
+            testNowarn "ignored-xml-tag" false
+
+        it "nowarn/xml-comments/correct tags" <| fun _ ->
+            // This test doesn't need `#nowarn xml comments`:
+            // it contains XML comments, but these are all valid:
+            // * `<summary>` doesn't contain invalid xml
+            // * `<param>` name is correct
+            // -> ideally: no `#nowarn`
+            //
+            // BUT: invalid xml comments require a lot of complex testing (like 'are names correct?')
+            // and some transformations from jsdoc to XML docs aren't that easy and error prone (like `<ref>` to another member)
+            // -> easier to always emit `#nowarn xml comments` when xml comments with at least one tag
+            testNowarn "xml-comments-correct-tags" true
+
+    // https://github.com/fable-compiler/ts2fable/pull/405
+    let _ =
+        let nowarnXmlComments = "#nowarn \"0044\""
+        let dataContains text (data: AdditionalData list) =
+            data
+            |> List.map snd
+            |> List.collect id
+            |> List.filter (fun d -> d.TrimStart().StartsWith text)
+            |> List.length
+            |> (=) 1    // just ONE `#nowarn`
+        let testNowarn name nowarnExcpected =
+            let tsPaths = [ sprintf "test/fragments/custom/nowarn/obsolete/%s.d.ts" name ]
+            let fsPath = sprintf "test/fragments/custom/nowarn/obsolete/%s.fs" name
+            let fsFileOut = getFsFileOut fsPath tsPaths []
+            // emitFsFileOut fsPath fsFileOut   // write F# file -> for debugging
+            fsFileOut.AdditionalData
+            |> dataContains nowarnXmlComments
+            |> equal nowarnExcpected
+
+        it "nowarn/obsolete/no deprecated" <| fun _ ->
+            testNowarn "no-deprecated" false
+
+        it "nowarn/obsolete/deprecated" <| fun _ ->
+            testNowarn "deprecated" true
+
+        it "nowarn/obsolete/complex-no-deprecated" <| fun _ ->
+            testNowarn "complex-no-deprecated" false
+
+        it "nowarn/obsolete/complex-single-deprecated" <| fun _ ->
+            testNowarn "complex-single-deprecated" true
+
+        it "nowarn/obsolete/complex-multiple-deprecated" <| fun _ ->
+            testNowarn "complex-multiple-deprecated" true
+
+        it "nowarn/obsolete/complex-deprecated-width-xml-comments" <| fun _ ->
+            testNowarn "complex-deprecated-with-xml-comments" true
+
+        it "nowarn/obsolete/deprecated usage" <| fun _ ->
+            // in ideal case:
+            // `#nowarn obsolete` is only emitted when an obsolete type/function/whatever is used
+            // -> only this unit test should contain `#nowarn obsolete`
+            //
+            // BUT: detecting usage is way harder than detecting `@deprecated` 
+            // -> emit `#nowarn` for `@deprecated` instead of just usage
+            testNowarn "deprecated-usage" true
 
     // https://github.com/fable-compiler/ts2fable/pull/275
     it "regression #275 remove private members" <| fun _ ->

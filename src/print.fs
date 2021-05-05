@@ -505,14 +505,39 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
         for _ in 0..1 do
             lines.RemoveAt (lines.Count-1)
 
+[<RequireQualifiedAccess>]
+type private Space =
+    | None
+    | Before
+    | After
+    | Both
+let private printAdditionalData (lines: ResizeArray<string>) (space: Space) (loc: AdditionalDataLocation) (data: AdditionalData list) =
+    match data |> List.filter (fst >> (=) loc) |> List.map snd with
+    | [] -> ()
+    | data ->
+        match space with
+        | Space.Before | Space.Both -> lines.Add("")
+        | _ -> ()
+
+        data |> List.iter lines.AddRange
+
+        match space with
+        | Space.After | Space.Both -> lines.Add("")
+        | _ -> ()
+
 let printFsFile version (file: FsFileOut): ResizeArray<string> =
     let lines = ResizeArray<string>()
 
     sprintf "// ts2fable %s" version |> lines.Add
+    printAdditionalData lines Space.None Top file.AdditionalData
     sprintf "module rec %s" file.Namespace |> lines.Add
+
+    printAdditionalData lines Space.Both BetweenModuleAndOpen file.AdditionalData
 
     for opn in file.Opens do
         sprintf "open %s" opn |> lines.Add
+
+    printAdditionalData lines Space.Both BetweenOpenAndTypes file.AdditionalData
 
     if not (List.isEmpty file.AbbrevTypes) then
         lines.Add ""
@@ -523,4 +548,7 @@ let printFsFile version (file: FsFileOut): ResizeArray<string> =
         f.Modules
             |> List.filter (fun md -> md.Types.Length > 0)
             |> List.iter (printModule lines "")
+
+    printAdditionalData lines Space.Before Bottom file.AdditionalData
+
     lines
