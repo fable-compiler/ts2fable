@@ -906,6 +906,13 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
     )
 
 let extractTypeLiterals(f: FsFile): FsFile =
+    /// Type Literals with <= members are printed as Anonymous Records,
+    /// Type Literals with >  members are converted into Interfaces
+    let MaxMembers = 4
+    let (|TypeLiteralToConvert|_|) =
+        function
+        | FsType.TypeLiteral tl when tl.Members.Length > MaxMembers -> Some tl
+        | _ -> None
 
     /// the goal is to create interface types with 'pretty' names like '$(Class)$(Method)Return'.
     let extractTypeLiterals_pass1 (f: FsFile): FsFile =
@@ -961,7 +968,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                     | FsType.Function fn ->
                                         let mapParam (prm:FsParam) : FsParam =
                                             match prm.Type with
-                                            | FsType.TypeLiteral tl ->
+                                            | TypeLiteralToConvert tl ->
                                                 let name =
                                                     let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
                                                     let fnName = fn.Name.Value.Replace("`","")
@@ -979,7 +986,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
 
                                         let mapReturnType (tp:FsType) =
                                             match tp with
-                                            | FsType.TypeLiteral tl ->
+                                            | TypeLiteralToConvert tl ->
                                                 let name =
                                                     let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
                                                     let fnName = fn.Name.Value.Replace("`","")
@@ -1008,13 +1015,15 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                         let tps = List<FsType>()
                                         un.Types |> List.iter(fun tp ->
                                             match tp with
-                                            | FsType.TypeLiteral tl -> tl.Members |> tps.AddRange
+                                            | TypeLiteralToConvert tl -> 
+                                                //todo: extract into interface
+                                                tl.Members |> tps.AddRange
                                             | _ -> tp |> tps.Add
                                         )
                                         tps |> List.ofSeq
                                 }
                             {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton
-                        | FsType.TypeLiteral tl ->
+                        | TypeLiteralToConvert tl ->
                             {
                                 Attributes = []
                                 Comments = al.Comments
@@ -1098,7 +1107,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
             // 1: replace occurences of TypeLiterals with references to the generated types
             |> fixOneModule (fun ns tp ->
                 match tp with
-                | FsType.TypeLiteral tl ->
+                | TypeLiteralToConvert tl ->
 
                     let extractedInterface = replaceLiteral ns tl
                     match extractedInterface.TypeParameters with
