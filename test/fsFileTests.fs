@@ -561,7 +561,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             testNowarn "deprecated-usage" true
 
     // https://github.com/fable-compiler/ts2fable/issues/400
-    it "type-literal" <| fun _ ->
+    it "type literal" <| fun _ ->
         let tsPaths = ["test/fragments/custom/type-literal.d.ts"]
         let fsPath = "test/fragments/custom/type-literal.fs"
         let expected = "test/fragments/custom/type-literal.expected.fs"

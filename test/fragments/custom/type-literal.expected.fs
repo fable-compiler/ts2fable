@@ -1,5 +1,8 @@
 // ts2fable 0.0.0
 module rec ``type-literal``
+
+#nowarn "3390" // disable warnings for invalid XML comments
+
 open System
 open Fable.Core
 open Fable.Core.JS
@@ -46,7 +49,7 @@ type [<AllowNullLiteral>] IExports =
     /// Input: anon record; Return: anon record
     abstract fOptional2_Optional3: v1: {| name: string; birthday: float option |} -> {| name: string; age: float option; id: float |}
     /// Input: anon record; Return: anon record
-    abstract ff2_2: v1: {| value: string; f: (string -> string) |} -> {| result: string; f: (string -> float -> string) |}
+    abstract ff2_2: v1: {| value: string; f: string -> string |} -> {| result: string; f: string -> float -> string |}
     /// Input: interface; Return: anon interface
     abstract ff2_2: v1: Ff2_2V1 -> Ff2_2Return
     abstract C1: C1Static
