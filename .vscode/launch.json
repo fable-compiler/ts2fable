@@ -11,10 +11,10 @@
           "esm",
           "--no-timeouts",
           "--colors",
-          "${workspaceRoot}/build/test.js"
+          "${workspaceRoot}/build/test/test.js"
         ],
         "sourceMaps": true,
-        "outFiles": ["${workspaceRoot}/*/*.js"],
+        "outFiles": ["${workspaceRoot}/build/test/**/*.js"],
         "internalConsoleOptions": "openOnSessionStart",
       }
   ]
