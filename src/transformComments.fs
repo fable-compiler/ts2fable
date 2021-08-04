@@ -374,21 +374,37 @@ let private mergeSummaries (comments: FsComment list) =
             ::
             (comments |> List.filter (not << FsComment.isSummary))
 
+let private (|AtLeastOneLine|_|) (c: FsCommentContent) =
+    c
+    |> List.skipWhile (System.String.IsNullOrWhiteSpace)
+    |> function
+       | l::ls -> Some (l, ls)
+       | _ -> None
+
 let private transformTags (comments: FsComment list): FsComment list =
     // extract unparsed tags like typeparam or exception
-    // todo: filter out deprecated and put into obsolete attribute 
-
-    let (|AtLeastOneLine|_|) (c: FsCommentContent) =
-        c
-        |> List.skipWhile (System.String.IsNullOrWhiteSpace)
-        |> function
-           | l::ls -> Some (l, ls)
-           | _ -> None
 
     let combineWith ls head =
         match head with
         | Some head -> head :: ls
         | None -> ls
+
+    let removeLeadingClutter (content: FsCommentContent) =
+        // param name already extracted, because @param is parsed by TypeScript compiler
+        // https://jsdoc.app/tags-param.html
+        // BUT: it doesn't remove `-` after param name (which is allowed by specs)
+        //      neither does it remove `:` after name (not in specs, but sometimes used)
+        match content with
+        | AtLeastOneLine (l, ls) when l.StartsWith "-" || l.StartsWith ":" ->
+            let l = l.Substring(1).TrimStart()
+            if System.String.IsNullOrWhiteSpace(l) then
+                // ensure rest isn't empty
+                match ls with
+                | AtLeastOneLine _ -> Some ls
+                | _ -> Some []
+            else
+                Some <| l :: ls
+        | _ -> None
 
     comments
     |> List.choose (
@@ -483,32 +499,27 @@ let private transformTags (comments: FsComment list): FsComment list =
                     |> Some
             | _ -> None
 
-        | FsComment.Param ({ Content = AtLeastOneLine (l, ls) } as p) ->
-            // param name already extracted, because @param is parsed by TypeScript compiler
-            // https://jsdoc.app/tags-param.html
-            // BUT: it doesn't remove `-` after param name (which is allowed by specs)
-            //      neither does it remove `:` after name (not in specs, but sometimes used)
-            if l.StartsWith "-" || l.StartsWith ":" then
-                let l = l.Substring(1).TrimStart()
-                let content =
-                    if System.String.IsNullOrWhiteSpace(l) then
-                        // ensure rest isn't empty
-                        match ls with
-                        | AtLeastOneLine _ -> Some ls
-                        | _ -> None
-                    else
-                        Some <| l :: ls
-                
-                match content with
-                | Some c -> 
-                    { p with Content = c }
-                    |> FsComment.Param
-                    |> Some
-                | None -> None
-            else
+        | FsComment.Param p ->
+            match removeLeadingClutter p.Content with
+            | Some content ->
+                { p with Content = content }
+                |> FsComment.Param
+                |> Some
+            | None -> 
                 p
                 |> FsComment.Param
                 |> Some
+        | FsComment.TypeParam tp ->
+            match removeLeadingClutter tp.Content with
+            | Some content ->
+                { tp with Content = content }
+                |> FsComment.TypeParam
+                |> Some
+            | None -> 
+                tp
+                |> FsComment.TypeParam
+                |> Some
+
 
         | c -> Some c
     )
@@ -655,6 +666,49 @@ let private convertDeprecatedTagIntoObsoleteAttribute _ ty =
         |> FsType.Module
     | t -> t
 
+let private extractTypeParamFromParam (typeParameters: FsGenericTypeParameter list) (parameters: FsParam list) (comments: FsComment list) = 
+    // `@param <T> - description` is valid for generic type parameter (https://tsdoc.org/pages/tags/typeparam/)
+    // Sometimes used: `@param T description` -> must be matched with type parameter
+    // And just like with parameter doc, separator between type and description can be missing or a colon.
+    if typeParameters |> List.isEmpty then
+        comments
+    else
+        comments
+        |> List.map (
+            function
+            | FsComment.Param p -> 
+                // detect `<T>` (-> correct generic type param as specified in docs)
+                // Issue: not read as Name, but in Content
+                let (|TypeParam|_|) (l: string) =
+                    if l.StartsWith "<" then
+                        let idx = l.IndexOf '>'
+                        if idx < 0 then
+                            None
+                        else
+                            let name = l.Substring(1, idx - 1)
+                            if name.Contains(" ") then
+                                None
+                            else
+                                Some (name, l.Substring(idx+1).TrimStart())
+                    else
+                        None
+                match p with
+                | { Name = ""; Content = AtLeastOneLine(TypeParam(name, desc), rest) } ->
+                        FsComment.TypeParam { Name = name; Content = desc :: rest }
+                | { Name = name } when
+                        // Exclude Special case: Parameter and Generic Type Paramater have same name (`f<T>(T: T)`) -> doc belongs to parameter
+                        parameters |> List.forall (fun p -> p.Name <> name)
+                        &&
+                        // Names in typeParameters start with `'`
+                        typeParameters |> List.exists (fun tp -> tp.Name.Substring(1) = name)
+                        ->
+                    FsComment.TypeParam p
+                | _ ->
+                        FsComment.Param p
+            | c -> c
+        )
+    
+
 let transform (f: FsFile): FsFile =
 
     let transformComments (comments: FsComment list) =
@@ -681,14 +735,19 @@ let transform (f: FsFile): FsFile =
                 comments
                 |> escapeXmlChars
                 |> transformContent
+        
+    let transformCommentsWithContext (typeParameters: FsGenericTypeParameter list) (parameters: FsParam list) (comments: FsComment list) =
+        comments
+        |> extractTypeParamFromParam typeParameters parameters
+        |> transformComments
 
     let fix ns =
         function
         | FsType.Interface i ->
-            { i with Comments = transformComments i.Comments }
+            { i with Comments = transformCommentsWithContext (i.TypeParameters |> List.choose FsType.asGenericTypeParameter) [] i.Comments }
             |> FsType.Interface
         | FsType.Function f ->
-            { f with Comments = transformComments f.Comments }
+            { f with Comments = transformCommentsWithContext (f.TypeParameters |> List.choose FsType.asGenericTypeParameter) (f.Params) f.Comments }
             |> FsType.Function
         | FsType.Enum e ->
             { e with
@@ -700,7 +759,7 @@ let transform (f: FsFile): FsFile =
             { p with Comments = transformComments p.Comments }
             |> FsType.Property
         | FsType.Alias a ->
-            { a with Comments = transformComments a.Comments}
+            { a with Comments = transformCommentsWithContext (a.TypeParameters |> List.choose FsType.asGenericTypeParameter) [] a.Comments }
             |> FsType.Alias
         | FsType.Variable v ->
             { v with Comments = transformComments v.Comments }

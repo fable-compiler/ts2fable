@@ -650,4 +650,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #403 Invalid Xml Comments because of unescaped chars" <| fun _ ->
         runRegressionTest "#403-xml-comment-escape-chars"
 
+    // https://github.com/fable-compiler/ts2fable/issues/420
+    it "regression #420 Generic Type Parameter in `@param`" <| fun _ ->
+        runRegressionTest "#420-xml-comment-generic-type-param-in-param"
+
 )?timeout(15_000)
