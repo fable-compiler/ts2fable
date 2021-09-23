@@ -15,7 +15,7 @@ module private Text =
     // groups cannot occur multiple times -> prepend group name
 
     /// markdown link: `[title](link)`
-    let [<Literal>] private MdLink = "\[(?<mdLink_title>[^\)]*)\]\((?<mdLink_link>[^\]]*)\)"
+    let [<Literal>] private MdLink = "\[(?<mdLink_title>[^\[\]]*)\]\((?<mdLink_link>[^\)]*)\)"
     // jsDoc Link
     // https://jsdoc.app/tags-inline-link.html
     // Syntax:

@@ -654,4 +654,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #420 Generic Type Parameter in `@param`" <| fun _ ->
         runRegressionTest "#420-xml-comment-generic-type-param-in-param"
 
+    // https://github.com/fable-compiler/ts2fable/issues/420
+    it "regression #425 Link surrounded by parens becomes link containing paren" <| fun _ ->
+        runRegressionTest "#425-xml-comment-link-in-parens"
+
 )?timeout(15_000)
