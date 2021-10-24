@@ -566,6 +566,13 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/custom/type-literal.fs"
         let expected = "test/fragments/custom/type-literal.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
+    // https://github.com/fable-compiler/ts2fable/issues/415
+    it "type literal indexer" <| fun _ ->
+        let tsPaths = ["test/fragments/custom/type-literal-indexer.d.ts"]
+        let fsPath = "test/fragments/custom/type-literal-indexer.fs"
+        let expected = "test/fragments/custom/type-literal-indexer.expected.fs"
+        convertAndCompareAgainstExpected tsPaths fsPath expected
+
 
     // https://github.com/fable-compiler/ts2fable/pull/275
     it "regression #275 remove private members" <| fun _ ->

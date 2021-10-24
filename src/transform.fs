@@ -908,10 +908,22 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
 let extractTypeLiterals(f: FsFile): FsFile =
     /// Type Literals with <= members are printed as Anonymous Records,
     /// Type Literals with >  members are converted into Interfaces
-    let MaxMembers = 4
+    let maxMembers = 4
+    let isIndexer =
+        function
+        | FsType.Property { Kind = FsPropertyKind.Index } -> true
+        | _ -> false
     let (|TypeLiteralToConvert|_|) =
         function
-        | FsType.TypeLiteral tl when tl.Members |> List.isEmpty || tl.Members.Length > MaxMembers -> 
+        | FsType.TypeLiteral tl when tl.Members |> List.isEmpty || tl.Members.Length > maxMembers -> 
+            Some tl
+        // convert literal with Indexer to interface: `{ [key: string]: string }`
+        // -> Indexer not available in Anon Record
+        // 
+        // Note: Indexer only works when consumed in F# (-> function output), but not when created in F# (-> function input):
+        //       Indexer in JS is over its members, in F# it's a property (-> function) 
+        //       See https://github.com/fable-compiler/ts2fable/issues/415
+        | FsType.TypeLiteral tl when tl.Members |> List.exists isIndexer ->
             Some tl
         | _ -> None
 
@@ -955,6 +967,73 @@ let extractTypeLiterals(f: FsFile): FsFile =
                 }
                 collection.Add (FsType.Interface materialized)
 
+            let materializeReturnInterfaceType = materializeInterfaceType
+            let materializeParamInterfaceType name members (collection: ResizeArray<_>)=
+                match members |> List.tryFind isIndexer with
+                  // comment to best use Anon Record with `!!`
+                | Some (FsType.Property ({ Index = Some index } as indexer)) ->
+                    // todo: introduce extra FsComment type for Index marker? (printType isn't available here)
+                    // todo: add comment on Indexer too?
+                    // todo: use `remarks`? but isn't shown in VS 2022, Ionide only when there's no other tag
+                    // todo: different layout in different editors: ionide ok (because markdown); VS F#: same_ish lines (incl. code) (with `para`: even worse); VS C#: all same line because no `para`; VS Code C#" same_ish lines (incl. code)"
+                    // todo: link: VS F#: no href, just shows link target instead of title; Ionide: formatting ok; VS Code C#: no actual link, no highlighting of link, shows title
+                    // todo: cannot use actual types for examples: formatting of types isn't available here (-> `print.fs`)
+                    let indexerComment = 
+                        let lines =
+                            """
+                            Typescript interface contains an [index signature](https://www.typescriptlang.org/docs/handbook/2/objects.html#index-signatures) (like `{ [key:string]: string }`).  
+                            Unlike an indexer in F#, index signatures index over a type's members. 
+
+                            As such an index signature cannot be implemented via regular F# Indexer (`Item` property),
+                            but instead by just specifying fields.
+
+                            Easiest way to declare such a type is with an Anonymous Record and force it into the function.  
+                            For example:  
+                            ```fsharp
+                            type I =
+                                [<EmitIndexer>]
+                                abstract Item: string -> string
+                            let f (i: I) = jsNative
+
+                            let t = {| Value1 = "foo"; Value2 = "bar" |}
+                            f (!! t)
+                            ```
+                            """
+                            |> fun c -> c.Split '\n'
+                            |> fun ls ->
+                                // skip first and last line (new line after/before triple quotes)
+                                ls
+                                |> Seq.skip 1
+                                |> Seq.take (ls.Length - 1 - 1)
+                            |> Seq.toList
+                        // trim indentation because of indentation of Triple Quoted Strings
+                        let lines =
+                            let head = lines |> List.head
+                            let ind = head.Length - head.TrimStart().Length
+                            lines
+                            |> List.map (fun l -> if l.Length > ind then l.Substring ind else l.TrimStart ())
+                        lines
+                    let materialized = {
+                        Attributes = []
+                        Comments = [
+                            FsComment.Summary [
+                                yield! indexerComment
+                            ]
+                        ]
+                        IsStatic = false
+                        IsClass = false
+                        Name = name
+                        FullName = name
+                        Inherits = []
+                        Members = members
+                        TypeParameters = []
+                        Accessibility = None
+                    }
+                    collection.Add (FsType.Interface materialized)
+                | _ -> 
+                    materializeInterfaceType name members collection
+
+
             { md with
                 Types = md.Types |> List.collect (fun tp ->
                     match tp with
@@ -981,7 +1060,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                     else
                                                         sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
 
-                                                newTypes |> materializeInterfaceType name tl.Members
+                                                newTypes |> materializeParamInterfaceType name tl.Members
                                                 { prm with Type = simpleType name }
                                             | _ -> prm
 
@@ -993,7 +1072,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                     let fnName = fn.Name.Value.Replace("`","")
                                                     sprintf "%s%sReturn" itName (capitalize fnName) |> newTypeName
 
-                                                newTypes |> materializeInterfaceType name tl.Members
+                                                newTypes |> materializeReturnInterfaceType name tl.Members
                                                 simpleType name
                                             | _ -> tp
                                         { fn with
