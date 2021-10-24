@@ -267,12 +267,11 @@ let private (|TransformMultilineCode|_|) (lines: string list) =
                     | "" -> None
                     | lang -> Some lang
                 let startTag = 
-                    // sandcastle understands language attribute
-                    // https://ewsoftware.github.io/SHFB/html/7f03ba39-09f8-4320-bdbd-ed31a3bd885f.htm
+                    // Ionide understands `lang` attribute
                     match lang with
                     | None -> "<code>"
                     | Some lang ->
-                        sprintf "<code language=\"%s\">" lang
+                        sprintf "<code lang=\"%s\">" lang
 
                 startTag :: code @ ["</code>"]
 
