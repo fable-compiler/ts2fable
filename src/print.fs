@@ -6,7 +6,7 @@ let printType (tp: FsType): string =
     | FsType.Mapped mp ->
         mp.Name
     | FsType.Array at ->
-        sprintf "ResizeArray<%s>" (printType at)
+        sprintf (if Config.EmitResizeArray then "ResizeArray<%s>" else "%s[]") (printType at)
     | FsType.Union un ->
         if un.Types.Length = 1 then
             sprintf "%s%s" (printType un.Types.[0]) (if un.Option then " option" else "")
@@ -79,7 +79,7 @@ let printFunctionType (f: FsFunction) =
                     // this bracket isn't always necessary for example:
                     // `const f: (value?: string) => void`
                     // in F#: `abstract f: (string) option -> unit`
-                    // but it's easier to always put into brackets, than to discrimate 
+                    // but it's easier to always put into brackets, than to discrimate
                     // when it's needed (tuple, function) and when not (simple type).
                     sprintf "(%s) option" t
                 else
@@ -103,7 +103,7 @@ let printEnumType (en: FsEnum): string =
     | FsEnumCaseType.String -> "string"
     | FsEnumCaseType.Unknown -> "obj"
 
-let printFunction (fn: FsFunction): string =
+let printFunctionName (fn: FsFunction) (name:string): string =
     let line = ResizeArray()
 
     match fn.Kind with
@@ -115,7 +115,7 @@ let printFunction (fn: FsFunction): string =
     | FsFunctionKind.StringParam emit ->
         sprintf  "[<Emit \"%s\">] " emit |> line.Add
 
-    sprintf "abstract %s" fn.Name.Value |> line.Add
+    sprintf "abstract %s" name |> line.Add
 
     // parameters
     let prms =
@@ -146,7 +146,17 @@ let printFunction (fn: FsFunction): string =
 
     line |> String.concat ""
 
+let printFunction (fn: FsFunction): string =
+    printFunctionName fn (fn.Name.Value)
+
 let printProperty (pr: FsProperty): string =
+    match Config.ConvertPropertyFunctions, pr.Type with
+    | true, FsType.Function fn ->
+        printFunctionName fn pr.Name
+    | _ ->
+        printPropertyDefault pr
+
+let printPropertyDefault (pr: FsProperty): string =
     sprintf "%sabstract %s: %s%s%s%s%s"
         (   match pr.Kind with
             | FsPropertyKind.Regular -> ""
@@ -173,11 +183,11 @@ let printProperty (pr: FsProperty): string =
                     t
 
             match pr.Accessor with
-            | ReadOnly -> 
+            | ReadOnly ->
                 optionInBrackets pr.Type
             | WriteOnly | ReadWrite ->
                 match pr.Type with
-                | FsType.Function _ -> 
+                | FsType.Function _ ->
                     sprintf "(%s)" t
                 | _ -> optionInBrackets pr.Type
         )
@@ -262,14 +272,14 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
             match attributes with
             | [] -> name
             | _ ->
-                let attrs = 
-                    attributes 
+                let attrs =
+                    attributes
                     |> List.map (fun (name, value) -> sprintf "%s=\"%s\"" name value)
                     |> String.concat " "
                 sprintf "%s %s" name attrs
-            
+
         match content with
-        | [] -> 
+        | [] ->
             sprintf "<%s />" nameWithAttributes
             |> printLine
         | [ line ] ->
@@ -299,7 +309,7 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
             | FsComment.SeeAlso link -> printTag "seealso" [((match link.Type with | HRef -> "href" | CRef -> "cref"), link.Target)] link.Content
             | FsComment.TypeParam tp -> printTag "typeparam" [("name", tp.Name)] tp.Content
             | FsComment.Example e -> printTag "example" [] e
-            | FsComment.Exception e -> 
+            | FsComment.Exception e ->
                 // exception REQUIRES a type -- otherwise it isn't shown (in VS) or produces a doc parsing error in Ionide
                 // BUT: it doesn't matter what's in the attribute...
                 // -> use empty type entry when no type specified
@@ -332,7 +342,7 @@ let printAttributes (lines: ResizeArray<string>) (indent: string) (attrs: FsAttr
             match attr.Arguments with
             | [] -> name
             | args ->
-                let args = 
+                let args =
                     args
                     |> List.map formatArgument
                     |> String.concat ", "
@@ -430,9 +440,9 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             match inf.Members with
             | [FsType.Enum en] ->
                 // type literal -> comments are in parent Alias which was transformed into Interface
-                let en = 
-                    { en with 
-                        Name = inf.Name 
+                let en =
+                    { en with
+                        Name = inf.Name
                         Comments = inf.Comments @ en.Comments
                     }
                 printEnum lines indent en

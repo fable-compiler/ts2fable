@@ -27,20 +27,29 @@ let inline equal (expected: 'T) (actual: 'T): unit =
 let inline notEqual (expected: 'T) (actual: 'T): unit =
     Testing.Assert.NotEqual(expected, actual)
 
-let testFsFilesWithExports tsPaths fsPath exports (f: FsFile list -> unit) =
+let lookForOptions tsPaths =
+    Config.Reset()
+    for ts in tsPaths do
+        let src = ts2fable.node.FileSystem.readText ts
+        if src.Contains(Config.OptionNames.NoEmitResizeArray) then
+            System.Console.WriteLine("Detected '--noresizearray'")
+            Config.EmitResizeArray <- false
+        if src.Contains(Config.OptionNames.ConvertPropertyFunctions) then
+            Config.ConvertPropertyFunctions <- true
 
+let testFsFilesWithExports tsPaths fsPath exports (f: FsFile list -> unit) =
     let fsFileOut = getFsFileOut fsPath tsPaths exports
-    emitFsFileOut fsPath fsFileOut 
+    emitFsFileOut fsPath fsFileOut
     f fsFileOut.Files
 
 let testFsFiles tsPaths fsPath (f: FsFile list -> unit) =
     testFsFilesWithExports tsPaths fsPath [] f
-    
+
 
 let testFsFileLines tsPaths fsPath (f: string list -> unit) =
-
+    lookForOptions tsPaths
     let fsFileOut = getFsFileOut fsPath tsPaths []
-    emitFsFileOutAsLines fsPath fsFileOut 
+    emitFsFileOutAsLines fsPath fsFileOut
     |> f
 
 
@@ -50,66 +59,66 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // in fable 3: compiled as arrow function
     //   -> no `this`
     //   -> `this.timeout` doesn't work
-    
+
     let getTypeByName name fsFiles =
         getAllTypes fsFiles
         |> List.filter(fun tp -> getName tp = name)
 
-    let existOnlyOneByName name (predicate: FsType -> bool) fsFiles= 
+    let existOnlyOneByName name (predicate: FsType -> bool) fsFiles=
         fsFiles
         |> getTypeByName name
         |> List.filter predicate
         |> fun tp -> tp.Length = 1
 
-    let existLeastOneByName name (predicate: FsType -> bool) fsFiles= 
+    let existLeastOneByName name (predicate: FsType -> bool) fsFiles=
         fsFiles
         |> getTypeByName name
         |> List.filter predicate
-        |> fun tp -> tp.Length > 0     
+        |> fun tp -> tp.Length > 0
 
-    let existNone (predicate: FsType -> bool) fsFiles= 
+    let existNone (predicate: FsType -> bool) fsFiles=
         fsFiles
         |> getAllTypes
         |> List.filter predicate
-        |> fun tp -> tp.Length = 0        
+        |> fun tp -> tp.Length = 0
 
-    let existNoneByName name (predicate: FsType -> bool) fsFiles= 
+    let existNoneByName name (predicate: FsType -> bool) fsFiles=
         fsFiles
         |> getTypeByName name
         |> List.filter predicate
-        |> fun tp -> tp.Length = 0                  
+        |> fun tp -> tp.Length = 0
 
-    let existManyByName i name (predicate: FsType -> bool) fsFiles= 
+    let existManyByName i name (predicate: FsType -> bool) fsFiles=
         fsFiles
         |> getTypeByName name
         |> List.filter predicate
-        |> fun tp -> tp.Length = i   
+        |> fun tp -> tp.Length = i
 
-    let getTopTypes fsFiles = 
+    let getTopTypes fsFiles =
         fsFiles
         |> List.head
         |> fun f ->  f.Modules
         |> List.head
         |> fun md -> md.Types
-    
-    let getTopVariables fsFiles = 
+
+    let getTopVariables fsFiles =
         fsFiles
         |> getTopTypes
-        |> List.choose FsType.asVariable 
+        |> List.choose FsType.asVariable
 
     let inline (<&&>) (t1:FsFile list -> bool) (t2:FsFile list -> bool) fsFiles =
-        fsFiles |> t1 && fsFiles |> t2        
+        fsFiles |> t1 && fsFiles |> t2
 
     let importSpecifierHasNames name propertyName =
             (fun tp ->
-                match tp with 
-                | FsType.Import ti -> 
-                    match ti with 
+                match tp with
+                | FsType.Import ti ->
+                    match ti with
                     | FsImport.Type imtp ->
                         let imsp = imtp.ImportSpecifier
                         imsp.Name = name
                         && imsp.PropertyName = propertyName
-                    | _ -> false                    
+                    | _ -> false
                 | _ -> false
             )
     let containLineHasWord tsPaths fsPath line = testFsFileLines tsPaths fsPath (stringContainsAny line >> equal true)
@@ -126,7 +135,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         )
         |> Seq.map (fun l -> l.TrimEnd())
         |> Seq.toArray
-    
+
     let fileLinesCompare compare expected actual =
         compare (sanitizeFsFile expected) (sanitizeFsFile actual)
 
@@ -152,7 +161,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/reactxp/duplicatedVariableExports.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles
-            |> getTopVariables 
+            |> getTopVariables
             |> List.countBy(fun vb -> vb.Name)
             |> List.forall(fun (_,l) -> l = 1)
             |> equal true
@@ -164,18 +173,18 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/reactxp/multiple/ReactXP.fs"
         testFsFilesWithExports tsPaths fsPath ["multiple"] <| fun fsFiles ->
             fsFiles
-            |> 
-                ( 
-                    existOnlyOneByName "__web_ReactXP" FsType.isModule 
-                    <&&> existOnlyOneByName "__web_Accessibility" FsType.isModule 
+            |>
+                (
+                    existOnlyOneByName "__web_ReactXP" FsType.isModule
+                    <&&> existOnlyOneByName "__web_Accessibility" FsType.isModule
                     <&&> existOnlyOneByName "reactXP" (fun tp ->
-                        match FsType.asVariable tp with 
-                        | Some vb -> 
-                            match vb.Export with 
+                        match FsType.asVariable tp with
+                        | Some vb ->
+                            match vb.Export with
                             | Some ex -> ex.Path = "ReactXP/web/ReactXP"
                             | None -> false
                         | None -> false
-                    ) 
+                    )
                 )
             |> equal true
 
@@ -185,15 +194,15 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/reactxp/multiple/ReactXP.fs"
         testFsFilesWithExports tsPaths fsPath ["multiple"] <| fun fsFiles ->
             fsFiles
-            |> existOnlyOneByName 
-                "CommonAccessibility" 
+            |> existOnlyOneByName
+                "CommonAccessibility"
                 (importSpecifierHasNames "CommonAccessibility" (Some "Accessibility"))
             |> equal true
 
     // https://github.com/fable-compiler/ts2fable/pull/164
     it "multiple ts inputs should export one time" <| fun _ ->
-        let tsPaths =         
-            [   
+        let tsPaths =
+            [
                 "node_modules/@types/google-protobuf/index.d.ts"
                 "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
             ]
@@ -201,17 +210,17 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         testFsFileLines tsPaths fsPath  <| fun lines ->
             lines.Length < 700
             |> equal true
-    
+
     // https://github.com/fable-compiler/ts2fable/issues/175
     (it "fix some Option.map to Microsoft.FSharp.Core.Option.map" <| fun _ ->
         let tsPaths = ["node_modules/@types/react/index.d.ts"]
         let fsPath = "test-compile/React.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existLeastOneByName "ReactNode" FsType.isMapped
             // (fun tp ->
-            //     match tp with 
-            //     | FsType.Module md -> 
+            //     match tp with
+            //     | FsType.Module md ->
             //         md.HelperLines  |> List.exists(fun l -> l.Contains("Microsoft.FSharp.Core.Option.map"))
             //     | _ -> false
             // )
@@ -223,129 +232,129 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let tsPaths = ["test/fragments/react/f2.d.ts"]
         let fsPath = "test/fragments/react/f2.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existOnlyOneByName "DOMFactory" FsType.isInterface
             |> equal true
 
-    // https://github.com/fable-compiler/ts2fable/pull/167        
+    // https://github.com/fable-compiler/ts2fable/pull/167
     it "extract type literal from union" <| fun _ ->
         let tsPaths = ["test/fragments/react/f1.d.ts"]
         let fsPath = "test/fragments/react/f1.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existOnlyOneByName "bivarianceHack" FsType.isFunction
             |> equal true
 
-    // https://github.com/fable-compiler/ts2fable/issues/177        
+    // https://github.com/fable-compiler/ts2fable/issues/177
     it "generic parameter defaults" <| fun _ ->
         let tsPaths = ["test/fragments/react/f3.d.ts"]
         let fsPath = "test/fragments/react/f3.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existManyByName 2 "Component" FsType.isAlias
-            |> equal true            
+            |> equal true
 
-    // https://github.com/fable-compiler/ts2fable/issues/179  
+    // https://github.com/fable-compiler/ts2fable/issues/179
     it "fix types has ESKeywords" <| fun _ ->
         let tsPaths = ["test/fragments/react/f4.d.ts"]
         let fsPath = "test/fragments/react/f4.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
-            |> existNone (fun tp -> 
+            fsFiles
+            |> existNone (fun tp ->
                 let name = getName tp
                 esKeywords.Contains name
             )
             |> equal true
 
-    // https://github.com/fable-compiler/ts2fable/issues/181 
+    // https://github.com/fable-compiler/ts2fable/issues/181
     it "extract types in global module" <| fun _ ->
         let tsPaths = ["test/fragments/react/f5.d.ts"]
         let fsPath = "test/fragments/react/f5.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existNoneByName "global" FsType.isModule
-            |> equal true            
+            |> equal true
 
-    // https://github.com/fable-compiler/ts2fable/issues/182               
+    // https://github.com/fable-compiler/ts2fable/issues/182
     it "compile intersection to interface end" <| fun _ ->
         let tsPaths = ["test/fragments/react/f6.d.ts"]
         let fsPath = "test/fragments/react/f6.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existOnlyOneByName "ClassType" FsType.isInterface
-            |> equal true                                    
+            |> equal true
 
-    // https://github.com/fable-compiler/ts2fable/issues/185               
+    // https://github.com/fable-compiler/ts2fable/issues/185
     it "extract type literal from type alias" <| fun _ ->
         let tsPaths = ["test/fragments/react/f7.d.ts"]
         let fsPath = "test/fragments/react/f7.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |>  (
-                    existOnlyOneByName "EventHandler" FsType.isInterface 
+                    existOnlyOneByName "EventHandler" FsType.isInterface
                     <&&> existOnlyOneByName "bivarianceHack" FsType.isFunction
                 )
-            |> equal true                                                
+            |> equal true
 
-    // https://github.com/fable-compiler/ts2fable/issues/44               
+    // https://github.com/fable-compiler/ts2fable/issues/44
     it "map mapped types" <| fun _ ->
         let tsPaths = ["test/fragments/react/f8.d.ts"]
         let fsPath = "test/fragments/react/f8.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existLeastOneByName "ValidationMap" FsType.isInterface
-            |> equal true                
+            |> equal true
 
     // https://github.com/fable-compiler/ts2fable/issues/208
     it "remove duplicate options" <| fun _ ->
         let tsPaths = ["test/fragments/yargs/duplicateOption.d.ts"]
         let fsPath = "test/fragments/yargs/duplicateOption.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existNone (fun tp ->
-                match tp with 
+                match tp with
                 | FsType.Union un when un.Option -> true
                 | _ -> false
             )
-            |> equal true         
+            |> equal true
 
     // https://github.com/fable-compiler/ts2fable/issues/219
     it "string enum with period" <| fun _ ->
         let tsPaths = ["test/fragments/react-native-fbsdk/stringEnumWithPeriod.d.ts"]
         let fsPath = "test/fragments/react-native-fbsdk/stringEnumWithPeriod.fs"
         testFsFileLines tsPaths fsPath  <| fun lines ->
-            lines 
+            lines
             |> List.exists (fun line ->
-                line.Contains "User_actions_books"    
+                line.Contains "User_actions_books"
             )
-            |> equal true      
+            |> equal true
 
     // https://github.com/fable-compiler/ts2fable/issues/219
     it "global variable is not generated" <| fun _ ->
         let tsPaths = ["test/fragments/breezejs/globalVariable.d.ts"]
         let fsPath = "test/fragments/breezejs/globalVariable.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existOnlyOneByName "FilterQueryOp" (fun tp ->
-                tp 
+                tp
                 |> FsType.asVariable
-                |> function 
+                |> function
                     | Some vb ->
-                        match vb.Export with 
+                        match vb.Export with
                         | Some ep ->
                             ep.Selector = "FilterQueryOp"
-                        | None -> false 
+                        | None -> false
                     | None -> false
             )
-            |> equal true  
+            |> equal true
 
     it "variable in module should be added to exports" <| fun _ ->
         let tsPaths = ["test/fragments/monaco/variableInModule.d.ts"]
         let fsPath = "test/fragments/monaco/variableInModule.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
-            fsFiles 
+            fsFiles
             |> existOnlyOneByName "EditorType" FsType.isProperty
-            |> equal true  
+            |> equal true
 
     it "globalClass" <| fun _ ->
         let tsPaths = ["test/fragments/breezejs/globalClass.d.ts"]
@@ -372,7 +381,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/babylonjs/Stage.PrivateCtor.fs"
         let expected = "test/fragments/babylonjs/Stage.PrivateCtor.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
-    
+
     it "generic-type-constraints/simple" <| fun _ ->
         let tsPaths = ["test/fragments/custom/generic-type-constraints/simple.d.ts"]
         let fsPath = "test/fragments/custom/generic-type-constraints/simple.fs"
@@ -418,7 +427,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/custom/generic-type-constraints/default.fs"
         let expected = "test/fragments/custom/generic-type-constraints/default.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
-    
+
     // https://github.com/fable-compiler/ts2fable/issues/361
     it "keyof" <| fun _ ->
         let tsPaths = ["test/fragments/custom/keyof.d.ts"]
@@ -448,7 +457,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         convertAndCompareAgainstExpected tsPaths fsPath expected
 
     // https://github.com/fable-compiler/ts2fable/pull/409
-    let _ = 
+    let _ =
         let nowarnXmlComments = "#nowarn \"3390\""
         let dataContains text (data: AdditionalData list) =
             data
@@ -547,7 +556,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             // `#nowarn obsolete` is only emitted when an obsolete type/function/whatever is used
             // -> only this unit test should contain `#nowarn obsolete`
             //
-            // BUT: detecting usage is way harder than detecting `@deprecated` 
+            // BUT: detecting usage is way harder than detecting `@deprecated`
             // -> emit `#nowarn` for `@deprecated` instead of just usage
             testNowarn "deprecated-usage" true
 
@@ -657,5 +666,13 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts2fable/issues/420
     it "regression #425 Link surrounded by parens becomes link containing paren" <| fun _ ->
         runRegressionTest "#425-xml-comment-link-in-parens"
+
+    // https://github.com/fable-compiler/ts2fable/issues/428
+    it "regression #428 Use \"T[]\" instead \"ResizeArray<T>\"" <| fun _ ->
+        runRegressionTest "#428-noresizearray"
+
+    // https://github.com/fable-compiler/ts2fable/issues/429
+    it "regression #429 Generate member function instead of getter of lambda" <| fun _ ->
+        runRegressionTest "#429-convertpropfns"
 
 )?timeout(15_000)

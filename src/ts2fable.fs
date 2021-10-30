@@ -15,6 +15,8 @@ let parseArgs (args: string[]) =
     let exports = args |> getArgs (fun s -> s = "-e" || s = "--exports")
     let fsPaths = args |> Array.filter (fun s -> s.EndsWith ".fs") |> Array.toList
     let tsPaths = args |> Array.filter (fun s -> s.EndsWith ".ts") |> Array.toList
+    Config.EmitResizeArray <- not (args |> Array.contains (Config.OptionNames.NoEmitResizeArray))
+    Config.ConvertPropertyFunctions <- args |> Array.contains (Config.OptionNames.ConvertPropertyFunctions)
     if List.isEmpty fsPaths then failwithf "Please provide the path to the F# file to be written."
     if List.isEmpty tsPaths then failwithf "Please provide the path to a TypeScript file."
     // print ts2fable version
