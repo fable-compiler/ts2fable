@@ -35,7 +35,9 @@ let main (argv: string[]): int =
         if Array.contains "-v" argv || Array.contains "--version" argv
         then printfn "%s" Version.version
         if Array.length argv < 2 || Array.contains "-h" argv || Array.contains "--help" argv
-        then printfn "Usage: ts2fable some.d.ts src/Some.fs"
+        then
+            printfn "Usage: ts2fable some.d.ts src/Some.fs"
+            printfn "Options:\n%s" (Config.Usage())
         else parseArgs argv
         ``process``.exitCode <- 0.0
         0
