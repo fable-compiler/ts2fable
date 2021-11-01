@@ -132,20 +132,24 @@ let private navbar model dispatch =
                       navbarItem "Typescript" Samples.typescript dispatch ]
                 ]
               Navbar.Item.div [] [
-                  span [] [ str (Config.OptionNames.NoEmitResizeArray) ]
-                  input [
-                      Type "checkbox"
-                      Checked (not Config.EmitResizeArray)
-                      OnChange (fun e -> dispatch ToggleConfigEmitResizeArray)
-                      ]
+                  span [ Title (Config.Options |> List.find (fun (n, _) -> n = Config.OptionNames.NoEmitResizeArray) |> snd) ] [
+                    span [] [ str (Config.OptionNames.NoEmitResizeArray) ]
+                    input [
+                        Type "checkbox"
+                        Checked (not Config.EmitResizeArray)
+                        OnChange (fun e -> dispatch ToggleConfigEmitResizeArray)
+                        ]
+                  ]
               ]
               Navbar.Item.div [] [
-                  span [] [ str (Config.OptionNames.ConvertPropertyFunctions) ]
-                  input [
-                      Type "checkbox"
-                      Checked (Config.ConvertPropertyFunctions)
-                      OnChange (fun e -> dispatch ToggleConfigConvertPropertyFunctions)
-                      ]
+                  span [ Title (Config.Options |> List.find (fun (n, _) -> n = Config.OptionNames.ConvertPropertyFunctions) |> snd) ] [
+                    span [] [ str (Config.OptionNames.ConvertPropertyFunctions) ]
+                    input [
+                        Type "checkbox"
+                        Checked (Config.ConvertPropertyFunctions)
+                        OnChange (fun e -> dispatch ToggleConfigConvertPropertyFunctions)
+                        ]
+                  ]
               ]
 
             ]
