@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <!-- 
+    <!--
       Symbol required when cli build with fable: TS2FABLE_STANDALONE
       (Not required in .NET build)
 
@@ -10,6 +10,7 @@
     -->
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="config.fs" />
     <Compile Include="node/fileSystem.fs" />
     <Compile Include="TypeScript.fs" />
     <Compile Include="keywords.fs" />

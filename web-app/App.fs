@@ -15,15 +15,18 @@ type Model =
     { HtmlCode : string
       FSharpCode : string
       HtmlEditorState : EditorState
-      FSharpEditorState : EditorState }
+      FSharpEditorState : EditorState
+      }
 
 type Msg =
     | HtmlEditorLoaded
     | FSharpEditorLoaded
     | OnHtmlChange of string
     | UpdateFSharpCode
+    | ToggleConfigEmitResizeArray
+    | ToggleConfigConvertPropertyFunctions
 
-let ts2fable s = 
+let ts2fable s =
     printfn "// Placeholder for ts2fable lib\n"
     s |> getFsFileOutWithText |> emitFsFileOutAsText
 
@@ -47,6 +50,14 @@ let update msg model =
     | UpdateFSharpCode ->
         { model with FSharpCode =
                         ts2fable model.HtmlCode }, Cmd.none
+
+    | ToggleConfigEmitResizeArray ->
+        Config.EmitResizeArray <- not (Config.EmitResizeArray)
+        model, Cmd.ofMsg UpdateFSharpCode
+
+    | ToggleConfigConvertPropertyFunctions ->
+        Config.ConvertPropertyFunctions <- not (Config.ConvertPropertyFunctions)
+        model, Cmd.ofMsg UpdateFSharpCode
 
 open Fable.React
 open Fable.React.Props
@@ -103,7 +114,7 @@ let private navbarItem text sampleCode dispatch =
     Navbar.Item.a [ Navbar.Item.Props [ OnClick (fun _ -> OnHtmlChange sampleCode |> dispatch)] ]
         [ str text ]
 
-let private navbar dispatch =
+let private navbar model dispatch =
     Navbar.navbar [ Navbar.IsFixedTop ]
         [ Navbar.Brand.div [ ]
             [ Navbar.Item.a [ ]
@@ -118,7 +129,30 @@ let private navbar dispatch =
                     [ navbarItem "Monaco" Samples.monaco dispatch
                       navbarItem "Mocha" Samples.mocha dispatch
                       navbarItem "chai" Samples.chai dispatch
-                      navbarItem "Typescript" Samples.typescript dispatch ] ] ]
+                      navbarItem "Typescript" Samples.typescript dispatch ]
+                ]
+              Navbar.Item.div [] [
+                  span [ Title (Config.Options |> List.find (fun (n, _) -> n = Config.OptionNames.NoEmitResizeArray) |> snd) ] [
+                    span [] [ str (Config.OptionNames.NoEmitResizeArray) ]
+                    input [
+                        Type "checkbox"
+                        Checked (not Config.EmitResizeArray)
+                        OnChange (fun e -> dispatch ToggleConfigEmitResizeArray)
+                        ]
+                  ]
+              ]
+              Navbar.Item.div [] [
+                  span [ Title (Config.Options |> List.find (fun (n, _) -> n = Config.OptionNames.ConvertPropertyFunctions) |> snd) ] [
+                    span [] [ str (Config.OptionNames.ConvertPropertyFunctions) ]
+                    input [
+                        Type "checkbox"
+                        Checked (Config.ConvertPropertyFunctions)
+                        OnChange (fun e -> dispatch ToggleConfigConvertPropertyFunctions)
+                        ]
+                  ]
+              ]
+
+            ]
           Navbar.End.div [ ]
             [ Navbar.Item.div [ ]
                 [ Button.a [ Button.Props [ Href "https://github.com/fable-compiler/ts2fable" ]
@@ -135,7 +169,7 @@ let view model dispatch =
         | _ -> false
 
     div [ ]
-        [ navbar dispatch
+        [ navbar model dispatch
           div [ Class "page-content" ]
             [ PageLoader.pageLoader [ PageLoader.IsActive isLoading
                                       PageLoader.Color IsWhite ]
