@@ -35,7 +35,7 @@ NUGET
     Fable.Node (1.2)
       Fable.Core (>= 3.1.2) - restriction: >= netstandard2.0
       FSharp.Core (>= 5.0) - restriction: >= netstandard2.0
-    FSharp.Core (6.0) - restriction: >= netstandard2.0
+    FSharp.Core (6.0.1) - restriction: >= netstandard2.0
 
 GROUP netcorebuild
 STORAGE: NONE
@@ -130,10 +130,6 @@ NUGET
     Fake.IO.FileSystem (5.20.4)
       Fake.Core.String (>= 5.20.4)
       FSharp.Core (>= 4.7.2)
-    Fake.JavaScript.Yarn (5.20.4)
-      Fake.Core.Environment (>= 5.20.4)
-      Fake.Core.Process (>= 5.20.4)
-      FSharp.Core (>= 4.7.2)
     Fake.Net.Http (5.20.4)
       Fake.Core.Trace (>= 5.20.4)
       FSharp.Core (>= 4.7.2)
@@ -158,7 +154,7 @@ NUGET
     FSharp.Control.Reactive (5.0.2)
       FSharp.Core (>= 4.7.2)
       System.Reactive (>= 5.0)
-    FSharp.Core (6.0)
+    FSharp.Core (5.0)
     Microsoft.Build (16.11)
     Microsoft.Build.Framework (16.11)
       System.Security.Permissions (>= 4.7)
@@ -323,14 +319,14 @@ NUGET
       Fable.Core (>= 3.0) - restriction: >= netstandard2.0
       Fable.FontAwesome (>= 2.0) - restriction: >= netstandard2.0
       Fable.React (>= 5.1) - restriction: >= netstandard2.0
-    Fable.Promise (3.1)
+    Fable.Promise (3.1.2)
       Fable.Core (>= 3.1.5) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0
     Fable.React (7.4.2)
       Fable.Browser.Dom (>= 2.4.4) - restriction: >= netstandard2.0
       Fable.Core (>= 3.2.7) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0
-    FSharp.Core (6.0) - redirects: force
+    FSharp.Core (6.0.1) - redirects: force
     Fulma (2.14.1)
       Fable.Core (>= 3.2.6) - restriction: >= netstandard2.0
       Fable.React (>= 7.4) - restriction: >= netstandard2.0

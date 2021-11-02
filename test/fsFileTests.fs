@@ -14,6 +14,9 @@ open ts2fable.Print
 open System.Collections.Generic
 open ts2fable.Keywords
 
+let private nodeModulesPath = "./test-modules/node_modules/"
+let inNodeModules path = sprintf "%s/%s" nodeModulesPath path
+
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
 /// Focus on this test. Other thests aren't execute, just `itOnly` tests.
@@ -157,7 +160,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
 
     // https://github.com/fable-compiler/ts2fable/issues/154
     it "duplicated variable exports" <| fun _ ->
-        let tsPaths = ["node_modules/reactxp/dist/web/ReactXP.d.ts"]
+        let tsPaths = [inNodeModules "reactxp/dist/web/ReactXP.d.ts"]
         let fsPath = "test/fragments/reactxp/duplicatedVariableExports.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles
@@ -168,7 +171,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
 
     // https://github.com/fable-compiler/ts2fable/issues/246
     it "add wrapper module to extra files" <| fun _ ->
-        // let tsPaths = ["node_modules/reactxp/dist/ReactXP.d.ts"]
+        // let tsPaths = [inNodeModules" reactxp/dist/ReactXP.d.ts"]
         let tsPaths = ["test/fragments/reactxp/multiple/ReactXP.d.ts"]
         let fsPath = "test/fragments/reactxp/multiple/ReactXP.fs"
         testFsFilesWithExports tsPaths fsPath ["multiple"] <| fun fsFiles ->
@@ -203,8 +206,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "multiple ts inputs should export one time" <| fun _ ->
         let tsPaths =
             [
-                "node_modules/@types/google-protobuf/index.d.ts"
-                "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
+                inNodeModules "@types/google-protobuf/index.d.ts"
+                inNodeModules "@types/google-protobuf/google/protobuf/empty_pb.d.ts"
             ]
         let fsPath = "test-compile/Protobuf.fs"
         testFsFileLines tsPaths fsPath  <| fun lines ->
@@ -213,7 +216,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
 
     // https://github.com/fable-compiler/ts2fable/issues/175
     (it "fix some Option.map to Microsoft.FSharp.Core.Option.map" <| fun _ ->
-        let tsPaths = ["node_modules/@types/react/index.d.ts"]
+        let tsPaths = [inNodeModules "@types/react/index.d.ts"]
         let fsPath = "test-compile/React.fs"
         testFsFiles tsPaths fsPath  <| fun fsFiles ->
             fsFiles

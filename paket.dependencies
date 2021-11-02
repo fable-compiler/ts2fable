@@ -12,6 +12,7 @@ group netcorebuild
     storage:none
     framework: netstandard2.0
 
+    nuget FSharp.Core 5
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem
     nuget Fake.Core.Environment
@@ -20,7 +21,6 @@ group netcorebuild
     nuget Fake.Tools.Git
     nuget Fake.Windows.Chocolatey
     nuget Fake.Core.Target
-    nuget Fake.JavaScript.Yarn
 
 group WebApp
     source https://api.nuget.org/v3/index.json

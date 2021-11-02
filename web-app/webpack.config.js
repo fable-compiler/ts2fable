@@ -89,7 +89,7 @@ module.exports = (env, argv) => {
                 })
             ])
             : commonPlugins.concat([
-                new webpack.HotModuleReplacementPlugin(),
+                // new webpack.HotModuleReplacementPlugin(),    // "hot: true" automatically applies HMR plugin
             ]),
         resolve: {
             modules: [
@@ -101,11 +101,16 @@ module.exports = (env, argv) => {
             },
         },
         devServer: {
-            contentBase: resolve('./output/'),
-            publicPath: "/",
+            static: {
+                directory: resolve('./output/'),   // prev: contentBase
+                // watch is enabled by default
+                publicPath: "/",
+            },
             port: 8080,
             hot: true,
-            inline: true
+            client: {
+                overlay: false,    // otherwise: overlay over app with warning
+            },
         },
         module: {
             rules: [

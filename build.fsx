@@ -18,12 +18,20 @@ let versionFromGlobalJson (o: DotNet.CliInstallOptions): DotNet.CliInstallOption
     { o with Version = DotNet.Version (DotNet.getSDKVersionFromGlobalJson()) }
 
 let run cmd dir args =
+    CreateProcess.fromRawCommandLine cmd args
+    |> CreateProcess.withWorkingDirectory dir
+    |> CreateProcess.ensureExitCode
+    |> Proc.run
+    |> ignore
+let runWithOutput cmd dir args =
     let result =
         CreateProcess.fromRawCommandLine cmd args
         |> CreateProcess.withWorkingDirectory dir
+        |> CreateProcess.redirectOutput
+        |> CreateProcess.redirectOutput
+        |> CreateProcess.ensureExitCode
         |> Proc.run
-    if result.ExitCode <> 0 then
-        failwithf "Error while running '%s' with args: %s " cmd args
+    result.Result.Output
 
 let platformTool tool =
     ProcessUtils.tryFindFileOnPath tool
@@ -44,6 +52,7 @@ let cliBuildDir = buildDir </> "cli"
 let distDir = "./dist"
 let cliDir = "./src"
 let testDir = "./test"
+let testModulesDir = "./test-modules"
 let appDir = "./web-app"
 let appTempOutDir = appDir </> "temp"
 let appOutDir = appDir </> "output"
@@ -52,6 +61,7 @@ let isAppveyor = String.isNotNullOrEmpty BuildServer.appVeyorBuildVersion
 
 let node args = run nodeTool "./" args
 let npm args = run npmTool "./" args
+let npmWithOutput args = runWithOutput npmTool "./" args
 let npx args = run npxTool "./" args
 let git args = run gitTool "./" args
 
@@ -120,7 +130,7 @@ module Scripts =
     /// First: Fable in debug mode, with sourcemaps into `./web-app/temp` with entry `App.js`.
     /// Then: Serving via `localhost:8080` with `webpack serve` (-> webpack-dev-server) and `./web-app/webpack.config.js`
     let watchWebapp () =
-        fable $"watch {appDir} --outDir {appTempOutDir} --sourceMaps --define DEBUG --run webpack serve --watch-content-base --mode development --config {appDir}/webpack.config.js"
+        fable $"watch {appDir} --outDir {appTempOutDir} --sourceMaps --define DEBUG --run webpack serve --mode development --config {appDir}/webpack.config.js"
 
     /// Bundle existing CLI (output of `buildCli`, in `./build/cli` with entry `ts2fable.js`) into `./dist/ts2fable.js` with rollup
     let bundleCli () =
@@ -147,12 +157,26 @@ Target.create "Restore" <| fun _ ->
     DotNet.restore id appDir
 
 Target.create "Prepare" ignore
+Target.create "PrepareTests" ignore
 
 Target.create "BuildCli" <| fun _ ->
     Scripts.buildCli ()
 
 Target.create "WatchCli" <| fun _ ->
     Scripts.watchCli ()
+
+Target.create "InstallTestNpmPackages" <| fun _ ->
+    // Keep npm packages used to test ts2fable separate:
+    // Might be outdated versions that conflict with actual used packages
+    // `d.ts` files in `testModulesDir` are used for:
+    // * unit tests
+    // * test compile
+    run npmTool testModulesDir "install --legacy-peer-deps" 
+    // `legacy-peer-deps`: accept incorrect dependency resolution. Otherwise there might be a conflict.
+    // We are only interested in `d.ts` of packages directly specified in `package.json` -> don't care about conflicts
+
+    //todo: change to `npm pack packageName@version` and unpacking downloaded `.tgz` afterwards?
+    //      -> no need to download dependencies
 
 Target.create "RunCliOnTestCompile" <| fun _ ->
     let ts2fable args =
@@ -163,32 +187,32 @@ Target.create "RunCliOnTestCompile" <| fun _ ->
 
     [
         // used by ts2fable
-        ts2fable ["node_modules/typescript/lib/typescript.d.ts";"test-compile/TypeScript.fs"]
-        ts2fable ["node_modules/@types/node/index.d.ts";"test-compile/Node.fs"]
-        ts2fable ["node_modules/@types/yargs/index.d.ts";"test-compile/Yargs.fs"]
-        ts2fable ["node_modules/breeze-client/index.d.ts";"test-compile/Breeze.fs"]
+        ts2fable [testModulesDir</>"node_modules/typescript/lib/typescript.d.ts";"test-compile/TypeScript.fs"]
+        ts2fable [testModulesDir</>"node_modules/@types/node/index.d.ts";"test-compile/Node.fs"]
+        ts2fable [testModulesDir</>"node_modules/@types/yargs/index.d.ts";"test-compile/Yargs.fs"]
+        ts2fable [testModulesDir</>"node_modules/breeze-client/index.d.ts";"test-compile/Breeze.fs"]
 
         // for test-compile
-        ts2fable ["node_modules/vscode/vscode.d.ts";"test-compile/VSCode.fs"]
-        // ts2fable ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
-        ts2fable ["node_modules/izitoast/types/index.d.ts";"test-compile/IziToast.fs"]
-        ts2fable ["node_modules/electron/electron.d.ts";"test-compile/Electron.fs"]
-        ts2fable ["node_modules/@types/react/index.d.ts";"test-compile/React.fs"]
-        ts2fable ["node_modules/@types/react-native/index.d.ts";"test-compile/ReactNative.fs"]
-        ts2fable ["node_modules/@types/mocha/index.d.ts";"test-compile/Mocha.fs"]
-        ts2fable ["node_modules/@types/chai/index.d.ts";"test-compile/Chai.fs"]
-        ts2fable ["node_modules/chalk/types/index.d.ts";"test-compile/Chalk.fs"]
-        ts2fable ["node_modules/monaco-editor/monaco.d.ts";"test-compile/Monaco.fs"]
+        ts2fable [testModulesDir</>"node_modules/vscode/vscode.d.ts";"test-compile/VSCode.fs"]
+        // ts2fable [[testModulesDir</>"node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
+        ts2fable [testModulesDir</>"node_modules/izitoast/types/index.d.ts";"test-compile/IziToast.fs"]
+        ts2fable [testModulesDir</>"node_modules/electron/electron.d.ts";"test-compile/Electron.fs"]
+        ts2fable [testModulesDir</>"node_modules/@types/react/index.d.ts";"test-compile/React.fs"]
+        ts2fable [testModulesDir</>"node_modules/@types/react-native/index.d.ts";"test-compile/ReactNative.fs"]
+        ts2fable [testModulesDir</>"node_modules/@types/mocha/index.d.ts";"test-compile/Mocha.fs"]
+        ts2fable [testModulesDir</>"node_modules/@types/chai/index.d.ts";"test-compile/Chai.fs"]
+        ts2fable [testModulesDir</>"node_modules/chalk/types/index.d.ts";"test-compile/Chalk.fs"]
+        ts2fable [testModulesDir</>"node_modules/monaco-editor/monaco.d.ts";"test-compile/Monaco.fs"]
         ts2fable
-            [   "node_modules/@types/google-protobuf/index.d.ts"
-                "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
+            [   testModulesDir</>"node_modules/@types/google-protobuf/index.d.ts"
+                testModulesDir</>"node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
                 "test-compile/Protobuf.fs"
             ]
-        ts2fable ["node_modules/synctasks/dist/SyncTasks.d.ts";"test-compile/SyncTasks.fs"]
-        ts2fable ["node_modules/subscribableevent/dist-types/SubscribableEvent.d.ts";"test-compile/SubscribableEvent.fs"]
+        ts2fable [testModulesDir</>"node_modules/synctasks/dist/SyncTasks.d.ts";"test-compile/SyncTasks.fs"]
+        ts2fable [testModulesDir</>"node_modules/subscribableevent/dist-types/SubscribableEvent.d.ts";"test-compile/SubscribableEvent.fs"]
         ts2fable
             [
-                "node_modules/office-ui-fabric-react/lib/index.d.ts"
+                testModulesDir</>"node_modules/office-ui-fabric-react/lib/index.d.ts"
                 "test-compile/OfficeReact.fs"
                 "-e"
                 "uifabric"
@@ -196,7 +220,7 @@ Target.create "RunCliOnTestCompile" <| fun _ ->
             ]
         ts2fable
             [
-                "node_modules/reactxp/dist/ReactXP.d.ts"
+                testModulesDir</>"node_modules/reactxp/dist/ReactXP.d.ts"
                 "test-compile/ReactXP.fs"
                 "-e"
                 "reactxp"
@@ -428,6 +452,18 @@ Target.create "WebApp.Setup" ignore
 // CLI Watch
 "Prepare"
     ==> "WatchCli"
+
+// Tests (unit tests as well as test compile) use different npm packages to translate with ts2fable
+"InstallTestNpmPackages"
+    ==> "PrepareTests"
+"PrepareTests"
+    ==> "RunTest"
+"PrepareTests"
+    ==> "WatchTest"
+"PrepareTests"
+    ==> "WatchAndRunTest"
+"PrepareTests"
+    ==> "RunCliOnTestCompile"
 
 // Run Tests: Build Tests, Run Tests
 "Prepare"

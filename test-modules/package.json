@@ -1,0 +1,22 @@
+{
+  "devDependencies": {
+    "@types/chai": "^4.2.14",
+    "@types/google-protobuf": "^3.7.4",
+    "@types/mocha": "^2.2.44",
+    "@types/node": "^8.10.66",
+    "@types/react": "16.0.4",
+    "@types/react-native": "^0.56.4",
+    "@types/yargs": "^13.0.11",
+    "breeze-client": "^1.7.1",
+    "chalk": "^2.3.0",
+    "electron": "^11.5.0",
+    "izitoast": "^1.1.5",
+    "monaco-editor": "^0.21.3",
+    "office-ui-fabric-react": "^5.135.6",
+    "reactxp": "^1.6.1",
+    "subscribableevent": "^1.0.1",
+    "synctasks": "^0.3.3",
+    "typescript": "3.7.4",
+    "vscode": "^1.1.37"
+  }
+}
