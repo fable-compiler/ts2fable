@@ -4,6 +4,8 @@ open System
 open Fable.Core
 open Fable.Core.JS
 
+#nowarn "3390"
+
 type Array<'T> = System.Collections.Generic.IList<'T>
 type ReadonlyArray<'T> = System.Collections.Generic.IReadOnlyList<'T>
 type ReadonlyMap<'K, 'V> = Map<'K, 'V>
