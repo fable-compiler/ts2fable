@@ -675,4 +675,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #429 Generate member function instead of getter of lambda" <| fun _ ->
         runRegressionTest "#429-convertpropfns"
 
+    // https://github.com/fable-compiler/ts2fable/issues/431
+    it "regression #431 ImportAll instead of Import('*')" <| fun _ ->
+        runRegressionTest "#431-import-all"
+
 )?timeout(15_000)

@@ -496,11 +496,12 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                 sprintf "%slet %s%s: %s = jsNative" indent
                     (   match vb.Export with
                         | None -> ""
+                        | Some ep when ep.IsGlobal -> "[<Global>] "
                         | Some ep ->
-                            if ep.IsGlobal then
-                                "[<Global>] "
-                            else
-                                sprintf "[<Import(\"%s\",\"%s\")>] " ep.Selector ep.Path
+                            match ep.Selector with
+                            | "*" -> sprintf "[<ImportAll(\"%s\")>] " ep.Path
+                            | "default" -> sprintf "[<ImportDefault(\"%s\")>] " ep.Path
+                            | _ -> sprintf "[<Import(\"%s\",\"%s\")>] " ep.Selector ep.Path
                     )
                     vb.Name (printType vb.Type)
                 |> lines.Add

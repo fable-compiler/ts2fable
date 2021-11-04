@@ -9,7 +9,7 @@ open Fable.Core.JS
 
 type Array<'T> = System.Collections.Generic.IList<'T>
 
-let [<Import("*","Stage.PrivateCtor")>] babylon: BABYLON.IExports = jsNative
+let [<ImportAll("Stage.PrivateCtor")>] babylon: BABYLON.IExports = jsNative
 
 module BABYLON =
 
