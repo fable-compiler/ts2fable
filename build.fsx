@@ -5,6 +5,7 @@ open Fake.Core
 open Microsoft.FSharp.Core.Printf
 open Fake.IO.FileSystemOperators
 open Fake.IO
+open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
 open Fake.DotNet
 open Fake.Tools.Git
@@ -347,7 +348,8 @@ Target.create "PushForComparison" <| fun _ ->
         git "remote add upstream git@github.com:fable-compiler/ts2fable-exports.git"
         git "fetch upstream"
         git "reset --hard upstream/dev"
-        Shell.copyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
+        !! (testCompileDir </> "*.fs")
+        |> Shell.copyFiles repositoryDir
         stageAll repositoryDir
         try 
             commit()
