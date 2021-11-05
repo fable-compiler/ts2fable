@@ -42,6 +42,6 @@ let main (argv: string[]): int =
         ``process``.exitCode <- 0.0
         0
     with ex ->
-        printfn "Error: %A" ex.Message
+        eprintfn "%A" ex.StackTrace
         ``process``.exitCode <- 1.0
         1

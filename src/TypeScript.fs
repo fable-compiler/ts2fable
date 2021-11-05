@@ -11,7 +11,7 @@ type ReadonlyArray<'T> = System.Collections.Generic.IReadOnlyList<'T>
 type ReadonlyMap<'K, 'V> = Map<'K, 'V>
 type Symbol = obj
 
-let [<Import("*","typescript")>] ts: Ts.IExports = jsNative
+let [<ImportDefault("typescript")>] ts: Ts.IExports = jsNative
 
 type [<AllowNullLiteral>] IExports =
     abstract setTimeout: handler: (ResizeArray<obj option> -> unit) * timeout: float -> obj option

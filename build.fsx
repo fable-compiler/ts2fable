@@ -83,24 +83,24 @@ module Scripts =
 
     /// Build `./src` in release mode, no bundle, with sourcemaps,  into `./build/cli`, with entry `ts2fable.js`
     /// 
-    /// Start with `node --require esm ./build/cli/ts2fable.js`
+    /// Start with `node ./build/cli/ts2fable.js`
     let buildCli () =
         fable $"{cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --sourceMaps"
     /// Watch `./src` in debug mode, no bundle, with sourcemaps, into `./build/cli`, with entry `ts2fable.js`
     /// 
-    /// Start with `node --require esm ./build/cli/ts2fable.js`
+    /// Start with `node ./build/cli/ts2fable.js`
     let watchCli () =
         fable $"watch {cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --sourceMaps --define DEBUG"
 
     /// Build `./test` in release mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`
     /// 
-    /// Start with `npx mocha --require esm ./build/test/test.js`
+    /// Start with `npx mocha ./build/test/test.js`
     let buildTest () =
         fable $"{testDir} --outDir {testBuildDir} --sourceMaps"
 
     /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`.
     /// 
-    /// Start with `npx mocha --require esm ./build/test/test.js`
+    /// Start with `npx mocha ./build/test/test.js`
     /// 
     /// Unlike `watchAndRunTest` this doesn't run tests after compilation.
     let watchTest () =
@@ -110,13 +110,13 @@ module Scripts =
     /// 
     /// Requires building test before via `buildTest`
     let runTest () =
-        npx $"mocha --require esm {testBuildDir}/test.js"
+        npx $"mocha --colors {testBuildDir}/test.js"
     let runTestWithReporter (reporter: string) =
-        npx $"mocha --require esm --reporter {reporter} {testBuildDir}/test.js"
+        npx $"mocha --reporter {reporter} {testBuildDir}/test.js"
 
     /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js` and run tests with mocha after each change
     let watchAndRunTest () =
-        fable $"watch {testDir} --outDir {testBuildDir} --sourceMaps --define DEBUG --runWatch mocha --require esm {testBuildDir}/test.js"
+        fable $"watch {testDir} --outDir {testBuildDir} --sourceMaps --define DEBUG --runWatch mocha --colors {testBuildDir}/test.js"
 
     /// Build `web-app` in release mode, bundled, with sourcemap into `./web-app/output/` dir.
     /// 
@@ -135,7 +135,7 @@ module Scripts =
     /// Bundle existing CLI (output of `buildCli`, in `./build/cli` with entry `ts2fable.js`) into `./dist/ts2fable.js` with rollup
     let bundleCli () =
         // umd: Universal Module Definition
-        npx $"rollup --file {distDir}/ts2fable.js --format umd --name ts2fable {cliBuildDir}/ts2fable.js"
+        npx $"rollup --file {distDir}/ts2fable.js --format es {cliBuildDir}/ts2fable.js"
 
     
 Target.create "Clean" <| fun _ ->
@@ -182,7 +182,7 @@ Target.create "RunCliOnTestCompile" <| fun _ ->
     let ts2fable args =
         let args = args |> String.concat " "
         async {
-            node <| $"--require esm {cliBuildDir}/ts2fable.js {args}"
+            node <| $"{cliBuildDir}/ts2fable.js {args}"
         }
 
     [
