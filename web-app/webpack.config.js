@@ -1,8 +1,14 @@
-const path = require("path");
-const webpack = require("webpack");
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const { ProvidePlugin } = require("webpack");
+import path from "path"
+import webpack from "webpack"
+import HtmlWebpackPlugin from "html-webpack-plugin"
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
+
+import url from 'url';
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 
 function resolve(filePath) {
     return path.join(__dirname, filePath)
@@ -28,12 +34,12 @@ var commonPlugins = [
         filename: resolve('./output/index.html'),
         template: resolve('index.html')
     }),
-    new ProvidePlugin({
+    new webpack.ProvidePlugin({
         process: 'process/browser', // required for path-browserify
     }),
 ];
 
-module.exports = (env, argv) => {
+export default (env, argv) => {
     var isProduction = argv.mode == "production"
     console.log("Bundling for " + (isProduction ? "production" : "development") + "...");
 
