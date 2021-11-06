@@ -2,6 +2,7 @@ import path from "path"
 import webpack from "webpack"
 import HtmlWebpackPlugin from "html-webpack-plugin"
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import MonacoWebpackPlugin from "monaco-editor-webpack-plugin"
 
 import url from 'url';
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -37,6 +38,7 @@ var commonPlugins = [
     new webpack.ProvidePlugin({
         process: 'process/browser', // required for path-browserify
     }),
+    new MonacoWebpackPlugin(),
 ];
 
 export default (env, argv) => {
@@ -136,6 +138,7 @@ export default (env, argv) => {
                 },
                 {
                     test: /\.(sass|scss|css)$/,
+                    exclude: resolve("./../node_modules/monaco-editor"),
                     use: [
                         isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
                         'css-loader',
@@ -145,6 +148,15 @@ export default (env, argv) => {
                 {
                     test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)(\?.*$|$)/,
                     type: "asset/resource"
+                },
+                {
+                    test: /\.css$/,
+                    include: resolve("./../node_modules/monaco-editor"),
+                    use: [
+                        // 'style-loader', 
+                        isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
+                        'css-loader'
+                    ],
                 }
             ]
         }
