@@ -1,14 +1,8 @@
-import path from "path"
-import webpack from "webpack"
-import HtmlWebpackPlugin from "html-webpack-plugin"
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import MonacoWebpackPlugin from "monaco-editor-webpack-plugin"
-
-import url from 'url';
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-
-// import { createRequire } from 'module';
-// const require = createRequire(import.meta.url);
+const path = require("path");
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 
 function resolve(filePath) {
     return path.join(__dirname, filePath)
@@ -40,10 +34,12 @@ var commonPlugins = [
     new webpack.ProvidePlugin({
         process: 'process/browser', // required for path-browserify
     }),
-    new MonacoWebpackPlugin(),
+    new MonacoWebpackPlugin({
+        languages: ["typescript", "fsharp"],
+    }),
 ];
 
-export default (env, argv) => {
+module.exports = (env, argv) => {
     var isProduction = argv.mode == "production"
     console.log("Bundling for " + (isProduction ? "production" : "development") + "...");
 
@@ -98,16 +94,13 @@ export default (env, argv) => {
                     'process.env.NODE_ENV': '"production"'
                 })
             ])
-            : commonPlugins.concat([
-                // new webpack.HotModuleReplacementPlugin(),    // "hot: true" automatically applies HMR plugin
-            ]),
+            : commonPlugins,
         resolve: {
             modules: [
                 "node_modules/",
                 resolveInNodeModules(".")
             ],
             alias: {
-                // path: require.resolve('path-browserify'),
                 path: resolveInNodeModules('path-browserify'),
             },
         },
@@ -156,7 +149,6 @@ export default (env, argv) => {
                     test: /\.css$/,
                     include: resolveInNodeModules("monaco-editor"),
                     use: [
-                        // 'style-loader', 
                         isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
                         'css-loader'
                     ],
