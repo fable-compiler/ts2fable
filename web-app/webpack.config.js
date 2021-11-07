@@ -75,7 +75,7 @@ module.exports = (env, argv) => {
                         chunks: 'all'
                     },
                     fable: {
-                        test: /[\\/]fable-core[\\/]/,
+                        test: /[\\/]fable_modules[\\/]/,
                         name: 'fable',
                         chunks: 'all'
                     }
@@ -94,7 +94,9 @@ module.exports = (env, argv) => {
                     'process.env.NODE_ENV': '"production"'
                 })
             ])
-            : commonPlugins,
+            : commonPlugins.concat([
+                // new BundleAnalyzerPlugin(),
+            ]),
         resolve: {
             modules: [
                 "node_modules/",
@@ -142,17 +144,17 @@ module.exports = (env, argv) => {
                     ],
                 },
                 {
-                    test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)(\?.*$|$)/,
-                    type: "asset/resource"
-                },
-                {
                     test: /\.css$/,
                     include: resolveInNodeModules("monaco-editor"),
                     use: [
                         isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
                         'css-loader'
                     ],
-                }
+                },
+                {
+                    test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)(\?.*$|$)/,
+                    type: "asset/resource"
+                },
             ]
         }
     }
