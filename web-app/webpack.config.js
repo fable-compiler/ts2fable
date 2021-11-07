@@ -7,12 +7,14 @@ import MonacoWebpackPlugin from "monaco-editor-webpack-plugin"
 import url from 'url';
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
+// import { createRequire } from 'module';
+// const require = createRequire(import.meta.url);
 
 function resolve(filePath) {
     return path.join(__dirname, filePath)
+}
+function resolveInNodeModules(packageName) {
+    return resolve(path.join("./../node_modules", packageName))
 }
 
 var babelOptions = {
@@ -102,10 +104,11 @@ export default (env, argv) => {
         resolve: {
             modules: [
                 "node_modules/",
-                resolve("./../node_modules/")
+                resolveInNodeModules(".")
             ],
             alias: {
-                path: require.resolve('path-browserify'),
+                // path: require.resolve('path-browserify'),
+                path: resolveInNodeModules('path-browserify'),
             },
         },
         devServer: {
@@ -138,7 +141,7 @@ export default (env, argv) => {
                 },
                 {
                     test: /\.(sass|scss|css)$/,
-                    exclude: resolve("./../node_modules/monaco-editor"),
+                    exclude: resolveInNodeModules("monaco-editor"),
                     use: [
                         isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
                         'css-loader',
@@ -151,7 +154,7 @@ export default (env, argv) => {
                 },
                 {
                     test: /\.css$/,
-                    include: resolve("./../node_modules/monaco-editor"),
+                    include: resolveInNodeModules("monaco-editor"),
                     use: [
                         // 'style-loader', 
                         isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
