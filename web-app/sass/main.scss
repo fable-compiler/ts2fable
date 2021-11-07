@@ -19,11 +19,6 @@ html {
     height: calc(100vh - #{$navbar-height});
 }
 
-// Overwrite, monaco style to make the code center compare to the Message box
-.monaco-scrollable-element {
-    left: 5px !important;
-}
-
 .copy-button {
     position: absolute;
     z-index: 1000;
