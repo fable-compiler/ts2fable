@@ -1,5 +1,5 @@
 import React from 'react';
-import MonacoEditor from 'react-monaco-editor';
+import MonacoEditor from "@monaco-editor/react"
 import PropTypes from 'prop-types';
 import ReactResizeDetector from 'react-resize-detector';
 
@@ -34,12 +34,6 @@ class Editor extends React.Component {
                 enabled: false
             }
         };
-        const requireConfig = {
-            url:  "libs/requirejs/require.js",
-            paths: {
-                vs: "libs/vs"
-            }
-        };
         return (
             <div style={{height: '100%', overflow: 'hidden'}}>
                 <ReactResizeDetector handleWidth handleHeight onResize={this.onResize} />
@@ -48,8 +42,7 @@ class Editor extends React.Component {
                     value={this.props.value}
                     options={options}
                     onChange={this.onChange}
-                    editorDidMount={this.editorDidMount}
-                    requireConfig={requireConfig}
+                    onMount={this.editorDidMount}
                 />
             </div>
         );
