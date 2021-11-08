@@ -3,6 +3,13 @@ import MonacoEditor from "@monaco-editor/react"
 import PropTypes from 'prop-types';
 import ReactResizeDetector from 'react-resize-detector';
 
+// https://github.com/suren-atoyan/monaco-react#loader-config
+import { loader } from "@monaco-editor/react"
+loader.config({
+    paths: {
+        vs: "./libs/vs"
+    }
+})
 
 class Editor extends React.Component {
     editor = null;

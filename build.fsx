@@ -391,16 +391,6 @@ Target.create "Deploy" ignore
 Target.create "BuildAll" ignore
 
 // Web App
-let jsLibsOutput = appOutDir </> "libs"
-
-Target.create "WebApp.CopyMonacoModules" <| fun _ ->
-    let requireJsOutput = jsLibsOutput </> "requirejs"
-    let vsOutput = jsLibsOutput </> "vs"
-    Directory.create requireJsOutput
-    Directory.create vsOutput
-    Shell.cp ("./node_modules" </> "requirejs" </> "require.js") requireJsOutput
-    Shell.cp_r ("./node_modules" </> "monaco-editor" </> "min" </> "vs") vsOutput
-
 Target.create "WebApp.Build" <| fun _ ->
     Scripts.buildWebapp ()
 
@@ -504,7 +494,6 @@ Target.create "WebApp.Setup" ignore
 
 // WebApp.Setup
 "Prepare"
-    ==> "WebApp.CopyMonacoModules"
     ==> "WebApp.Setup"
 
 // WebApp.Publish: Build & Publish

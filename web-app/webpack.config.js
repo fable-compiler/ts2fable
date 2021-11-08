@@ -2,7 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 
 function resolve(filePath) {
     return path.join(__dirname, filePath)
@@ -27,15 +27,20 @@ var babelOptions = {
 };
 
 var commonPlugins = [
+    new CopyPlugin({
+        patterns: [
+            {
+                from: resolveInNodeModules("monaco-editor/min/vs"),
+                to: resolve("./output/libs/vs"),
+            }
+        ]
+    }),
     new HtmlWebpackPlugin({
         filename: resolve('./output/index.html'),
         template: resolve('index.html')
     }),
     new webpack.ProvidePlugin({
         process: 'process/browser', // required for path-browserify
-    }),
-    new MonacoWebpackPlugin({
-        languages: ["typescript", "fsharp"],
     }),
 ];
 
