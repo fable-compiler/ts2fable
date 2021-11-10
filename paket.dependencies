@@ -35,9 +35,7 @@ group WebApp
     nuget Fable.Elmish.Browser
     nuget Fable.Elmish.Debugger
     nuget Fable.Elmish.HMR
-    nuget Fable.FontAwesome.Free
     nuget Fable.Promise
     nuget Fable.React
     nuget Fulma
     nuget Fulma.Extensions.Wikiki.PageLoader
-

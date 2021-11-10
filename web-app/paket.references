@@ -1,13 +1,11 @@
 group WebApp
-
-    Fable.Core
-    Fable.Elmish
-    Fable.Elmish.React
-    Fable.Elmish.Browser
-    Fable.Elmish.Debugger
-    Fable.Elmish.HMR
-    Fable.FontAwesome.Free
-    Fable.Promise
-    Fable.React
-    Fulma
-    Fulma.Extensions.Wikiki.PageLoader
+Fable.Core
+Fable.Elmish
+Fable.Elmish.React
+Fable.Elmish.Browser
+Fable.Elmish.Debugger
+Fable.Elmish.HMR
+Fable.Promise
+Fable.React
+Fulma
+Fulma.Extensions.Wikiki.PageLoader
