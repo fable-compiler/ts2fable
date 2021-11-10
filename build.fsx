@@ -184,44 +184,45 @@ Target.create "RunCliOnTestCompile" <| fun _ ->
         async {
             node <| $"{cliBuildDir}/ts2fable.js {args}"
         }
+    let nodeModulesDir = testCompileDir</>"node_modules"
 
     [
         // used by ts2fable
-        ts2fable [testCompileDir</>"node_modules/typescript/lib/typescript.d.ts";"test-compile/TypeScript.fs"]
-        ts2fable [testCompileDir</>"node_modules/@types/node/index.d.ts";"test-compile/Node.fs"]
-        ts2fable [testCompileDir</>"node_modules/@types/yargs/index.d.ts";"test-compile/Yargs.fs"]
-        ts2fable [testCompileDir</>"node_modules/breeze-client/index.d.ts";"test-compile/Breeze.fs"]
+        ts2fable [nodeModulesDir</>"typescript/lib/typescript.d.ts"; testCompileDir</>"TypeScript.fs"]
+        ts2fable [nodeModulesDir</>"@types/node/index.d.ts"; testCompileDir</>"Node.fs"]
+        ts2fable [nodeModulesDir</>"@types/yargs/index.d.ts"; testCompileDir</>"Yargs.fs"]
+        ts2fable [nodeModulesDir</>"breeze-client/index.d.ts"; testCompileDir</>"Breeze.fs"]
 
         // for test-compile
-        ts2fable [testCompileDir</>"node_modules/vscode/vscode.d.ts";"test-compile/VSCode.fs"]
-        // ts2fable [[testCompileDir</>"node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
-        ts2fable [testCompileDir</>"node_modules/izitoast/types/index.d.ts";"test-compile/IziToast.fs"]
-        ts2fable [testCompileDir</>"node_modules/electron/electron.d.ts";"test-compile/Electron.fs"]
-        ts2fable [testCompileDir</>"node_modules/@types/react/index.d.ts";"test-compile/React.fs"]
-        ts2fable [testCompileDir</>"node_modules/@types/react-native/index.d.ts";"test-compile/ReactNative.fs"]
-        ts2fable [testCompileDir</>"node_modules/@types/mocha/index.d.ts";"test-compile/Mocha.fs"]
-        ts2fable [testCompileDir</>"node_modules/@types/chai/index.d.ts";"test-compile/Chai.fs"]
-        ts2fable [testCompileDir</>"node_modules/chalk/types/index.d.ts";"test-compile/Chalk.fs"]
-        ts2fable [testCompileDir</>"node_modules/monaco-editor/monaco.d.ts";"test-compile/Monaco.fs"]
+        ts2fable [nodeModulesDir</>"vscode/vscode.d.ts"; testCompileDir</>"VSCode.fs"]
+        // ts2fable [nodeModulesDir</>"izitoast/dist/izitoast/izitoast.d.ts"; testCompileDir</>"IziToast.fs"]
+        ts2fable [nodeModulesDir</>"izitoast/types/index.d.ts"; testCompileDir</>"IziToast.fs"]
+        ts2fable [nodeModulesDir</>"electron/electron.d.ts"; testCompileDir</>"Electron.fs"]
+        ts2fable [nodeModulesDir</>"@types/react/index.d.ts"; testCompileDir</>"React.fs"]
+        ts2fable [nodeModulesDir</>"@types/react-native/index.d.ts"; testCompileDir</>"ReactNative.fs"]
+        ts2fable [nodeModulesDir</>"@types/mocha/index.d.ts"; testCompileDir</>"Mocha.fs"]
+        ts2fable [nodeModulesDir</>"@types/chai/index.d.ts"; testCompileDir</>"Chai.fs"]
+        ts2fable [nodeModulesDir</>"chalk/types/index.d.ts"; testCompileDir</>"Chalk.fs"]
+        ts2fable [nodeModulesDir</>"monaco-editor/monaco.d.ts"; testCompileDir</>"Monaco.fs"]
         ts2fable
-            [   testCompileDir</>"node_modules/@types/google-protobuf/index.d.ts"
-                testCompileDir</>"node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
-                "test-compile/Protobuf.fs"
+            [   nodeModulesDir</>"@types/google-protobuf/index.d.ts"
+                nodeModulesDir</>"@types/google-protobuf/google/protobuf/empty_pb.d.ts"
+                testCompileDir</>"Protobuf.fs"
             ]
-        ts2fable [testCompileDir</>"node_modules/synctasks/dist/SyncTasks.d.ts";"test-compile/SyncTasks.fs"]
-        ts2fable [testCompileDir</>"node_modules/subscribableevent/dist-types/SubscribableEvent.d.ts";"test-compile/SubscribableEvent.fs"]
+        ts2fable [nodeModulesDir</>"synctasks/dist/SyncTasks.d.ts"; testCompileDir</>"SyncTasks.fs"]
+        ts2fable [nodeModulesDir</>"subscribableevent/dist-types/SubscribableEvent.d.ts"; testCompileDir</>"SubscribableEvent.fs"]
         ts2fable
             [
-                testCompileDir</>"node_modules/office-ui-fabric-react/lib/index.d.ts"
-                "test-compile/OfficeReact.fs"
+                nodeModulesDir</>"office-ui-fabric-react/lib/index.d.ts"
+                testCompileDir</>"OfficeReact.fs"
                 "-e"
                 "uifabric"
                 "office-ui-fabric-react"
             ]
         ts2fable
             [
-                testCompileDir</>"node_modules/reactxp/dist/ReactXP.d.ts"
-                "test-compile/ReactXP.fs"
+                nodeModulesDir</>"reactxp/dist/ReactXP.d.ts"
+                testCompileDir</>"ReactXP.fs"
                 "-e"
                 "reactxp"
             ]
@@ -230,8 +231,8 @@ Target.create "RunCliOnTestCompile" <| fun _ ->
     |> Async.RunSynchronously
     |> ignore
     // files that have too many TODOs
-    // ts2fable ["node_modules/@types/jquery/index.d.ts"] "test-compile/JQuery.fs"
-    // ts2fable ["node_modules/typescript/lib/lib.es2015.promise.d.ts"] "test-compile/Promise.fs"
+    // ts2fable [nodeModulesDir</>"@types/jquery/index.d.ts"; testCompileDir</>"JQuery.fs"]
+    // ts2fable [nodeModulesDir</>"typescript/lib/lib.es2015.promise.d.ts"; testCompileDir</>"Promise.fs"]
 
     printfn "done writing test-compile files"
 

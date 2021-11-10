@@ -99,9 +99,7 @@ module.exports = (env, argv) => {
                     'process.env.NODE_ENV': '"production"'
                 })
             ])
-            : commonPlugins.concat([
-                // new BundleAnalyzerPlugin(),
-            ]),
+            : commonPlugins,
         resolve: {
             modules: [
                 "node_modules/",
