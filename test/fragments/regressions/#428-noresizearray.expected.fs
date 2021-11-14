@@ -9,10 +9,7 @@ type [<AllowNullLiteral>] IExports =
     abstract Appwrite: AppwriteStatic
 
 type [<AllowNullLiteral>] Appwrite =
-    abstract account: AppwriteAccount with get, set
+    abstract account: {| createDocument: string[] |} with get, set
 
 type [<AllowNullLiteral>] AppwriteStatic =
     [<EmitConstructor>] abstract Create: unit -> Appwrite
-
-type [<AllowNullLiteral>] AppwriteAccount =
-    abstract createDocument: string[] with get, set

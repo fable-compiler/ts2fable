@@ -292,7 +292,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             fsFiles
             |>  (
                     existOnlyOneByName "EventHandler" FsType.isInterface
-                    <&&> existOnlyOneByName "bivarianceHack" FsType.isFunction
+                    <&&> existOnlyOneByName "Invoke" FsType.isFunction
                 )
             |> equal true
 
