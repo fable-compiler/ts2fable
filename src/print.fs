@@ -39,6 +39,7 @@ let printType (tp: FsType): string =
     | FsType.KeyOf k ->
         printType k.Type
         |> sprintf "KeyOf<%s>"
+    | FsType.TypeLiteral tl -> printTypeLiteral tl
 
     // | FsType.Alias _ -> "obj"
     // | FsType.ExportAssignment _ -> "obj"
@@ -52,7 +53,6 @@ let printType (tp: FsType): string =
     // | FsType.Param _ -> "obj"
     // | FsType.This -> "obj"
     // | FsType.TODO -> "obj"
-    // | FsType.TypeLiteral tp -> "obj"
 
     | _ ->
         printfn "unsupported printType %s: %s" (getTypeName tp) (getName tp)
@@ -157,7 +157,7 @@ let printProperty (pr: FsProperty): string =
         printPropertyDefault pr
 
 let printPropertyDefault (pr: FsProperty): string =
-    sprintf "%sabstract %s: %s%s%s%s%s"
+    sprintf "%sabstract %s: %s%s%s%s"
         (   match pr.Kind with
             | FsPropertyKind.Regular -> ""
             | FsPropertyKind.Index -> "[<EmitIndexer>] "
@@ -167,31 +167,7 @@ let printPropertyDefault (pr: FsProperty): string =
             | None -> ""
             | Some idx -> sprintf "%s: %s -> " idx.Name (printType idx.Type)
         )
-        (
-            let t = printRootType pr.Type
-            let optionInBrackets ty =
-                if pr.Option then
-                    match ty with
-                    // if `Option<A * B>`, surround tuple with brackets (`(A * B) option`), otherwise it's emitted as `A * Option<B>` (`A * B option`)
-                    | FsType.Tuple { Kind = FsTupleKind.Tuple; Types = tys } when (tys |> List.length) > 1 ->
-                        sprintf "(%s)" t
-                    // brackets required for function type like `(string -> string) option`
-                    | FsType.Function _ ->
-                        sprintf "(%s)" t
-                    | _ -> t
-                else
-                    t
-
-            match pr.Accessor with
-            | ReadOnly ->
-                optionInBrackets pr.Type
-            | WriteOnly | ReadWrite ->
-                match pr.Type with
-                | FsType.Function _ ->
-                    sprintf "(%s)" t
-                | _ -> optionInBrackets pr.Type
-        )
-        (if pr.Option then " option" else "")
+        (printOptionalType pr.Option pr.Accessor pr.Type)
         (
             // generic type parameter
             match pr.Type with
@@ -257,6 +233,86 @@ let printTypeParameters (tps: FsType list): string =
 
         line.Add ">"
         line |> String.concat ""
+
+let printTypeLiteral (tl: FsTypeLiteral): string =
+    let members =
+        tl.Members
+        |> List.choose (
+            function
+            | FsType.Property p ->
+                Some (p.Name, printOptionalType p.Option ReadOnly p.Type)
+            | FsType.Function ({ Name = Some name } as f) ->
+                let prms =
+                    f.Params
+                    |> List.map (fun p ->
+                        printOptionalType p.Optional ReadOnly p.Type
+                    )
+                let prms =
+                    match prms with
+                    | [] -> "unit"
+                    | _ -> prms |> String.concat " -> "
+                let t =
+                    sprintf "%s -> %s" prms (printType f.ReturnType)
+                
+                Some (name, t)
+            | _ -> None
+        )
+
+    members
+    |> List.map (fun (name, t) -> sprintf "%s: %s" name t)
+    |> String.concat "; "
+    |> sprintf "{| %s |}"
+
+let printOptionalType (optional: bool) (accessor: FsAccessor) (ty: FsType) =
+    let t = printRootType ty
+
+    let surround = sprintf "(%s)"
+    let optionInBrackets ty =
+        if optional then
+            match ty with
+            // if `Option<A * B>`, surround tuple with brackets (`(A * B) option`), otherwise it's emitted as `A * Option<B>` (`A * B option`)
+            | FsType.Tuple { Kind = FsTupleKind.Tuple; Types = tys } when (tys |> List.length) > 1 ->
+                surround t
+            // brackets required for function type like `(string -> string) option`
+            | FsType.Function _ ->
+                surround t
+            | _ -> t
+        else
+            t
+
+    let t =
+        match accessor with
+        | ReadOnly ->
+            optionInBrackets ty
+        | WriteOnly | ReadWrite ->
+            match ty with
+            | FsType.Function _ ->
+                surround t
+            | _ ->
+                optionInBrackets ty
+
+    if optional then
+        sprintf "%s option" t
+    else
+        t
+
+    // if optional then
+    //     // when optional type: might need brackets arround formatted `t`:
+    //     // Ensure `(A * B) option` instead of `A * B option`
+    //     let surround = sprintf "(%s)"
+
+    //     let ts = printType t
+    //     match t with
+    //     // if `Option<A * B>`, surround tuple with brackets (`(A * B) option`), otherwise it's emitted as `A * Option<B>` (`A * B option`)
+    //     | FsType.Tuple { Kind = FsTupleKind.Tuple; Types = tys } when tys.Length > 1 ->
+    //         surround ts
+    //     // brackets required for function type like `(string -> string) option`
+    //     | FsType.Function _ ->
+    //         surround ts
+    //     | _ -> ts
+    //     |> sprintf "%s option"
+    // else
+    //     printType t
 
 let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsComment list): unit =
     let printLine comment =

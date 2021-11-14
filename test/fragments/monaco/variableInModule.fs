@@ -9,14 +9,10 @@ let [<ImportAll("variableInModule")>] monaco: Monaco.IExports = jsNative
 module Monaco =
 
     type [<AllowNullLiteral>] IExports =
-        abstract EditorType: IExportsEditorType with get, set
+        abstract EditorType: {| ICodeEditor: string; IDiffEditor: string |} with get, set
 
     type [<AllowNullLiteral>] IDisposable =
         abstract dispose: unit -> unit
 
     type [<AllowNullLiteral>] IEvent<'T> =
         [<Emit "$0($1...)">] abstract Invoke: listener: ('T -> obj option) * ?thisArg: obj -> IDisposable
-
-    type [<AllowNullLiteral>] IExportsEditorType =
-        abstract ICodeEditor: string with get, set
-        abstract IDiffEditor: string with get, set

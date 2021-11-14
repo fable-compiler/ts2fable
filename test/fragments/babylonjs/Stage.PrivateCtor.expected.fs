@@ -28,7 +28,7 @@ module BABYLON =
     /// Expected FS output: 'Stage' with 'registerStep' and 'clear', 'StageStatic' with the static Create method
     /// **********
     type [<AllowNullLiteral>] Stage<'T> =
-        inherit Array<StageArray<'T>>
+        inherit Array<{| index: float; ``component``: ISceneComponent; action: 'T |}>
         /// <summary>Registers a step in an ordered way in the targeted stage.</summary>
         /// <param name="index">Defines the position to register the step in</param>
         /// <param name="component">Defines the component attached to the step</param>
@@ -45,8 +45,3 @@ module BABYLON =
         /// <summary>Creates a new Stage.</summary>
         /// <returns>A new instance of a Stage</returns>
         abstract Create: unit -> Stage<'T>
-
-    type [<AllowNullLiteral>] StageArray<'T> =
-        abstract index: float with get, set
-        abstract ``component``: ISceneComponent with get, set
-        abstract action: 'T with get, set

@@ -26,7 +26,7 @@ open Fable.Core.JS
 /// </code>
 /// 
 /// Multi line code with language:
-/// <code language="fsharp">
+/// <code lang="fsharp">
 /// let text = "Hello fsharp"
 /// printfn "%s" text
 /// </code>

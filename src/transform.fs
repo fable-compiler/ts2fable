@@ -906,6 +906,37 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
     )
 
 let extractTypeLiterals(f: FsFile): FsFile =
+    /// Type Literals with <= members are printed as Anonymous Records,
+    /// Type Literals with >  members are converted into Interfaces
+    let maxMembers = 4
+    let isIndexer =
+        function
+        | FsType.Property { Kind = FsPropertyKind.Index } -> true
+        | _ -> false
+    let (|TypeLiteralToConvert|_|) =
+        function
+        | FsType.TypeLiteral tl when tl.Members |> List.isEmpty || tl.Members.Length > maxMembers -> 
+            Some tl
+        // convert literal with Indexer to interface: `{ [key: string]: string }`
+        // -> Indexer not available in Anon Record
+        // 
+        // Note: Indexer only works when consumed in F# (-> function output), but not when created in F# (-> function input):
+        //       Indexer in JS is over its members, in F# it's a property (-> function) 
+        //       See https://github.com/fable-compiler/ts2fable/issues/415
+        | FsType.TypeLiteral tl when tl.Members |> List.exists isIndexer ->
+            Some tl
+        // | FsType.TypeLiteral tl when Config.ConvertPropertyFunctions ->
+        //     printfn "TypeLiteral=%A" tl
+        //     None
+        | FsType.TypeLiteral tl when Config.ConvertPropertyFunctions && tl.Members |> List.exists (function | FsType.Property p -> FsType.isFunction p.Type | _ -> false) -> 
+            // `class Appwrite { account: { createDocument: (name: string) => Document; }; }`
+            // `createDocument` is usually converted into property:
+            // `abstract account: {| createDocument: string -> Document |} with get, set`
+            // but with `ConvertPropertyFunctions` enabled, `createDocument` should turn into a function:
+            // `abstract createDocument: name: string -> Document`
+            // -> extract `account` into interface
+            Some tl
+        | _ -> None
 
     /// the goal is to create interface types with 'pretty' names like '$(Class)$(Method)Return'.
     let extractTypeLiterals_pass1 (f: FsFile): FsFile =
@@ -932,27 +963,94 @@ let extractTypeLiterals(f: FsFile): FsFile =
                     typeNames.Add name |> ignore
                     name
 
+            let materializeInterfaceType name members (collection: ResizeArray<_>) =
+                let materialized = {
+                    Attributes = []
+                    Comments = []
+                    IsStatic = false
+                    IsClass = false
+                    Name = name
+                    FullName = name
+                    Inherits = []
+                    Members = members
+                    TypeParameters = []
+                    Accessibility = None
+                }
+                collection.Add (FsType.Interface materialized)
+
+            let materializeReturnInterfaceType = materializeInterfaceType
+            let materializeParamInterfaceType name members (collection: ResizeArray<_>)=
+                match members |> List.tryFind isIndexer with
+                  // comment to best use Anon Record with `!!`
+                | Some (FsType.Property ({ Index = Some index } as indexer)) ->
+                    // todo: introduce extra FsComment type for Index marker? (printType isn't available here)
+                    // todo: add comment on Indexer too?
+                    // todo: use `remarks`? but isn't shown in VS 2022, Ionide only when there's no other tag
+                    // todo: different layout in different editors: ionide ok (because markdown); VS F#: same_ish lines (incl. code) (with `para`: even worse); VS C#: all same line because no `para`; VS Code C#" same_ish lines (incl. code)"
+                    // todo: link: VS F#: no href, just shows link target instead of title; Ionide: formatting ok; VS Code C#: no actual link, no highlighting of link, shows title
+                    // todo: cannot use actual types for examples: formatting of types isn't available here (-> `print.fs`)
+                    let indexerComment = 
+                        let lines =
+                            """
+                            Typescript interface contains an [index signature](https://www.typescriptlang.org/docs/handbook/2/objects.html#index-signatures) (like `{ [key:string]: string }`).  
+                            Unlike an indexer in F#, index signatures index over a type's members. 
+
+                            As such an index signature cannot be implemented via regular F# Indexer (`Item` property),
+                            but instead by just specifying fields.
+
+                            Easiest way to declare such a type is with an Anonymous Record and force it into the function.  
+                            For example:  
+                            ```fsharp
+                            type I =
+                                [<EmitIndexer>]
+                                abstract Item: string -> string
+                            let f (i: I) = jsNative
+
+                            let t = {| Value1 = "foo"; Value2 = "bar" |}
+                            f (!! t)
+                            ```
+                            """
+                            |> fun c -> c.Split '\n'
+                            |> fun ls ->
+                                // skip first and last line (new line after/before triple quotes)
+                                ls
+                                |> Seq.skip 1
+                                |> Seq.take (ls.Length - 1 - 1)
+                            |> Seq.toList
+                        // trim indentation because of indentation of Triple Quoted Strings
+                        let lines =
+                            let head = lines |> List.head
+                            let ind = head.Length - head.TrimStart().Length
+                            lines
+                            |> List.map (fun l -> if l.Length > ind then l.Substring ind else l.TrimStart ())
+                        lines
+                    let materialized = {
+                        Attributes = []
+                        Comments = [
+                            FsComment.Summary [
+                                yield! indexerComment
+                            ]
+                        ]
+                        IsStatic = false
+                        IsClass = false
+                        Name = name
+                        FullName = name
+                        Inherits = []
+                        Members = members
+                        TypeParameters = []
+                        Accessibility = None
+                    }
+                    collection.Add (FsType.Interface materialized)
+                | _ -> 
+                    materializeInterfaceType name members collection
+
+
             { md with
                 Types = md.Types |> List.collect (fun tp ->
                     match tp with
                     | FsType.Interface it ->
 
-                        let newTypes = List<FsType>()
-                        let materializeInterfaceType name members =
-                            let materialized = {
-                                Attributes = []
-                                Comments = []
-                                IsStatic = false
-                                IsClass = false
-                                Name = name
-                                FullName = name
-                                Inherits = []
-                                Members = members
-                                TypeParameters = []
-                                Accessibility = None
-                            }
-                            newTypes.Add (FsType.Interface materialized)
-
+                        let newTypes = ResizeArray<FsType>()
 
                         let it2 =
                             { it with
@@ -961,7 +1059,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                     | FsType.Function fn ->
                                         let mapParam (prm:FsParam) : FsParam =
                                             match prm.Type with
-                                            | FsType.TypeLiteral tl ->
+                                            | TypeLiteralToConvert tl ->
                                                 let name =
                                                     let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
                                                     let fnName = fn.Name.Value.Replace("`","")
@@ -973,19 +1071,19 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                                     else
                                                         sprintf "%s%s%s" itName (capitalize fnName) (capitalize pmName) |> newTypeName
 
-                                                materializeInterfaceType name tl.Members
+                                                newTypes |> materializeParamInterfaceType name tl.Members
                                                 { prm with Type = simpleType name }
                                             | _ -> prm
 
                                         let mapReturnType (tp:FsType) =
                                             match tp with
-                                            | FsType.TypeLiteral tl ->
+                                            | TypeLiteralToConvert tl ->
                                                 let name =
                                                     let itName = if it.Name = "IExports" then "" else it.Name.Replace("`","")
                                                     let fnName = fn.Name.Value.Replace("`","")
                                                     sprintf "%s%sReturn" itName (capitalize fnName) |> newTypeName
 
-                                                materializeInterfaceType name tl.Members
+                                                newTypes |> materializeReturnInterfaceType name tl.Members
                                                 simpleType name
                                             | _ -> tp
                                         { fn with
@@ -1001,19 +1099,25 @@ let extractTypeLiterals(f: FsFile): FsFile =
                         [it2] @ (List.ofSeq newTypes) // append new types
                     | FsType.Alias al ->
                         match al.Type with
-                        | FsType.Union un ->
-                            let un2 =
+                        | FsType.Union un when un.Types.Length > 1 ->
+                            let newTypes = ResizeArray()
+                            let un =
                                 { un with
                                     Types =
-                                        let tps = List<FsType>()
-                                        un.Types |> List.iter(fun tp ->
-                                            match tp with
-                                            | FsType.TypeLiteral tl -> tl.Members |> tps.AddRange
-                                            | _ -> tp |> tps.Add
+                                        un.Types
+                                        |> List.mapi (fun i ->
+                                            function
+                                            | TypeLiteralToConvert tl ->
+                                                let name = 
+                                                    sprintf "%sCase%i" al.Name (i+1)
+                                                    |> newTypeName
+                                                newTypes |> materializeInterfaceType name tl.Members
+                                                simpleType name
+                                            | tp -> tp
                                         )
-                                        tps |> List.ofSeq
                                 }
-                            {al with Type = un2 |> FsType.Union} |> FsType.Alias |> List.singleton
+                            let al = FsType.Alias {al with Type = un |> FsType.Union}
+                            [al] @ (List.ofSeq newTypes)
                         | FsType.TypeLiteral tl ->
                             {
                                 Attributes = []
@@ -1097,14 +1201,17 @@ let extractTypeLiterals(f: FsFile): FsFile =
             m
             // 1: replace occurences of TypeLiterals with references to the generated types
             |> fixOneModule (fun ns tp ->
-                match tp with
-                | FsType.TypeLiteral tl ->
-
+                let replace (tl: FsTypeLiteral) =
                     let extractedInterface = replaceLiteral ns tl
                     match extractedInterface.TypeParameters with
                     | [ ] ->
                         simpleType (extractedInterface.Name)
                     | tp -> FsType.Generic({ Type = simpleType (extractedInterface.Name); TypeParameters = tp })
+
+                match tp with
+                | TypeLiteralToConvert tl -> replace tl
+                | FsType.TypeLiteral ({ Members = [ FsType.Enum _ ] } as tl) ->
+                    replace tl
                 | _ -> tp
             )
             // 2: append the generated types to the module
