@@ -1,5 +1,6 @@
 source https://api.nuget.org/v3/index.json
 storage:none
+framework: net5.0
 
 nuget Fable.Core
 nuget Fable.Node
@@ -25,6 +26,7 @@ group netcorebuild
 group WebApp
     source https://api.nuget.org/v3/index.json
     storage:none
+    framework: net5.0
 
     nuget FSharp.Core redirects:force
     nuget Fable.Core

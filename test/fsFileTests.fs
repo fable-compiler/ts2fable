@@ -14,8 +14,8 @@ open ts2fable.Print
 open System.Collections.Generic
 open ts2fable.Keywords
 
-let private nodeModulesPath = "./test-modules/node_modules/"
-let inNodeModules path = sprintf "%s/%s" nodeModulesPath path
+let private nodeModulesPath = "./test-compile/node_modules/"
+let private inNodeModules path = sprintf "%s/%s" nodeModulesPath path
 
 let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
@@ -462,7 +462,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts2fable/pull/409
     let _ =
         let nowarnXmlComments = "#nowarn \"3390\""
-        let dataContains text (data: AdditionalData list) =
+        let dataContains (text: string) (data: AdditionalData list) =
             data
             |> List.map snd
             |> List.collect id
@@ -520,7 +520,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts2fable/pull/405
     let _ =
         let nowarnXmlComments = "#nowarn \"0044\""
-        let dataContains text (data: AdditionalData list) =
+        let dataContains (text: string) (data: AdditionalData list) =
             data
             |> List.map snd
             |> List.collect id
