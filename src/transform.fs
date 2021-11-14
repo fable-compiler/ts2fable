@@ -983,12 +983,6 @@ let extractTypeLiterals(f: FsFile): FsFile =
                 match members |> List.tryFind isIndexer with
                   // comment to best use Anon Record with `!!`
                 | Some (FsType.Property ({ Index = Some index } as indexer)) ->
-                    // todo: introduce extra FsComment type for Index marker? (printType isn't available here)
-                    // todo: add comment on Indexer too?
-                    // todo: use `remarks`? but isn't shown in VS 2022, Ionide only when there's no other tag
-                    // todo: different layout in different editors: ionide ok (because markdown); VS F#: same_ish lines (incl. code) (with `para`: even worse); VS C#: all same line because no `para`; VS Code C#" same_ish lines (incl. code)"
-                    // todo: link: VS F#: no href, just shows link target instead of title; Ionide: formatting ok; VS Code C#: no actual link, no highlighting of link, shows title
-                    // todo: cannot use actual types for examples: formatting of types isn't available here (-> `print.fs`)
                     let indexerComment = 
                         let lines =
                             """
