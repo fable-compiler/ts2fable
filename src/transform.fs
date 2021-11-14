@@ -925,6 +925,17 @@ let extractTypeLiterals(f: FsFile): FsFile =
         //       See https://github.com/fable-compiler/ts2fable/issues/415
         | FsType.TypeLiteral tl when tl.Members |> List.exists isIndexer ->
             Some tl
+        // | FsType.TypeLiteral tl when Config.ConvertPropertyFunctions ->
+        //     printfn "TypeLiteral=%A" tl
+        //     None
+        | FsType.TypeLiteral tl when Config.ConvertPropertyFunctions && tl.Members |> List.exists (function | FsType.Property p -> FsType.isFunction p.Type | _ -> false) -> 
+            // `class Appwrite { account: { createDocument: (name: string) => Document; }; }`
+            // `createDocument` is usually converted into property:
+            // `abstract account: {| createDocument: string -> Document |} with get, set`
+            // but with `ConvertPropertyFunctions` enabled, `createDocument` should turn into a function:
+            // `abstract createDocument: name: string -> Document`
+            // -> extract `account` into interface
+            Some tl
         | _ -> None
 
     /// the goal is to create interface types with 'pretty' names like '$(Class)$(Method)Return'.
