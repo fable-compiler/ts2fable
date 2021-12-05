@@ -487,14 +487,14 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                 let prms = ResizeArray()
                 sprintf "$0.%s(" fn.Name.Value |> kind.Add
                 sprintf "%s" fn.Name.Value |> name.Add
-                let slCount = ref 0
+                let mutable slCount = 0
                 fn.Params |> List.iteri (fun i prm ->
                     match FsType.asStringLiteral prm.Type with
                     | None ->
-                        sprintf "$%d" (i + 1 - !slCount) |> kind.Add
+                        sprintf "$%d" (i + 1 - slCount) |> kind.Add
                         prms.Add prm
                     | Some sl ->
-                        incr slCount
+                        slCount <- slCount + 1
                         sprintf "'%s'" sl |> kind.Add
                         sprintf "_%s" sl |> name.Add
                     if i < fn.Params.Length - 1 then
