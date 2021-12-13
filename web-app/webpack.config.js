@@ -2,10 +2,13 @@ const path = require("path");
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const { ProvidePlugin } = require("webpack");
+const CopyPlugin = require("copy-webpack-plugin");
 
 function resolve(filePath) {
     return path.join(__dirname, filePath)
+}
+function resolveInNodeModules(packageName) {
+    return resolve(path.join("./../node_modules", packageName))
 }
 
 var babelOptions = {
@@ -24,11 +27,19 @@ var babelOptions = {
 };
 
 var commonPlugins = [
+    new CopyPlugin({
+        patterns: [
+            {
+                from: resolveInNodeModules("monaco-editor/min/vs"),
+                to: resolve("./output/libs/vs"),
+            }
+        ]
+    }),
     new HtmlWebpackPlugin({
         filename: resolve('./output/index.html'),
         template: resolve('index.html')
     }),
-    new ProvidePlugin({
+    new webpack.ProvidePlugin({
         process: 'process/browser', // required for path-browserify
     }),
 ];
@@ -69,7 +80,7 @@ module.exports = (env, argv) => {
                         chunks: 'all'
                     },
                     fable: {
-                        test: /[\\/]fable-core[\\/]/,
+                        test: /[\\/]fable_modules[\\/]/,
                         name: 'fable',
                         chunks: 'all'
                     }
@@ -88,24 +99,27 @@ module.exports = (env, argv) => {
                     'process.env.NODE_ENV': '"production"'
                 })
             ])
-            : commonPlugins.concat([
-                new webpack.HotModuleReplacementPlugin(),
-            ]),
+            : commonPlugins,
         resolve: {
             modules: [
                 "node_modules/",
-                resolve("./../node_modules/")
+                resolveInNodeModules(".")
             ],
             alias: {
-                path: require.resolve('path-browserify'),
+                path: resolveInNodeModules('path-browserify'),
             },
         },
         devServer: {
-            contentBase: resolve('./output/'),
-            publicPath: "/",
+            static: {
+                directory: resolve('./output/'),   // prev: contentBase
+                // watch is enabled by default
+                publicPath: "/",
+            },
             port: 8080,
             hot: true,
-            inline: true
+            client: {
+                overlay: false,    // otherwise: overlay over app with warning
+            },
         },
         module: {
             rules: [
@@ -125,6 +139,7 @@ module.exports = (env, argv) => {
                 },
                 {
                     test: /\.(sass|scss|css)$/,
+                    exclude: resolveInNodeModules("monaco-editor"),
                     use: [
                         isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
                         'css-loader',
@@ -132,9 +147,17 @@ module.exports = (env, argv) => {
                     ],
                 },
                 {
+                    test: /\.css$/,
+                    include: resolveInNodeModules("monaco-editor"),
+                    use: [
+                        isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
+                        'css-loader'
+                    ],
+                },
+                {
                     test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)(\?.*$|$)/,
                     type: "asset/resource"
-                }
+                },
             ]
         }
     }

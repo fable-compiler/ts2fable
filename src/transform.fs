@@ -487,14 +487,14 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                 let prms = ResizeArray()
                 sprintf "$0.%s(" fn.Name.Value |> kind.Add
                 sprintf "%s" fn.Name.Value |> name.Add
-                let slCount = ref 0
+                let mutable slCount = 0
                 fn.Params |> List.iteri (fun i prm ->
                     match FsType.asStringLiteral prm.Type with
                     | None ->
-                        sprintf "$%d" (i + 1 - !slCount) |> kind.Add
+                        sprintf "$%d" (i + 1 - slCount) |> kind.Add
                         prms.Add prm
                     | Some sl ->
-                        incr slCount
+                        slCount <- slCount + 1
                         sprintf "'%s'" sl |> kind.Add
                         sprintf "_%s" sl |> name.Add
                     if i < fn.Params.Length - 1 then
@@ -983,12 +983,6 @@ let extractTypeLiterals(f: FsFile): FsFile =
                 match members |> List.tryFind isIndexer with
                   // comment to best use Anon Record with `!!`
                 | Some (FsType.Property ({ Index = Some index } as indexer)) ->
-                    // todo: introduce extra FsComment type for Index marker? (printType isn't available here)
-                    // todo: add comment on Indexer too?
-                    // todo: use `remarks`? but isn't shown in VS 2022, Ionide only when there's no other tag
-                    // todo: different layout in different editors: ionide ok (because markdown); VS F#: same_ish lines (incl. code) (with `para`: even worse); VS C#: all same line because no `para`; VS Code C#" same_ish lines (incl. code)"
-                    // todo: link: VS F#: no href, just shows link target instead of title; Ionide: formatting ok; VS Code C#: no actual link, no highlighting of link, shows title
-                    // todo: cannot use actual types for examples: formatting of types isn't available here (-> `print.fs`)
                     let indexerComment = 
                         let lines =
                             """

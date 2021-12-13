@@ -5,6 +5,7 @@ open Fake.Core
 open Microsoft.FSharp.Core.Printf
 open Fake.IO.FileSystemOperators
 open Fake.IO
+open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
 open Fake.DotNet
 open Fake.Tools.Git
@@ -18,12 +19,20 @@ let versionFromGlobalJson (o: DotNet.CliInstallOptions): DotNet.CliInstallOption
     { o with Version = DotNet.Version (DotNet.getSDKVersionFromGlobalJson()) }
 
 let run cmd dir args =
+    CreateProcess.fromRawCommandLine cmd args
+    |> CreateProcess.withWorkingDirectory dir
+    |> CreateProcess.ensureExitCode
+    |> Proc.run
+    |> ignore
+let runWithOutput cmd dir args =
     let result =
         CreateProcess.fromRawCommandLine cmd args
         |> CreateProcess.withWorkingDirectory dir
+        |> CreateProcess.redirectOutput
+        |> CreateProcess.redirectOutput
+        |> CreateProcess.ensureExitCode
         |> Proc.run
-    if result.ExitCode <> 0 then
-        failwithf "Error while running '%s' with args: %s " cmd args
+    result.Result.Output
 
 let platformTool tool =
     ProcessUtils.tryFindFileOnPath tool
@@ -52,6 +61,7 @@ let isAppveyor = String.isNotNullOrEmpty BuildServer.appVeyorBuildVersion
 
 let node args = run nodeTool "./" args
 let npm args = run npmTool "./" args
+let npmWithOutput args = runWithOutput npmTool "./" args
 let npx args = run npxTool "./" args
 let git args = run gitTool "./" args
 
@@ -73,59 +83,59 @@ module Scripts =
 
     /// Build `./src` in release mode, no bundle, with sourcemaps,  into `./build/cli`, with entry `ts2fable.js`
     /// 
-    /// Start with `node --require esm ./build/cli/ts2fable.js`
+    /// Start with `node ./build/cli/ts2fable.js`
     let buildCli () =
-        fable $"{cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --sourceMaps"
+        fable $"{cliDir} --outDir {cliBuildDir} --configuration Release --define {CLI_BUILD_SYMBOL} --sourceMaps"
     /// Watch `./src` in debug mode, no bundle, with sourcemaps, into `./build/cli`, with entry `ts2fable.js`
     /// 
-    /// Start with `node --require esm ./build/cli/ts2fable.js`
+    /// Start with `node ./build/cli/ts2fable.js`
     let watchCli () =
-        fable $"watch {cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --sourceMaps --define DEBUG"
+        fable $"watch {cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --configuration Debug --sourceMaps"
 
     /// Build `./test` in release mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`
     /// 
-    /// Start with `npx mocha --require esm ./build/test/test.js`
+    /// Start with `npx mocha ./build/test/test.js`
     let buildTest () =
         fable $"{testDir} --outDir {testBuildDir} --sourceMaps"
 
     /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`.
     /// 
-    /// Start with `npx mocha --require esm ./build/test/test.js`
+    /// Start with `npx mocha ./build/test/test.js`
     /// 
     /// Unlike `watchAndRunTest` this doesn't run tests after compilation.
     let watchTest () =
-        fable $" watch {testDir} --outDir {testBuildDir} --sourceMaps --define DEBUG"
+        fable $" watch {testDir} --outDir {testBuildDir} --configuration Debug --sourceMaps"
 
     /// Run mocha tests with entry `./build/test/test.js`.
     /// 
     /// Requires building test before via `buildTest`
     let runTest () =
-        npx $"mocha --require esm {testBuildDir}/test.js"
+        npx $"mocha --colors {testBuildDir}/test.js"
     let runTestWithReporter (reporter: string) =
-        npx $"mocha --require esm --reporter {reporter} {testBuildDir}/test.js"
+        npx $"mocha --reporter {reporter} {testBuildDir}/test.js"
 
     /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js` and run tests with mocha after each change
     let watchAndRunTest () =
-        fable $"watch {testDir} --outDir {testBuildDir} --sourceMaps --define DEBUG --runWatch mocha --require esm {testBuildDir}/test.js"
+        fable $"watch {testDir} --outDir {testBuildDir} --sourceMaps --configuration Debug --runWatch mocha --colors {testBuildDir}/test.js"
 
     /// Build `web-app` in release mode, bundled, with sourcemap into `./web-app/output/` dir.
     /// 
     /// First: Fable in release mode, with sourcemaps into `./web-app/temp` with entry `App.js`.
     /// Then: Bundling with webpack into `./web-app/output/` with `./web-app/webpack.config.js`.
     let buildWebapp () =
-        fable $"{appDir} --outDir {appTempOutDir} --sourceMaps --run webpack --mode production --config {appDir}/webpack.config.js"
+        fable $"{appDir} --outDir {appTempOutDir} --configuration Release --sourceMaps --run webpack --mode production --config {appDir}/webpack.config.js"
     
     /// Watch `web-app` in debug mode, with sourcemaps, served via `localhost:8080`.
     /// 
     /// First: Fable in debug mode, with sourcemaps into `./web-app/temp` with entry `App.js`.
     /// Then: Serving via `localhost:8080` with `webpack serve` (-> webpack-dev-server) and `./web-app/webpack.config.js`
     let watchWebapp () =
-        fable $"watch {appDir} --outDir {appTempOutDir} --sourceMaps --define DEBUG --run webpack serve --watch-content-base --mode development --config {appDir}/webpack.config.js"
+        fable $"watch {appDir} --outDir {appTempOutDir} --configuration Debug --sourceMaps --run webpack serve --mode development --config {appDir}/webpack.config.js"
 
     /// Bundle existing CLI (output of `buildCli`, in `./build/cli` with entry `ts2fable.js`) into `./dist/ts2fable.js` with rollup
     let bundleCli () =
         // umd: Universal Module Definition
-        npx $"rollup --file {distDir}/ts2fable.js --format umd --name ts2fable {cliBuildDir}/ts2fable.js"
+        npx $"rollup --file {distDir}/ts2fable.js --format es {cliBuildDir}/ts2fable.js"
 
     
 Target.create "Clean" <| fun _ ->
@@ -147,6 +157,7 @@ Target.create "Restore" <| fun _ ->
     DotNet.restore id appDir
 
 Target.create "Prepare" ignore
+Target.create "PrepareTests" ignore
 
 Target.create "BuildCli" <| fun _ ->
     Scripts.buildCli ()
@@ -154,50 +165,64 @@ Target.create "BuildCli" <| fun _ ->
 Target.create "WatchCli" <| fun _ ->
     Scripts.watchCli ()
 
+Target.create "InstallTestNpmPackages" <| fun _ ->
+    // Keep npm packages used to test ts2fable separate:
+    // Might be outdated versions that conflict with actual used packages
+    // `d.ts` files in `testModulesDir` are used for:
+    // * unit tests
+    // * test compile
+    run npmTool testCompileDir "install --legacy-peer-deps" 
+    // `legacy-peer-deps`: accept incorrect dependency resolution. Otherwise there might be a conflict.
+    // We are only interested in `d.ts` of packages directly specified in `package.json` -> don't care about conflicts
+
+    //todo: change to `npm pack packageName@version` and unpacking downloaded `.tgz` afterwards?
+    //      -> no need to download dependencies
+
 Target.create "RunCliOnTestCompile" <| fun _ ->
     let ts2fable args =
         let args = args |> String.concat " "
         async {
-            node <| $"--require esm {cliBuildDir}/ts2fable.js {args}"
+            node <| $"{cliBuildDir}/ts2fable.js {args}"
         }
+    let nodeModulesDir = testCompileDir</>"node_modules"
 
     [
         // used by ts2fable
-        ts2fable ["node_modules/typescript/lib/typescript.d.ts";"test-compile/TypeScript.fs"]
-        ts2fable ["node_modules/@types/node/index.d.ts";"test-compile/Node.fs"]
-        ts2fable ["node_modules/@types/yargs/index.d.ts";"test-compile/Yargs.fs"]
-        ts2fable ["node_modules/breeze-client/index.d.ts";"test-compile/Breeze.fs"]
+        ts2fable [nodeModulesDir</>"typescript/lib/typescript.d.ts"; testCompileDir</>"TypeScript.fs"]
+        ts2fable [nodeModulesDir</>"@types/node/index.d.ts"; testCompileDir</>"Node.fs"]
+        ts2fable [nodeModulesDir</>"@types/yargs/index.d.ts"; testCompileDir</>"Yargs.fs"]
+        ts2fable [nodeModulesDir</>"breeze-client/index.d.ts"; testCompileDir</>"Breeze.fs"]
 
         // for test-compile
-        ts2fable ["node_modules/vscode/vscode.d.ts";"test-compile/VSCode.fs"]
-        // ts2fable ["node_modules/izitoast/dist/izitoast/izitoast.d.ts"] "test-compile/IziToast.fs"
-        ts2fable ["node_modules/izitoast/types/index.d.ts";"test-compile/IziToast.fs"]
-        ts2fable ["node_modules/electron/electron.d.ts";"test-compile/Electron.fs"]
-        ts2fable ["node_modules/@types/react/index.d.ts";"test-compile/React.fs"]
-        ts2fable ["node_modules/@types/react-native/index.d.ts";"test-compile/ReactNative.fs"]
-        ts2fable ["node_modules/@types/mocha/index.d.ts";"test-compile/Mocha.fs"]
-        ts2fable ["node_modules/@types/chai/index.d.ts";"test-compile/Chai.fs"]
-        ts2fable ["node_modules/chalk/types/index.d.ts";"test-compile/Chalk.fs"]
-        ts2fable ["node_modules/monaco-editor/monaco.d.ts";"test-compile/Monaco.fs"]
+        ts2fable [nodeModulesDir</>"vscode/vscode.d.ts"; testCompileDir</>"VSCode.fs"]
+        // ts2fable [nodeModulesDir</>"izitoast/dist/izitoast/izitoast.d.ts"; testCompileDir</>"IziToast.fs"]
+        ts2fable [nodeModulesDir</>"izitoast/types/index.d.ts"; testCompileDir</>"IziToast.fs"]
+        ts2fable [nodeModulesDir</>"electron/electron.d.ts"; testCompileDir</>"Electron.fs"]
+        ts2fable [nodeModulesDir</>"@types/react/index.d.ts"; testCompileDir</>"React.fs"]
+        ts2fable [nodeModulesDir</>"@types/react-native/index.d.ts"; testCompileDir</>"ReactNative.fs"]
+        ts2fable [nodeModulesDir</>"@types/mocha/index.d.ts"; testCompileDir</>"Mocha.fs"]
+        ts2fable [nodeModulesDir</>"@types/chai/index.d.ts"; testCompileDir</>"Chai.fs"]
+        ts2fable [nodeModulesDir</>"chalk/types/index.d.ts"; testCompileDir</>"Chalk.fs"]
+        ts2fable [nodeModulesDir</>"monaco-editor/monaco.d.ts"; testCompileDir</>"Monaco.fs"]
         ts2fable
-            [   "node_modules/@types/google-protobuf/index.d.ts"
-                "node_modules/@types/google-protobuf/google/protobuf/empty_pb.d.ts"
-                "test-compile/Protobuf.fs"
+            [   nodeModulesDir</>"@types/google-protobuf/index.d.ts"
+                nodeModulesDir</>"@types/google-protobuf/google/protobuf/empty_pb.d.ts"
+                testCompileDir</>"Protobuf.fs"
             ]
-        ts2fable ["node_modules/synctasks/dist/SyncTasks.d.ts";"test-compile/SyncTasks.fs"]
-        ts2fable ["node_modules/subscribableevent/dist-types/SubscribableEvent.d.ts";"test-compile/SubscribableEvent.fs"]
+        ts2fable [nodeModulesDir</>"synctasks/dist/SyncTasks.d.ts"; testCompileDir</>"SyncTasks.fs"]
+        ts2fable [nodeModulesDir</>"subscribableevent/dist-types/SubscribableEvent.d.ts"; testCompileDir</>"SubscribableEvent.fs"]
         ts2fable
             [
-                "node_modules/office-ui-fabric-react/lib/index.d.ts"
-                "test-compile/OfficeReact.fs"
+                nodeModulesDir</>"office-ui-fabric-react/lib/index.d.ts"
+                testCompileDir</>"OfficeReact.fs"
                 "-e"
                 "uifabric"
                 "office-ui-fabric-react"
             ]
         ts2fable
             [
-                "node_modules/reactxp/dist/ReactXP.d.ts"
-                "test-compile/ReactXP.fs"
+                nodeModulesDir</>"reactxp/dist/ReactXP.d.ts"
+                testCompileDir</>"ReactXP.fs"
                 "-e"
                 "reactxp"
             ]
@@ -206,8 +231,8 @@ Target.create "RunCliOnTestCompile" <| fun _ ->
     |> Async.RunSynchronously
     |> ignore
     // files that have too many TODOs
-    // ts2fable ["node_modules/@types/jquery/index.d.ts"] "test-compile/JQuery.fs"
-    // ts2fable ["node_modules/typescript/lib/lib.es2015.promise.d.ts"] "test-compile/Promise.fs"
+    // ts2fable [nodeModulesDir</>"@types/jquery/index.d.ts"; testCompileDir</>"JQuery.fs"]
+    // ts2fable [nodeModulesDir</>"typescript/lib/lib.es2015.promise.d.ts"; testCompileDir</>"Promise.fs"]
 
     printfn "done writing test-compile files"
 
@@ -323,7 +348,8 @@ Target.create "PushForComparison" <| fun _ ->
         git "remote add upstream git@github.com:fable-compiler/ts2fable-exports.git"
         git "fetch upstream"
         git "reset --hard upstream/dev"
-        Shell.copyDir repositoryDir testCompileDir (fun f -> f.EndsWith ".fs")
+        !! (testCompileDir </> "*.fs")
+        |> Shell.copyFiles repositoryDir
         stageAll repositoryDir
         try 
             commit()
@@ -366,16 +392,6 @@ Target.create "Deploy" ignore
 Target.create "BuildAll" ignore
 
 // Web App
-let jsLibsOutput = appOutDir </> "libs"
-
-Target.create "WebApp.CopyMonacoModules" <| fun _ ->
-    let requireJsOutput = jsLibsOutput </> "requirejs"
-    let vsOutput = jsLibsOutput </> "vs"
-    Directory.create requireJsOutput
-    Directory.create vsOutput
-    Shell.cp ("./node_modules" </> "requirejs" </> "require.js") requireJsOutput
-    Shell.cp_r ("./node_modules" </> "monaco-editor" </> "min" </> "vs") vsOutput
-
 Target.create "WebApp.Build" <| fun _ ->
     Scripts.buildWebapp ()
 
@@ -429,6 +445,18 @@ Target.create "WebApp.Setup" ignore
 "Prepare"
     ==> "WatchCli"
 
+// Tests (unit tests as well as test compile) use different npm packages to translate with ts2fable
+"InstallTestNpmPackages"
+    ==> "PrepareTests"
+"PrepareTests"
+    ==> "RunTest"
+"PrepareTests"
+    ==> "WatchTest"
+"PrepareTests"
+    ==> "WatchAndRunTest"
+"PrepareTests"
+    ==> "RunCliOnTestCompile"
+
 // Run Tests: Build Tests, Run Tests
 "Prepare"
     ==> "BuildTest"
@@ -467,7 +495,6 @@ Target.create "WebApp.Setup" ignore
 
 // WebApp.Setup
 "Prepare"
-    ==> "WebApp.CopyMonacoModules"
     ==> "WebApp.Setup"
 
 // WebApp.Publish: Build & Publish

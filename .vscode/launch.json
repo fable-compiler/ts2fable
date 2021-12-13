@@ -7,8 +7,6 @@
         "name": "Run Mocha Tests",
         "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
         "args":[
-          "--require",
-          "esm",
           "--no-timeouts",
           "--colors",
           "${workspaceRoot}/build/test/test.js"

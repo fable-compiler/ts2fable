@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Clipboard from "clipboard"
 
 class CopyButton extends React.Component {
     constructor(props) {
@@ -8,7 +9,6 @@ class CopyButton extends React.Component {
     }
 
     componentDidMount() {
-        const Clipboard = require('clipboard');
         this.clipboard = new Clipboard(this.element);
 
         const self = this;

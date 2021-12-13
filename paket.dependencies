@@ -1,5 +1,6 @@
-source https://nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
 storage:none
+framework: net5.0
 
 nuget Fable.Core
 nuget Fable.Node
@@ -12,6 +13,7 @@ group netcorebuild
     storage:none
     framework: netstandard2.0
 
+    nuget FSharp.Core 5
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem
     nuget Fake.Core.Environment
@@ -20,11 +22,11 @@ group netcorebuild
     nuget Fake.Tools.Git
     nuget Fake.Windows.Chocolatey
     nuget Fake.Core.Target
-    nuget Fake.JavaScript.Yarn
 
 group WebApp
     source https://api.nuget.org/v3/index.json
     storage:none
+    framework: net5.0
 
     nuget FSharp.Core redirects:force
     nuget Fable.Core
@@ -33,9 +35,7 @@ group WebApp
     nuget Fable.Elmish.Browser
     nuget Fable.Elmish.Debugger
     nuget Fable.Elmish.HMR
-    nuget Fable.FontAwesome.Free
     nuget Fable.Promise
     nuget Fable.React
     nuget Fulma
     nuget Fulma.Extensions.Wikiki.PageLoader
-

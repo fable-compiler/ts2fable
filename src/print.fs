@@ -507,10 +507,10 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                 printComments lines indent inf.Comments
                 printAttributes lines indent inf.Attributes
                 sprintf "%stype [<AllowNullLiteral>] %s%s =" indent inf.Name (printTypeParameters inf.TypeParameters) |> lines.Add
-                let nLines = ref 0
+                let mutable nLines = 0
                 for ih in inf.Inherits do
                     sprintf "%s    inherit %s" indent (printType ih) |> lines.Add
-                    incr nLines
+                    nLines <- nLines + 1
                 for mbr in inf.Members do
                     let indent = sprintf "%s    " indent
                     match mbr with
@@ -518,21 +518,21 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
                         printComments lines indent f.Comments
                         printAttributes lines indent f.Attributes
                         sprintf "%s%s" indent (printFunction f) |> lines.Add
-                        incr nLines
+                        nLines <- nLines + 1
                     | FsType.Property p ->
                         printComments lines indent p.Comments
                         printAttributes lines indent p.Attributes
                         sprintf "%s%s" indent (printProperty p) |> lines.Add
-                        incr nLines
+                        nLines <- nLines + 1
                     | FsType.Variable v ->
                         printComments lines indent v.Comments
                         printAttributes lines indent v.Attributes
                         sprintf "%s%s" indent (printType mbr) |> lines.Add
-                        incr nLines
+                        nLines <- nLines + 1
                     | _ ->
                         sprintf "%s    %s" indent (printType mbr) |> lines.Add
-                        incr nLines
-                if !nLines = 0 then
+                        nLines <- nLines + 1
+                if nLines = 0 then
                     sprintf "%s    interface end" indent |> lines.Add
         | FsType.Enum en ->
             printEnum lines indent en

@@ -5,6 +5,8 @@ open Fable.Core
 open Fable.Core.JS
 open Browser.Types
 
+#nowarn "3390"
+
 type Error = System.Exception
 type RegExp = System.Text.RegularExpressions.Regex
 
