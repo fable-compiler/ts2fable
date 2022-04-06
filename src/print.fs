@@ -29,7 +29,11 @@ let printType (tp: FsType): string =
         printfn "Variable in printType that should have been converted into property: %s" (vb.Name)
         let vtp = vb.Type |> printType
         sprintf "abstract %s: %s%s" vb.Name vtp (if vb.IsConst then "" else " with get, set")
-    | FsType.StringLiteral _ -> "string"
+    | FsType.Literal l ->
+        match l with
+        | FsLiteral.String _ -> "string"
+        | FsLiteral.Number _ -> "number"
+        | FsLiteral.Bool _ -> "boolean"
     | FsType.Property p -> printType p.Type
     | FsType.Enum en ->
         printfn "unextracted printType %s: %s" (getTypeName tp) (getName tp)
@@ -253,7 +257,7 @@ let printTypeLiteral (tl: FsTypeLiteral): string =
                     | _ -> prms |> String.concat " -> "
                 let t =
                     sprintf "%s -> %s" prms (printType f.ReturnType)
-                
+
                 Some (name, t)
             | _ -> None
         )

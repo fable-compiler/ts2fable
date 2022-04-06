@@ -57,6 +57,12 @@ type FsEnumCase =
         Type: FsEnumCaseType
         Value: string option
     }
+with
+    member x.ValueAsLiteral =
+        match x.Type, x.Value with
+        | FsEnumCaseType.String, Some v -> FsLiteral.String v |> Some
+        | FsEnumCaseType.Numeric, Some v -> FsLiteral.Number v |> Some
+        | _, _ -> None
 
 type FsEnum =
     {
@@ -77,7 +83,7 @@ with
 type FsCommentLine = string
 type FsCommentContent = FsCommentLine list
 
-type FsCommentTag = 
+type FsCommentTag =
     {
         Name: string
         Content: FsCommentContent
@@ -302,17 +308,23 @@ type FsKeyOf = {
     Type: FsType
 }
 
+[<RequireQualifiedAccess>]
+type FsMappedDeclaration =
+    | Type of FsType
+    | EnumCase of FsEnumCase
+
 type FsMapped =
     {
         // Namespace: string list // TODO
         Name: string
         FullName: string
+        Declarations: Lazy<FsMappedDeclaration list>
     }
 
 type FsArgument = {
     /// Named argument
     Name: string option
-    /// stringyfied value  
+    /// stringyfied value
     /// -> includes quotation marks for string argument: `"\"MyVal\""`
     Value: string
 }
@@ -324,10 +336,10 @@ module FsArgument =
         }
 type FsAttribute = {
     /// might possible be `open`ed.
-    /// 
-    /// NOT included in `Name`  
+    ///
+    /// NOT included in `Name`
     /// -> `System.Obsolete`: `Namespace`=`System`; `Name`=`Obsolete`
-    /// 
+    ///
     /// Place Full Name in `Name` to emit full name.
     Namespace: string option
     Name: string
@@ -349,8 +361,16 @@ let simpleType name: FsType =
         // Namespace = []
         Name = name
         FullName = name
+        Declarations = Lazy.CreateFromValue []
     }
     |> FsType.Mapped
+
+
+[<RequireQualifiedAccess>]
+type FsLiteral =
+    | String of string
+    | Number of string
+    | Bool of bool
 
 [<RequireQualifiedAccess>]
 type FsType =
@@ -371,7 +391,7 @@ type FsType =
     | File of FsFile
     | FileOut of FsFileOut
     | Variable of FsVariable
-    | StringLiteral of string
+    | Literal of FsLiteral
     | ExportAssignment of string
     | This
     | Import of FsImport
@@ -386,7 +406,7 @@ module FsType =
     let isMapped tp = match tp with | FsType.Mapped _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
-    let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
+    let isStringLiteral tp = match tp with | FsType.Literal (FsLiteral.String _) -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isImport tp = match tp with | FsType.Import _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
@@ -400,7 +420,7 @@ module FsType =
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
     let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
     let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
-    let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
+    let asStringLiteral (tp: FsType): string option = match tp with | FsType.Literal (FsLiteral.String v) -> Some v | _ -> None
     let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
     let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
     let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
@@ -474,7 +494,7 @@ type FsFileOut =
         Files: FsFile list
         AbbrevTypes: string list
         /// Can be used to output additional text not covered by any `FsXXX` type
-        /// 
+        ///
         /// Used to print `#nowarn` or might be useful to output debug logs.
         AdditionalData: AdditionalData list
     }
@@ -542,7 +562,11 @@ let getTypeName (tp: FsType) =
     | FsType.KeyOf t -> t.GetType().ToString()
     | FsType.None as t -> t.GetType().ToString() + ".None"
     | FsType.TODO as t -> t.GetType().ToString() + ".TODO"
-    | FsType.StringLiteral t -> t.GetType().ToString()
+    | FsType.Literal l ->
+        match l with
+        | FsLiteral.String t -> t.GetType().ToString()
+        | FsLiteral.Number t -> (float t).GetType().ToString() // is this correct???
+        | FsLiteral.Bool t -> t.GetType().ToString()
     | FsType.This as t -> t.GetType().ToString() + ".This"
     | FsType.Tuple t -> t.GetType().ToString()
     | FsType.TypeLiteral t -> t.GetType().ToString()
@@ -569,7 +593,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     | FsType.KeyOf _
     | FsType.None
     | FsType.TODO
-    | FsType.StringLiteral _
+    | FsType.Literal _
     | FsType.This
     | FsType.Tuple _
     | FsType.TypeLiteral _

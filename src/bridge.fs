@@ -79,10 +79,12 @@ module internal Bridge =
         let createDummy tsPaths (sourceFiles: SourceFile list) =
             let options = jsOptions<CompilerOptions>(fun o ->
                 o.target <- Some scriptTarget
+                o.noEmit <- Some true
                 o.``module`` <- Some ModuleKind.CommonJS
             )
             let host = jsOptions<CompilerHost>(fun o ->
                 o.getSourceFile <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
+                o.getSourceFileByPath <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
                 o.writeFile <- fun (_,_) -> ()
                 o.getDefaultLibFileName <- fun _ -> "lib.d.ts"
                 o.useCaseSensitiveFileNames <- fun _ -> false
@@ -90,7 +92,7 @@ module internal Bridge =
                 o.getCurrentDirectory <- fun _ -> ""
                 o.getNewLine <- fun _ -> "\r\n"
                 o.fileExists <- fun fileName -> List.contains fileName tsPaths
-                o.readFile <- fun _ -> Some ""
+                o.readFile <- fun fileName -> sourceFiles |> List.tryPick (fun sf -> if sf.fileName = fileName then Some (sf.getFullText()) else None)
                 o.directoryExists <- fun _ -> true
                 o.getDirectories <- fun _ -> ResizeArray []
             )
@@ -149,7 +151,7 @@ module internal Bridge =
         |> removeDuplicateFunctions
         |> removeDuplicateOptions
         |> extractTypeLiterals // after fixEscapeWords
-        // |> addAliasUnionHelpers // disabled for Fable.Core 3.x
+        |> addAliasUnionHelpers
         |> removeDuplicateOptionsFromParameters
         |> fixFloatAlias
         |> TransformComments.transform
