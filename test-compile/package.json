@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@types/chai": "^4.2.14",
+    "@types/deep-diff": "^1.0.1",
     "@types/google-protobuf": "^3.7.4",
     "@types/jquery": "^3.5.5",
     "@types/mocha": "^2.2.44",

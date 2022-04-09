@@ -23,6 +23,8 @@
 
     <!-- <Compile Include="JQuery.fs" /> -->
     <!-- <Compile Include="Promise.fs" /> -->
+
+    <Compile Include="DeepDiff.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
