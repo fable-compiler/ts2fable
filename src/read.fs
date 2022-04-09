@@ -45,34 +45,45 @@ let getBindingName(bn: BindingName): string option =
     | SyntaxKind.ArrayBindingPattern -> None
     | _ -> failwithf "unknown Binding Name kind %A" syntaxNode.kind
 
+type JS.NumberConstructor with
+    [<Emit("$0.isSafeInteger($1)")>]
+    member __.isSafeInteger (_: float) : bool = jsNative
+
+let readLiteral (node: Node) : FsLiteral option =
+    match node.kind with
+    | SyntaxKind.StringLiteral ->
+        Some (FsLiteral.String ((node :?> Ts.StringLiteral).text))
+    | SyntaxKind.TrueKeyword -> Some (FsLiteral.Bool true)
+    | SyntaxKind.FalseKeyword -> Some (FsLiteral.Bool false)
+    | _ ->
+        let text = node.getText()
+        let parsedAsInt, intValue = System.Int32.TryParse text
+        let parsedAsFloat, floatValue = System.Double.TryParse text
+        if parsedAsInt then Some (FsLiteral.Int intValue)
+        else if parsedAsFloat then Some (FsLiteral.Float floatValue)
+        else None
+
 let readEnumCase (checker: TypeChecker) (em: EnumMember): FsEnumCase =
     let name = em.name |> getPropertyName
-    let tp, value =
+    let tryGetConstantValue onFail =
+        match checker.getConstantValue(!^em) with
+        | Some (U2.Case1 s) -> FsLiteral.String s |> Some
+        | Some (U2.Case2 f) ->
+            if JS.Constructors.Number.isSafeInteger f then FsLiteral.Int (int f) |> Some
+            else FsLiteral.Float f |> Some
+        | None -> onFail ()
+    let value =
         match em.initializer with
-        | None -> FsEnumCaseType.Unknown, None
+        | None -> tryGetConstantValue (fun () -> None)
         | Some ep ->
-            match ep.kind with
-            | SyntaxKind.NumericLiteral ->
-                let nl = ep :?> NumericLiteral
-                FsEnumCaseType.Numeric, Some nl.text
-            | SyntaxKind.StringLiteral ->
-                let sl = ep :?> StringLiteral
-                FsEnumCaseType.String, Some sl.text
-            | SyntaxKind.PrefixUnaryExpression ->
-                let pue = ep :?> PrefixUnaryExpression
-                // a negative number such as -1 is the usual case
-                let txt = pue.getText()
-                let parsed, _ = Int32.TryParse txt
-                if parsed then
-                    FsEnumCaseType.Numeric, Some txt
-                else
-                    FsEnumCaseType.Unknown, None
-            | _ -> failwithf "EnumCase type not supported %A %A" ep.kind name
+            match readLiteral ep with
+            | Some (FsLiteral.String _ | FsLiteral.Int _ | FsLiteral.Float _) as value -> value
+            | _ ->
+                tryGetConstantValue (fun () -> failwithf "EnumCase type not supported %A %A" ep.kind name)
     {
         Attributes = []
         Comments = readCommentsAtLocation checker (!!em.name)
         Name = name
-        Type = tp
         Value = value
     }
 
@@ -236,7 +247,7 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
         IsStatic = false
         IsClass = false
         Name = id.name.getText()
-        FullName = getFullNodeName checker id.name
+        FullName = getFullName checker id.name
         Inherits = readInherits checker id.heritageClauses
         Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters checker id.typeParameters
@@ -248,7 +259,7 @@ let readTypeLiteral (checker: TypeChecker) (tl: TypeLiteralNode): FsTypeLiteral 
         Members = tl.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
     }
 
-let getFullNodeName (checker: TypeChecker) (nd: Node) : string =
+let getFullName (checker: TypeChecker) (nd: Node) : string =
     match checker.getSymbolAtLocation nd with
     | None -> ""
     | Some smb -> checker.getFullyQualifiedName smb
@@ -271,19 +282,17 @@ let getDeclarationsOfTypeNode (checker: TypeChecker) (nd: Node) : Lazy<FsMappedD
             if not (isNull tp) && not (isNullOrUndefined tp.symbol) then tp.symbol |> Some
             else checker.getSymbolAtLocation nd
         else checker.getSymbolAtLocation nd
-    let fail reason =
-        printf "* cannot get the declaration of type '%s' (%s)" (nd.getText()) reason
-        Lazy<_>.CreateFromValue []
+    let fail () = Lazy<_>.CreateFromValue []
     match symbol with
     | Some symbol ->
         match symbol.getDeclarations() with
-        | None -> fail "no decl found"
+        | None -> fail () // no declaration found
         | Some decls ->
             lazy (decls |> Seq.collect (fun decl -> readDeclarationOfSymbol checker decl) |> Seq.toList)
-    | None -> fail "symbol undefined"
+    | None -> fail () // symbol undefined
 
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
-    let fullName = getFullNodeName checker cd
+    let fullName = getFullName checker cd
     {
         Attributes = []
         Comments = cd.name |> Option.map (readCommentsAtLocation checker) |> Option.defaultValue []
@@ -340,7 +349,7 @@ let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
     | None ->
         {
             Name = tr.getText()
-            FullName = getFullNodeName checker !!tr.typeName
+            FullName = getFullName checker !!tr.typeName
             Declarations = getDeclarationsOfTypeNode checker !!tr.typeName
         }
         |> FsType.Mapped
@@ -355,7 +364,7 @@ let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
                     failwithf "readTypeReference type name is null: %s" (tr.getText())
                 {
                     Name = typeName
-                    FullName = getFullNodeName checker !!tr.typeName
+                    FullName = getFullName checker !!tr.typeName
                     Declarations = getDeclarationsOfTypeNode checker !!tr.typeName
                 }
                 |> FsType.Mapped
@@ -448,25 +457,14 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         simpleType "obj"
     | SyntaxKind.LiteralType ->
         let lt = t :?> LiteralTypeNode
-        let readLiteralKind (kind: SyntaxKind) text: FsType =
-            match kind with
-            | SyntaxKind.StringLiteral ->
-                FsType.Literal (FsLiteral.String (text |> removeQuotes))
-            | SyntaxKind.TrueKeyword -> FsType.Literal (FsLiteral.Bool true)
-            | SyntaxKind.FalseKeyword -> FsType.Literal (FsLiteral.Bool false)
-            | SyntaxKind.NumericLiteral -> FsType.Literal (FsLiteral.Number text)
-            | _ -> simpleType "obj"
-        // cannot match on erased union, so use properties directly
-        readLiteralKind (!!lt.literal?kind) (!!lt.literal?getText())
-        // match lt.literal with
-        // | U3.Case1 bl -> readLiteralKind bl.kind (bl.getText())
-        // | U3.Case2 le -> readLiteralKind le.kind (le.getText())
-        // | U3.Case3 pue -> readLiteralKind pue.kind (pue.getText())
+        readLiteral !!lt.literal
+        |> Option.map FsType.Literal
+        |> Option.defaultValue (simpleType "obj")
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
         {
             Name = readExpressionText eta.expression
-            FullName = getFullNodeName checker eta
+            FullName = getFullName checker eta.expression
             Declarations = getDeclarationsOfTypeNode checker eta.expression
         }
         |> FsType.Mapped
@@ -519,11 +517,6 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
     let isOptionType (t: TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
     let isLiteralType (t: TypeNode) = t.kind = SyntaxKind.LiteralType
     let isOptional = unTypes |> List.exists isOptionType
-    let getEnumCaseType (t: LiteralTypeNode) =
-        match !!t.literal?kind with
-        | SyntaxKind.NumericLiteral -> FsEnumCaseType.Numeric
-        | SyntaxKind.StringLiteral -> FsEnumCaseType.String
-        | _ -> FsEnumCaseType.Unknown
     let makeEnumCase (t: LiteralTypeNode) =
         let name = !!t.literal?getText() |> removeQuotes
         {
@@ -531,8 +524,7 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
             // comments aren't really supported for Literal Types in TS -> not available in node
             Comments = []
             Name = name
-            Type = getEnumCaseType t
-            Value = Some name
+            Value = readLiteral !!t.literal
         }
     let makeEnum name cases =
         {
@@ -824,8 +816,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
                         Attributes = []
                         Comments = []
                         Name = sl
-                        Type = FsEnumCaseType.String
-                        Value = None
+                        Value = FsLiteral.String sl |> Some
                     }
                 )
             }

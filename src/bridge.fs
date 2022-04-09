@@ -140,8 +140,10 @@ module internal Bridge =
         |> fixStatic
         |> createIExports
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
-        |> fixEnumReferences
-        |> fixDuplicatesInUnion
+        |> fixUnknownEnumCaseValue
+        |> replaceDiscriminatedUnions // must be after fixUnknownEnumCaseValue
+        |> fixEnumReferences // must be after replaceDiscriminatedUnions
+        |> fixDuplicatesInUnion // must be after replaceDiscriminatedUnions
         |> fixEscapeWords
         |> fixNameSpaceWithBridge bridge
         |> addTicForGenericFunctions // must be after fixEscapeWords
@@ -151,7 +153,6 @@ module internal Bridge =
         |> removeDuplicateFunctions
         |> removeDuplicateOptions
         |> extractTypeLiterals // after fixEscapeWords
-        |> addAliasUnionHelpers
         |> removeDuplicateOptionsFromParameters
         |> fixFloatAlias
         |> TransformComments.transform

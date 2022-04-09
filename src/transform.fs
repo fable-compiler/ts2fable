@@ -101,6 +101,11 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
             TypeParameters = al.TypeParameters |> List.map fixType
         }
         |> FsType.Alias
+    | FsType.DiscriminatedUnionAlias al ->
+        { al with
+            Cases = al.Cases |> Map.map (fun _ -> fixType)
+            TypeParameters = al.TypeParameters |> List.map fixType
+        } |> FsType.DiscriminatedUnionAlias
     | FsType.Generic gn ->
         { gn with
             Type = fixType gn.Type
@@ -1237,191 +1242,210 @@ let extractTypeLiterals(f: FsFile): FsFile =
     |> extractTypeLiterals_pass1
     |> extractTypeLiterals_pass2
 
-type FsUnionDiscriminator = Choice<FsLiteral, FsEnumCase>
-
-let private getDiscriminatedFromUnion name (un: FsUnion) : Map<string, Map<FsUnionDiscriminator, FsType>> * FsUnion =
-    let (|Dummy|) _ = []
-
-    let rec getLiteralFields (fieldName: string option) (typeArguments: FsType list) (ty: FsType) : list<{| name: string; value: FsUnionDiscriminator |}> =
-        match ty with
-        | FsType.Property {
-            Kind = FsPropertyKind.Regular; Accessor = ReadOnly | ReadWrite
-            IsStatic = false; Option = false; Name = name; Type = ty } when Option.isNone fieldName ->
-            getLiteralFields (Some name) [] ty
-        | FsType.Interface { Members = members; TypeParameters = tps }
-        | FsType.TypeLiteral { Members = members } & Dummy tps when Option.isNone fieldName ->
-            members
-            |> List.map (instantiate tps typeArguments)
-            |> List.collect (getLiteralFields fieldName [])
-        | FsType.Mapped m ->
-            m.Declarations.Value |> List.collect (function
-                | FsMappedDeclaration.Type ty -> getLiteralFields fieldName typeArguments ty
-                | FsMappedDeclaration.EnumCase ec ->
-                    match fieldName with
-                    | Some name -> [{| name = name; value = Choice2Of2 ec |}]
-                    | None -> []
-            )
-        | FsType.Literal l ->
-            match fieldName with
-            | Some name -> [{| name = name; value = Choice1Of2 l |}]
-            | None -> []
-        | FsType.Enum e ->
-            match fieldName with
-            | Some name -> e.Cases |> List.map (fun ec -> {| name = name; value = Choice2Of2 ec |})
-            | None -> []
-        | FsType.Alias { Type = ty; TypeParameters = tps } ->
-            ty |> instantiate tps typeArguments |> getLiteralFields fieldName []
-        | FsType.Generic { Type = ty; TypeParameters = tas } -> getLiteralFields fieldName tas ty
-        | FsType.Union u ->
-            if u.Option then []
-            else
-                let fields = u.Types |> List.map (getLiteralFields fieldName [])
-                fields |> List.concat
-        | _ -> []
-
-    let createLiteralFieldMap ty =
-        getLiteralFields None [] ty
-        |> List.distinct
-        |> List.groupBy (fun x -> x.name)
-        |> List.map (fun (k, v) -> k, v |> List.map (fun x -> x.value) |> Set.ofList)
-        |> Map.ofList
-
-    let discriminatables, rest =
-        List.foldBack (fun ty (discriminatables, rest) ->
-            let fields = createLiteralFieldMap ty
-            if Map.isEmpty fields then discriminatables, ty :: rest
-            else (ty, fields) :: discriminatables, rest
-        ) un.Types ([], [])
-
-    printfn "%s:" name
-    discriminatables
-    |> List.map (fun (t, m) -> Print.printType t, m)
-    |> printfn "  %A"
-    printfn ""
-
-    let tagDict = new Dictionary<string, _>()
-    for (_, fields) in discriminatables do
-        for (name, values) in fields |> Map.toSeq do
-            match tagDict.TryGetValue(name) with
-            | true, (i, values') -> tagDict.[name] <- (i + 1u, Set.intersect values values')
-            | false, _ -> tagDict.[name] <- (1u, values)
-
-    let getBestTag (fields: Map<string, Set<_>>) =
-        let xs =
-            fields
-            |> Map.toList
-            |> List.choose (fun (name, values) ->
-            match tagDict.TryGetValue(name) with
-            | true, (i, commonValues) when values <> commonValues -> // reject the tag if it does not discriminate at all
-                let intersect = Set.intersect values commonValues
-                Some ((-(Set.count intersect), i), (name, values)) // prefer the tag with the least intersections
-            | _, _ -> None)
-        if List.isEmpty xs then None
-        else Some (xs |> List.maxBy fst |> snd)
-
-    let discriminatables, rest =
-        List.foldBack (fun (ty, fields) (discriminatables, rest) ->
-            match getBestTag fields with
-            | Some (name, values) -> (name, values, ty) :: discriminatables, rest
-            | None -> discriminatables, ty :: rest
-        ) discriminatables ([], rest)
-
-    if List.length discriminatables < 2 then
-      Map.empty, un
-    else
-      let dus =
-        discriminatables
-        |> List.collect (fun (name, values, ty) ->
-          values |> Set.toList |> List.map (fun value -> name, (value, ty)))
-        |> List.groupBy fst
-        |> List.map (fun (name, xs) ->
-          name,
-          xs |> List.map snd
-             |> List.groupBy fst
-             |> List.map (fun (k, xs) ->
-                  match List.map snd xs |> List.distinct with
-                  | [x] -> k, x
-                  | xs -> k, FsType.Union { Types = xs; Option = false })
-             |> Map.ofList)
-        |> Map.ofList
-      dus, { un with Types = List.distinct rest }
-
-let private addAliasUnionHelpersImpl (al: FsAlias) (un: FsUnion) : FsType list =
-    let fallback () =
-        (*
-        [tp2] @
-        [
-            {
-                Comments = []
-                Attributes = [
-                    [
-                        FsAttribute.fromName "RequireQualifiedAccess"
-                        { Namespace = None; Name = "CompilationRepresentation"; Arguments = [ FsArgument.justValue "CompilationRepresentationFlags.ModuleSuffix" ] }
-                    ]
-                ]
-                HasDeclare = false
-                IsNamespace = false
-                Name = al.Name
-                Types = []
-                HelperLines =
-                    let mutable i = 0
-                    un.Types |> List.collect (fun tp3 ->
-                        let n = un.Types.Length
-                        i <- i + 1
-                        let name = getName tp3
-                        let name = if name = "" then sprintf "Case%d" i else name
-                        let name = name.Replace("'","") // strip generics
-                        let name = capitalize name
-                        let aliasNameWithTypes = sprintf "%s%s" al.Name (Print.printTypeParameters al.TypeParameters)
-                        if un.Option then
-                            [
-                                sprintf "let of%sOption v: %s = v |> Option.map U%d.Case%d" name aliasNameWithTypes n i
-                                sprintf "let of%s v: %s = v |> U%d.Case%d |> Some" name aliasNameWithTypes n i
-                                sprintf "let is%s (v: %s) = match v with None -> false | Some o -> match o with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
-                                sprintf "let as%s (v: %s) = match v with None -> None | Some o -> match o with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
-                            ]
-                        else
-                            [
-                                sprintf "let of%s v: %s = v |> U%d.Case%d" name aliasNameWithTypes n i
-                                sprintf "let is%s (v: %s) = match v with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
-                                sprintf "let as%s (v: %s) = match v with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
-                            ]
-                    )
-            }
-            |> FsType.Module
-        ]
-        *) // disabled for Fable.Core 3.x
-        [FsType.Alias al]
-    let discriminated, rest = getDiscriminatedFromUnion al.Name un
-    match Map.isEmpty discriminated, List.isEmpty rest.Types with
-    | true, true -> failwith "impossible!!"
-    | true, false -> fallback ()
-    | _, noRest ->
-        let keys = discriminated |> Map.toList |> List.map fst
-        printfn "'%s' can be discriminated with tag: %s" al.Name (keys |> String.concat ", ")
-        if not noRest then
-            printfn "  with the exceptions of: %s" (rest.Types |> List.map Print.printType |> String.concat ", ")
-        fallback ()
-
-let addAliasUnionHelpers(f: FsFile): FsFile =
+let fixUnknownEnumCaseValue (f: FsFile) : FsFile =
     f |> fixFile (fun ns tp ->
         match tp with
-        | FsType.Module md ->
-            { md with
-                Types =
-                    (md.Types |> List.collect(fun tp2 ->
-                        match tp2 with
-                        | FsType.Alias al ->
-                            match al.Type with
-                            | FsType.Union un ->
-                                if un.Types.Length > 1 then addAliasUnionHelpersImpl al un else [tp2]
-                            | _ -> [tp2]
-                        | _ -> [tp2]
-                    ))
-            }
-            |> FsType.Module
+        | FsType.Enum e ->
+            let f (state: FsLiteral option) (c: FsEnumCase) : FsEnumCase * FsLiteral option =
+                match c.Value with
+                | Some v -> c, Some v
+                | None ->
+                    let v =
+                        match state with
+                        | None -> Some (FsLiteral.Int 0)
+                        | Some (FsLiteral.Int n) -> Some (FsLiteral.Int (n+1))
+                        | Some (FsLiteral.Float f) -> Some (FsLiteral.Float (f+1.0))
+                        | _ -> None
+                    { c with Value = v }, v
+            FsType.Enum { e with Cases = e.Cases |> List.mapFold f None |> fst }
         | _ -> tp
     )
+
+type DUResult = Map<string, Map<FsLiteral, FsType>> * FsUnion
+type DUCache = Dictionary<FsUnion, DUResult>
+
+let private getDiscriminatedFromUnion (cache: DUCache) (un: FsUnion) : Map<string, Map<FsLiteral, FsType>> * FsUnion =
+    match cache.TryGetValue(un) with
+    | _, _ when un.Option -> Map.empty, un
+    | true, result -> result
+    | false, _ ->
+        let (|Dummy|) _ = []
+
+        let isDU (u: FsUnion) =
+            not u.Option
+            && getDiscriminatedFromUnion cache u |> fst |> Map.isEmpty |> not
+
+        let rec expandUnionType (typeArguments: FsType list) (ty: FsType) : FsType list option =
+            match ty with
+            | FsType.Union u when isDU u ->
+                u.Types
+                |> List.collect (fun ty -> expandUnionType typeArguments ty |> Option.defaultValue [ty])
+                |> Some
+            | FsType.Mapped m when m.FullName <> "" ->
+                m.Declarations.Value
+                |> List.tryPick (function
+                    | FsMappedDeclaration.Type t -> expandUnionType typeArguments t
+                    | FsMappedDeclaration.EnumCase _ -> None)
+            | FsType.Alias { Type = ty; TypeParameters = tps } ->
+                ty |> instantiate tps typeArguments |> expandUnionType []
+            | FsType.Generic { Type = ty; TypeParameters = tas } -> expandUnionType tas ty
+            | _ -> None
+
+        let types =
+            un.Types |> List.collect (fun ty -> expandUnionType [] ty |> Option.defaultValue [ty])
+
+        let rec getLiteralFields (fieldName: string option) (typeArguments: FsType list) (ty: FsType) : list<{| name: string; value: FsLiteral |}> =
+            match ty with
+            | FsType.Property {
+                Kind = FsPropertyKind.Regular; Accessor = ReadOnly | ReadWrite
+                IsStatic = false; Option = false; Name = name; Type = ty } when Option.isNone fieldName ->
+                getLiteralFields (Some name) [] ty
+            | FsType.Interface { Members = members; TypeParameters = tps; Inherits = inherits }
+            | FsType.TypeLiteral { Members = members } & Dummy tps & Dummy inherits when Option.isNone fieldName ->
+                let fields =
+                    members
+                    |> List.map (instantiate tps typeArguments)
+                    |> List.collect (getLiteralFields fieldName [])
+                let fieldNames =
+                    fields |> List.map (fun fl -> fl.name) |> Set.ofList
+                let inherited =
+                    inherits
+                    |> List.map (instantiate tps typeArguments)
+                    |> List.collect (getLiteralFields fieldName [])
+                    |> List.filter (fun fl -> fieldNames |> Set.contains fl.name |> not) // remove overridden fields
+                fields @ inherited
+            | FsType.Mapped m ->
+                m.Declarations.Value |> List.collect (function
+                    | FsMappedDeclaration.Type ty -> getLiteralFields fieldName typeArguments ty
+                    | FsMappedDeclaration.EnumCase ec ->
+                        match fieldName, ec.Value with
+                        | Some name, Some value -> [{| name = name; value = value |}]
+                        | _ -> []
+                )
+            | FsType.Literal l ->
+                match fieldName with
+                | Some name -> [{| name = name; value = l |}]
+                | None -> []
+            | FsType.Enum e ->
+                match fieldName with
+                | Some name ->
+                    if e.Cases |> List.forall (fun ec -> ec.Value.IsSome) then
+                        e.Cases |> List.map (fun ec -> {| name = name; value = ec.Value.Value |})
+                    else []
+                | None -> []
+            | FsType.Alias { Type = ty; TypeParameters = tps } ->
+                ty |> instantiate tps typeArguments |> getLiteralFields fieldName []
+            | FsType.Generic { Type = ty; TypeParameters = tas } -> getLiteralFields fieldName tas ty
+            | FsType.Union u ->
+                if u.Option then []
+                else
+                    let fields = u.Types |> List.map (getLiteralFields fieldName [])
+                    fields |> List.concat
+            | _ -> []
+
+        let createLiteralFieldMap ty =
+            getLiteralFields None [] ty
+            |> List.distinct
+            |> List.groupBy (fun x -> x.name)
+            |> List.map (fun (k, v) -> k, v |> List.map (fun x -> x.value) |> Set.ofList)
+            |> Map.ofList
+
+        let discriminatables, rest =
+            List.foldBack (fun ty (discriminatables, rest) ->
+                let fields = createLiteralFieldMap ty
+                if Map.isEmpty fields then discriminatables, ty :: rest
+                else (ty, fields) :: discriminatables, rest
+            ) types ([], [])
+
+        let tagDict = new Dictionary<string, _>()
+        for (_, fields) in discriminatables do
+            for (name, values) in fields |> Map.toSeq do
+                match tagDict.TryGetValue(name) with
+                | true, (i, values') -> tagDict.[name] <- (i + 1u, Set.intersect values values')
+                | false, _ -> tagDict.[name] <- (1u, values)
+
+        let getBestTag (fields: Map<string, Set<_>>) =
+            let xs =
+                fields
+                |> Map.toList
+                |> List.choose (fun (name, values) ->
+                match tagDict.TryGetValue(name) with
+                | true, (i, commonValues) when values <> commonValues -> // reject the tag if it does not discriminate at all
+                    let intersect = Set.intersect values commonValues
+                    Some ((-(Set.count intersect), i), (name, values)) // prefer the tag with the least intersections
+                | _, _ -> None)
+            if List.isEmpty xs then None
+            else Some (xs |> List.maxBy fst |> snd)
+
+        let discriminatables, rest =
+            List.foldBack (fun (ty, fields) (discriminatables, rest) ->
+                match getBestTag fields with
+                | Some (name, values) -> (name, values, ty) :: discriminatables, rest
+                | None -> discriminatables, ty :: rest
+            ) discriminatables ([], rest)
+
+        let result =
+            if List.length discriminatables < 2 then
+                Map.empty, un
+            else
+                let dus =
+                    discriminatables
+                    |> List.collect (fun (name, values, ty) ->
+                    values |> Set.toList |> List.map (fun value -> name, (value, ty)))
+                    |> List.groupBy fst
+                    |> List.map (fun (name, xs) ->
+                    name,
+                    xs |> List.map snd
+                        |> List.groupBy fst
+                        |> List.map (fun (k, xs) ->
+                            match List.map snd xs |> List.distinct with
+                            | [x] -> k, x
+                            | xs -> k, FsType.Union { Types = xs; Option = false })
+                        |> Map.ofList)
+                    |> Map.ofList
+                dus, { un with Types = List.distinct rest }
+        cache.Add(un, result)
+        result
+
+let private replaceDiscriminatedUnionsImpl (cache: DUCache) (al: FsAlias) (un: FsUnion) : FsType list =
+    let fallback () = [FsType.Alias al]
+    let discriminated, rest = getDiscriminatedFromUnion cache un
+    match Map.count discriminated, List.isEmpty rest.Types with
+    | 1, true ->
+        let discriminator, cases =
+            discriminated |> Map.toList |> List.head
+        [FsType.DiscriminatedUnionAlias {
+            Attributes = al.Attributes
+            Comments = al.Comments
+            Name = al.Name
+            Discriminator = discriminator
+            Cases = cases
+            TypeParameters = al.TypeParameters
+        }]
+    | _, _ -> fallback ()
+
+let replaceDiscriminatedUnions(f: FsFile): FsFile =
+    let cache = new Dictionary<_, _>()
+    if not Config.TaggedUnion then f
+    else
+        f |> fixFile (fun ns tp ->
+            match tp with
+            | FsType.Module md ->
+                { md with
+                    Types =
+                        (md.Types |> List.collect(fun tp2 ->
+                            match tp2 with
+                            | FsType.Alias al ->
+                                match al.Type with
+                                | FsType.Union un ->
+                                    if un.Types.Length > 1 then replaceDiscriminatedUnionsImpl cache al un else [tp2]
+                                | _ -> [tp2]
+                            | _ -> [tp2]
+                        ))
+                }
+                |> FsType.Module
+            | _ -> tp
+        )
 
 let fixNamespace (f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->

@@ -32,8 +32,9 @@ let printType (tp: FsType): string =
     | FsType.Literal l ->
         match l with
         | FsLiteral.String _ -> "string"
-        | FsLiteral.Number _ -> "number"
-        | FsLiteral.Bool _ -> "boolean"
+        | FsLiteral.Int _ -> "int"
+        | FsLiteral.Float _ -> "float"
+        | FsLiteral.Bool _ -> "bool"
     | FsType.Property p -> printType p.Type
     | FsType.Enum en ->
         printfn "unextracted printType %s: %s" (getTypeName tp) (getName tp)
@@ -432,7 +433,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
             let line = ResizeArray()
             sprintf "    | %s" unm |> line.Add
             if cs.Value.IsSome then
-                sprintf " = %s" cs.Value.Value |> line.Add
+                sprintf " = %s" cs.Value.Value.Value |> line.Add
             sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
     | FsEnumCaseType.String ->
         sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
@@ -440,7 +441,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
             printComments lines (indent + "    ") cs.Comments
             printAttributes lines (indent + "    ") cs.Attributes
             let nm = cs.Name
-            let v = (cs.Value |> Option.defaultValue nm).Replace("\"", "\\\"")
+            let v = (cs.Value |> Option.map (fun v -> v.Value) |> Option.defaultValue nm).Replace("\"", "\\\"")
             let unm = createEnumName nm
             let line = ResizeArray()
             if nameEqualsDefaultFableValue unm v then
@@ -451,6 +452,39 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
     | FsEnumCaseType.Unknown ->
         sprintf "%stype %s =" indent en.Name |> lines.Add
         sprintf "%s    obj" indent |> lines.Add
+
+let printDU (lines: ResizeArray<string>) (indent: string) (du: FsDiscriminatedUnionAlias) =
+    sprintf "" |> lines.Add
+    printComments lines indent du.Comments
+    printAttributes lines indent du.Attributes
+    let types =
+        du.Cases
+        |> Map.toList |> List.map snd
+        |> List.map printType
+        |> List.distinct
+    match types with
+    | [ty] -> // just emit alias if everything is converted to the same type by `fixEnumReferences`
+        sprintf "%stype %s =" indent du.Name |> lines.Add
+        sprintf "%s    %s" indent ty |> lines.Add
+    | _ ->
+        sprintf "%stype [<TypeScriptTaggedUnion(\"%s\")>] [<RequireQualifiedAccess>] %s%s ="
+            indent du.Discriminator du.Name (printTypeParameters du.TypeParameters) |> lines.Add
+        let mutable usedNames = Set.empty
+        for KeyValue(value, ty) in du.Cases do
+            let caseName =
+                let name = ty |> getName |> createEnumName
+                if usedNames |> Set.contains name then name + "'" else name
+            usedNames <- usedNames |> Set.add caseName
+            let attr =
+                match value with
+                | FsLiteral.String s ->
+                    let s = s.Replace("\"", "\\\"")
+                    if nameEqualsDefaultFableValue caseName s then ""
+                    else sprintf "[<CompiledName \"%s\">] " s
+                | FsLiteral.Int i -> sprintf "[<CompiledValue %d>] " i
+                | FsLiteral.Float f -> sprintf "[<CompiledValue %s>] " (string f)
+                | FsLiteral.Bool b -> sprintf "[<CompiledValue %b>] " b
+            sprintf "%s    | %s%s of %s" indent attr caseName (printType ty) |> lines.Add
 
 let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
     let lineCountStart = lines.Count
@@ -546,6 +580,8 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             printAttributes lines indent al.Attributes
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
+        | FsType.DiscriminatedUnionAlias du ->
+            printDU lines indent du
         | FsType.Module smd ->
             printModule lines indent smd
         | FsType.Variable vb ->

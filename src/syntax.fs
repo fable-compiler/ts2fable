@@ -44,6 +44,20 @@ type FsGenericTypeParameter =
     }
 
 [<RequireQualifiedAccess>]
+type FsLiteral =
+    | String of string
+    | Int of int
+    | Float of float
+    | Bool of bool
+with
+    member x.Value =
+        match x with
+        | String s -> s
+        | Int i -> string i
+        | Float f -> string f
+        | Bool b -> string b
+
+[<RequireQualifiedAccess>]
 type FsEnumCaseType =
     | Numeric
     | String
@@ -54,15 +68,8 @@ type FsEnumCase =
         Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
-        Type: FsEnumCaseType
-        Value: string option
+        Value: FsLiteral option
     }
-with
-    member x.ValueAsLiteral =
-        match x.Type, x.Value with
-        | FsEnumCaseType.String, Some v -> FsLiteral.String v |> Some
-        | FsEnumCaseType.Numeric, Some v -> FsLiteral.Number v |> Some
-        | _, _ -> None
 
 type FsEnum =
     {
@@ -73,12 +80,17 @@ type FsEnum =
     }
 with
     member x.Type =
-        if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
-            FsEnumCaseType.Unknown
-        else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
-            FsEnumCaseType.String
-        else
-            FsEnumCaseType.Numeric
+        if x.Cases |> List.forall (fun x ->
+            match x.Value with
+            | Some (FsLiteral.Float _ | FsLiteral.Int _) -> true
+            | Some _ -> false
+            | None -> true) then FsEnumCaseType.Numeric
+        else if x.Cases |> List.forall (fun x ->
+            match x.Value with
+            | Some (FsLiteral.String _) -> true
+            | Some _ -> false
+            | None -> true) then FsEnumCaseType.String
+        else FsEnumCaseType.Unknown
 
 type FsCommentLine = string
 type FsCommentContent = FsCommentLine list
@@ -235,6 +247,16 @@ type FsAlias =
         TypeParameters: FsType list
     }
 
+type FsDiscriminatedUnionAlias =
+    {
+        Attributes: FsAttributeSet list
+        Comments: FsComment list
+        Name: string
+        Discriminator: string
+        Cases: Map<FsLiteral, FsType>
+        TypeParameters: FsType list
+    }
+
 [<RequireQualifiedAccess>]
 type FsTupleKind =
     | Intersection
@@ -313,13 +335,24 @@ type FsMappedDeclaration =
     | Type of FsType
     | EnumCase of FsEnumCase
 
-type FsMapped =
+type [<CustomEquality; CustomComparison>] FsMapped =
     {
         // Namespace: string list // TODO
         Name: string
         FullName: string
         Declarations: Lazy<FsMappedDeclaration list>
     }
+with
+    override x.Equals(yo) =
+        match yo with
+        | :? FsMapped as y -> x.FullName = y.FullName
+        | _ -> false
+    override x.GetHashCode() = x.FullName.GetHashCode()
+    interface System.IComparable with
+        member x.CompareTo(yo) =
+            match yo with
+            | :? FsMapped as y -> compare x.FullName y.FullName
+            | _ -> invalidArg "yo" "cannot compare values"
 
 type FsArgument = {
     /// Named argument
@@ -365,14 +398,7 @@ let simpleType name: FsType =
     }
     |> FsType.Mapped
 
-
-[<RequireQualifiedAccess>]
-type FsLiteral =
-    | String of string
-    | Number of string
-    | Bool of bool
-
-[<RequireQualifiedAccess>]
+[<RequireQualifiedAccess; StructuralEquality; StructuralComparison>]
 type FsType =
     | Interface of FsInterface
     | Enum of FsEnum
@@ -385,6 +411,7 @@ type FsType =
     | Function of FsFunction
     | Union of FsUnion
     | Alias of FsAlias
+    | DiscriminatedUnionAlias of FsDiscriminatedUnionAlias
     | Generic of FsGenericType
     | Tuple of FsTuple
     | Module of FsModule
@@ -552,6 +579,7 @@ let getTypeName (tp: FsType) =
     | FsType.Enum t -> t.GetType().ToString()
     | FsType.Param t -> t.GetType().ToString()
     | FsType.Alias t -> t.GetType().ToString()
+    | FsType.DiscriminatedUnionAlias t -> t.GetType().ToString()
     | FsType.File t -> t.GetType().ToString()
     | FsType.Generic t -> t.GetType().ToString()
     | FsType.Mapped t -> t.GetType().ToString()
@@ -565,7 +593,8 @@ let getTypeName (tp: FsType) =
     | FsType.Literal l ->
         match l with
         | FsLiteral.String t -> t.GetType().ToString()
-        | FsLiteral.Number t -> (float t).GetType().ToString() // is this correct???
+        | FsLiteral.Int t -> t.GetType().ToString()
+        | FsLiteral.Float t -> t.GetType().ToString()
         | FsLiteral.Bool t -> t.GetType().ToString()
     | FsType.This as t -> t.GetType().ToString() + ".This"
     | FsType.Tuple t -> t.GetType().ToString()
@@ -583,6 +612,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     | FsType.Enum _
     | FsType.Param _
     | FsType.Alias _
+    | FsType.DiscriminatedUnionAlias _
     | FsType.File _
     | FsType.Generic _
     | FsType.Mapped _
