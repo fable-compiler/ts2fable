@@ -656,6 +656,7 @@ let addTicForGenericTypes(f: FsFile): FsFile =
         match tp with
         | FsType.Interface it -> fixTic ns it.TypeParameters tp
         | FsType.Alias al -> fixTic ns al.TypeParameters tp
+        | FsType.DiscriminatedUnionAlias du -> fixTic ns du.TypeParameters tp
         | _ -> tp
     )
 
