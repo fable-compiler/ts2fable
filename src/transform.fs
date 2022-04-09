@@ -887,22 +887,17 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
     //   2) type Nullable<T> = T | null
     //      (?p : Nullable<int>)
 
-    let allTypes = lazy (getAllTypesFromFile f |> List.toArray)
-
-    let rec isAliasToOption (name: string) =
-        let typFromName = allTypes.Value |> Seq.tryFind (fun t ->
+    let rec isAliasToOption (m: FsMapped) =
+        m.Declarations.Value |> List.exists (fun t ->
             match t with
-            | FsType.Alias { Name = aliasName }
-                when (aliasName = name) -> true
+            // simple: the alias is itself a union with option
+            | FsMappedDeclaration.Type (FsType.Alias {
+                Type = FsType.Union { Option = true; Types = [ FsType.Mapped mp ] }
+                TypeParameters = [ FsType.GenericTypeParameter gtp ]
+              }) when mp.Name = gtp.Name -> true
+            // here we could check if the alias is another alias to option, but that seems like an unlikely pattern
             | _ -> false
         )
-        match typFromName with
-        // simple: the alias is itself a union with option
-        | Some (FsType.Alias { Type = FsType.Union { Option = true; Types = [ FsType.Mapped mp ] }; TypeParameters = [ FsType.GenericTypeParameter gtp ] })
-           when mp.Name = gtp.Name -> true
-        // here we could check if the alias is another alias to option, but that seems like an unlikely pattern
-        | _ -> false
-
 
     f |> fixFile (fun ns tp ->
 
@@ -916,8 +911,8 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
             | FsType.Union un when un.Option ->
                 { pr with Type = { un  with Option = false } |> FsType.Union } |> FsType.Param
             // case 2: alias
-            | FsType.Generic { Type = FsType.Mapped { Name = name; FullName = "" }; TypeParameters = [ t ] }
-                when (isAliasToOption name) ->
+            | FsType.Generic { Type = FsType.Mapped m; TypeParameters = [ t ] }
+                when (isAliasToOption m) ->
                     { pr with Type = t } |> FsType.Param
 
             | _ -> tp
@@ -1437,7 +1432,7 @@ let replaceDiscriminatedUnions(f: FsFile): FsFile =
                             match tp2 with
                             | FsType.Alias al ->
                                 match al.Type with
-                                | FsType.Union un ->
+                                | FsType.Union un when not un.Option ->
                                     if un.Types.Length > 1 then replaceDiscriminatedUnionsImpl cache al un else [tp2]
                                 | _ -> [tp2]
                             | _ -> [tp2]

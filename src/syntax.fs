@@ -343,15 +343,17 @@ type [<CustomEquality; CustomComparison>] FsMapped =
         Declarations: Lazy<FsMappedDeclaration list>
     }
 with
+    member x.AsComparable =
+        (x.Name, x.FullName)
     override x.Equals(yo) =
         match yo with
-        | :? FsMapped as y -> x.FullName = y.FullName
+        | :? FsMapped as y -> x.AsComparable = y.AsComparable
         | _ -> false
-    override x.GetHashCode() = x.FullName.GetHashCode()
+    override x.GetHashCode() = x.AsComparable.GetHashCode()
     interface System.IComparable with
         member x.CompareTo(yo) =
             match yo with
-            | :? FsMapped as y -> compare x.FullName y.FullName
+            | :? FsMapped as y -> compare x.AsComparable y.AsComparable
             | _ -> invalidArg "yo" "cannot compare values"
 
 type FsArgument = {
