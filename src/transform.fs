@@ -1259,7 +1259,7 @@ let fixUnknownEnumCaseValue (f: FsFile) : FsFile =
 type DUResult = Map<string, Map<FsLiteral, FsType>> * FsUnion
 type DUCache = Dictionary<FsUnion, DUResult>
 
-let private getDiscriminatedFromUnion (cache: DUCache) (un: FsUnion) : Map<string, Map<FsLiteral, FsType>> * FsUnion =
+let private getDiscriminatedFromUnion (cache: DUCache) (un: FsUnion) : DUResult =
     match cache.TryGetValue(un) with
     | _, _ when un.Option -> Map.empty, un
     | true, result -> result
