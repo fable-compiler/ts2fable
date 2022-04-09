@@ -292,7 +292,7 @@ let getDeclarationsOfTypeNode (checker: TypeChecker) (nd: Node) : Lazy<FsMappedD
     | None -> fail () // symbol undefined
 
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
-    let fullName = getFullName checker cd
+    let fullName = getFullName checker !!cd.name
     {
         Attributes = []
         Comments = cd.name |> Option.map (readCommentsAtLocation checker) |> Option.defaultValue []

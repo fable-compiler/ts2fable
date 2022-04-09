@@ -340,6 +340,9 @@ type [<CustomEquality; CustomComparison>] FsMapped =
         // Namespace: string list // TODO
         Name: string
         FullName: string
+        /// The declarations of this type. Reader would run on creating the lazy value for the first time.
+        ///
+        /// This must be lazy because mutually-recurisive types would contain each other...
         Declarations: Lazy<FsMappedDeclaration list>
     }
 with
