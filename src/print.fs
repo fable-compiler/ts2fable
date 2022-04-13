@@ -453,7 +453,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
         sprintf "%stype %s =" indent en.Name |> lines.Add
         sprintf "%s    obj" indent |> lines.Add
 
-let printDU (lines: ResizeArray<string>) (indent: string) (du: FsDiscriminatedUnionAlias) =
+let printDU (lines: ResizeArray<string>) (indent: string) (du: FsTaggedUnionAlias) =
     sprintf "" |> lines.Add
     printComments lines indent du.Comments
     printAttributes lines indent du.Attributes
@@ -470,13 +470,24 @@ let printDU (lines: ResizeArray<string>) (indent: string) (du: FsDiscriminatedUn
         sprintf "%stype [<TypeScriptTaggedUnion(\"%s\")>] [<RequireQualifiedAccess>] %s%s ="
             indent du.Discriminator du.Name (printTypeParameters du.TypeParameters) |> lines.Add
         let mutable usedNames = Set.empty
-        for KeyValue(value, ty) in du.Cases do
+        for index, (tag, ty) in du.Cases |> Map.toArray |> Array.indexed do
             let caseName =
-                let name = ty |> getName |> createEnumName
+                let name =
+                    match getName ty with
+                    | "" -> // not helpful. see the tag instead
+                        match tag.Name with
+                        | Some name -> name // if tag is an enum case, use its name
+                        | None ->
+                            match tag.Value with
+                            | FsLiteral.String s -> createEnumName s // use value as name (like in StringEnum)
+                            | _ ->
+                                // use index. would be confusing if it became something like `Case2147483647`
+                                sprintf "Case%d" (index+1)
+                    | name -> name
                 if usedNames |> Set.contains name then name + "'" else name
             usedNames <- usedNames |> Set.add caseName
             let attr =
-                match value with
+                match tag.Value with
                 | FsLiteral.String s ->
                     let s = s.Replace("\"", "\\\"")
                     if nameEqualsDefaultFableValue caseName s then ""
@@ -580,7 +591,7 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             printAttributes lines indent al.Attributes
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
-        | FsType.DiscriminatedUnionAlias du ->
+        | FsType.TaggedUnionAlias du ->
             printDU lines indent du
         | FsType.Module smd ->
             printModule lines indent smd

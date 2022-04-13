@@ -247,13 +247,19 @@ type FsAlias =
         TypeParameters: FsType list
     }
 
-type FsDiscriminatedUnionAlias =
+type FsTag =
+    {
+        Name: string option
+        Value: FsLiteral
+    }
+
+type FsTaggedUnionAlias =
     {
         Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
         Discriminator: string
-        Cases: Map<FsLiteral, FsType>
+        Cases: Map<FsTag, FsType>
         TypeParameters: FsType list
     }
 
@@ -416,7 +422,7 @@ type FsType =
     | Function of FsFunction
     | Union of FsUnion
     | Alias of FsAlias
-    | DiscriminatedUnionAlias of FsDiscriminatedUnionAlias
+    | TaggedUnionAlias of FsTaggedUnionAlias
     | Generic of FsGenericType
     | Tuple of FsTuple
     | Module of FsModule
@@ -584,7 +590,7 @@ let getTypeName (tp: FsType) =
     | FsType.Enum t -> t.GetType().ToString()
     | FsType.Param t -> t.GetType().ToString()
     | FsType.Alias t -> t.GetType().ToString()
-    | FsType.DiscriminatedUnionAlias t -> t.GetType().ToString()
+    | FsType.TaggedUnionAlias t -> t.GetType().ToString()
     | FsType.File t -> t.GetType().ToString()
     | FsType.Generic t -> t.GetType().ToString()
     | FsType.Mapped t -> t.GetType().ToString()
@@ -617,7 +623,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     | FsType.Enum _
     | FsType.Param _
     | FsType.Alias _
-    | FsType.DiscriminatedUnionAlias _
+    | FsType.TaggedUnionAlias _
     | FsType.File _
     | FsType.Generic _
     | FsType.Mapped _

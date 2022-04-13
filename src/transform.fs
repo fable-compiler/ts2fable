@@ -101,11 +101,11 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
             TypeParameters = al.TypeParameters |> List.map fixType
         }
         |> FsType.Alias
-    | FsType.DiscriminatedUnionAlias al ->
+    | FsType.TaggedUnionAlias al ->
         { al with
             Cases = al.Cases |> Map.map (fun _ -> fixType)
             TypeParameters = al.TypeParameters |> List.map fixType
-        } |> FsType.DiscriminatedUnionAlias
+        } |> FsType.TaggedUnionAlias
     | FsType.Generic gn ->
         { gn with
             Type = fixType gn.Type
@@ -656,7 +656,7 @@ let addTicForGenericTypes(f: FsFile): FsFile =
         match tp with
         | FsType.Interface it -> fixTic ns it.TypeParameters tp
         | FsType.Alias al -> fixTic ns al.TypeParameters tp
-        | FsType.DiscriminatedUnionAlias du -> fixTic ns du.TypeParameters tp
+        | FsType.TaggedUnionAlias du -> fixTic ns du.TypeParameters tp
         | _ -> tp
     )
 
@@ -1257,7 +1257,7 @@ let fixUnknownEnumCaseValue (f: FsFile) : FsFile =
         | _ -> tp
     )
 
-type DUResult = Map<string, Map<FsLiteral, FsType>> * FsUnion
+type DUResult = Map<string, Map<FsTag, FsType>> * FsUnion
 type DUCache = Dictionary<FsUnion, DUResult>
 
 let private getDiscriminatedFromUnion (cache: DUCache) (un: FsUnion) : DUResult =
@@ -1290,7 +1290,7 @@ let private getDiscriminatedFromUnion (cache: DUCache) (un: FsUnion) : DUResult 
         let types =
             un.Types |> List.collect (fun ty -> expandUnionType [] ty |> Option.defaultValue [ty])
 
-        let rec getLiteralFields (fieldName: string option) (typeArguments: FsType list) (ty: FsType) : list<{| name: string; value: FsLiteral |}> =
+        let rec getLiteralFields (fieldName: string option) (typeArguments: FsType list) (ty: FsType) : list<{| name: string; value: FsTag |}> =
             match ty with
             | FsType.Property {
                 Kind = FsPropertyKind.Regular; Accessor = ReadOnly | ReadWrite
@@ -1315,18 +1315,18 @@ let private getDiscriminatedFromUnion (cache: DUCache) (un: FsUnion) : DUResult 
                     | FsMappedDeclaration.Type ty -> getLiteralFields fieldName typeArguments ty
                     | FsMappedDeclaration.EnumCase ec ->
                         match fieldName, ec.Value with
-                        | Some name, Some value -> [{| name = name; value = value |}]
+                        | Some name, Some value -> [{| name = name; value = { Name = Some ec.Name; Value = value } |}]
                         | _ -> []
                 )
             | FsType.Literal l ->
                 match fieldName with
-                | Some name -> [{| name = name; value = l |}]
+                | Some name -> [{| name = name; value = { Name = None; Value = l } |}]
                 | None -> []
             | FsType.Enum e ->
                 match fieldName with
                 | Some name ->
                     if e.Cases |> List.forall (fun ec -> ec.Value.IsSome) then
-                        e.Cases |> List.map (fun ec -> {| name = name; value = ec.Value.Value |})
+                        e.Cases |> List.map (fun ec -> {| name = name; value = { Name = Some ec.Name; Value = ec.Value.Value } |})
                     else []
                 | None -> []
             | FsType.Alias { Type = ty; TypeParameters = tps } ->
@@ -1410,7 +1410,7 @@ let private replaceDiscriminatedUnionsImpl (cache: DUCache) (al: FsAlias) (un: F
     | 1, true ->
         let discriminator, cases =
             discriminated |> Map.toList |> List.head
-        [FsType.DiscriminatedUnionAlias {
+        [FsType.TaggedUnionAlias {
             Attributes = al.Attributes
             Comments = al.Comments
             Name = al.Name
