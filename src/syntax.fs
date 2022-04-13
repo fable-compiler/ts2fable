@@ -76,6 +76,7 @@ type FsEnum =
         Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
+        FullName: string
         Cases: FsEnumCase list
     }
 with

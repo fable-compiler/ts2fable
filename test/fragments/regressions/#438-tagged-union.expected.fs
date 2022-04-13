@@ -1,4 +1,4 @@
-// ts2fable 0.8.0
+// ts2fable 0.0.0
 module rec ``#438-tagged-union``
 open System
 open Fable.Core
@@ -17,7 +17,7 @@ module StringKind =
 
     type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] Shape =
         | Circle of Circle
-        | [<CompiledName "square_">] Square of Square
+        | [<CompiledName "square!">] Square of Square
 
 module NumberKind =
 
@@ -26,12 +26,12 @@ module NumberKind =
         abstract radius: float with get, set
 
     type [<AllowNullLiteral>] Square =
-        abstract kind: float with get, set
+        abstract kind: int with get, set
         abstract sideLength: float with get, set
 
     type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] Shape =
         | [<CompiledValue 1>] Circle of Circle
-        | [<CompiledValue 4.2>] Square of Square
+        | [<CompiledValue 2>] Square of Square
 
 module MixedKind =
 
@@ -45,7 +45,7 @@ module MixedKind =
 
     type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] Shape =
         | [<CompiledName "square!">] Square of Square
-        | [<CompiledValue 0>] Circle of Circle
+        | [<CompiledValue 1>] Circle of Circle
 
 module EnumKind =
 
@@ -64,3 +64,15 @@ module EnumKind =
     type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] Shape =
         | [<CompiledValue 1>] Circle of Circle
         | [<CompiledValue 2>] Square of Square
+
+type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] S1 =
+    | Circle of {| kind: string; radius: float |}
+    | Square of {| kind: string; sideLength: float |}
+
+type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] S2 =
+    | [<CompiledValue 1>] Case1 of {| kind: int; radius: float |}
+    | [<CompiledValue 2>] Case2 of {| kind: int; sideLength: float |}
+
+type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] S3 =
+    | [<CompiledValue 1>] Circle of {| kind: EnumKind.ShapeKind; radius: float |}
+    | [<CompiledValue 2>] Square of {| kind: EnumKind.ShapeKind; sideLength: float |}

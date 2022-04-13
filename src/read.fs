@@ -341,6 +341,7 @@ let readEnum (checker: TypeChecker) (ed: EnumDeclaration): FsEnum =
         Attributes = []
         Comments = readCommentsAtLocation checker ed.name
         Name = ed.name.getText()
+        FullName = getFullName checker ed.name
         Cases = ed.members |> List.ofSeq |> List.map (readEnumCase checker)
     }
 
@@ -531,6 +532,7 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
             Attributes = []
             Comments = []
             Name = name
+            FullName = name
             Cases = cases
         }
         |> FsType.Enum
@@ -793,6 +795,7 @@ let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =
 let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsType =
     let tp = d.``type`` |> (readTypeNode checker)
     let name = d.name.getText()
+    let fullName = getFullName checker d.name
     let asAlias() =
         {
             Attributes = []
@@ -811,6 +814,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
                 Attributes = []
                 Comments = readCommentsAtLocation checker d.name
                 Name = name
+                FullName = fullName
                 Cases = sls |> List.map (fun sl ->
                     {
                         Attributes = []

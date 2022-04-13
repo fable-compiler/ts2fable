@@ -8,7 +8,7 @@ declare namespace StringKind {
     }
 
     interface Square {
-        kind: "square_";
+        kind: "square!";
         sideLength: number;
     }
 
@@ -23,7 +23,7 @@ declare namespace NumberKind {
     }
 
     interface Square {
-        kind: 4.2;
+        kind: 2;
         sideLength: number;
     }
 
@@ -33,7 +33,7 @@ declare namespace NumberKind {
 // mixed kind
 declare namespace MixedKind {
     interface Circle {
-        kind: 0;
+        kind: 1;
         radius: number;
     }
 
@@ -64,3 +64,15 @@ declare namespace EnumKind {
 
     type Shape = Circle | Square;
 }
+
+type S1 = // literals with string kind
+    { kind: "circle"; radius: number; }
+  | { kind: "square"; sideLength: number; };
+
+type S2 = // literals with number kind
+    { kind: 1; radius: number; }
+  | { kind: 2; sideLength: number; };
+
+type S3 = // literals with enum kind
+    { kind: EnumKind.ShapeKind.Circle; radius: number; }
+  | { kind: EnumKind.ShapeKind.Square; sideLength: number; };

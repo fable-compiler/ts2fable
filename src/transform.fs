@@ -611,7 +611,7 @@ let fixEnumReferences (f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Enum en ->
-            list.Add en.Name |> ignore
+            list.Add en.FullName |> ignore
             tp
         | _ -> tp
     ) |> ignore
@@ -622,10 +622,10 @@ let fixEnumReferences (f: FsFile): FsFile =
         match tp with
         | FsType.Mapped mp ->
             if mp.Name.Contains "." then
-                let nm = mp.Name.Substring(0, mp.Name.IndexOf ".")
-                if set.Contains nm then
+                let dropLast (s: string) = s.Substring(0, s.LastIndexOf ".")
+                if set.Contains(dropLast mp.FullName) then
                     // { mp with Name = nm } |> FsType.Mapped
-                    simpleType nm
+                    simpleType (dropLast mp.Name)
                 else tp
             else tp
         | _ -> tp
