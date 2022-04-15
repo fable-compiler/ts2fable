@@ -463,10 +463,14 @@ let printDU (lines: ResizeArray<string>) (indent: string) (du: FsTaggedUnionAlia
         |> List.map printType
         |> List.distinct
     match types with
+    | [] ->   // this should never happen
+        sprintf "%stype %s =" indent du.Name |> lines.Add
+        sprintf "%s    obj" indent |> lines.Add
     | [ty] -> // just emit alias if everything is converted to the same type by `fixEnumReferences`
         sprintf "%stype %s =" indent du.Name |> lines.Add
         sprintf "%s    %s" indent ty |> lines.Add
     | _ ->
+        let memberLines = new ResizeArray<string>()
         sprintf "%stype [<TypeScriptTaggedUnion(\"%s\")>] [<RequireQualifiedAccess>] %s%s ="
             indent du.Discriminator du.Name (printTypeParameters du.TypeParameters) |> lines.Add
         let mutable usedNames = Set.empty
@@ -486,6 +490,7 @@ let printDU (lines: ResizeArray<string>) (indent: string) (du: FsTaggedUnionAlia
                     | name -> name
                 if usedNames |> Set.contains name then name + "'" else name
             usedNames <- usedNames |> Set.add caseName
+            let tyStr = printType ty
             let attr =
                 match tag.Value with
                 | FsLiteral.String s ->
@@ -495,7 +500,9 @@ let printDU (lines: ResizeArray<string>) (indent: string) (du: FsTaggedUnionAlia
                 | FsLiteral.Int i -> sprintf "[<CompiledValue %d>] " i
                 | FsLiteral.Float f -> sprintf "[<CompiledValue %s>] " (string f)
                 | FsLiteral.Bool b -> sprintf "[<CompiledValue %b>] " b
-            sprintf "%s    | %s%s of %s" indent attr caseName (printType ty) |> lines.Add
+            sprintf "%s    | %s%s of %s" indent attr caseName tyStr |> lines.Add
+            sprintf "%s    static member inline op_ErasedCast(x: %s) = %s x" indent tyStr caseName |> memberLines.Add
+        lines.AddRange(memberLines) // add members
 
 let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
     let lineCountStart = lines.Count
