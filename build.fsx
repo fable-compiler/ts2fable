@@ -82,32 +82,32 @@ module Scripts =
     let private CLI_BUILD_SYMBOL = "TS2FABLE_STANDALONE"
 
     /// Build `./src` in release mode, no bundle, with sourcemaps,  into `./build/cli`, with entry `ts2fable.js`
-    ///
+    /// 
     /// Start with `node ./build/cli/ts2fable.js`
     let buildCli () =
         fable $"{cliDir} --outDir {cliBuildDir} --configuration Release --define {CLI_BUILD_SYMBOL} --sourceMaps"
     /// Watch `./src` in debug mode, no bundle, with sourcemaps, into `./build/cli`, with entry `ts2fable.js`
-    ///
+    /// 
     /// Start with `node ./build/cli/ts2fable.js`
     let watchCli () =
         fable $"watch {cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --configuration Debug --sourceMaps"
 
     /// Build `./test` in release mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`
-    ///
+    /// 
     /// Start with `npx mocha ./build/test/test.js`
     let buildTest () =
         fable $"{testDir} --outDir {testBuildDir} --sourceMaps"
 
     /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`.
-    ///
+    /// 
     /// Start with `npx mocha ./build/test/test.js`
-    ///
+    /// 
     /// Unlike `watchAndRunTest` this doesn't run tests after compilation.
     let watchTest () =
         fable $" watch {testDir} --outDir {testBuildDir} --configuration Debug --sourceMaps"
 
     /// Run mocha tests with entry `./build/test/test.js`.
-    ///
+    /// 
     /// Requires building test before via `buildTest`
     let runTest () =
         npx $"mocha --colors {testBuildDir}/test.js"
@@ -119,14 +119,14 @@ module Scripts =
         fable $"watch {testDir} --outDir {testBuildDir} --sourceMaps --configuration Debug --runWatch mocha --colors {testBuildDir}/test.js"
 
     /// Build `web-app` in release mode, bundled, with sourcemap into `./web-app/output/` dir.
-    ///
+    /// 
     /// First: Fable in release mode, with sourcemaps into `./web-app/temp` with entry `App.js`.
     /// Then: Bundling with webpack into `./web-app/output/` with `./web-app/webpack.config.js`.
     let buildWebapp () =
         fable $"{appDir} --outDir {appTempOutDir} --configuration Release --sourceMaps --run webpack --mode production --config {appDir}/webpack.config.js"
-
+    
     /// Watch `web-app` in debug mode, with sourcemaps, served via `localhost:8080`.
-    ///
+    /// 
     /// First: Fable in debug mode, with sourcemaps into `./web-app/temp` with entry `App.js`.
     /// Then: Serving via `localhost:8080` with `webpack serve` (-> webpack-dev-server) and `./web-app/webpack.config.js`
     let watchWebapp () =
@@ -137,7 +137,7 @@ module Scripts =
         // umd: Universal Module Definition
         npx $"rollup --file {distDir}/ts2fable.js --format es {cliBuildDir}/ts2fable.js"
 
-
+    
 Target.create "Clean" <| fun _ ->
     execDotNet "clean" ""
     Shell.cleanDirs [
@@ -171,7 +171,7 @@ Target.create "InstallTestNpmPackages" <| fun _ ->
     // `d.ts` files in `testModulesDir` are used for:
     // * unit tests
     // * test compile
-    run npmTool testCompileDir "install --legacy-peer-deps"
+    run npmTool testCompileDir "install --legacy-peer-deps" 
     // `legacy-peer-deps`: accept incorrect dependency resolution. Otherwise there might be a conflict.
     // We are only interested in `d.ts` of packages directly specified in `package.json` -> don't care about conflicts
 
@@ -226,7 +226,6 @@ Target.create "RunCliOnTestCompile" <| fun _ ->
                 "-e"
                 "reactxp"
             ]
-        ts2fable ["--tagged-union"; nodeModulesDir</>"@types/deep-diff/index.d.ts"; testCompileDir</>"DeepDiff.fs"] // test compile for --tagged-union
     ]
     |> Async.Parallel
     |> Async.RunSynchronously
@@ -335,13 +334,13 @@ Target.create "PushToExports" <| fun _ ->
             else
                 handle (fun () -> ())
 
-// you have to fork ts2fable-export repo to your computer first
+// you have to fork ts2fable-export repo to your computer first 
 Target.create "PushForComparison" <| fun _ ->
     if (not isAppveyor) then
         let repositoryDir = "../ts2fable-exports"
         let git = run gitTool repositoryDir
         let commit() =
-            sprintf "commit -m comparision"
+            sprintf "commit -m comparision" 
             |> git
             |> ignore
 
@@ -352,12 +351,12 @@ Target.create "PushForComparison" <| fun _ ->
         !! (testCompileDir </> "*.fs")
         |> Shell.copyFiles repositoryDir
         stageAll repositoryDir
-        try
+        try 
             commit()
         with ex -> printf "%A" ex
         git "push origin -f"
 
-Target.create "Cli.BuildRelease" <| fun _ ->
+Target.create "Cli.BuildRelease" <| fun _ -> 
     Scripts.bundleCli ()
 
     // add `#! node`
@@ -427,10 +426,10 @@ Target.create "WebApp.Setup" ignore
 
 
 // Prepare
-"Clean"
+"Clean" 
     ==> "NpmInstall"
     ==> "Prepare"
-"Clean"
+"Clean" 
     ==> "Restore"
     ==> "Prepare"
 
