@@ -7,4 +7,4 @@ open Fable.Core.JS
 type SyntheticEvent = React.SyntheticEvent
 
 type [<AllowNullLiteral>] EventHandler<'E when 'E :> SyntheticEvent<obj option>> =
-    [<Emit "$0($1...)">] abstract Invoke: ``event``: 'E -> unit
+    [<Emit("$0($1...)")>] abstract Invoke: ``event``: 'E -> unit

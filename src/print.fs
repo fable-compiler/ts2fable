@@ -116,9 +116,9 @@ let printFunctionName (fn: FsFunction) (name:string): string =
     | FsFunctionKind.Constructor ->
         "[<EmitConstructor>] " |> line.Add
     | FsFunctionKind.Call ->
-        "[<Emit \"$0($1...)\">] " |> line.Add
+        "[<Emit(\"$0($1...)\")>] " |> line.Add
     | FsFunctionKind.StringParam emit ->
-        sprintf  "[<Emit \"%s\">] " emit |> line.Add
+        sprintf  "[<Emit(\"%s\")>] " emit |> line.Add
 
     sprintf "abstract %s" name |> line.Add
 
@@ -447,7 +447,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
             if nameEqualsDefaultFableValue unm v then
                 sprintf "    | %s" unm |> line.Add
             else
-                sprintf "    | [<CompiledName \"%s\">] %s" v unm |> line.Add
+                sprintf "    | [<CompiledName(\"%s\")>] %s" v unm |> line.Add
             sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
     | FsEnumCaseType.Unknown ->
         sprintf "%stype %s =" indent en.Name |> lines.Add
@@ -496,10 +496,10 @@ let printDU (lines: ResizeArray<string>) (indent: string) (du: FsTaggedUnionAlia
                 | FsLiteral.String s ->
                     let s = s.Replace("\"", "\\\"")
                     if nameEqualsDefaultFableValue caseName s then ""
-                    else sprintf "[<CompiledName \"%s\">] " s
-                | FsLiteral.Int i -> sprintf "[<CompiledValue %d>] " i
-                | FsLiteral.Float f -> sprintf "[<CompiledValue %s>] " (string f)
-                | FsLiteral.Bool b -> sprintf "[<CompiledValue %b>] " b
+                    else sprintf "[<CompiledName(\"%s\")>] " s
+                | FsLiteral.Int i -> sprintf "[<CompiledValue(%d)>] " i
+                | FsLiteral.Float f -> sprintf "[<CompiledValue(%s)>] " (string f)
+                | FsLiteral.Bool b -> sprintf "[<CompiledValue(%b)>] " b
             sprintf "%s    | %s%s of %s" indent attr caseName tyStr |> lines.Add
             sprintf "%s    static member inline op_ErasedCast(x: %s) = %s x" indent tyStr caseName |> memberLines.Add
         lines.AddRange(memberLines) // add members

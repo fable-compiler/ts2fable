@@ -128,7 +128,7 @@ type UnionBivarianceHack =
 /// <summary>Source: <see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87">React</see></summary>
 type [<AllowNullLiteral>] RefCallback<'T> =
     /// <summary>Source: <see href="https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L87">React</see></summary>
-    [<Emit "$0($1...)">] abstract Invoke: instance: 'T option -> unit
+    [<Emit("$0($1...)")>] abstract Invoke: instance: 'T option -> unit
 
 type [<AllowNullLiteral>] I1 =
     /// Anon Record
@@ -243,8 +243,8 @@ type [<AllowNullLiteral>] C1Static =
 /// read as Type Literal 
 /// BUT: must be printed as Union
 type [<StringEnum>] [<RequireQualifiedAccess>] E1 =
-    | [<CompiledName "Alpha">] Alpha
-    | [<CompiledName "Beta">] Beta
+    | [<CompiledName("Alpha")>] Alpha
+    | [<CompiledName("Beta")>] Beta
 
 type [<AllowNullLiteral>] C5 =
     abstract v1: string with get, set
@@ -280,9 +280,9 @@ type [<StringEnum>] [<RequireQualifiedAccess>] State =
     | Passed
 
 type [<StringEnum>] [<RequireQualifiedAccess>] IExportsE1 =
-    | [<CompiledName "Alpha">] Alpha
-    | [<CompiledName "Beta">] Beta
+    | [<CompiledName("Alpha")>] Alpha
+    | [<CompiledName("Beta")>] Beta
 
 type [<StringEnum>] [<RequireQualifiedAccess>] IExportsE12 =
-    | [<CompiledName "Gamma">] Gamma
-    | [<CompiledName "Delta">] Delta
+    | [<CompiledName("Gamma")>] Gamma
+    | [<CompiledName("Delta")>] Delta
