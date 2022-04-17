@@ -45,34 +45,45 @@ let getBindingName(bn: BindingName): string option =
     | SyntaxKind.ArrayBindingPattern -> None
     | _ -> failwithf "unknown Binding Name kind %A" syntaxNode.kind
 
+type JS.NumberConstructor with
+    [<Emit("$0.isSafeInteger($1)")>]
+    member __.isSafeInteger (_: float) : bool = jsNative
+
+let readLiteral (node: Node) : FsLiteral option =
+    match node.kind with
+    | SyntaxKind.StringLiteral ->
+        Some (FsLiteral.String ((node :?> Ts.StringLiteral).text))
+    | SyntaxKind.TrueKeyword -> Some (FsLiteral.Bool true)
+    | SyntaxKind.FalseKeyword -> Some (FsLiteral.Bool false)
+    | _ ->
+        let text = node.getText()
+        let parsedAsInt, intValue = System.Int32.TryParse text
+        let parsedAsFloat, floatValue = System.Double.TryParse text
+        if parsedAsInt then Some (FsLiteral.Int intValue)
+        else if parsedAsFloat then Some (FsLiteral.Float floatValue)
+        else None
+
 let readEnumCase (checker: TypeChecker) (em: EnumMember): FsEnumCase =
     let name = em.name |> getPropertyName
-    let tp, value =
+    let tryGetConstantValue onFail =
+        match checker.getConstantValue(!^em) with
+        | Some (U2.Case1 s) -> FsLiteral.String s |> Some
+        | Some (U2.Case2 f) ->
+            if JS.Constructors.Number.isSafeInteger f then FsLiteral.Int (int f) |> Some
+            else FsLiteral.Float f |> Some
+        | None -> onFail ()
+    let value =
         match em.initializer with
-        | None -> FsEnumCaseType.Unknown, None
+        | None -> tryGetConstantValue (fun () -> None)
         | Some ep ->
-            match ep.kind with
-            | SyntaxKind.NumericLiteral ->
-                let nl = ep :?> NumericLiteral
-                FsEnumCaseType.Numeric, Some nl.text
-            | SyntaxKind.StringLiteral ->
-                let sl = ep :?> StringLiteral
-                FsEnumCaseType.String, Some sl.text
-            | SyntaxKind.PrefixUnaryExpression ->
-                let pue = ep :?> PrefixUnaryExpression
-                // a negative number such as -1 is the usual case
-                let txt = pue.getText()
-                let parsed, _ = Int32.TryParse txt
-                if parsed then
-                    FsEnumCaseType.Numeric, Some txt
-                else
-                    FsEnumCaseType.Unknown, None
-            | _ -> failwithf "EnumCase type not supported %A %A" ep.kind name
+            match readLiteral ep with
+            | Some (FsLiteral.String _ | FsLiteral.Int _ | FsLiteral.Float _) as value -> value
+            | _ ->
+                tryGetConstantValue (fun () -> failwithf "EnumCase type not supported %A %A" ep.kind name)
     {
         Attributes = []
         Comments = readCommentsAtLocation checker (!!em.name)
         Name = name
-        Type = tp
         Value = value
     }
 
@@ -135,7 +146,7 @@ let private readCommentTag (jsDocTag: JSDocTag): FsComment =
         | SyntaxKind.QualifiedName ->
             getQualifiedName (unbox name)
         | kind -> failwithf "Invalid Syntaxkind: %A" kind
-    
+
     let tag (jsDocTag: JSDocTag) = jsDocTag.tagName.text.ToLower()
 
     let (|Tag|_|) (kind: SyntaxKind) (jsDocTag: JSDocTag) =
@@ -185,7 +196,7 @@ let private readCommentTag (jsDocTag: JSDocTag): FsComment =
         mkTag "throws"
     | TagNodeOf ["deprecated"] _ ->
         mkTag "deprecated"
-    
+
     | Tag SyntaxKind.FirstJSDocTagNode ->
         { Name = jsDocTag |> tag; Content = comment }
         |> FsComment.UnknownTag
@@ -236,7 +247,7 @@ let readInterface (checker: TypeChecker) (id: InterfaceDeclaration): FsInterface
         IsStatic = false
         IsClass = false
         Name = id.name.getText()
-        FullName = getFullNodeName checker id
+        FullName = getFullName checker id.name
         Inherits = readInherits checker id.heritageClauses
         Members = id.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
         TypeParameters = readTypeParameters checker id.typeParameters
@@ -248,20 +259,40 @@ let readTypeLiteral (checker: TypeChecker) (tl: TypeLiteralNode): FsTypeLiteral 
         Members = tl.members |> List.ofSeq |> List.map (readNamedDeclaration checker)
     }
 
-let getFullTypeName (checker: TypeChecker) (nd: TypeNode) =
-    let tp = checker.getTypeFromTypeNode nd
-    if not (isNull tp.symbol) then
-        checker.getFullyQualifiedName tp.symbol
-    else "error"
-
-let getFullNodeName (checker: TypeChecker) (nd: Node) =
-    // getFullTypeName checker (checker.getTypeAtLocation nd)
+let getFullName (checker: TypeChecker) (nd: Node) : string =
     match checker.getSymbolAtLocation nd with
     | None -> ""
     | Some smb -> checker.getFullyQualifiedName smb
 
+let readDeclarationOfSymbol (checker: TypeChecker) (decl: Declaration) : FsMappedDeclaration list =
+    if decl.kind = SyntaxKind.EnumMember then
+        [FsMappedDeclaration.EnumCase (readEnumCase checker !!decl)]
+    else
+        match tryReadNamedDeclaration checker !!decl with
+        | Some t -> [FsMappedDeclaration.Type t]
+        | None ->
+            match tryReadStatement checker !!decl with
+            | Some ts -> ts |> List.map FsMappedDeclaration.Type
+            | None -> []
+
+let getDeclarationsOfTypeNode (checker: TypeChecker) (nd: Node) : Lazy<FsMappedDeclaration list> =
+    let symbol =
+        if ts.isTypeNode nd then
+            let tp = checker.getTypeFromTypeNode !!nd
+            if not (isNull tp) && not (isNullOrUndefined tp.symbol) then tp.symbol |> Some
+            else checker.getSymbolAtLocation nd
+        else checker.getSymbolAtLocation nd
+    let fail () = Lazy<_>.CreateFromValue []
+    match symbol with
+    | Some symbol ->
+        match symbol.getDeclarations() with
+        | None -> fail () // no declaration found
+        | Some decls ->
+            lazy (decls |> Seq.collect (fun decl -> readDeclarationOfSymbol checker decl) |> Seq.toList)
+    | None -> fail () // symbol undefined
+
 let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
-    let fullName = getFullNodeName checker cd
+    let fullName = getFullName checker !!cd.name
     {
         Attributes = []
         Comments = cd.name |> Option.map (readCommentsAtLocation checker) |> Option.defaultValue []
@@ -310,16 +341,17 @@ let readEnum (checker: TypeChecker) (ed: EnumDeclaration): FsEnum =
         Attributes = []
         Comments = readCommentsAtLocation checker ed.name
         Name = ed.name.getText()
+        FullName = getFullName checker ed.name
         Cases = ed.members |> List.ofSeq |> List.map (readEnumCase checker)
     }
 
 let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
-
     match tr.typeArguments with
     | None ->
         {
             Name = tr.getText()
-            FullName = getFullNodeName checker tr
+            FullName = getFullName checker !!tr.typeName
+            Declarations = getDeclarationsOfTypeNode checker !!tr.typeName
         }
         |> FsType.Mapped
     | Some tas ->
@@ -333,7 +365,8 @@ let readTypeReference (checker: TypeChecker) (tr: TypeReferenceNode): FsType =
                     failwithf "readTypeReference type name is null: %s" (tr.getText())
                 {
                     Name = typeName
-                    FullName = getFullNodeName checker tr
+                    FullName = getFullName checker !!tr.typeName
+                    Declarations = getDeclarationsOfTypeNode checker !!tr.typeName
                 }
                 |> FsType.Mapped
             TypeParameters =
@@ -405,7 +438,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         let ia = t :?> IndexedAccessTypeNode
         let indexType = readTypeNode checker ia.indexType
         match indexType with
-        | FsType.StringLiteral name ->
+        | FsType.Literal (FsLiteral.String name) ->
             let inner = readTypeNode checker ia.objectType
             match inner with
             | FsType.TypeLiteral tl ->
@@ -425,22 +458,15 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
         simpleType "obj"
     | SyntaxKind.LiteralType ->
         let lt = t :?> LiteralTypeNode
-        let readLiteralKind (kind: SyntaxKind) text: FsType =
-            match kind with
-            | SyntaxKind.StringLiteral ->
-                FsType.StringLiteral (text |> removeQuotes)
-            | _ -> simpleType "obj"
-        // cannot match on erased union, so use properties directly
-        readLiteralKind (!!lt.literal?kind) (!!lt.literal?getText())
-        // match lt.literal with
-        // | U3.Case1 bl -> readLiteralKind bl.kind (bl.getText())
-        // | U3.Case2 le -> readLiteralKind le.kind (le.getText())
-        // | U3.Case3 pue -> readLiteralKind pue.kind (pue.getText())
+        readLiteral !!lt.literal
+        |> Option.map FsType.Literal
+        |> Option.defaultValue (simpleType "obj")
     | SyntaxKind.ExpressionWithTypeArguments ->
         let eta = t :?> ExpressionWithTypeArguments
         {
             Name = readExpressionText eta.expression
-            FullName = getFullTypeName checker eta
+            FullName = getFullName checker eta.expression
+            Declarations = getDeclarationsOfTypeNode checker eta.expression
         }
         |> FsType.Mapped
 
@@ -468,7 +494,7 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.TypeOperator ->
         let pt = t :?> TypeOperatorNode
         match pt.operator with
-        | SyntaxKind.KeyOfKeyword -> 
+        | SyntaxKind.KeyOfKeyword ->
             {
                 Type = readTypeNode checker pt.``type``
             }
@@ -485,35 +511,30 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
             removeParens t.``type``
         else
             t
-    let unTypes = 
-        un.types 
+    let unTypes =
+        un.types
         |> Seq.map removeParens
         |> List.ofSeq
     let isOptionType (t: TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
     let isLiteralType (t: TypeNode) = t.kind = SyntaxKind.LiteralType
     let isOptional = unTypes |> List.exists isOptionType
-    let getEnumCaseType (t: LiteralTypeNode) =
-        match !!t.literal?kind with
-        | SyntaxKind.NumericLiteral -> FsEnumCaseType.Numeric
-        | SyntaxKind.StringLiteral -> FsEnumCaseType.String
-        | _ -> FsEnumCaseType.Unknown
     let makeEnumCase (t: LiteralTypeNode) =
         let name = !!t.literal?getText() |> removeQuotes
-        { 
+        {
             Attributes = []
             // comments aren't really supported for Literal Types in TS -> not available in node
             Comments = []
             Name = name
-            Type = getEnumCaseType t
-            Value = Some name
+            Value = readLiteral !!t.literal
         }
     let makeEnum name cases =
-        { 
+        {
             Attributes = []
             Comments = []
             Name = name
-            Cases = cases 
-        } 
+            FullName = name
+            Cases = cases
+        }
         |> FsType.Enum
     let isKindOf kind (t: TypeNode) =
         if isLiteralType t then
@@ -545,7 +566,7 @@ let readParameterDeclaration (checker: TypeChecker) (iParam:int) (pd: ParameterD
         )
     let tp =
         match stringLiteral with
-        | Some sl -> FsType.StringLiteral (sl.getText() |> removeQuotes)
+        | Some sl -> FsType.Literal (FsLiteral.String (sl.getText() |> removeQuotes))
         | None ->
             match pd.``type`` with
             | Some t -> readTypeNode checker t
@@ -742,33 +763,39 @@ let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaratio
         Accessibility = getAccessibility cs.modifiers
     }
 
-let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =
+let tryReadNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType option =
     match te.kind with
     | SyntaxKind.IndexSignature ->
-        readIndexSignature checker (te :?> IndexSignatureDeclaration) |> FsType.Property
+        readIndexSignature checker (te :?> IndexSignatureDeclaration) |> FsType.Property |> Some
     | SyntaxKind.MethodSignature ->
-        readMethodSignature checker (te :?> MethodSignature) |> FsType.Function
+        readMethodSignature checker (te :?> MethodSignature) |> FsType.Function |> Some
     | SyntaxKind.PropertySignature ->
-        readPropertySignature checker (te :?> PropertySignature) |> FsType.Property
+        readPropertySignature checker (te :?> PropertySignature) |> FsType.Property |> Some
     | SyntaxKind.CallSignature ->
-        readCallSignature checker (te :?> CallSignatureDeclaration) |> FsType.Function
+        readCallSignature checker (te :?> CallSignatureDeclaration) |> FsType.Function |> Some
     | SyntaxKind.ConstructSignature ->
-        readConstructSignatureDeclaration checker (te :?> ConstructSignatureDeclaration) |> FsType.Function
+        readConstructSignatureDeclaration checker (te :?> ConstructSignatureDeclaration) |> FsType.Function |> Some
     | SyntaxKind.Constructor ->
-        readConstructorDeclaration checker (te :?> ConstructorDeclaration) |> FsType.Function
+        readConstructorDeclaration checker (te :?> ConstructorDeclaration) |> FsType.Function |> Some
     | SyntaxKind.PropertyDeclaration ->
-        readPropertyDeclaration checker (te :?> PropertyDeclaration) |> FsType.Property
+        readPropertyDeclaration checker (te :?> PropertyDeclaration) |> FsType.Property |> Some
     | SyntaxKind.GetAccessor ->
-        readGetAccessorDeclaration checker (te :?> GetAccessorDeclaration) |> FsType.Property
+        readGetAccessorDeclaration checker (te :?> GetAccessorDeclaration) |> FsType.Property |> Some
     | SyntaxKind.SetAccessor ->
-        readSetAccessorDeclaration checker (te :?> SetAccessorDeclaration) |> FsType.Property
+        readSetAccessorDeclaration checker (te :?> SetAccessorDeclaration) |> FsType.Property |> Some
     | SyntaxKind.MethodDeclaration ->
-        readMethodDeclaration checker (te :?> MethodDeclaration) |> FsType.Function
-    | _ -> printfn "unsupported NamedDeclaration kind: %A" te.kind; FsType.TODO
+        readMethodDeclaration checker (te :?> MethodDeclaration) |> FsType.Function |> Some
+    | _ -> None
+
+let readNamedDeclaration (checker: TypeChecker) (te: NamedDeclaration): FsType =
+    match tryReadNamedDeclaration checker te with
+    | Some tp -> tp
+    | None -> printfn "unsupported NamedDeclaration kind: %A" te.kind; FsType.TODO
 
 let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsType =
     let tp = d.``type`` |> (readTypeNode checker)
     let name = d.name.getText()
+    let fullName = getFullName checker d.name
     let asAlias() =
         {
             Attributes = []
@@ -787,13 +814,13 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
                 Attributes = []
                 Comments = readCommentsAtLocation checker d.name
                 Name = name
+                FullName = fullName
                 Cases = sls |> List.map (fun sl ->
                     {
                         Attributes = []
                         Comments = []
                         Name = sl
-                        Type = FsEnumCaseType.String
-                        Value = None
+                        Value = FsLiteral.String sl |> Some
                     }
                 )
             }
@@ -859,37 +886,42 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
                     )
             // | U2.Case2 namedImports -> []
 
-let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
+let tryReadStatement (checker: TypeChecker) (sd: Statement): FsType list option =
     match sd.kind with
     | SyntaxKind.InterfaceDeclaration ->
-        [readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface]
+        Some [readInterface checker (sd :?> InterfaceDeclaration) |> FsType.Interface]
     | SyntaxKind.EnumDeclaration ->
-        [readEnum checker (sd :?> EnumDeclaration) |> FsType.Enum]
+        Some [readEnum checker (sd :?> EnumDeclaration) |> FsType.Enum]
     | SyntaxKind.TypeAliasDeclaration ->
-        [readAliasDeclaration checker (sd :?> TypeAliasDeclaration)]
+        Some [readAliasDeclaration checker (sd :?> TypeAliasDeclaration)]
     | SyntaxKind.ClassDeclaration ->
-        [readClass checker (sd :?> ClassDeclaration) |> FsType.Interface]
+        Some [readClass checker (sd :?> ClassDeclaration) |> FsType.Interface]
     | SyntaxKind.VariableStatement ->
-        readVariable checker (sd :?> VariableStatement)
+        readVariable checker (sd :?> VariableStatement) |> Some
     | SyntaxKind.FunctionDeclaration ->
-        [readFunctionDeclaration checker (sd :?> FunctionDeclaration) |> FsType.Function]
+        Some [readFunctionDeclaration checker (sd :?> FunctionDeclaration) |> FsType.Function]
     | SyntaxKind.ModuleDeclaration ->
-        [readModuleDeclaration checker (sd :?> ModuleDeclaration) |> FsType.Module]
+        Some [readModuleDeclaration checker (sd :?> ModuleDeclaration) |> FsType.Module]
     | SyntaxKind.ExportAssignment ->
-        [readExportAssignment(sd :?> ExportAssignment)]
+        Some [readExportAssignment(sd :?> ExportAssignment)]
     | SyntaxKind.ImportDeclaration ->
-        readImportDeclaration(sd :?> ImportDeclaration)
+        readImportDeclaration(sd :?> ImportDeclaration) |> Some
     | SyntaxKind.NamespaceExportDeclaration ->
         // let ns = sd :?> NamespaceExportDeclaration
-        []
+        Some []
     | SyntaxKind.ExportDeclaration ->
         // printfn "TODO export statements"
-        []
+        Some []
     | SyntaxKind.ImportEqualsDeclaration ->
         let ime = sd :?> ImportEqualsDeclaration
         // printfn "import equals decl %s" (ime.getText())
-        []
-    | _ -> printfn "unsupported Statement kind: %A" sd.kind; []
+        Some []
+    | _ -> None
+
+let readStatement (checker: TypeChecker) (sd: Statement): FsType list =
+    match tryReadStatement checker sd with
+    | Some ts -> ts
+    | None -> printfn "unsupported Statement kind: %A" sd.kind; []
 
 let readModuleName(mn: ModuleName): string =
     !!mn?getText() |> removeQuotes

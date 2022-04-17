@@ -39,6 +39,8 @@ let lookForOptions tsPaths =
             Config.EmitResizeArray <- false
         if src.Contains(Config.OptionNames.ConvertPropertyFunctions) then
             Config.ConvertPropertyFunctions <- true
+        if src.Contains(Config.OptionNames.TaggedUnion) then
+            Config.TaggedUnion <- true
 
 let testFsFilesWithExports tsPaths fsPath exports (f: FsFile list -> unit) =
     let fsFileOut = getFsFileOut fsPath tsPaths exports
@@ -699,5 +701,9 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts2fable/issues/431
     it "regression #431 ImportAll instead of Import('*')" <| fun _ ->
         runRegressionTest "#431-import-all"
+
+    // https://github.com/fable-compiler/ts2fable/pull/438
+    it "regression #438 Tagged union" <| fun _ ->
+        runRegressionTest "#438-tagged-union"
 
 )?timeout(15_000)

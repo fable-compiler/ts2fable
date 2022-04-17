@@ -25,6 +25,7 @@ type Msg =
     | UpdateFSharpCode
     | ToggleConfigEmitResizeArray
     | ToggleConfigConvertPropertyFunctions
+    | ToggleTaggedUnion
 
 let ts2fable s =
     printfn "// Placeholder for ts2fable lib\n"
@@ -57,6 +58,10 @@ let update msg model =
 
     | ToggleConfigConvertPropertyFunctions ->
         Config.ConvertPropertyFunctions <- not (Config.ConvertPropertyFunctions)
+        model, Cmd.ofMsg UpdateFSharpCode
+
+    | ToggleTaggedUnion ->
+        Config.TaggedUnion <- not (Config.TaggedUnion)
         model, Cmd.ofMsg UpdateFSharpCode
 
 open Fable.React
@@ -148,6 +153,16 @@ let private navbar model dispatch =
                         Type "checkbox"
                         Checked (Config.ConvertPropertyFunctions)
                         OnChange (fun e -> dispatch ToggleConfigConvertPropertyFunctions)
+                        ]
+                  ]
+              ]
+              Navbar.Item.div [] [
+                  span [ Title (Config.Options |> List.find (fun (n, _) -> n = Config.OptionNames.TaggedUnion) |> snd) ] [
+                    span [] [ str (Config.OptionNames.TaggedUnion) ]
+                    input [
+                        Type "checkbox"
+                        Checked (Config.TaggedUnion)
+                        OnChange (fun e -> dispatch ToggleTaggedUnion)
                         ]
                   ]
               ]

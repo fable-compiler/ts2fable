@@ -44,6 +44,20 @@ type FsGenericTypeParameter =
     }
 
 [<RequireQualifiedAccess>]
+type FsLiteral =
+    | String of string
+    | Int of int
+    | Float of float
+    | Bool of bool
+with
+    member x.Value =
+        match x with
+        | String s -> s
+        | Int i -> string i
+        | Float f -> string f
+        | Bool b -> string b
+
+[<RequireQualifiedAccess>]
 type FsEnumCaseType =
     | Numeric
     | String
@@ -54,8 +68,7 @@ type FsEnumCase =
         Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
-        Type: FsEnumCaseType
-        Value: string option
+        Value: FsLiteral option
     }
 
 type FsEnum =
@@ -63,21 +76,27 @@ type FsEnum =
         Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
+        FullName: string
         Cases: FsEnumCase list
     }
 with
     member x.Type =
-        if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.Unknown) then
-            FsEnumCaseType.Unknown
-        else if x.Cases |> List.exists (fun c -> c.Type = FsEnumCaseType.String) then
-            FsEnumCaseType.String
-        else
-            FsEnumCaseType.Numeric
+        if x.Cases |> List.forall (fun x ->
+            match x.Value with
+            | Some (FsLiteral.Float _ | FsLiteral.Int _) -> true
+            | Some _ -> false
+            | None -> true) then FsEnumCaseType.Numeric
+        else if x.Cases |> List.forall (fun x ->
+            match x.Value with
+            | Some (FsLiteral.String _) -> true
+            | Some _ -> false
+            | None -> true) then FsEnumCaseType.String
+        else FsEnumCaseType.Unknown
 
 type FsCommentLine = string
 type FsCommentContent = FsCommentLine list
 
-type FsCommentTag = 
+type FsCommentTag =
     {
         Name: string
         Content: FsCommentContent
@@ -229,6 +248,22 @@ type FsAlias =
         TypeParameters: FsType list
     }
 
+type FsTag =
+    {
+        Name: string option
+        Value: FsLiteral
+    }
+
+type FsTaggedUnionAlias =
+    {
+        Attributes: FsAttributeSet list
+        Comments: FsComment list
+        Name: string
+        Discriminator: string
+        Cases: Map<FsTag, FsType>
+        TypeParameters: FsType list
+    }
+
 [<RequireQualifiedAccess>]
 type FsTupleKind =
     | Intersection
@@ -302,17 +337,39 @@ type FsKeyOf = {
     Type: FsType
 }
 
-type FsMapped =
+[<RequireQualifiedAccess>]
+type FsMappedDeclaration =
+    | Type of FsType
+    | EnumCase of FsEnumCase
+
+type [<CustomEquality; CustomComparison>] FsMapped =
     {
         // Namespace: string list // TODO
         Name: string
         FullName: string
+        /// The declarations of this type. Reader would run on creating the lazy value for the first time.
+        ///
+        /// This must be lazy because mutually-recurisive types would contain each other...
+        Declarations: Lazy<FsMappedDeclaration list>
     }
+with
+    member x.AsComparable =
+        (x.Name, x.FullName)
+    override x.Equals(yo) =
+        match yo with
+        | :? FsMapped as y -> x.AsComparable = y.AsComparable
+        | _ -> false
+    override x.GetHashCode() = x.AsComparable.GetHashCode()
+    interface System.IComparable with
+        member x.CompareTo(yo) =
+            match yo with
+            | :? FsMapped as y -> compare x.AsComparable y.AsComparable
+            | _ -> invalidArg "yo" "cannot compare values"
 
 type FsArgument = {
     /// Named argument
     Name: string option
-    /// stringyfied value  
+    /// stringyfied value
     /// -> includes quotation marks for string argument: `"\"MyVal\""`
     Value: string
 }
@@ -324,10 +381,10 @@ module FsArgument =
         }
 type FsAttribute = {
     /// might possible be `open`ed.
-    /// 
-    /// NOT included in `Name`  
+    ///
+    /// NOT included in `Name`
     /// -> `System.Obsolete`: `Namespace`=`System`; `Name`=`Obsolete`
-    /// 
+    ///
     /// Place Full Name in `Name` to emit full name.
     Namespace: string option
     Name: string
@@ -349,10 +406,11 @@ let simpleType name: FsType =
         // Namespace = []
         Name = name
         FullName = name
+        Declarations = Lazy.CreateFromValue []
     }
     |> FsType.Mapped
 
-[<RequireQualifiedAccess>]
+[<RequireQualifiedAccess; StructuralEquality; StructuralComparison>]
 type FsType =
     | Interface of FsInterface
     | Enum of FsEnum
@@ -365,13 +423,14 @@ type FsType =
     | Function of FsFunction
     | Union of FsUnion
     | Alias of FsAlias
+    | TaggedUnionAlias of FsTaggedUnionAlias
     | Generic of FsGenericType
     | Tuple of FsTuple
     | Module of FsModule
     | File of FsFile
     | FileOut of FsFileOut
     | Variable of FsVariable
-    | StringLiteral of string
+    | Literal of FsLiteral
     | ExportAssignment of string
     | This
     | Import of FsImport
@@ -386,7 +445,7 @@ module FsType =
     let isMapped tp = match tp with | FsType.Mapped _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
-    let isStringLiteral tp = match tp with | FsType.StringLiteral _ -> true | _ -> false
+    let isStringLiteral tp = match tp with | FsType.Literal (FsLiteral.String _) -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isImport tp = match tp with | FsType.Import _ -> true | _ -> false
     let isVariable tp = match tp with | FsType.Variable _ -> true | _ -> false
@@ -400,7 +459,7 @@ module FsType =
     let asFunction (tp: FsType) = match tp with | FsType.Function v -> Some v | _ -> None
     let asInterface (tp: FsType) = match tp with | FsType.Interface v -> Some v | _ -> None
     let asGeneric (tp: FsType) = match tp with | FsType.Generic v -> Some v | _ -> None
-    let asStringLiteral (tp: FsType): string option = match tp with | FsType.StringLiteral v -> Some v | _ -> None
+    let asStringLiteral (tp: FsType): string option = match tp with | FsType.Literal (FsLiteral.String v) -> Some v | _ -> None
     let asModule (tp: FsType) = match tp with | FsType.Module v -> Some v | _ -> None
     let asVariable (tp: FsType) = match tp with | FsType.Variable v -> Some v | _ -> None
     let asExportAssignment (tp: FsType) = match tp with | FsType.ExportAssignment v -> Some v | _ -> None
@@ -474,7 +533,7 @@ type FsFileOut =
         Files: FsFile list
         AbbrevTypes: string list
         /// Can be used to output additional text not covered by any `FsXXX` type
-        /// 
+        ///
         /// Used to print `#nowarn` or might be useful to output debug logs.
         AdditionalData: AdditionalData list
     }
@@ -532,6 +591,7 @@ let getTypeName (tp: FsType) =
     | FsType.Enum t -> t.GetType().ToString()
     | FsType.Param t -> t.GetType().ToString()
     | FsType.Alias t -> t.GetType().ToString()
+    | FsType.TaggedUnionAlias t -> t.GetType().ToString()
     | FsType.File t -> t.GetType().ToString()
     | FsType.Generic t -> t.GetType().ToString()
     | FsType.Mapped t -> t.GetType().ToString()
@@ -542,7 +602,12 @@ let getTypeName (tp: FsType) =
     | FsType.KeyOf t -> t.GetType().ToString()
     | FsType.None as t -> t.GetType().ToString() + ".None"
     | FsType.TODO as t -> t.GetType().ToString() + ".TODO"
-    | FsType.StringLiteral t -> t.GetType().ToString()
+    | FsType.Literal l ->
+        match l with
+        | FsLiteral.String t -> t.GetType().ToString()
+        | FsLiteral.Int t -> t.GetType().ToString()
+        | FsLiteral.Float t -> t.GetType().ToString()
+        | FsLiteral.Bool t -> t.GetType().ToString()
     | FsType.This as t -> t.GetType().ToString() + ".This"
     | FsType.Tuple t -> t.GetType().ToString()
     | FsType.TypeLiteral t -> t.GetType().ToString()
@@ -559,6 +624,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     | FsType.Enum _
     | FsType.Param _
     | FsType.Alias _
+    | FsType.TaggedUnionAlias _
     | FsType.File _
     | FsType.Generic _
     | FsType.Mapped _
@@ -569,7 +635,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     | FsType.KeyOf _
     | FsType.None
     | FsType.TODO
-    | FsType.StringLiteral _
+    | FsType.Literal _
     | FsType.This
     | FsType.Tuple _
     | FsType.TypeLiteral _

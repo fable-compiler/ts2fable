@@ -101,6 +101,11 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
             TypeParameters = al.TypeParameters |> List.map fixType
         }
         |> FsType.Alias
+    | FsType.TaggedUnionAlias al ->
+        { al with
+            Cases = al.Cases |> Map.map (fun _ -> fixType)
+            TypeParameters = al.TypeParameters |> List.map fixType
+        } |> FsType.TaggedUnionAlias
     | FsType.Generic gn ->
         { gn with
             Type = fixType gn.Type
@@ -134,7 +139,7 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
     | FsType.Mapped _ -> tp
     | FsType.None _ -> tp
     | FsType.TODO _ -> tp
-    | FsType.StringLiteral _ -> tp
+    | FsType.Literal _ -> tp
     | FsType.This -> tp
     | FsType.Import _ -> tp
     | FsType.GenericTypeParameter gtp ->
@@ -167,6 +172,21 @@ let fixFileEx (doFix:FsType->bool) (fix: string->FsType->FsType) (f: FsFile): Fs
 /// recursively fix all the FsType childen for the given FsFile
 let fixFile (fix: string->FsType->FsType) (f: FsFile): FsFile =
     fixFileEx (fun _ -> true) fix f
+
+let instantiate (typeParams: FsType list) (typeArgs: FsType list) (tp: FsType) =
+    let rec assign tps tas =
+        match tps, tas with
+        | FsType.GenericTypeParameter tp :: tps, ta :: tas -> (tp.Name, ta) :: assign tps tas
+        | FsType.GenericTypeParameter { Name = name; Default = Some tp } :: tps, [] -> (name, tp) :: assign tps []
+        | _ :: tps, _ :: tas -> assign tps tas
+        | _, _ -> []
+    let assignment = assign typeParams typeArgs |> Map.ofList
+    fixType "" (fun _ tp ->
+        match tp with
+        | FsType.Mapped { Name = name } | FsType.GenericTypeParameter { Name = name } ->
+            assignment |> Map.tryFind name |> Option.defaultValue tp
+        | _ -> tp
+    ) tp
 
 let mergeTypes (tps: FsType list): FsType list =
     let index = Dictionary<string,int>()
@@ -501,7 +521,7 @@ let fixOverloadingOnStringParameters(f: FsFile): FsFile =
                         "," |> kind.Add
                 )
                 ")" |> kind.Add
-                let name = 
+                let name =
                     let name = String.concat "" name
                     // replace whitespaces with `_`
                     let name = name.Replace(' ', '_').Replace('\t', '_')
@@ -591,7 +611,7 @@ let fixEnumReferences (f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Enum en ->
-            list.Add en.Name |> ignore
+            list.Add en.FullName |> ignore
             tp
         | _ -> tp
     ) |> ignore
@@ -602,10 +622,10 @@ let fixEnumReferences (f: FsFile): FsFile =
         match tp with
         | FsType.Mapped mp ->
             if mp.Name.Contains "." then
-                let nm = mp.Name.Substring(0, mp.Name.IndexOf ".")
-                if set.Contains nm then
+                let dropLast (s: string) = s.Substring(0, s.LastIndexOf ".")
+                if set.Contains(dropLast mp.FullName) then
                     // { mp with Name = nm } |> FsType.Mapped
-                    simpleType nm
+                    simpleType (dropLast mp.Name)
                 else tp
             else tp
         | _ -> tp
@@ -636,6 +656,7 @@ let addTicForGenericTypes(f: FsFile): FsFile =
         match tp with
         | FsType.Interface it -> fixTic ns it.TypeParameters tp
         | FsType.Alias al -> fixTic ns al.TypeParameters tp
+        | FsType.TaggedUnionAlias du -> fixTic ns du.TypeParameters tp
         | _ -> tp
     )
 
@@ -867,22 +888,17 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
     //   2) type Nullable<T> = T | null
     //      (?p : Nullable<int>)
 
-    let allTypes = lazy (getAllTypesFromFile f |> List.toArray)
-
-    let rec isAliasToOption (name: string) =
-        let typFromName = allTypes.Value |> Seq.tryFind (fun t ->
+    let rec isAliasToOption (m: FsMapped) =
+        m.Declarations.Value |> List.exists (fun t ->
             match t with
-            | FsType.Alias { Name = aliasName }
-                when (aliasName = name) -> true
+            // simple: the alias is itself a union with option
+            | FsMappedDeclaration.Type (FsType.Alias {
+                Type = FsType.Union { Option = true; Types = [ FsType.Mapped mp ] }
+                TypeParameters = [ FsType.GenericTypeParameter gtp ]
+              }) when mp.Name = gtp.Name -> true
+            // here we could check if the alias is another alias to option, but that seems like an unlikely pattern
             | _ -> false
         )
-        match typFromName with
-        // simple: the alias is itself a union with option
-        | Some (FsType.Alias { Type = FsType.Union { Option = true; Types = [ FsType.Mapped mp ] }; TypeParameters = [ FsType.GenericTypeParameter gtp ] })
-           when mp.Name = gtp.Name -> true
-        // here we could check if the alias is another alias to option, but that seems like an unlikely pattern
-        | _ -> false
-
 
     f |> fixFile (fun ns tp ->
 
@@ -896,8 +912,8 @@ let removeDuplicateOptionsFromParameters(f: FsFile): FsFile =
             | FsType.Union un when un.Option ->
                 { pr with Type = { un  with Option = false } |> FsType.Union } |> FsType.Param
             // case 2: alias
-            | FsType.Generic { Type = FsType.Mapped { Name = name; FullName = "" }; TypeParameters = [ t ] }
-                when (isAliasToOption name) ->
+            | FsType.Generic { Type = FsType.Mapped m; TypeParameters = [ t ] }
+                when (isAliasToOption m) ->
                     { pr with Type = t } |> FsType.Param
 
             | _ -> tp
@@ -915,20 +931,20 @@ let extractTypeLiterals(f: FsFile): FsFile =
         | _ -> false
     let (|TypeLiteralToConvert|_|) =
         function
-        | FsType.TypeLiteral tl when tl.Members |> List.isEmpty || tl.Members.Length > maxMembers -> 
+        | FsType.TypeLiteral tl when tl.Members |> List.isEmpty || tl.Members.Length > maxMembers ->
             Some tl
         // convert literal with Indexer to interface: `{ [key: string]: string }`
         // -> Indexer not available in Anon Record
-        // 
+        //
         // Note: Indexer only works when consumed in F# (-> function output), but not when created in F# (-> function input):
-        //       Indexer in JS is over its members, in F# it's a property (-> function) 
+        //       Indexer in JS is over its members, in F# it's a property (-> function)
         //       See https://github.com/fable-compiler/ts2fable/issues/415
         | FsType.TypeLiteral tl when tl.Members |> List.exists isIndexer ->
             Some tl
         // | FsType.TypeLiteral tl when Config.ConvertPropertyFunctions ->
         //     printfn "TypeLiteral=%A" tl
         //     None
-        | FsType.TypeLiteral tl when Config.ConvertPropertyFunctions && tl.Members |> List.exists (function | FsType.Property p -> FsType.isFunction p.Type | _ -> false) -> 
+        | FsType.TypeLiteral tl when Config.ConvertPropertyFunctions && tl.Members |> List.exists (function | FsType.Property p -> FsType.isFunction p.Type | _ -> false) ->
             // `class Appwrite { account: { createDocument: (name: string) => Document; }; }`
             // `createDocument` is usually converted into property:
             // `abstract account: {| createDocument: string -> Document |} with get, set`
@@ -983,17 +999,17 @@ let extractTypeLiterals(f: FsFile): FsFile =
                 match members |> List.tryFind isIndexer with
                   // comment to best use Anon Record with `!!`
                 | Some (FsType.Property ({ Index = Some index } as indexer)) ->
-                    let indexerComment = 
+                    let indexerComment =
                         let lines =
                             """
-                            Typescript interface contains an [index signature](https://www.typescriptlang.org/docs/handbook/2/objects.html#index-signatures) (like `{ [key:string]: string }`).  
-                            Unlike an indexer in F#, index signatures index over a type's members. 
+                            Typescript interface contains an [index signature](https://www.typescriptlang.org/docs/handbook/2/objects.html#index-signatures) (like `{ [key:string]: string }`).
+                            Unlike an indexer in F#, index signatures index over a type's members.
 
                             As such an index signature cannot be implemented via regular F# Indexer (`Item` property),
                             but instead by just specifying fields.
 
-                            Easiest way to declare such a type is with an Anonymous Record and force it into the function.  
-                            For example:  
+                            Easiest way to declare such a type is with an Anonymous Record and force it into the function.
+                            For example:
                             ```fsharp
                             type I =
                                 [<EmitIndexer>]
@@ -1035,7 +1051,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                         Accessibility = None
                     }
                     collection.Add (FsType.Interface materialized)
-                | _ -> 
+                | _ ->
                     materializeInterfaceType name members collection
 
 
@@ -1102,7 +1118,7 @@ let extractTypeLiterals(f: FsFile): FsFile =
                                         |> List.mapi (fun i ->
                                             function
                                             | TypeLiteralToConvert tl ->
-                                                let name = 
+                                                let name =
                                                     sprintf "%sCase%i" al.Name (i+1)
                                                     |> newTypeName
                                                 newTypes |> materializeInterfaceType name tl.Members
@@ -1222,7 +1238,194 @@ let extractTypeLiterals(f: FsFile): FsFile =
     |> extractTypeLiterals_pass1
     |> extractTypeLiterals_pass2
 
-let addAliasUnionHelpers(f: FsFile): FsFile =
+let fixUnknownEnumCaseValue (f: FsFile) : FsFile =
+    f |> fixFile (fun ns tp ->
+        match tp with
+        | FsType.Enum e ->
+            let f (state: FsLiteral option) (c: FsEnumCase) : FsEnumCase * FsLiteral option =
+                match c.Value with
+                | Some v -> c, Some v
+                | None ->
+                    let v =
+                        match state with
+                        | None -> Some (FsLiteral.Int 0)
+                        | Some (FsLiteral.Int n) -> Some (FsLiteral.Int (n+1))
+                        | Some (FsLiteral.Float f) -> Some (FsLiteral.Float (f+1.0))
+                        | _ -> None
+                    { c with Value = v }, v
+            FsType.Enum { e with Cases = e.Cases |> List.mapFold f None |> fst }
+        | _ -> tp
+    )
+
+type DUResult = Map<string, Map<FsTag, FsType>> * FsUnion
+type DUCache = Dictionary<FsUnion, DUResult>
+
+let private getDiscriminatedFromUnion (cache: DUCache) (un: FsUnion) : DUResult =
+    match cache.TryGetValue(un) with
+    | _, _ when un.Option -> Map.empty, un
+    | true, result -> result
+    | false, _ ->
+        let (|Dummy|) _ = []
+
+        let isDU (u: FsUnion) =
+            not u.Option
+            && getDiscriminatedFromUnion cache u |> fst |> Map.isEmpty |> not
+
+        let rec expandUnionType (typeArguments: FsType list) (ty: FsType) : FsType list option =
+            match ty with
+            | FsType.Union u when isDU u ->
+                u.Types
+                |> List.collect (fun ty -> expandUnionType typeArguments ty |> Option.defaultValue [ty])
+                |> Some
+            | FsType.Mapped m when m.FullName <> "" ->
+                m.Declarations.Value
+                |> List.tryPick (function
+                    | FsMappedDeclaration.Type t -> expandUnionType typeArguments t
+                    | FsMappedDeclaration.EnumCase _ -> None)
+            | FsType.Alias { Type = ty; TypeParameters = tps } ->
+                ty |> instantiate tps typeArguments |> expandUnionType []
+            | FsType.Generic { Type = ty; TypeParameters = tas } -> expandUnionType tas ty
+            | _ -> None
+
+        let types =
+            un.Types |> List.collect (fun ty -> expandUnionType [] ty |> Option.defaultValue [ty])
+
+        let rec getLiteralFields (fieldName: string option) (typeArguments: FsType list) (ty: FsType) : list<{| name: string; value: FsTag |}> =
+            match ty with
+            | FsType.Property {
+                Kind = FsPropertyKind.Regular; Accessor = ReadOnly | ReadWrite
+                IsStatic = false; Option = false; Name = name; Type = ty } when Option.isNone fieldName ->
+                getLiteralFields (Some name) [] ty
+            | FsType.Interface { Members = members; TypeParameters = tps; Inherits = inherits }
+            | FsType.TypeLiteral { Members = members } & Dummy tps & Dummy inherits when Option.isNone fieldName ->
+                let fields =
+                    members
+                    |> List.map (instantiate tps typeArguments)
+                    |> List.collect (getLiteralFields fieldName [])
+                let fieldNames =
+                    fields |> List.map (fun fl -> fl.name) |> Set.ofList
+                let inherited =
+                    inherits
+                    |> List.map (instantiate tps typeArguments)
+                    |> List.collect (getLiteralFields fieldName [])
+                    |> List.filter (fun fl -> fieldNames |> Set.contains fl.name |> not) // remove overridden fields
+                fields @ inherited
+            | FsType.Mapped m ->
+                m.Declarations.Value |> List.collect (function
+                    | FsMappedDeclaration.Type ty -> getLiteralFields fieldName typeArguments ty
+                    | FsMappedDeclaration.EnumCase ec ->
+                        match fieldName, ec.Value with
+                        | Some name, Some value -> [{| name = name; value = { Name = Some ec.Name; Value = value } |}]
+                        | _ -> []
+                )
+            | FsType.Literal l ->
+                match fieldName with
+                | Some name -> [{| name = name; value = { Name = None; Value = l } |}]
+                | None -> []
+            | FsType.Enum e ->
+                match fieldName with
+                | Some name ->
+                    if e.Cases |> List.forall (fun ec -> ec.Value.IsSome) then
+                        e.Cases |> List.map (fun ec -> {| name = name; value = { Name = Some ec.Name; Value = ec.Value.Value } |})
+                    else []
+                | None -> []
+            | FsType.Alias { Type = ty; TypeParameters = tps } ->
+                ty |> instantiate tps typeArguments |> getLiteralFields fieldName []
+            | FsType.Generic { Type = ty; TypeParameters = tas } -> getLiteralFields fieldName tas ty
+            | FsType.Union u ->
+                if u.Option then []
+                else
+                    let fields = u.Types |> List.map (getLiteralFields fieldName [])
+                    fields |> List.concat
+            | _ -> []
+
+        let createLiteralFieldMap ty =
+            getLiteralFields None [] ty
+            |> List.distinct
+            |> List.groupBy (fun x -> x.name)
+            |> List.map (fun (k, v) -> k, v |> List.map (fun x -> x.value) |> Set.ofList)
+            |> Map.ofList
+
+        let discriminatables, rest =
+            List.foldBack (fun ty (discriminatables, rest) ->
+                let fields = createLiteralFieldMap ty
+                if Map.isEmpty fields then discriminatables, ty :: rest
+                else (ty, fields) :: discriminatables, rest
+            ) types ([], [])
+
+        let tagDict = new Dictionary<string, _>()
+        for (_, fields) in discriminatables do
+            for (name, values) in fields |> Map.toSeq do
+                match tagDict.TryGetValue(name) with
+                | true, (i, values') -> tagDict.[name] <- (i + 1u, Set.intersect values values')
+                | false, _ -> tagDict.[name] <- (1u, values)
+
+        let getBestTag (fields: Map<string, Set<_>>) =
+            let xs =
+                fields
+                |> Map.toList
+                |> List.choose (fun (name, values) ->
+                match tagDict.TryGetValue(name) with
+                | true, (i, commonValues) when values <> commonValues -> // reject the tag if it does not discriminate at all
+                    let intersect = Set.intersect values commonValues
+                    Some ((-(Set.count intersect), i), (name, values)) // prefer the tag with the least intersections
+                | _, _ -> None)
+            if List.isEmpty xs then None
+            else Some (xs |> List.maxBy fst |> snd)
+
+        let discriminatables, rest =
+            List.foldBack (fun (ty, fields) (discriminatables, rest) ->
+                match getBestTag fields with
+                | Some (name, values) -> (name, values, ty) :: discriminatables, rest
+                | None -> discriminatables, ty :: rest
+            ) discriminatables ([], rest)
+
+        let result =
+            if List.length discriminatables < 2 then
+                Map.empty, un
+            else
+                let dus =
+                    discriminatables
+                    |> List.collect (fun (name, values, ty) ->
+                    values |> Set.toList |> List.map (fun value -> name, (value, ty)))
+                    |> List.groupBy fst
+                    |> List.map (fun (name, xs) ->
+                    name,
+                    xs |> List.map snd
+                        |> List.groupBy fst
+                        |> List.map (fun (k, xs) ->
+                            match List.map snd xs |> List.distinct with
+                            | [x] -> k, x
+                            | xs -> k, FsType.Union { Types = xs; Option = false })
+                        |> Map.ofList)
+                    |> Map.ofList
+                dus, { un with Types = List.distinct rest }
+        cache.Add(un, result)
+        result
+
+let private replaceDiscriminatedUnionsImpl (cache: DUCache) (al: FsAlias) (un: FsUnion) : FsType list =
+    let fallback () = [FsType.Alias al]
+    let discriminated, rest = getDiscriminatedFromUnion cache un
+    match Map.count discriminated, List.isEmpty rest.Types with
+    | 1, true ->
+        if Config.TaggedUnion then
+            let discriminator, cases =
+                discriminated |> Map.toList |> List.head
+            [FsType.TaggedUnionAlias {
+                Attributes = al.Attributes
+                Comments = al.Comments
+                Name = al.Name
+                Discriminator = discriminator
+                Cases = cases
+                TypeParameters = al.TypeParameters
+            }]
+        else
+            printfn "detected a discriminated union: %s (use --tagged-union for a better result)" al.Name
+            fallback ()
+    | _, _ -> fallback ()
+
+let replaceDiscriminatedUnions(f: FsFile): FsFile =
+    let cache = new Dictionary<_, _>()
     f |> fixFile (fun ns tp ->
         match tp with
         | FsType.Module md ->
@@ -1232,50 +1435,8 @@ let addAliasUnionHelpers(f: FsFile): FsFile =
                         match tp2 with
                         | FsType.Alias al ->
                             match al.Type with
-                            | FsType.Union un ->
-                                if un.Types.Length > 1 then
-                                    [tp2] @
-                                    [
-                                        {
-                                            Comments = []
-                                            Attributes = [
-                                                [
-                                                    FsAttribute.fromName "RequireQualifiedAccess"
-                                                    { Namespace = None; Name = "CompilationRepresentation"; Arguments = [ FsArgument.justValue "CompilationRepresentationFlags.ModuleSuffix" ] }
-                                                ]
-                                            ]
-                                            HasDeclare = false
-                                            IsNamespace = false
-                                            Name = al.Name
-                                            Types = []
-                                            HelperLines =
-                                                let mutable i = 0
-                                                un.Types |> List.collect (fun tp3 ->
-                                                    let n = un.Types.Length
-                                                    i <- i + 1
-                                                    let name = getName tp3
-                                                    let name = if name = "" then sprintf "Case%d" i else name
-                                                    let name = name.Replace("'","") // strip generics
-                                                    let name = capitalize name
-                                                    let aliasNameWithTypes = sprintf "%s%s" al.Name (Print.printTypeParameters al.TypeParameters)
-                                                    if un.Option then
-                                                        [
-                                                            sprintf "let of%sOption v: %s = v |> Option.map U%d.Case%d" name aliasNameWithTypes n i
-                                                            sprintf "let of%s v: %s = v |> U%d.Case%d |> Some" name aliasNameWithTypes n i
-                                                            sprintf "let is%s (v: %s) = match v with None -> false | Some o -> match o with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
-                                                            sprintf "let as%s (v: %s) = match v with None -> None | Some o -> match o with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
-                                                        ]
-                                                    else
-                                                        [
-                                                            sprintf "let of%s v: %s = v |> U%d.Case%d" name aliasNameWithTypes n i
-                                                            sprintf "let is%s (v: %s) = match v with U%d.Case%d _ -> true | _ -> false" name aliasNameWithTypes n i
-                                                            sprintf "let as%s (v: %s) = match v with U%d.Case%d o -> Some o | _ -> None" name aliasNameWithTypes n i
-                                                        ]
-                                                )
-                                        }
-                                        |> FsType.Module
-                                    ]
-                                else [tp2]
+                            | FsType.Union un when not un.Option ->
+                                if un.Types.Length > 1 then replaceDiscriminatedUnionsImpl cache al un else [tp2]
                             | _ -> [tp2]
                         | _ -> [tp2]
                     ))
@@ -1325,13 +1486,13 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
                         Name = al.Name
                         FullName = al.Name
                         Inherits = []
-                        Members = 
-                            { f with 
+                        Members =
+                            { f with
                                 Comments = al.Comments
                                 Name = Some "Invoke"
                                 Kind = FsFunctionKind.Call
-                            } 
-                            |> FsType.Function 
+                            }
+                            |> FsType.Function
                             |> List.singleton
                         TypeParameters = al.TypeParameters
                         Accessibility = None
@@ -1389,7 +1550,7 @@ let aliasToInterfacePartly (f: FsFile): FsFile =
 
     //we don't want to print intersection and mapped types, so compile them to simpleType "obj"
     let flatten f =
-        // FsTupleKind.Intersection { Kind = Intersection } -> `A & B` 
+        // FsTupleKind.Intersection { Kind = Intersection } -> `A & B`
         // -> valid for generic type parameter constraints
         //    (but only as direct constraint)
         //    * `extends A & B` -> keep tuple
@@ -1468,7 +1629,7 @@ let emitNowarn (fo: FsFileOut): FsFileOut =
 
         if hasXmlComments then
             let noWarn: AdditionalData = (BetweenModuleAndOpen, [ "#nowarn \"3390\" // disable warnings for invalid XML comments"])
-            { fo with 
+            { fo with
                 AdditionalData = fo.AdditionalData @ [ noWarn ]
             }
         else
@@ -1478,7 +1639,7 @@ let emitNowarn (fo: FsFileOut): FsFileOut =
     // for simplicity: always emit when something is obsolete; its usage isn't as easily detectable
     let fo =
         let mutable hasObsolete = false
-        let doFix _ = 
+        let doFix _ =
             not hasObsolete
         let fix _ ty =
             let obs =
@@ -1503,7 +1664,7 @@ let emitNowarn (fo: FsFileOut): FsFileOut =
 
         if hasObsolete then
             let noWarn: AdditionalData = (BetweenModuleAndOpen, [ "#nowarn \"0044\" // disable warnings for `Obsolete` usage"])
-            { fo with 
+            { fo with
                 AdditionalData = fo.AdditionalData @ [ noWarn ]
             }
         else
@@ -1563,7 +1724,7 @@ let fixFsFileOut fo =
                 ) } |> FsType.Module
             | _ -> tp )
 
-    let fo = 
+    let fo =
         { fo with AbbrevTypes = abbrevTypes @ fo.AbbrevTypes }
         |> emitKeyOfType
     let fo =
@@ -1574,7 +1735,7 @@ let fixFsFileOut fo =
         else fo
 
     let fo = emitNowarn fo
-    
+
     fo
 
 let extractGenericParameterDefaults (f: FsFile): FsFile =
@@ -1669,7 +1830,7 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
     |> fix
     |> removeDefaults
 
-let private sealedTypes = 
+let private sealedTypes =
     [
         "string"
         "float"
@@ -1677,7 +1838,7 @@ let private sealedTypes =
         "ReadonlySet"
         "ReadonlyMap"
         "Function"
-    ] 
+    ]
     |> Set.ofList
 let removeInvalidGenericConstraints (f: FsFile): FsFile =
     // remove unsupported constraints like `A | B`
@@ -1685,7 +1846,7 @@ let removeInvalidGenericConstraints (f: FsFile): FsFile =
         match c with
           // actual tupe or generic type parameter name
         | FsType.Mapped _ -> Some c
-          // generic type 
+          // generic type
         | FsType.Generic _ -> Some c
           // `A & B & C` -> only remove unsupported, keep others
         | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
@@ -1778,10 +1939,10 @@ let removeKeyOfConstraint (f: FsFile): FsFile =
                 match tp.Constraint with
                 | Some (FsType.KeyOf { Type = t }) ->
                     (tps, keyofs |> Map.add tp.Name t)
-                | _ -> 
+                | _ ->
                     (tp::tps, keyofs)
             ) ([], Map.empty)
-        
+
         if keyofs |> Map.isEmpty then
             None
         else
@@ -1791,7 +1952,7 @@ let removeKeyOfConstraint (f: FsFile): FsFile =
                 |> List.map FsType.GenericTypeParameter
 
             Some (tps, keyofs)
-    
+
     let replaceTypeParameters ns (keyofs: Map<string, FsType>) =
         fixType ns (fun _ ->
             function
@@ -1802,7 +1963,7 @@ let removeKeyOfConstraint (f: FsFile): FsFile =
                 |> FsType.KeyOf
             | t -> t
         )
-    
+
     let fix ns c =
         match c with
         | FsType.Function f ->
@@ -1812,7 +1973,7 @@ let removeKeyOfConstraint (f: FsFile): FsFile =
                 { f with TypeParameters = tps }
                 |> FsType.Function
                 |> replaceTypeParameters ns keyofs
-        | FsType.Interface i -> 
+        | FsType.Interface i ->
             match extractKeyOfTypeParameters i.TypeParameters with
             | None -> c
             | Some (tps, keyofs) ->
@@ -1834,12 +1995,12 @@ let removeKeyOfConstraint (f: FsFile): FsFile =
 /// In TS: getter and setter are two distinct functions:
 /// ```typescript
 /// get length(): number;
-/// set length(value: number);  
+/// set length(value: number);
 /// ```
 /// -> are read as two properties, one with `ReadOnly`, one `WriteOnly`
 /// -> merge into one `ReadWrite` property
-/// 
-/// Note: it's legal F# to split getter and setter, 
+///
+/// Note: it's legal F# to split getter and setter,
 /// but it's probably more common and clearer to merge get and set into a single property.
 let mergeReadAndWriteProperties (f: FsFile): FsFile =
     let fix _ =
@@ -1872,14 +2033,14 @@ let mergeReadAndWriteProperties (f: FsFile): FsFile =
                         | FsType.Property p ->
                             if convertToReadWrite |> Set.contains p.Name then
                                 match p.Accessor with
-                                | ReadOnly -> 
+                                | ReadOnly ->
                                     { p with Accessor = ReadWrite }
                                     |> FsType.Property
                                     |> Some
                                 | WriteOnly -> None
                                 | _ -> None
                             else
-                                p 
+                                p
                                 |> FsType.Property
                                 |> Some
                         | m -> Some m

@@ -29,7 +29,12 @@ let printType (tp: FsType): string =
         printfn "Variable in printType that should have been converted into property: %s" (vb.Name)
         let vtp = vb.Type |> printType
         sprintf "abstract %s: %s%s" vb.Name vtp (if vb.IsConst then "" else " with get, set")
-    | FsType.StringLiteral _ -> "string"
+    | FsType.Literal l ->
+        match l with
+        | FsLiteral.String _ -> "string"
+        | FsLiteral.Int _ -> "int"
+        | FsLiteral.Float _ -> "float"
+        | FsLiteral.Bool _ -> "bool"
     | FsType.Property p -> printType p.Type
     | FsType.Enum en ->
         printfn "unextracted printType %s: %s" (getTypeName tp) (getName tp)
@@ -253,7 +258,7 @@ let printTypeLiteral (tl: FsTypeLiteral): string =
                     | _ -> prms |> String.concat " -> "
                 let t =
                     sprintf "%s -> %s" prms (printType f.ReturnType)
-                
+
                 Some (name, t)
             | _ -> None
         )
@@ -428,7 +433,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
             let line = ResizeArray()
             sprintf "    | %s" unm |> line.Add
             if cs.Value.IsSome then
-                sprintf " = %s" cs.Value.Value |> line.Add
+                sprintf " = %s" cs.Value.Value.Value |> line.Add
             sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
     | FsEnumCaseType.String ->
         sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
@@ -436,7 +441,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
             printComments lines (indent + "    ") cs.Comments
             printAttributes lines (indent + "    ") cs.Attributes
             let nm = cs.Name
-            let v = (cs.Value |> Option.defaultValue nm).Replace("\"", "\\\"")
+            let v = (cs.Value |> Option.map (fun v -> v.Value) |> Option.defaultValue nm).Replace("\"", "\\\"")
             let unm = createEnumName nm
             let line = ResizeArray()
             if nameEqualsDefaultFableValue unm v then
@@ -447,6 +452,57 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
     | FsEnumCaseType.Unknown ->
         sprintf "%stype %s =" indent en.Name |> lines.Add
         sprintf "%s    obj" indent |> lines.Add
+
+let printDU (lines: ResizeArray<string>) (indent: string) (du: FsTaggedUnionAlias) =
+    sprintf "" |> lines.Add
+    printComments lines indent du.Comments
+    printAttributes lines indent du.Attributes
+    let types =
+        du.Cases
+        |> Map.toList |> List.map snd
+        |> List.map printType
+        |> List.distinct
+    match types with
+    | [] ->   // this should never happen
+        sprintf "%stype %s =" indent du.Name |> lines.Add
+        sprintf "%s    obj" indent |> lines.Add
+    | [ty] -> // just emit alias if everything is converted to the same type by `fixEnumReferences`
+        sprintf "%stype %s =" indent du.Name |> lines.Add
+        sprintf "%s    %s" indent ty |> lines.Add
+    | _ ->
+        let memberLines = new ResizeArray<string>()
+        sprintf "%stype [<TypeScriptTaggedUnion(\"%s\")>] [<RequireQualifiedAccess>] %s%s ="
+            indent du.Discriminator du.Name (printTypeParameters du.TypeParameters) |> lines.Add
+        let mutable usedNames = Set.empty
+        for index, (tag, ty) in du.Cases |> Map.toArray |> Array.indexed do
+            let caseName =
+                let name =
+                    match getName ty with
+                    | "" -> // not helpful. see the tag instead
+                        match tag.Name with
+                        | Some name -> name // if tag is an enum case, use its name
+                        | None ->
+                            match tag.Value with
+                            | FsLiteral.String s -> createEnumName s // use value as name (like in StringEnum)
+                            | _ ->
+                                // use index. would be confusing if it became something like `Case2147483647`
+                                sprintf "Case%d" (index+1)
+                    | name -> name
+                if usedNames |> Set.contains name then name + "'" else name
+            usedNames <- usedNames |> Set.add caseName
+            let tyStr = printType ty
+            let attr =
+                match tag.Value with
+                | FsLiteral.String s ->
+                    let s = s.Replace("\"", "\\\"")
+                    if nameEqualsDefaultFableValue caseName s then ""
+                    else sprintf "[<CompiledName \"%s\">] " s
+                | FsLiteral.Int i -> sprintf "[<CompiledValue %d>] " i
+                | FsLiteral.Float f -> sprintf "[<CompiledValue %s>] " (string f)
+                | FsLiteral.Bool b -> sprintf "[<CompiledValue %b>] " b
+            sprintf "%s    | %s%s of %s" indent attr caseName tyStr |> lines.Add
+            sprintf "%s    static member inline op_ErasedCast(x: %s) = %s x" indent tyStr caseName |> memberLines.Add
+        lines.AddRange(memberLines) // add members
 
 let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule): unit =
     let lineCountStart = lines.Count
@@ -542,6 +598,8 @@ let rec printModule (lines: ResizeArray<string>) (indent: string) (md: FsModule)
             printAttributes lines indent al.Attributes
             sprintf "%stype %s%s =" indent al.Name (printTypeParameters al.TypeParameters) |> lines.Add
             sprintf "%s    %s" indent (printType al.Type) |> lines.Add
+        | FsType.TaggedUnionAlias du ->
+            printDU lines indent du
         | FsType.Module smd ->
             printModule lines indent smd
         | FsType.Variable vb ->
