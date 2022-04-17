@@ -153,7 +153,7 @@ type [<AllowNullLiteral>] SomeFunctionType =
     /// SomeFunctionType 
     /// and a link: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see>
     /// </remarks>
-    [<Emit "$0($1...)">] abstract Invoke: a: float * b: string -> string
+    [<Emit("$0($1...)")>] abstract Invoke: a: float * b: string -> string
 
 /// <summary>Summary: SomeAlias</summary>
 /// <remarks>
@@ -180,8 +180,8 @@ type SomeUnion =
 /// and a link: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see>
 /// </remarks>
 type [<StringEnum>] [<RequireQualifiedAccess>] SomeLiteral =
-    | [<CompiledName "A">] A
-    | [<CompiledName "B">] B
+    | [<CompiledName("A")>] A
+    | [<CompiledName("B")>] B
 
 /// <summary>Summary: SomeIntersectionType</summary>
 /// <remarks>
@@ -223,14 +223,14 @@ type [<StringEnum>] [<RequireQualifiedAccess>] SomeStringEnum =
     /// `A 
     /// and a link: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see> = "A"`
     /// </remarks>
-    | [<CompiledName "A">] A
+    | [<CompiledName("A")>] A
     /// <summary>Summary: <c>B = "B"</c></summary>
     /// <remarks>
     /// Remarks:
     /// `B 
     /// and a link: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see> = "B"`
     /// </remarks>
-    | [<CompiledName "B">] B
+    | [<CompiledName("B")>] B
 
 /// <summary>Summary: SomeNamespace</summary>
 /// <remarks>

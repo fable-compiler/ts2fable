@@ -104,7 +104,7 @@ type [<AllowNullLiteral>] SomeType =
 type [<AllowNullLiteral>] SomeFunctionType =
     /// Summary: SomeFunctionType
     [<Obsolete("SomeFunctionType is deprecated")>]
-    [<Emit "$0($1...)">] abstract Invoke: a: float * b: string -> string
+    [<Emit("$0($1...)")>] abstract Invoke: a: float * b: string -> string
 
 /// Summary: SomeAlias
 [<Obsolete("SomeAlias is deprecated")>]
@@ -118,8 +118,8 @@ type SomeUnion =
 
 /// Summary: SomeLiteral
 type [<StringEnum>] [<RequireQualifiedAccess>] SomeLiteral =
-    | [<CompiledName "A">] A
-    | [<CompiledName "B">] B
+    | [<CompiledName("A")>] A
+    | [<CompiledName("B")>] B
 
 /// Summary: SomeIntersectionType
 [<Obsolete("SomeIntersectionType is deprecated")>]
@@ -141,10 +141,10 @@ type [<RequireQualifiedAccess>] SomeEnum =
 type [<StringEnum>] [<RequireQualifiedAccess>] SomeStringEnum =
     /// <summary>Summary: <c>A = "A"</c></summary>
     [<Obsolete("A is deprecated")>]
-    | [<CompiledName "A">] A
+    | [<CompiledName("A")>] A
     /// <summary>Summary: <c>B = "B"</c></summary>
     [<Obsolete("B is deprecated")>]
-    | [<CompiledName "B">] B
+    | [<CompiledName("B")>] B
 
 /// Summary: SomeNamespace
 [<Obsolete("SomeNamespace is deprecated")>]

@@ -17,7 +17,7 @@ module StringKind =
 
     type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] Shape =
         | Circle of Circle
-        | [<CompiledName "square!">] Square of Square
+        | [<CompiledName("square!")>] Square of Square
         static member inline op_ErasedCast(x: Circle) = Circle x
         static member inline op_ErasedCast(x: Square) = Square x
 
@@ -32,8 +32,8 @@ module NumberKind =
         abstract sideLength: float with get, set
 
     type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] Shape =
-        | [<CompiledValue 1>] Circle of Circle
-        | [<CompiledValue 2>] Square of Square
+        | [<CompiledValue(1)>] Circle of Circle
+        | [<CompiledValue(2)>] Square of Square
         static member inline op_ErasedCast(x: Circle) = Circle x
         static member inline op_ErasedCast(x: Square) = Square x
 
@@ -48,8 +48,8 @@ module MixedKind =
         abstract sideLength: float with get, set
 
     type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] Shape =
-        | [<CompiledName "square!">] Square of Square
-        | [<CompiledValue 1>] Circle of Circle
+        | [<CompiledName("square!")>] Square of Square
+        | [<CompiledValue(1)>] Circle of Circle
         static member inline op_ErasedCast(x: Square) = Square x
         static member inline op_ErasedCast(x: Circle) = Circle x
 
@@ -68,8 +68,8 @@ module EnumKind =
         abstract sideLength: float with get, set
 
     type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] Shape =
-        | [<CompiledValue 1>] Circle of Circle
-        | [<CompiledValue 2>] Square of Square
+        | [<CompiledValue(1)>] Circle of Circle
+        | [<CompiledValue(2)>] Square of Square
         static member inline op_ErasedCast(x: Circle) = Circle x
         static member inline op_ErasedCast(x: Square) = Square x
 
@@ -80,13 +80,13 @@ type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] S1 =
     static member inline op_ErasedCast(x: {| kind: string; sideLength: float |}) = Square x
 
 type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] S2 =
-    | [<CompiledValue 1>] Case1 of {| kind: int; radius: float |}
-    | [<CompiledValue 2>] Case2 of {| kind: int; sideLength: float |}
+    | [<CompiledValue(1)>] Case1 of {| kind: int; radius: float |}
+    | [<CompiledValue(2)>] Case2 of {| kind: int; sideLength: float |}
     static member inline op_ErasedCast(x: {| kind: int; radius: float |}) = Case1 x
     static member inline op_ErasedCast(x: {| kind: int; sideLength: float |}) = Case2 x
 
 type [<TypeScriptTaggedUnion("kind")>] [<RequireQualifiedAccess>] S3 =
-    | [<CompiledValue 1>] Circle of {| kind: EnumKind.ShapeKind; radius: float |}
-    | [<CompiledValue 2>] Square of {| kind: EnumKind.ShapeKind; sideLength: float |}
+    | [<CompiledValue(1)>] Circle of {| kind: EnumKind.ShapeKind; radius: float |}
+    | [<CompiledValue(2)>] Square of {| kind: EnumKind.ShapeKind; sideLength: float |}
     static member inline op_ErasedCast(x: {| kind: EnumKind.ShapeKind; radius: float |}) = Circle x
     static member inline op_ErasedCast(x: {| kind: EnumKind.ShapeKind; sideLength: float |}) = Square x

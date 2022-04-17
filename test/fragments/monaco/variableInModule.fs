@@ -15,4 +15,4 @@ module Monaco =
         abstract dispose: unit -> unit
 
     type [<AllowNullLiteral>] IEvent<'T> =
-        [<Emit "$0($1...)">] abstract Invoke: listener: ('T -> obj option) * ?thisArg: obj -> IDisposable
+        [<Emit("$0($1...)")>] abstract Invoke: listener: ('T -> obj option) * ?thisArg: obj -> IDisposable
