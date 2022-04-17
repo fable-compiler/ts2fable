@@ -1408,40 +1408,42 @@ let private replaceDiscriminatedUnionsImpl (cache: DUCache) (al: FsAlias) (un: F
     let discriminated, rest = getDiscriminatedFromUnion cache un
     match Map.count discriminated, List.isEmpty rest.Types with
     | 1, true ->
-        let discriminator, cases =
-            discriminated |> Map.toList |> List.head
-        [FsType.TaggedUnionAlias {
-            Attributes = al.Attributes
-            Comments = al.Comments
-            Name = al.Name
-            Discriminator = discriminator
-            Cases = cases
-            TypeParameters = al.TypeParameters
-        }]
+        if Config.TaggedUnion then
+            let discriminator, cases =
+                discriminated |> Map.toList |> List.head
+            [FsType.TaggedUnionAlias {
+                Attributes = al.Attributes
+                Comments = al.Comments
+                Name = al.Name
+                Discriminator = discriminator
+                Cases = cases
+                TypeParameters = al.TypeParameters
+            }]
+        else
+            printfn "detected a discriminated union: %s (use --tagged-union for a better result)" al.Name
+            fallback ()
     | _, _ -> fallback ()
 
 let replaceDiscriminatedUnions(f: FsFile): FsFile =
     let cache = new Dictionary<_, _>()
-    if not Config.TaggedUnion then f
-    else
-        f |> fixFile (fun ns tp ->
-            match tp with
-            | FsType.Module md ->
-                { md with
-                    Types =
-                        (md.Types |> List.collect(fun tp2 ->
-                            match tp2 with
-                            | FsType.Alias al ->
-                                match al.Type with
-                                | FsType.Union un when not un.Option ->
-                                    if un.Types.Length > 1 then replaceDiscriminatedUnionsImpl cache al un else [tp2]
-                                | _ -> [tp2]
+    f |> fixFile (fun ns tp ->
+        match tp with
+        | FsType.Module md ->
+            { md with
+                Types =
+                    (md.Types |> List.collect(fun tp2 ->
+                        match tp2 with
+                        | FsType.Alias al ->
+                            match al.Type with
+                            | FsType.Union un when not un.Option ->
+                                if un.Types.Length > 1 then replaceDiscriminatedUnionsImpl cache al un else [tp2]
                             | _ -> [tp2]
-                        ))
-                }
-                |> FsType.Module
-            | _ -> tp
-        )
+                        | _ -> [tp2]
+                    ))
+            }
+            |> FsType.Module
+        | _ -> tp
+    )
 
 let fixNamespace (f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->
