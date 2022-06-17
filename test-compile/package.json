@@ -10,7 +10,7 @@
     "@types/yargs": "^13.0.11",
     "breeze-client": "^1.7.1",
     "chalk": "^2.3.0",
-    "electron": "^13.6.6",
+    "electron": "^15.5.5",
     "izitoast": "^1.1.5",
     "monaco-editor": "^0.21.3",
     "office-ui-fabric-react": "^5.135.6",
