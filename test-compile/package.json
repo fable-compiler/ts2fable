@@ -14,7 +14,7 @@
     "izitoast": "^1.1.5",
     "monaco-editor": "^0.21.3",
     "office-ui-fabric-react": "^5.135.6",
-    "reactxp": "^1.6.1",
+    "reactxp": "^2.0.0",
     "subscribableevent": "^1.0.1",
     "synctasks": "^0.3.3",
     "typescript": "3.7.4",
