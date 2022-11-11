@@ -391,10 +391,60 @@ let printAttributes (lines: ResizeArray<string>) (indent: string) (attrs: FsAttr
             sprintf "%s[<%s>]" indent
             >> lines.Add
 
+        let ensureLastLineEndsAtLeastAtIndentation (text: string) =
+            // ```fsharp
+            // module A =
+            //     module B =
+            //         type I =
+            //             [<Obsolete("Reason over multiple
+            // lines")>]
+            //             abstract SomeValue: float with get, set
+            // ```
+            // -> Invalid: `)` in Attribute must at least be at column of Attribute start:
+            // ```fsharp
+            // module A =
+            //     module B =
+            //         type I =
+            //             [<Obsolete("Reason over multiple
+            // lines"      )>]
+            //             abstract SomeValue: float with get, set
+            // ```
+            // 
+            // Note: Additional arguments don't need to be at or after indentation
+            // -> is valid
+            //    ```fsharp
+            //    module A =
+            //        module B =
+            //            type I =
+            //                [<Obsolete("Reason over multiple
+            //    lines",true )>]
+            //                abstract SomeValue: float with get, set
+            //    ```
+            // But for simplicity: each arguments gets expanded to indentation:
+            //    ```fsharp
+            //    module A =
+            //        module B =
+            //            type I =
+            //                [<Obsolete("Reason over multiple
+            //    lines"      ,true)>]
+            //                abstract SomeValue: float with get, set
+            //    ```
+            if text.Contains '\n' then
+                let lines = text.Split('\n')
+                let lastLine = lines |> Array.last
+                if lastLine.Length < indent.Length then
+                    let diff = indent.Length - lastLine.Length
+                    text + String.replicate diff " "
+                else
+                    text
+            else
+                text
+
         let formatArgument (arg: FsArgument) =
             match arg.Name with
             | Some name -> sprintf "%s = %s" name arg.Value
             | None -> arg.Value
+            |> ensureLastLineEndsAtLeastAtIndentation
         let formatAttribute (attr: FsAttribute) =
             let name =
                 match attr.Namespace with

@@ -706,4 +706,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #438 Tagged union" <| fun _ ->
         runRegressionTest "#438-tagged-union"
 
+    // https://github.com/fable-compiler/ts2fable/pull/450
+    it "regression #450 Obsolete with multiline reason" <| fun _ ->
+        runRegressionTest "#450-obsolete-multiline"
+
 )?timeout(15_000)
