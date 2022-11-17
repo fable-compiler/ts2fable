@@ -631,6 +631,108 @@ let fixEnumReferences (f: FsFile): FsFile =
         | _ -> tp
     )
 
+let unifyUnionEnumAliases (f: FsFile) : FsFile =
+    f |> fixFile (fun _ tp ->
+        match tp with
+        | FsType.Alias ({ Type = FsType.Union u } as al) 
+            when 
+                u.Types |> List.forall (FsType.isMapped) 
+            ->
+
+            let rec tryGetUnderlyingEnumOfMapped (mp: FsMapped) =
+                match mp.Declarations.Value with
+                | [] -> None
+                | (FsMappedDeclaration.EnumCase (en, _))::_ ->
+                    Some en
+                | (FsMappedDeclaration.Type (FsType.Enum en))::_ ->
+                    Some en
+                | (FsMappedDeclaration.Type (FsType.Alias al))::_ ->
+                    tryGetUnderlyingEnumOfAlias al
+                | _ -> None
+            and tryGetUnderlyingEnumOfAlias (al: FsAlias) =
+                match al with
+                | { Type = FsType.Mapped mp } -> 
+                    tryGetUnderlyingEnumOfMapped mp
+                | { Type = FsType.Union u } ->
+                    tryGetUnderlyingEnumOfUnion u
+                | _ -> None
+            and tryGetUnderlyingEnumOfUnion (u: FsUnion) =
+                u.Types
+                |> Seq.map (FsType.asMapped)
+                |> Seq.map (Option.bind tryGetUnderlyingEnumOfMapped)
+                |> Seq.reduce (fun acc en ->
+                    match acc, en with
+                    | None, _ -> None
+                    | _, None -> None
+                    | Some a, Some b when a = b -> acc
+                    | _, _ -> None
+                )
+
+            match tryGetUnderlyingEnumOfUnion u with
+            | None -> tp
+            | Some en ->
+                let dropLast (s: string) = s.Substring(0, s.LastIndexOf '.')
+                let extractNamespace (fullName: string) =
+                    // remove type name
+                    let name = dropLast fullName
+                    // remove file path (at start in quotations)
+                    if name.StartsWith '"' then
+                        match name.IndexOf('"', 1) with
+                        | -1 -> name
+                        | i -> 
+                            let name = name.Substring(i+1)
+                            name.TrimStart('.')
+                    else
+                        name
+                /// `A.B.C.D.E.F` & `A.B.C.X.Y.Z`
+                /// -> `A.B.C.`
+                /// 
+                /// Note: including `.`!
+                let commonPrefix (a: string) (b: string) =
+                    let l =
+                        Seq.zip a b 
+                        |> Seq.takeWhile (fun (a, b) -> a = b)
+                        |> Seq.length
+                    a.Substring(0, l)
+
+                let relativeEnName =
+                    let enNs = extractNamespace en.FullName
+                    let alNs = extractNamespace al.FullName
+                    let relativeNs = 
+                        let common = commonPrefix enNs alNs
+                        enNs.Substring(common.Length)
+                    if relativeNs |> String.IsNullOrWhiteSpace then
+                        en.Name
+                    else
+                        $"{relativeNs}.{en.Name}"
+
+                let remarks =
+                    let union =
+                        u.Types
+                        |> List.choose (FsType.asMapped)
+                        |> List.map (fun mp -> mp.Name)
+                        |> String.concat " | "
+                    [
+                        "Original in TypeScript:  "
+                        "```typescript"
+                        union
+                        "```"
+                    ]
+                    |> FsComment.Remarks
+                { al with
+                    Type = 
+                        {
+                            Name = relativeEnName
+                            FullName = en.FullName
+                            Declarations = Lazy<_>.CreateFromValue [FsMappedDeclaration.Type (FsType.Enum en)]
+                        }
+                        |> FsType.Mapped
+                    Comments = al.Comments @ [remarks]
+                }
+                |> FsType.Alias
+        | _ -> tp
+    )
+
 let fixDuplicatesInUnion (f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->
         match tp with
@@ -1313,7 +1415,7 @@ let private getDiscriminatedFromUnion (cache: DUCache) (un: FsUnion) : DUResult 
             | FsType.Mapped m ->
                 m.Declarations.Value |> List.collect (function
                     | FsMappedDeclaration.Type ty -> getLiteralFields fieldName typeArguments ty
-                    | FsMappedDeclaration.EnumCase ec ->
+                    | FsMappedDeclaration.EnumCase (_, ec) ->
                         match fieldName, ec.Value with
                         | Some name, Some value -> [{| name = name; value = { Name = Some ec.Name; Value = value } |}]
                         | _ -> []
@@ -1740,7 +1842,7 @@ let fixFsFileOut fo =
 
 let extractGenericParameterDefaults (f: FsFile): FsFile =
     let fix f =
-        let extractAliasesFromGenericParameterDefaults attributes comments name tps =
+        let extractAliasesFromGenericParameterDefaults attributes comments name fullName tps =
             let aliases = List<FsAlias>()
 
             tps
@@ -1754,6 +1856,7 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                         //todo: enhancement: remove defaulted (=removed) typeparams from comments
                         Comments = comments
                         Name = name
+                        FullName = fullName
                         Type =
                             {
                                 Type = simpleType name
@@ -1797,13 +1900,13 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                             match tp with
                             | FsType.Interface it ->
                                 it.TypeParameters
-                                |> extractAliasesFromGenericParameterDefaults it.Attributes it.Comments it.Name
+                                |> extractAliasesFromGenericParameterDefaults it.Attributes it.Comments it.Name it.FullName
                                 |> tps.AddRange
 
                                 tp |> tps.Add
                             | FsType.Alias al ->
                                 al.TypeParameters
-                                |> extractAliasesFromGenericParameterDefaults al.Attributes al.Comments al.Name
+                                |> extractAliasesFromGenericParameterDefaults al.Attributes al.Comments al.Name al.FullName
                                 |> tps.AddRange
 
                                 tp |> tps.Add

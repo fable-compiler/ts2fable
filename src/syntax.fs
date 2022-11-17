@@ -244,6 +244,7 @@ type FsAlias =
         Attributes: FsAttributeSet list
         Comments: FsComment list
         Name: string
+        FullName: string
         Type: FsType
         TypeParameters: FsType list
     }
@@ -340,7 +341,7 @@ type FsKeyOf = {
 [<RequireQualifiedAccess>]
 type FsMappedDeclaration =
     | Type of FsType
-    | EnumCase of FsEnumCase
+    | EnumCase of (FsEnum * FsEnumCase)
 
 type [<CustomEquality; CustomComparison>] FsMapped =
     {

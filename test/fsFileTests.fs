@@ -710,4 +710,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #450 Obsolete with multiline reason" <| fun _ ->
         runRegressionTest "#450-obsolete-multiline"
 
+    // https://github.com/fable-compiler/ts2fable/pull/451
+    it "regression #451 union of enum-sub-sets.d" <| fun _ ->
+        runRegressionTest "#451-union-enum-sub-sets"
+
 )?timeout(15_000)
