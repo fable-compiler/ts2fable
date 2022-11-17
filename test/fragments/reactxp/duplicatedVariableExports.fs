@@ -24,7 +24,6 @@ module ReactXP =
         abstract Linking: RXInterfaces.Linking with get, set
         abstract Location: RXInterfaces.Location with get, set
         abstract Modal: RXInterfaces.Modal with get, set
-        abstract Network: RXInterfaces.Network with get, set
         abstract Platform: RXInterfaces.Platform with get, set
         abstract Popup: RXInterfaces.Popup with get, set
         abstract ScrollView: RXInterfaces.ScrollViewConstructor with get, set
@@ -36,7 +35,6 @@ module ReactXP =
         abstract UserInterface: RXInterfaces.UserInterface with get, set
         abstract UserPresence: RXInterfaces.UserPresence with get, set
         abstract View: obj with get, set
-        abstract WebView: RXInterfaces.WebViewConstructor with get, set
         abstract __spread: obj option with get, set
 
     type Accessibility =
@@ -84,9 +82,6 @@ module ReactXP =
     type Modal =
         RXInterfaces.Modal
 
-    type Network =
-        RXInterfaces.Network
-
     type Platform =
         RXInterfaces.Platform
 
@@ -119,6 +114,3 @@ module ReactXP =
 
     type View =
         RXInterfaces.View
-
-    type WebView =
-        RXInterfaces.WebView
