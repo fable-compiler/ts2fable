@@ -266,7 +266,9 @@ let getFullName (checker: TypeChecker) (nd: Node) : string =
 
 let readDeclarationOfSymbol (checker: TypeChecker) (decl: Declaration) : FsMappedDeclaration list =
     if decl.kind = SyntaxKind.EnumMember then
-        [FsMappedDeclaration.EnumCase (readEnumCase checker !!decl)]
+        let em: EnumMember = !!decl
+        let en: EnumDeclaration = em.parent
+        [FsMappedDeclaration.EnumCase (readEnum checker en, readEnumCase checker em)]
     else
         match tryReadNamedDeclaration checker !!decl with
         | Some t -> [FsMappedDeclaration.Type t]
@@ -801,6 +803,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
             Attributes = []
             Comments = readCommentsAtLocation checker d.name
             Name = name
+            FullName = fullName
             Type = tp
             TypeParameters = readTypeParameters checker d.typeParameters
         }

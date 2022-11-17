@@ -120,7 +120,23 @@ module internal Bridge =
     // 2. Fix the syntax tree.
     // 3. Print the syntax tree to a F# file.
     let private transform bridge (file: FsFile): FsFile =
+        let log title file =
+            printfn "# %s" title
+            // `string file` vs `JSON.stringify file`:
+            // * `string`: 
+            //   + shorter, more compact representation
+            //   - little alignment & indentation
+            // * `json`:
+            //   + indentation & alignment
+            //   - more verbose with lots of lines with just parens
+            //   - json representation, not F# (`"name": "value"` vs `name="value"`)
+            Fable.Core.JS.console.log (string file)
+            // let json = Fable.Core.JS.JSON.stringify (file, space = Some " ")
+            // Fable.Core.JS.console.log json
+            file
+
         file
+        // |> log "start"
         // |> wrapperModuleForExtralFile
         |> removeInternalModules
         |> mergeModulesInFile
@@ -142,6 +158,7 @@ module internal Bridge =
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
         |> fixUnknownEnumCaseValue
         |> replaceDiscriminatedUnions // must be after fixUnknownEnumCaseValue
+        |> unifyUnionEnumAliases
         |> fixEnumReferences // must be after replaceDiscriminatedUnions
         |> fixDuplicatesInUnion // must be after replaceDiscriminatedUnions
         |> fixEscapeWords
@@ -157,6 +174,7 @@ module internal Bridge =
         |> fixFloatAlias
         |> TransformComments.transform
         //todo: enhancement: extract Namespaces from Attributes and open
+        // |> log "done"
 
     let getFsFileOut bridge =
         let program = createProgram bridge
