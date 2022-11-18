@@ -2,7 +2,6 @@ module ts2fable.functionTests
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Import
 
 open ts2fable.Transform
 open ts2fable.Naming
