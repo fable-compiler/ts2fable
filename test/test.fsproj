@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\ts2fable.fsproj" />
@@ -13,9 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="fragments\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Fable.Core" Version="3.1.4" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

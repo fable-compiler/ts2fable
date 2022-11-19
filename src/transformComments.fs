@@ -23,11 +23,11 @@ module private Text =
     // * `[link text]{@link namepathOrURL}` -> currently not handled
     // * `{@link namepathOrURL|link text}`
     // * `{@link namepathOrURL link text (after first space)}`
-    let [<Literal>] private JsDocLink = "\{\@link (?<jsDocLink_link>[^ \|\}]+)(?:[ \|](?<jsDocLink_title>[^\}]*))?\}"
+    let [<Literal>] private JsDocLink = "\{@link (?<jsDocLink_link>[^ \|\}]+)(?:[ \|](?<jsDocLink_title>[^\}]*))?\}"
     /// Markdown inline code: between two backticks
     let [<Literal>] private MdInlineCode = "`(?<mdInlineCode_code>[^`]*)`"
     /// Simple url pattern: Url is basically something that contains `://`
-    let [<Literal>] private Url = "(?<url_link>\w+\:\/\/\S+)"
+    let [<Literal>] private Url = "(?<url_link>\w+:\/\/\S+)"
 
     /// simple discrimination between href and cref: href contains `://`
     let isHref (possibleUrl: string) = possibleUrl.Contains "://"

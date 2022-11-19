@@ -1,6 +1,6 @@
 source https://api.nuget.org/v3/index.json
 storage:none
-framework: net5.0
+framework: net6.0
 
 nuget Fable.Core
 nuget Fable.Node
@@ -11,9 +11,9 @@ nuget Fable.Browser.Svg
 group netcorebuild
     source https://api.nuget.org/v3/index.json
     storage:none
-    framework: netstandard2.0
+    framework: net6.0
 
-    nuget FSharp.Core 5
+    nuget FSharp.Core 6
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem
     nuget Fake.Core.Environment
@@ -23,10 +23,18 @@ group netcorebuild
     nuget Fake.Windows.Chocolatey
     nuget Fake.Core.Target
 
+    # https://github.com/fsprojects/FAKE/issues/2722#issuecomment-1319077969
+    # otherwise for multiple `Fake.DotNet` commands (like restore):
+    # > Could not load file or assembly 'Microsoft.Build.Framework, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'
+    nuget Microsoft.Build 17.3.2
+    nuget Microsoft.Build.Framework 17.3.2
+    nuget Microsoft.Build.Tasks.Core 17.3.2
+    nuget Microsoft.Build.Utilities.Core 17.3.2
+
 group WebApp
     source https://api.nuget.org/v3/index.json
     storage:none
-    framework: net5.0
+    framework: net6.0
 
     nuget FSharp.Core redirects:force
     nuget Fable.Core
