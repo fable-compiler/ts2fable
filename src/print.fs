@@ -191,16 +191,21 @@ let printGenericTypeConstraint (p: FsGenericTypeParameter): string option =
     match p.Constraint with
     | None -> None
     | Some c ->
-        let formatConstraint = sprintf "%s :> %s" p.Name >> Some
+        let formatTypeConstraint = sprintf "%s :> %s" p.Name >> Some
         let rec printConstraint =
             function
+            | FsType.GenericTypeParameterEnumConstraint FsEnumCaseType.Numeric ->
+                sprintf "%s : enum<int>" p.Name
+                |> Some
+            | FsType.GenericTypeParameterEnumConstraint _ ->
+                None
               // actual type or generic parameter name: `MyType`, `T`
             | FsType.Mapped mp ->
-                formatConstraint mp.Name
+                formatTypeConstraint mp.Name
               // generic type: `MyType<...>
             | FsType.Generic g ->
                 printGeneric g
-                |> formatConstraint
+                |> formatTypeConstraint
               // and: `MyType1 & MyType2` (ts), `'T :> MyType1 and 'T :> MyType2` (F#)
             | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
                 tp.Types

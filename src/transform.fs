@@ -148,6 +148,7 @@ let rec fixTypeEx (ns: string) (doFix:FsType->bool) (fix: string->FsType->FsType
             Default = gtp.Default |> Option.map fixType
         }
         |> FsType.GenericTypeParameter
+    | FsType.GenericTypeParameterEnumConstraint _ -> tp
     | FsType.KeyOf k ->
         { k with
             Type = fixType k.Type
@@ -631,6 +632,35 @@ let fixEnumReferences (f: FsFile): FsFile =
         | _ -> tp
     )
 
+let rec private tryGetUnderlyingEnumOfMapped (mp: FsMapped) =
+    match mp.Declarations.Value with
+    | [] -> None
+    | (FsMappedDeclaration.EnumCase (en, _))::_ ->
+        Some en
+    | (FsMappedDeclaration.Type (FsType.Enum en))::_ ->
+        Some en
+    | (FsMappedDeclaration.Type (FsType.Alias al))::_ ->
+        tryGetUnderlyingEnumOfAlias al
+    | _ -> None
+and tryGetUnderlyingEnumOfAlias (al: FsAlias) =
+    match al with
+    | { Type = FsType.Mapped mp } -> 
+        tryGetUnderlyingEnumOfMapped mp
+    | { Type = FsType.Union u } ->
+        tryGetUnderlyingEnumOfUnion u
+    | _ -> None
+and tryGetUnderlyingEnumOfUnion (u: FsUnion) =
+    u.Types
+    |> Seq.map (FsType.asMapped)
+    |> Seq.map (Option.bind tryGetUnderlyingEnumOfMapped)
+    |> Seq.reduce (fun acc en ->
+        match acc, en with
+        | None, _ -> None
+        | _, None -> None
+        | Some a, Some b when a = b -> acc
+        | _, _ -> None
+    )
+
 let unifyUnionEnumAliases (f: FsFile) : FsFile =
     f |> fixFile (fun _ tp ->
         match tp with
@@ -638,36 +668,6 @@ let unifyUnionEnumAliases (f: FsFile) : FsFile =
             when 
                 u.Types |> List.forall (FsType.isMapped) 
             ->
-
-            let rec tryGetUnderlyingEnumOfMapped (mp: FsMapped) =
-                match mp.Declarations.Value with
-                | [] -> None
-                | (FsMappedDeclaration.EnumCase (en, _))::_ ->
-                    Some en
-                | (FsMappedDeclaration.Type (FsType.Enum en))::_ ->
-                    Some en
-                | (FsMappedDeclaration.Type (FsType.Alias al))::_ ->
-                    tryGetUnderlyingEnumOfAlias al
-                | _ -> None
-            and tryGetUnderlyingEnumOfAlias (al: FsAlias) =
-                match al with
-                | { Type = FsType.Mapped mp } -> 
-                    tryGetUnderlyingEnumOfMapped mp
-                | { Type = FsType.Union u } ->
-                    tryGetUnderlyingEnumOfUnion u
-                | _ -> None
-            and tryGetUnderlyingEnumOfUnion (u: FsUnion) =
-                u.Types
-                |> Seq.map (FsType.asMapped)
-                |> Seq.map (Option.bind tryGetUnderlyingEnumOfMapped)
-                |> Seq.reduce (fun acc en ->
-                    match acc, en with
-                    | None, _ -> None
-                    | _, None -> None
-                    | Some a, Some b when a = b -> acc
-                    | _, _ -> None
-                )
-
             match tryGetUnderlyingEnumOfUnion u with
             | None -> tp
             | Some en ->
@@ -730,6 +730,41 @@ let unifyUnionEnumAliases (f: FsFile) : FsFile =
                     Comments = al.Comments @ [remarks]
                 }
                 |> FsType.Alias
+        | _ -> tp
+    )
+
+let fixExtendsEnum (f: FsFile): FsFile =
+    let rec replaceEnum (ty: FsType) =
+        match ty with
+        | FsType.Mapped mp ->
+            match tryGetUnderlyingEnumOfMapped mp with
+            | Some en -> 
+                FsType.GenericTypeParameterEnumConstraint en.Type
+            | None -> ty
+        | FsType.Tuple ({ Kind = FsTupleKind.Intersection } as t) ->
+            { t with
+                Types =
+                    t.Types
+                    |> List.map replaceEnum
+            }
+            |> FsType.Tuple
+        | FsType.Union u ->
+            match tryGetUnderlyingEnumOfUnion u with
+            | Some en ->
+                FsType.GenericTypeParameterEnumConstraint en.Type
+            | None -> ty
+        | _ -> ty
+
+    f |> fixFile (fun _ tp ->
+        match tp with
+        | FsType.GenericTypeParameter ({ Constraint = Some c } as gtp) ->
+            { gtp with
+                Constraint = 
+                    c
+                    |> replaceEnum
+                    |> Some
+            }
+            |> FsType.GenericTypeParameter
         | _ -> tp
     )
 
@@ -1947,7 +1982,7 @@ let removeInvalidGenericConstraints (f: FsFile): FsFile =
     // remove unsupported constraints like `A | B`
     let rec removeUnsupportedType (c: FsType) =
         match c with
-          // actual tupe or generic type parameter name
+          // actual type or generic type parameter name
         | FsType.Mapped _ -> Some c
           // generic type
         | FsType.Generic _ -> Some c
@@ -1963,6 +1998,7 @@ let removeInvalidGenericConstraints (f: FsFile): FsFile =
         | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection -> None
           // inline interface `extends { f(args: ...): void }`
         | FsType.TypeLiteral _ -> None
+        | FsType.GenericTypeParameterEnumConstraint _ -> Some c
         | _ -> None
 
     // cannot use sealed type as constraint

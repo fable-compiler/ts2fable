@@ -143,6 +143,7 @@ module internal Bridge =
         |> aliasToInterfacePartly
         |> removeKeyOfConstraint
         |> extractGenericParameterDefaults
+        |> fixExtendsEnum   // must be before `removeInvalidGenericConstraints`
         |> removeInvalidGenericConstraints
         |> fixTypesHasESKeywords
         |> extractTypesInGlobalModules

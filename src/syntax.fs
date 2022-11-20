@@ -437,6 +437,7 @@ type FsType =
     | Import of FsImport
     | TypeLiteral of FsTypeLiteral
     | GenericTypeParameter of FsGenericTypeParameter
+    | GenericTypeParameterEnumConstraint of FsEnumCaseType
     | KeyOf of FsKeyOf
 
 [<RequireQualifiedAccess>]
