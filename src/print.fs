@@ -484,7 +484,7 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
             printComments lines (indent + "    ") cs.Comments
             printAttributes lines (indent + "    ") cs.Attributes
             let nm = cs.Name
-            let unm = createEnumName nm
+            let unm = createEnumCaseName nm
             let line = ResizeArray()
             sprintf "    | %s" unm |> line.Add
             if cs.Value.IsSome then
@@ -496,8 +496,8 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
             printComments lines (indent + "    ") cs.Comments
             printAttributes lines (indent + "    ") cs.Attributes
             let nm = cs.Name
-            let v = (cs.Value |> Option.map (fun v -> v.Value) |> Option.defaultValue nm).Replace("\"", "\\\"")
-            let unm = createEnumName nm
+            let v = (cs.Value |> Option.map (fun v -> v.Value) |> Option.defaultValue nm) |> escapeCompiledName
+            let unm = createUnionCaseName nm
             let line = ResizeArray()
             if nameEqualsDefaultFableValue unm v then
                 sprintf "    | %s" unm |> line.Add
@@ -538,7 +538,7 @@ let printDU (lines: ResizeArray<string>) (indent: string) (du: FsTaggedUnionAlia
                         | Some name -> name // if tag is an enum case, use its name
                         | None ->
                             match tag.Value with
-                            | FsLiteral.String s -> createEnumName s // use value as name (like in StringEnum)
+                            | FsLiteral.String s -> createEnumCaseName s // use value as name (like in StringEnum)
                             | _ ->
                                 // use index. would be confusing if it became something like `Case2147483647`
                                 sprintf "Case%d" (index+1)

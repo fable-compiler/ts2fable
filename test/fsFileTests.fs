@@ -690,6 +690,10 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #425 Link surrounded by parens becomes link containing paren" <| fun _ ->
         runRegressionTest "#425-xml-comment-link-in-parens"
 
+    // https://github.com/fable-compiler/ts2fable/issues/423
+    it "regression #423 invalid DU Case name" <| fun _ ->
+        runRegressionTest "#423-invalid-du-case-name"
+
     // https://github.com/fable-compiler/ts2fable/issues/428
     it "regression #428 Use \"T[]\" instead \"ResizeArray<T>\"" <| fun _ ->
         runRegressionTest "#428-noresizearray"
@@ -714,6 +718,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #451 union of enum-sub-sets" <| fun _ ->
         runRegressionTest "#451-union-enum-sub-sets"
 
+    // https://github.com/fable-compiler/ts2fable/pull/454
     it "regression #454 generic type constraint: extends enum" <| fun _ ->
         runRegressionTest "#454-extends-enum"
 
