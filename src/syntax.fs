@@ -601,6 +601,7 @@ let getTypeName (tp: FsType) =
     | FsType.Array t -> t.GetType().ToString()
     | FsType.ExportAssignment t -> t.GetType().ToString()
     | FsType.GenericTypeParameter t -> t.GetType().ToString()
+    | FsType.GenericTypeParameterEnumConstraint t -> t.GetType().ToString()
     | FsType.KeyOf t -> t.GetType().ToString()
     | FsType.None as t -> t.GetType().ToString() + ".None"
     | FsType.TODO as t -> t.GetType().ToString() + ".TODO"
@@ -634,6 +635,7 @@ let getAccessibility (tp: FsType) : FsAccessibility option =
     | FsType.Array _
     | FsType.ExportAssignment _
     | FsType.GenericTypeParameter _
+    | FsType.GenericTypeParameterEnumConstraint _
     | FsType.KeyOf _
     | FsType.None
     | FsType.TODO

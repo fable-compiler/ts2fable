@@ -37,23 +37,27 @@ let (|Digit|_|) (digit: string) =
     else None
 
 let createEnumNameParts (name: string) =
-    let tokens = Seq.map string name
-    let rec splitParts part parts  =
-        function
-        | [] -> part :: parts
-        | Digit n :: rest when
-            // Append N to beginning only if enum starts with digit
-            List.isEmpty parts
-            && part = "" -> splitParts ("N" + n) parts rest
-        | Capital letter :: rest when part = "" -> splitParts letter parts rest
-        | Capital letter :: rest -> splitParts letter (part :: parts) rest
-        | "-" :: rest -> splitParts "" (part :: parts) rest
-        | "." :: rest -> splitParts "_" (part :: parts) rest
-        | token :: rest ->  splitParts (part + token) parts rest
-    tokens
-    |> List.ofSeq
-    |> splitParts "" []
-    |> List.rev
+    // only split if not just special chars
+    if name |> Seq.forall (not << System.Char.IsLetterOrDigit) then
+        [name]
+    else
+        let tokens = Seq.map string name
+        let rec splitParts part parts  =
+            function
+            | [] -> part :: parts
+            | Digit n :: rest when
+                // Append N to beginning only if enum starts with digit
+                List.isEmpty parts
+                && part = "" -> splitParts ("N" + n) parts rest
+            | Capital letter :: rest when part = "" -> splitParts letter parts rest
+            | Capital letter :: rest -> splitParts letter (part :: parts) rest
+            | "-" :: rest -> splitParts "" (part :: parts) rest
+            | "." :: rest -> splitParts "_" (part :: parts) rest
+            | token :: rest ->  splitParts (part + token) parts rest
+        tokens
+        |> List.ofSeq
+        |> splitParts "" []
+        |> List.rev
 
 let capitalize (input: string): string =
     if String.IsNullOrWhiteSpace input then ""
@@ -79,12 +83,125 @@ let isIdentifier (input: string) =
 let asIdentifier (input: string) =
     input |> String.map (fun c -> if Char.IsLetterOrDigit c then c else '_')
 
-let createEnumName (s: string) =
+/// Replaces all occurrences of `check` in `str` with `replacement`
+/// 
+/// Separates `replacement` by (single) `_` from other text
+let rec private replaceInString (str: string) (check, replacement) =
+    if str = check then 
+        replacement
+    else
+        match str.IndexOf check with
+        | -1 -> str
+        | i ->
+            // introduce no leading/trailing _
+            // introduce no double _
+            let pre = str.Substring(0,i)
+            let post = str.Substring(i + check.Length)
+            let preApp =
+                if 
+                    pre = ""
+                    ||
+                    pre.EndsWith "_"
+                then
+                    ""
+                else
+                    "_"
+            let postApp =
+                if 
+                    post = ""
+                    ||
+                    post.StartsWith "_"
+                then
+                    ""
+                else
+                    "_"
+            let newName = pre+preApp+replacement+postApp+post
+            replaceInString newName (check,replacement)
+let createUnionCaseName (s: string) =
+    // special rules:
+    // * must start with upper case letter -- except when `RequiredQualifiedAccess`
+    //   -> we're always emitting `RequiredQualifiedAccess` -> lower case start ok
+    // * reserved (-> warning): @
+    // * invalid (-> error): .+$&[]/\\*\"`
+    //        (source: https://github.com/dotnet/fsharp/blob/875dbcc695d1ffdb20e3e899ba9a006df76fe051/src/Compiler/SyntaxTree/PrettyNaming.fs#L945-L946)
+
     if String.IsNullOrWhiteSpace s then "Empty"
     else
         // let s = s |> asIdentifier
         let nm = s |> createEnumNameParts |> List.map capitalize |> String.concat ""
-        if isIdentifier nm then nm else "``" + nm.Replace("`", "'") + "``"
+
+        let replaceSpecialChars (name: string) =
+            // only special char: just REPLACEMENT
+            // inside: xxx_REPLACEMENT_xxx
+            // side: xxx_REPLACEMENT or REPLACEMENT_xxx
+
+            let char_names = [|
+                "\\r\\n", "CRLF"
+                "\\n", "LF"
+                "\\r", "CR"
+                "\\t", "TAB"
+                "\\\"", "QUOTATION"
+                "\\\\", "BACKSLASH"
+
+                "@", "AT"
+                ".", "DOT"
+                "+", "PLUS"
+                "$", "DOLLAR"
+                "&", "AMPERSAND"
+                "[", "LEFT_SQUARE_BRACKET"
+                "]", "RIGHT_SQUARE_BRACKET"
+                "/", "SLASH"
+                "*", "ASTERISK"
+                "`", "BACKTICK"
+
+                "\"", "QUOTATION"
+            |]
+
+            char_names
+            |> Array.fold (replaceInString) name
+        let nm = nm |> replaceSpecialChars
+
+        if isIdentifier nm then nm else "``" + nm + "``"
+let createEnumCaseName (s: string) =
+    // unlike Union Case special chars ARE allowed...
+
+    let nm = 
+        if String.IsNullOrWhiteSpace s then
+            s
+        else
+            s |> createEnumNameParts |> List.map capitalize |> String.concat ""
+
+
+    // special cases:
+    // * reserved: @
+    // * certain backticks (`):
+    //  * at start or end (because of surrounding double-backticks)
+    //  * two (or more) consecutive backticks (because end of double-backticks)
+    //  But for simplicity: always replace backticks
+
+    let replaceSpecialChars (name: string) =
+        let char_names = [|
+            "@", "AT"
+            "`", "BACKTICK"
+        |]
+        char_names
+        |> Array.fold (replaceInString) name
+    let nm = nm |> replaceSpecialChars
+
+    if isIdentifier nm then 
+        nm 
+    else 
+        "``" + nm + "``"
+
+let escapeCompiledName (str: string) =
+    [|
+        "\\", "\\\\"
+        "\"", "\\\""
+        "\r", "\\r"
+        "\n", "\\n"
+        "\t", "\\t"
+    |]
+    |> Array.fold (fun (str: string) (c, r) -> str.Replace(c, r)) str
 
 // by default Fable lowercases the first letter of the name for the value
 let nameEqualsDefaultFableValue (name: string) (value: string): bool =
@@ -151,11 +268,15 @@ let fixModuleName (s: string) =
 
 let removeQuotes (s: string) =
     if String.IsNullOrEmpty s then ""
+    elif s.Length < 1 then s
     else
-        let c = s.[0]
-        if (c = '\"' || c = ''')
-        then s.Trim(c)
-        else s
+        // only remove quotes when at start AND end
+        let h,t = s.[0], s.[s.Length-1]
+        match h,t with
+        | '"', '"'
+        | ''', ''' ->
+            s.Substring(1, s.Length-2)
+        | _ -> s
 
 let makePartName (s: string) =
     let parts = s.Trim('`') |> createModuleNameParts
