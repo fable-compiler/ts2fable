@@ -1078,6 +1078,22 @@ let extractTypeLiterals(f: FsFile): FsFile =
         //       See https://github.com/fable-compiler/ts2fable/issues/415
         | FsType.TypeLiteral tl when tl.Members |> List.exists isIndexer ->
             Some tl
+        // interface when overload (two functions/properties with same name)
+        | FsType.TypeLiteral tl 
+            when 
+                tl.Members 
+                |> Seq.choose (fun m ->
+                    match m with
+                    | FsType.Function f -> f.Name
+                    | FsType.Property p -> Some p.Name
+                    | FsType.Variable v -> Some v.Name
+                    | FsType.Alias a -> Some a.Name
+                    | _ -> None
+                )
+                |> Seq.countBy id
+                |> Seq.exists (fun (_, count) -> count > 1)
+            ->
+            Some tl
         // | FsType.TypeLiteral tl when Config.ConvertPropertyFunctions ->
         //     printfn "TypeLiteral=%A" tl
         //     None
