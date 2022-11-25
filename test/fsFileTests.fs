@@ -722,4 +722,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #454 generic type constraint: extends enum" <| fun _ ->
         runRegressionTest "#454-extends-enum"
 
+    // https://github.com/fable-compiler/ts2fable/pull/456
+    it "regression #456 generic call signature" <| fun _ ->
+        runRegressionTest "#456-generic-call-signature"
+
 )?timeout(25_000)

@@ -730,7 +730,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
         Kind = FsFunctionKind.Call
         IsStatic = false // TODO ?
         Name = Some "Invoke"
-        TypeParameters = []
+        TypeParameters = cs.typeParameters |> readTypeParameters checker
         Params = cs.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType =
             match cs.``type`` with
