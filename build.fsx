@@ -110,9 +110,9 @@ module Scripts =
     /// 
     /// Requires building test before via `buildTest`
     let runTest () =
-        npx $"mocha --colors {testBuildDir}/test.js"
+        npx $"mocha --colors --forbid-only {testBuildDir}/test.js"
     let runTestWithReporter (reporter: string) =
-        npx $"mocha --reporter {reporter} {testBuildDir}/test.js"
+        npx $"mocha --reporter {reporter} --forbid-only {testBuildDir}/test.js"
 
     /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js` and run tests with mocha after each change
     let watchAndRunTest () =
