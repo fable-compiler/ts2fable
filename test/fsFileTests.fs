@@ -727,7 +727,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         runRegressionTest "#456-generic-call-signature"
 
     // https://github.com/fable-compiler/ts2fable/pull/457
-    itOnly "regression #457 Overload in Anonymous record" <| fun _ ->
+    it "regression #457 Overload in Anonymous record" <| fun _ ->
         runRegressionTest "#457-overload-anon-record"
 
 )?timeout(25_000)
