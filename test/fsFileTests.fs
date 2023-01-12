@@ -17,14 +17,27 @@ open ts2fable.Keywords
 let private nodeModulesPath = "./test-compile/node_modules/"
 let private inNodeModules path = sprintf "%s/%s" nodeModulesPath path
 
-let [<Global>] describe (msg: string) (f: unit->unit): unit = jsNative
+// force `function` (instead of arrow `=>`) -> can use `this` (`jsThis`)
+// necessary to set timeout on describe:
+// ```fsharp
+// (describe "my tests" (fun _ -> ... )).timeout(100)
+// ```  
+// -> timeout doesn't work: set AFTER all tests
+// -> timeout suffix method call works only for each individual test (`it`), but not on test suite (`describe`)
+/// captures `this` of `describe`
+let [<Emit("describe($0, function () { $1() })")>] describe (msg: string) (f: unit->unit): unit = jsNative
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
-/// Focus on this test. Other thests aren't execute, just `itOnly` tests.
+/// Focus on this test. Other tests aren't executed, just `itOnly` tests.
 let [<Global("it.only")>] itOnly (msg: string) (f: unit->unit): unit = jsNative
-
-// use only to debug single test
-let [<Emit("it.only($0,$1)")>] only (msg: string) (f: unit->unit): unit = jsNative
+/// `duration` in ms
+/// 
+/// default is `2_000`ms
+///
+/// Note: requires `this`!  
+/// Available in `describe`, but not in `it`  
+/// For `it` use suffix method: `(it "name" (fun _ -> ...)).timeout(100)`
 let [<Emit("this.timeout($0)")>] timeout (duration: int): unit = jsNative
+
 let inline equal (expected: 'T) (actual: 'T): unit =
     Testing.Assert.AreEqual(expected, actual)
 let inline notEqual (expected: 'T) (actual: 'T): unit =
@@ -57,13 +70,17 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     emitFsFileOutAsLines fsPath fsFileOut
     |> f
 
-
 // make sure tests are strict
 (describe "transform tests" <| fun _ ->
-    // timeout 10000
-    // in fable 3: compiled as arrow function
-    //   -> no `this`
-    //   -> `this.timeout` doesn't work
+    do
+        // timeout for complete test suite must be set with `this` and not via suffix `.timeout(...)` call.
+        // only works for individual tests, not suite
+        // Note: for `this` to work: `fun` passed into `describe` must be emitted as `function`, NOT arrow (`=>`)!
+
+        // timeout in ms
+        // default is 2_000ms
+        timeout(25_000)
+
 
     let getTypeByName name fsFiles =
         getAllTypes fsFiles
@@ -230,7 +247,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             //     | _ -> false
             // )
             |> equal true
-    )?timeout(10_000)    // timeout with default 2_000ms
+    )
 
     // https://github.com/fable-compiler/ts2fable/pull/170
     it "compile type alias has only function to interface" <| fun _ ->
@@ -730,4 +747,4 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #457 Overload in Anonymous record" <| fun _ ->
         runRegressionTest "#457-overload-anon-record"
 
-)?timeout(25_000)
+)
