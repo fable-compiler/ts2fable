@@ -12,6 +12,8 @@ open System.Collections.Generic
 open ts2fable.Syntax
 open ts2fable.Keywords
 open Fable
+open ts2fable.Utils
+open ts2fable.Print
 
 let getAllTypesFromFile fsFile =
     let tps = List []
@@ -607,28 +609,87 @@ let fixDateTime(f: FsFile): FsFile =
     )
 
 let fixEnumReferences (f: FsFile): FsFile =
-    // get a list of enum names
-    let list = List<string>()
-    f |> fixFile (fun ns tp ->
-        match tp with
-        | FsType.Enum en ->
-            list.Add en.FullName |> ignore
-            tp
-        | _ -> tp
-    ) |> ignore
+    let tryFixMapped (mp: FsMapped) =
+        match mp.Declarations.Value with
+        | (FsMappedDeclaration.EnumCase (e,_))::_ ->
+            // remove case name, but keep type (and namespace)
+            // `Namespace.MyEnum.MyCase` -> `Namespace.MyEnum`
+            let dropLast (s: string) = s.Substring(0, s.LastIndexOf '.')
+            { mp with
+                Name = dropLast mp.Name
+                FullName = dropLast mp.FullName
+                Declarations = Lazy<_>.CreateFromValue ([FsMappedDeclaration.Type (FsType.Enum e)])
+            }
+            |> FsType.Mapped
+            |> Some
+        | _ -> None
+    let rec fixMapped (t: FsType) =
+        match t with
+        | FsType.Mapped mp -> tryFixMapped mp
+        | FsType.Generic g -> 
+            let mutable somethingFixed = false
+            let tps = 
+                g.TypeParameters
+                |> List.map (fun tp ->
+                    match fixMapped tp with
+                    | None -> tp
+                    | Some t -> somethingFixed <- true; t)
+            if somethingFixed then
+                { g with
+                    TypeParameters = tps
+                }
+                |> FsType.Generic
+                |> Some
+            else
+                None
+        | FsType.Union u ->
+            let mutable somethingFixed = false
+            let ts = 
+                u.Types
+                |> List.map (fun tp ->
+                    match fixMapped tp with
+                    | None -> tp
+                    | Some t -> somethingFixed <- true; t)
+            if somethingFixed then
+                { u with
+                    Types = ts
+                }
+                |> FsType.Union
+                |> Some
+            else
+                None
+        | _ -> None
+            
+    let fixAlias (al: FsAlias) =
+        match fixMapped al.Type with
+        | None -> None
+        | Some t ->
+            { al with
+                Type = t
+                Comments = al.Comments @ (al |> asOriginalRemarks)
+            }
+            |> FsType.Alias
+            |> Some
 
-    // use those as the references
-    let set = Set.ofSeq list
-    f |> fixFile (fun ns tp ->
+    f 
+    |> fixFile (fun _ tp ->
+        match tp with
+        | FsType.Alias al ->
+            fixAlias al
+            |> Option.defaultValue tp
+        | _ -> tp
+    )
+    // above adds comment with source to Alias when FsMapped & changed (-> Enum Case removed)
+    // but that covers only very basic aliases
+    // -> to get all cases we must fix ALL FsMapped
+    // BUT: `fixFile` goes into children before fixing current type -> Mapped gets fixed BEFORE Alias
+    //      -> Alias doesn't get changed because Mapped inside was already fixed on its own
+    // -> two `fixFile`s: First to fix Aliases, second to fix all remaining Mapped
+    |> fixFile (fun _ tp ->
         match tp with
         | FsType.Mapped mp ->
-            if mp.Name.Contains "." then
-                let dropLast (s: string) = s.Substring(0, s.LastIndexOf ".")
-                if set.Contains(dropLast mp.FullName) then
-                    // { mp with Name = nm } |> FsType.Mapped
-                    simpleType (dropLast mp.Name)
-                else tp
-            else tp
+            tryFixMapped mp
+            |> Option.defaultValue tp
         | _ -> tp
     )
 
@@ -661,6 +722,62 @@ and tryGetUnderlyingEnumOfUnion (u: FsUnion) =
         | _, _ -> None
     )
 
+let rec private tryGetUnderlyingTypeOfMapped (mp: FsMapped) =
+    match mp.Declarations.Value with
+    | [] -> 
+        FsType.Mapped mp
+        |> Some
+    | (FsMappedDeclaration.EnumCase (en, _))::_ ->
+        FsType.Enum en
+        |> Some
+    | (FsMappedDeclaration.Type t)::_ ->
+        tryGetUnderlyingType t
+and private tryGetUnderlyingTypeOfUnion (u: FsUnion) =
+    u.Types
+    |> List.map tryGetUnderlyingType
+    |> function
+        | [] -> None
+        | [t] -> t
+        | tys ->
+            tys
+            |> List.reduce (fun acc ty ->
+                match acc, ty with
+                | None, _ -> None
+                | _, None -> None
+                | Some a, Some b when a = b -> acc
+                | _, _ -> None
+            )
+and private tryGetUnderlyingTypeOfAlias (al: FsAlias) =
+    tryGetUnderlyingType al.Type
+and private tryGetUnderlyingType (t: FsType) =
+    match t with
+    | FsType.Alias al ->
+        tryGetUnderlyingTypeOfAlias al
+    | FsType.Mapped mp ->
+        tryGetUnderlyingTypeOfMapped mp
+    | FsType.Union u ->
+        tryGetUnderlyingTypeOfUnion u
+    | FsType.Generic g ->
+        match tryGetUnderlyingType g.Type with
+        | None -> Some t
+        | Some t ->
+            let tps =
+                g.TypeParameters
+                |> List.map tryGetUnderlyingType
+                |> List.sequenceOption
+            match tps with
+            | None -> 
+                FsType.Generic g
+                |> Some
+            | Some tps ->
+                { 
+                    Type = t  
+                    TypeParameters = tps
+                }
+                |> FsType.Generic
+                |> Some
+    | _ -> Some t
+
 let unifyUnionEnumAliases (f: FsFile) : FsFile =
     f |> fixFile (fun _ tp ->
         match tp with
@@ -669,7 +786,8 @@ let unifyUnionEnumAliases (f: FsFile) : FsFile =
                 u.Types |> List.forall (FsType.isMapped) 
             ->
             match tryGetUnderlyingEnumOfUnion u with
-            | None -> tp
+            | None -> 
+                tp
             | Some en ->
                 let dropLast (s: string) = s.Substring(0, s.LastIndexOf '.')
                 let extractNamespace (fullName: string) =
@@ -706,19 +824,6 @@ let unifyUnionEnumAliases (f: FsFile) : FsFile =
                     else
                         $"{relativeNs}.{en.Name}"
 
-                let remarks =
-                    let union =
-                        u.Types
-                        |> List.choose (FsType.asMapped)
-                        |> List.map (fun mp -> mp.Name)
-                        |> String.concat " | "
-                    [
-                        "Original in TypeScript:  "
-                        "```typescript"
-                        union
-                        "```"
-                    ]
-                    |> FsComment.Remarks
                 { al with
                     Type = 
                         {
@@ -727,9 +832,161 @@ let unifyUnionEnumAliases (f: FsFile) : FsFile =
                             Declarations = Lazy<_>.CreateFromValue [FsMappedDeclaration.Type (FsType.Enum en)]
                         }
                         |> FsType.Mapped
-                    Comments = al.Comments @ [remarks]
+                    Comments = al.Comments @ (al |> asOriginalRemarks)
                 }
                 |> FsType.Alias
+        | _ -> tp
+    )
+
+/// Calculates relative path from `current` Type to `target` Type
+/// 
+/// Examles: (`current & target -> relative`)
+/// * `A.B.C.D.E.F & A.B.C.X.Y.Z -> X.Y.Z`
+/// * `A.B.F & A.B.Z -> Z`
+/// * `A.B.C & X.Y.Z -> X.Y.Z`
+/// 
+/// Note: Last identifier (after last `.`) is expected to be Type Name  
+/// -> doesn't support Enum Cases! (`Namespace.Enum.Case`)
+let private relativeName (currentTypeFullName: string) (targetTypeFullName: string) =
+    /// Assumes identifier after last `.` is Type Name  
+    /// That means: doesn't support Enum Cases! (`Namespace.Enum.Case`)
+    let extractParts (fullName: string) =
+        let ns, name = 
+            match fullName.LastIndexOf '.' with
+            | -1 -> "", fullName
+            | i -> fullName.Substring(0, i), fullName.Substring(i+1)
+        // file path is at start in quotations
+        let fp, ns = 
+            if ns.StartsWith '"' then
+                match ns.IndexOf('"', 1) with
+                | -1 -> "", ns
+                | i ->
+                    ns.Substring(0, i+1), ns.Substring(i+1).TrimStart('.')
+            else
+                "", ns
+        {|
+            Path = fp
+            Namespace = ns
+            TypeName = name
+        |}
+
+    let current, target = extractParts currentTypeFullName, extractParts targetTypeFullName
+
+    /// `A.B.C.D.E.F` & `A.B.C.X.Y.Z`
+    /// -> `A.B.C.`
+    /// 
+    /// Note: including `.`!
+    let commonPrefix (a: string) (b: string) =
+        let l =
+            Seq.zip a b 
+            |> Seq.takeWhile (fun (a, b) -> a = b)
+            |> Seq.length
+        a.Substring(0, l)
+    let commonNs = commonPrefix current.Namespace target.Namespace
+    let relativeNs = target.Namespace.Substring(commonNs.Length)
+
+    if String.IsNullOrWhiteSpace relativeNs then
+        target.TypeName
+    else
+        $"{relativeNs}.{target.TypeName}"
+
+let rec private mappedForAlias (source: FsAlias) (target: FsType) : FsType option = 
+    match target with
+    | FsType.Enum en ->
+        {
+            Name = (relativeName source.FullName en.FullName)
+            FullName = en.FullName
+            Declarations = Lazy<_>.CreateFromValue [FsMappedDeclaration.Type target]
+        }
+        |> FsType.Mapped
+        |> Some
+    | FsType.Generic g ->
+        let t = g.Type |> mappedForAlias source
+        match t with
+        | None -> None
+        | Some t ->
+            let ps = 
+                g.TypeParameters 
+                |> List.map (mappedForAlias source)
+                |> List.sequenceOption
+            match ps with
+            | None -> None
+            | Some ps ->
+                {
+                    Type = t
+                    TypeParameters = ps
+                }
+                |> FsType.Generic
+                |> Some
+    | FsType.Interface i ->
+        {
+            Name = relativeName source.FullName i.FullName
+            FullName = i.FullName
+            Declarations = Lazy<_>.CreateFromValue [FsMappedDeclaration.Type target]
+        }
+        |> FsType.Mapped
+        |> Some
+    | _ -> None
+
+/// XML Doc `remarks` with original TypeScript source.
+/// -> Use when F# removes some information (like Enum Case in type Alias)
+/// 
+/// Prints source for `al.Type` in code block with specified title
+/// 
+/// Source is retrieved from `al.TypeScriptDeclaration` (-> TypeScript)  
+/// If there's no `TypeScriptDeclaration`: Falls back to `al.Type` with `printType` (-> F#)
+/// 
+/// `suffixForTs/Fs`: suffix is added to title based on example code language.
+let private asRemarks (title: string) (suffixForTypeScript: string, suffixForFsharp: string) (al: FsAlias) =
+    let mkTitle suffix = 
+        if suffix |> String.IsNullOrWhiteSpace then
+            title
+        else
+            $"{title} {suffix}"
+    let (lang, src, title) =
+        match al.TypeScriptDeclaration with
+        | Some src -> "typescript", src, mkTitle suffixForTypeScript
+        | None -> 
+            // fall back to F#
+            "fsharp", printType al.Type, mkTitle suffixForFsharp
+
+    if String.IsNullOrWhiteSpace src then
+        []
+    else
+        [
+            $"{title}:  "
+            $"```{lang}"
+            yield! 
+                src.Split '\n'
+                |> Seq.map (fun l -> l.TrimEnd '\r')
+            "```"
+        ]
+        |> FsComment.Remarks
+        |> List.singleton
+let private asOriginalRemarks (al: FsAlias) =
+    al
+    |> asRemarks "Original" ("in TypeScript", "")
+
+let unifyUnionAliases (f: FsFile) : FsFile =
+    f |> fixFile (fun _ tp ->
+        match tp with
+        | FsType.Alias ({Type = (FsType.Union u) as ut} as al)
+            when 
+                //TODO: relax for directly use of `Token<Kind.Alpha>` (vs. via Alias)
+                u.Types |> List.forall (fun t -> FsType.isMapped t || FsType.isGeneric t) 
+            ->
+            match tryGetUnderlyingTypeOfUnion u with
+            | None -> tp
+            | Some target ->
+                match mappedForAlias al target with
+                | None -> 
+                    tp
+                | Some mapped ->
+                    { al with
+                        Type = mapped
+                        Comments = al.Comments @ (al |> asOriginalRemarks)
+                    }
+                    |> FsType.Alias
         | _ -> tp
     )
 
@@ -1935,6 +2192,7 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                             }
                             |> FsType.Generic
                         TypeParameters = tps.[0..(i-1)]
+                        TypeScriptDeclaration = None
                     }
                     |> aliases.Add
             )

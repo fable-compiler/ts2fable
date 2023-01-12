@@ -247,6 +247,15 @@ type FsAlias =
         FullName: string
         Type: FsType
         TypeParameters: FsType list
+        /// TypeScript source of Alias declaration
+        /// -> can be used for comments (when less info in F# than TS)
+        ///
+        /// Note: doesn't include Alias Name, just right hand side of Alias declaration!:
+        /// ```typescript
+        /// type MyAlias = number | string
+        /// ```
+        /// -> `number | string`
+        TypeScriptDeclaration: string option
     }
 
 type FsTag =

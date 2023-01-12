@@ -806,6 +806,7 @@ let readAliasDeclaration (checker: TypeChecker) (d: TypeAliasDeclaration): FsTyp
             FullName = fullName
             Type = tp
             TypeParameters = readTypeParameters checker d.typeParameters
+            TypeScriptDeclaration = Some <| d.``type``.getText (d.getSourceFile())
         }
         |> FsType.Alias
     match tp with

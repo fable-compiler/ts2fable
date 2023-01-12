@@ -159,7 +159,7 @@ module internal Bridge =
         |> fixOverloadingOnStringParameters // fixEscapeWords must be after
         |> fixUnknownEnumCaseValue
         |> replaceDiscriminatedUnions // must be after fixUnknownEnumCaseValue
-        |> unifyUnionEnumAliases
+        |> unifyUnionAliases
         |> fixEnumReferences // must be after replaceDiscriminatedUnions
         |> fixDuplicatesInUnion // must be after replaceDiscriminatedUnions
         |> fixEscapeWords

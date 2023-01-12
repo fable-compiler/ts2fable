@@ -747,4 +747,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #457 Overload in Anonymous record" <| fun _ ->
         runRegressionTest "#457-overload-anon-record"
 
+    // https://github.com/fable-compiler/ts2fable/pull/460
+    it "regression #460 Union of all same type" <| fun _ ->
+        runRegressionTest "#460-union-of-all-same-type"
+
 )
