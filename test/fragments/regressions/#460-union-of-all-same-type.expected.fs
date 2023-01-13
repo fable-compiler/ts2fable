@@ -16,7 +16,13 @@ module Ns =
         | Gamma = 3
         | Delta = 4
 
-    type [<AllowNullLiteral>] Token<'TKind when 'TKind : enum<int>> =
+    // `enum` constraint doesn't work in rec module and type alias or inheritance
+    // see https://github.com/dotnet/fsharp/issues/14580
+    // -> disabled until fixed
+
+    // type [<AllowNullLiteral>] Token<'TKind when 'TKind : enum<int>> =
+    //     interface end
+    type [<AllowNullLiteral>] Token<'TKind> =
         interface end
 
     /// <remarks>
@@ -123,7 +129,9 @@ module Ns =
         | Foo = 1
         | Bar = 2
 
-    type [<AllowNullLiteral>] OtherToken<'TKind when 'TKind : enum<int>> =
+    // type [<AllowNullLiteral>] OtherToken<'TKind when 'TKind : enum<int>> =
+    //     interface end
+    type [<AllowNullLiteral>] OtherToken<'TKind> =
         interface end
 
     /// <remarks>

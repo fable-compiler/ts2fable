@@ -14,11 +14,19 @@ open Fable.Core.JS
 /// </summary>
 module N =
 
+    // `enum` constraint doesn't work in rec module and type alias or inheritance
+    // see https://github.com/dotnet/fsharp/issues/14580
+    // -> disabled until fixed
+
     type [<AllowNullLiteral>] IExports =
-        abstract fRootKind: value: 'TKind -> 'TKind when 'TKind : enum<int>
-        abstract fSub1Kind: value: 'TKind -> 'TKind when 'TKind : enum<int>
-        abstract fSubValue: value: 'TKind -> 'TKind when 'TKind : enum<int>
-        abstract fSubSet: value: 'TKind -> 'TKind when 'TKind : enum<int>
+        // abstract fRootKind: value: 'TKind -> 'TKind when 'TKind : enum<int>
+        // abstract fSub1Kind: value: 'TKind -> 'TKind when 'TKind : enum<int>
+        // abstract fSubValue: value: 'TKind -> 'TKind when 'TKind : enum<int>
+        // abstract fSubSet: value: 'TKind -> 'TKind when 'TKind : enum<int>
+        abstract fRootKind: value: 'TKind -> 'TKind
+        abstract fSub1Kind: value: 'TKind -> 'TKind
+        abstract fSubValue: value: 'TKind -> 'TKind
+        abstract fSubSet: value: 'TKind -> 'TKind
 
     type [<RequireQualifiedAccess>] RootKind =
         | Alpha = 1
@@ -35,16 +43,28 @@ module N =
     type SubKind =
         RootKind
 
-    type [<AllowNullLiteral>] InterfaceRootKind<'TKind when 'TKind : enum<int>> =
+    // type [<AllowNullLiteral>] InterfaceRootKind<'TKind when 'TKind : enum<int>> =
+    //     interface end
+
+    // type [<AllowNullLiteral>] InterfaceSubKind<'TKind when 'TKind : enum<int>> =
+    //     interface end
+
+    // type [<AllowNullLiteral>] InterfaceSubValue<'TKind when 'TKind : enum<int>> =
+    //     interface end
+
+    // type [<AllowNullLiteral>] InterfaceSubSet<'TKind when 'TKind : enum<int>> =
+    //     interface end
+
+    type [<AllowNullLiteral>] InterfaceRootKind<'TKind> =
         interface end
 
-    type [<AllowNullLiteral>] InterfaceSubKind<'TKind when 'TKind : enum<int>> =
+    type [<AllowNullLiteral>] InterfaceSubKind<'TKind> =
         interface end
 
-    type [<AllowNullLiteral>] InterfaceSubValue<'TKind when 'TKind : enum<int>> =
+    type [<AllowNullLiteral>] InterfaceSubValue<'TKind> =
         interface end
 
-    type [<AllowNullLiteral>] InterfaceSubSet<'TKind when 'TKind : enum<int>> =
+    type [<AllowNullLiteral>] InterfaceSubSet<'TKind> =
         interface end
 
 /// extends string enum
