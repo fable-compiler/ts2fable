@@ -195,8 +195,13 @@ let printGenericTypeConstraint (p: FsGenericTypeParameter): string option =
         let rec printConstraint =
             function
             | FsType.GenericTypeParameterEnumConstraint FsEnumCaseType.Numeric ->
-                sprintf "%s : enum<int>" p.Name
-                |> Some
+                // disable enum constraint because of https://github.com/dotnet/fsharp/issues/14580 :
+                // type alias & inheritance do not work with `enum` constraint in same rec module/namespace,
+                // but instead produce compiler error at enum decl: internal error: no 'value__' field found for enumeration type
+                // -> disable until bug fixed
+                // sprintf "%s : enum<int>" p.Name
+                // |> Some
+                None
             | FsType.GenericTypeParameterEnumConstraint _ ->
                 None
               // actual type or generic parameter name: `MyType`, `T`
