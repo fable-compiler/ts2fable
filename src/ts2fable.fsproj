@@ -10,6 +10,7 @@
     -->
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="utils.fs" />
     <Compile Include="config.fs" />
     <Compile Include="node/fileSystem.fs" />
     <Compile Include="TypeScript.fs" />

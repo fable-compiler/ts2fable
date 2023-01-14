@@ -19,6 +19,12 @@ module Alpha =
     type AliasKind =
         RootKind
 
+    /// <remarks>
+    /// Original in TypeScript:  
+    /// <code lang="typescript">
+    /// RootKind.Beta
+    /// </code>
+    /// </remarks>
     type SingleKind =
         RootKind
 
@@ -133,9 +139,13 @@ module Alpha =
     type OtherSub12Kind =
         OtherKind
 
-    // ENHANCEMENT: emit XML Comments with Original TS in mixed case too
-
-    /// Two different enums -> keep Union
+    /// <summary>Two different enums -&gt; keep Union</summary>
+    /// <remarks>
+    /// Original in TypeScript:  
+    /// <code lang="typescript">
+    /// RootKind.Alpha | OtherKind.Bar
+    /// </code>
+    /// </remarks>
     type MixedKind =
         U2<RootKind, OtherKind>
 
