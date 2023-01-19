@@ -754,4 +754,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts2fable/pull/463
     it "regression #463 Literal Parameters" <| fun _ ->
         runRegressionTest "#463-literal-parameters"
+
+    // https://github.com/fable-compiler/ts3fable/pull/464
+    it "regression #464 duplicated method in generated interface" <| fun _ ->
+        runRegressionTest "#464-duplicated-method-in-generated-interface"
 )
