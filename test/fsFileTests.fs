@@ -751,4 +751,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #460 Union of all same type" <| fun _ ->
         runRegressionTest "#460-union-of-all-same-type"
 
+    // https://github.com/fable-compiler/ts2fable/pull/463
+    it "regression #463 Literal Parameters" <| fun _ ->
+        runRegressionTest "#463-literal-parameters"
 )

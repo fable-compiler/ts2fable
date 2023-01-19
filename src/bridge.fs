@@ -156,7 +156,7 @@ module internal Bridge =
         |> fixDateTime
         |> fixStatic
         |> createIExports
-        |> fixOverloadingOnStringParameters // fixEscapeWords must be after
+        |> fixOverloadingOnLiteralParameters // fixEscapeWords must be after
         |> fixUnknownEnumCaseValue
         |> replaceDiscriminatedUnions // must be after fixUnknownEnumCaseValue
         |> unifyUnionAliases

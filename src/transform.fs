@@ -500,46 +500,56 @@ let addTicForGenericFunctions(f: FsFile): FsFile =
     )
 
 // https://github.com/Microsoft/TypeScript/blob/master/doc/spec.md#18-overloading-on-string-parameters
-let fixOverloadingOnStringParameters(f: FsFile): FsFile =
+let fixOverloadingOnLiteralParameters(f: FsFile): FsFile =
     f |> fixFile (fun ns tp ->
         match tp with
-        | FsType.Function fn ->
-            if fn.HasStringLiteralParams then
-                let kind = ResizeArray()
-                let name = ResizeArray()
-                let prms = ResizeArray()
-                sprintf "$0.%s(" fn.Name.Value |> kind.Add
-                sprintf "%s" fn.Name.Value |> name.Add
-                let mutable slCount = 0
-                fn.Params |> List.iteri (fun i prm ->
-                    match FsType.asStringLiteral prm.Type with
-                    | None ->
-                        sprintf "$%d" (i + 1 - slCount) |> kind.Add
-                        prms.Add prm
-                    | Some sl ->
-                        slCount <- slCount + 1
-                        sprintf "'%s'" sl |> kind.Add
-                        sprintf "_%s" sl |> name.Add
-                    if i < fn.Params.Length - 1 then
-                        "," |> kind.Add
-                )
-                ")" |> kind.Add
-                let name =
-                    let name = String.concat "" name
-                    // replace whitespaces with `_`
-                    let name = name.Replace(' ', '_').Replace('\t', '_')
-                    // if still invalid identifier: put into double backticks
-                    if name |> isIdentifier then
-                        name
-                    else
-                        sprintf "``%s``" name
-                { fn with
-                    Kind = String.concat "" kind |> FsFunctionKind.StringParam
-                    Name = name |> Some
-                    Params = List.ofSeq prms
-                }
-                |> FsType.Function
-            else tp
+        | FsType.Function fn when fn.HasLiteralParams ->
+            let kind = ResizeArray()
+            let name = ResizeArray()
+            let prms = ResizeArray()
+            sprintf "$0.%s(" fn.Name.Value |> kind.Add
+            sprintf "%s" fn.Name.Value |> name.Add
+            let mutable lCount = 0
+            let addLiteral quotes value  =
+                lCount <- lCount + 1
+                if quotes then $"'{value}'" else value
+                |> kind.Add
+                $"_{value}" |> name.Add
+            fn.Params |> List.iteri (fun i prm ->
+                match prm.Type with
+                | FsType.Literal (FsLiteral.String sl) ->
+                    addLiteral true sl
+                | FsType.Literal (FsLiteral.Bool bl) ->
+                    let s = if bl then "true" else "false"
+                    addLiteral false s
+                | FsType.Literal (FsLiteral.Int il) ->
+                    let s = il.ToString()
+                    addLiteral false s
+                | FsType.Literal (FsLiteral.Float fl) ->
+                    let s = fl.ToString()
+                    addLiteral false s
+                | _ ->
+                    sprintf "$%d" (i + 1 - lCount) |> kind.Add
+                    prms.Add prm
+                if i < fn.Params.Length - 1 then
+                    "," |> kind.Add
+            )
+            ")" |> kind.Add
+            let name =
+                let name = String.concat "" name
+                // replace whitespaces with `_`
+                let name = name.Replace(' ', '_').Replace('\t', '_')
+                // if still invalid identifier: put into double backticks
+                if name |> isIdentifier then
+                    name
+                else
+                    sprintf "``%s``" name
+            { fn with
+                Kind = String.concat "" kind |> FsFunctionKind.StringParam
+                Name = name |> Some
+                Params = List.ofSeq prms
+            }
+            |> FsType.Function
         | _ -> tp
     )
 

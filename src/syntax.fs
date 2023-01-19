@@ -171,6 +171,7 @@ type FsParam =
 
 [<RequireQualifiedAccess>]
 module FsParam =
+    let isLiteral (p: FsParam): bool = FsType.isLiteral p.Type
     let isStringLiteral (p: FsParam): bool = FsType.isStringLiteral p.Type
 
 [<RequireQualifiedAccess>]
@@ -196,6 +197,7 @@ with
     member x.HasStringLiteralParams = x.Params |> List.exists FsParam.isStringLiteral
     member x.StringLiteralParams = x.Params |> List.filter FsParam.isStringLiteral
     member x.NonStringLiteralParams = x.Params |> List.filter (not << FsParam.isStringLiteral)
+    member x.HasLiteralParams = x.Params |> List.exists FsParam.isLiteral
 
 [<RequireQualifiedAccess>]
 type FsPropertyKind =
@@ -456,6 +458,7 @@ module FsType =
     let isMapped tp = match tp with | FsType.Mapped _ -> true | _ -> false
     let isFunction tp = match tp with | FsType.Function _ -> true | _ -> false
     let isInterface tp = match tp with | FsType.Interface _ -> true | _ -> false
+    let isLiteral tp = match tp with | FsType.Literal _ -> true | _ -> false
     let isStringLiteral tp = match tp with | FsType.Literal (FsLiteral.String _) -> true | _ -> false
     let isModule tp = match tp with | FsType.Module _ -> true | _ -> false
     let isImport tp = match tp with | FsType.Import _ -> true | _ -> false
