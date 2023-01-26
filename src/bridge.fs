@@ -168,9 +168,9 @@ module internal Bridge =
         |> addTicForGenericTypes
         // |> removeTodoMembers
         |> removeTypeParamsFromStatic
-        |> removeDuplicateFunctions
         |> removeDuplicateOptions
         |> extractTypeLiterals // after fixEscapeWords
+        |> removeDuplicateFunctions
         |> removeDuplicateOptionsFromParameters
         |> fixFloatAlias
         |> TransformComments.transform
