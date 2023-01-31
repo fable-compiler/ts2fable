@@ -1,5 +1,6 @@
 module ts2fable.fsFileTests
 
+open System
 open Fable.Core
 open Fable.Core.JsInterop
 
@@ -13,6 +14,7 @@ open ts2fable.Transform
 open ts2fable.Print
 open System.Collections.Generic
 open ts2fable.Keywords
+open ts2fable.node
 
 let private nodeModulesPath = "./test-compile/node_modules/"
 let private inNodeModules path = sprintf "%s/%s" nodeModulesPath path
@@ -46,14 +48,21 @@ let inline notEqual (expected: 'T) (actual: 'T): unit =
 let lookForOptions tsPaths =
     Config.Reset()
     for ts in tsPaths do
-        let src = ts2fable.node.FileSystem.readText ts
-        if src.Contains(Config.OptionNames.NoEmitResizeArray) then
-            System.Console.WriteLine("Detected '--noresizearray'")
-            Config.EmitResizeArray <- false
-        if src.Contains(Config.OptionNames.ConvertPropertyFunctions) then
-            Config.ConvertPropertyFunctions <- true
-        if src.Contains(Config.OptionNames.TaggedUnion) then
-            Config.TaggedUnion <- true
+        // only try until first line that's not single line comment (`//`) (but neither XML comment (`///`) or block comment (`(*...*)`))
+        //
+        // Note: comment must be first in line -- no spaces before allowed!
+        // 
+        // in comment line can be whatever -- only existing args surrounded by space match
+        // -> 
+        // * `// --remove-obsolete some reason` -> sets `--remove-obsolete`
+        // * `// --remove-obsolete: some reason` -> doesn't set `--remove-obsolete` because split at space -> no arg `--remove-obsolete:`
+
+        let potentialArgs =
+            ts2fable.node.FileSystem.readLines ts
+            |> Seq.takeWhile (fun l -> l.StartsWith "//" && not (l.StartsWith "///"))
+            |> Seq.collect (fun l -> l.TrimStart('/').Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            |> Seq.toArray
+        Config.setFromArgs potentialArgs
 
 let testFsFilesWithExports tsPaths fsPath exports (f: FsFile list -> unit) =
     let fsFileOut = getFsFileOut fsPath tsPaths exports
@@ -594,6 +603,46 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let fsPath = "test/fragments/custom/type-literal-indexer.fs"
         let expected = "test/fragments/custom/type-literal-indexer.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
+
+    // https://github.com/fable-compiler/ts2fable/issues/465
+    describe "remove obsolete" <| fun _ ->
+        it "--remove-obsolete" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/obsolete/remove-obsolete.d.ts"]
+            let fsPath = "test/fragments/custom/obsolete/remove-obsolete.fs"
+            let expected = "test/fragments/custom/obsolete/remove-obsolete.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "don't --remove-obsolete" <| fun _ ->
+            let tsPath = "test/fragments/custom/obsolete/dont-remove-obsolete.d.ts"
+            // copy from `remove-obsolete.d.ts` to `dont-remove-obsolete.d.ts` 
+            //   with adjusted header (especially: remove `--remove-obsolete` option)
+            do
+                let lines = ts2fable.node.FileSystem.readLines "test/fragments/custom/obsolete/remove-obsolete.d.ts"
+                // remove header
+                let lines = lines |> Seq.skipWhile (fun l -> not (l.StartsWith "// -----" )) |> Seq.skip 1
+                // add header
+                let lines = 
+                    Seq.append
+                        [
+                            "// Same as `remove-obsolete.d.ts`, but without `--remove-obsolete`"
+                            "// -> all deprecated/obsolete should remain!"
+                            ""
+                            "// Note: auto-copied from `remove-obsolete.d.ts`"
+                            "// -> edit `remove-obsolete.d.ts` instead of this file here!"
+                        ]
+                        lines
+                // write file
+                let file = Node.Api.fs.createWriteStream(tsPath)
+                try
+                    for line in lines do
+                        file.write line |> ignore
+                        file.write "\n" |> ignore
+                finally
+                    file.``end``()
+
+            let tsPaths = [tsPath]
+            let fsPath = "test/fragments/custom/obsolete/dont-remove-obsolete.fs"
+            let expected = "test/fragments/custom/obsolete/dont-remove-obsolete.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
 
 
     // https://github.com/fable-compiler/ts2fable/pull/275

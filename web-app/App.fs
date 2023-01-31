@@ -25,7 +25,8 @@ type Msg =
     | UpdateFSharpCode
     | ToggleConfigEmitResizeArray
     | ToggleConfigConvertPropertyFunctions
-    | ToggleTaggedUnion
+    | ToggleConfigTaggedUnion
+    | ToggleConfigRemoveObsolete
 
 let ts2fable s =
     printfn "// Placeholder for ts2fable lib\n"
@@ -60,8 +61,12 @@ let update msg model =
         Config.ConvertPropertyFunctions <- not (Config.ConvertPropertyFunctions)
         model, Cmd.ofMsg UpdateFSharpCode
 
-    | ToggleTaggedUnion ->
+    | ToggleConfigTaggedUnion ->
         Config.TaggedUnion <- not (Config.TaggedUnion)
+        model, Cmd.ofMsg UpdateFSharpCode
+
+    | ToggleConfigRemoveObsolete ->
+        Config.RemoveObsolete <- not (Config.RemoveObsolete)
         model, Cmd.ofMsg UpdateFSharpCode
 
 open Fable.React
@@ -126,7 +131,8 @@ let private navbar model dispatch =
                 [ strong [ ]
                     [ str "ts2fable" ] ] ]
           Navbar.Start.div [ ]
-            [ Navbar.Item.div [ Navbar.Item.HasDropdown
+            [ 
+              Navbar.Item.div [ Navbar.Item.HasDropdown
                                 Navbar.Item.IsHoverable ]
                 [ Navbar.Link.a [ ]
                     [ str "Samples" ]
@@ -162,11 +168,20 @@ let private navbar model dispatch =
                     input [
                         Type "checkbox"
                         Checked (Config.TaggedUnion)
-                        OnChange (fun e -> dispatch ToggleTaggedUnion)
+                        OnChange (fun e -> dispatch ToggleConfigTaggedUnion)
                         ]
                   ]
               ]
-
+              Navbar.Item.div [] [
+                  span [ Title (Config.Options |> List.find (fun (n, _) -> n = Config.OptionNames.RemoveObsolete) |> snd) ] [
+                    span [] [ str (Config.OptionNames.RemoveObsolete) ]
+                    input [
+                        Type "checkbox"
+                        Checked (Config.RemoveObsolete)
+                        OnChange (fun e -> dispatch ToggleConfigRemoveObsolete)
+                        ]
+                  ]
+              ]
             ]
           Navbar.End.div [ ]
             [ Navbar.Item.div [ ]

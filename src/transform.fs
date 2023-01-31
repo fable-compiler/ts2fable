@@ -2474,3 +2474,59 @@ let mergeReadAndWriteProperties (f: FsFile): FsFile =
         | t -> t
 
     f |> fixFile fix
+
+/// Note: Doesn't check `Config.RemoveObsolete`!
+///       -> if you want to guard this function by `Config.RemoveObsolete`: check before!
+let removeObsolete (f: FsFile): FsFile =
+    let containsDeprecated (comments: FsComment list) =
+        comments
+        |> List.exists (
+            function
+            | FsComment.Tag { Name = "deprecated" } -> true
+            | _ -> false
+        )
+    let isObsolete (t: FsType) =
+        t 
+        |> FsType.comments
+        |> containsDeprecated
+        
+
+    // We can't just remove everything obsolete: might be used by something not obsolete
+    // Additional issue: something obsolete -> all children obsolete too
+    //
+    // For now: only remove Functions, Properties, Variables directly marked as deprecated: always safe to remove
+    let shouldBeRemoved (t: FsType) =
+        if isObsolete t then
+            match t with
+            // functions can always be removed: cannot be referenced
+            | FsType.Function _ -> true
+            // properties can always be removed: cannot be referenced
+            | FsType.Property _ -> true
+            // variables can always be removed: cannot be referenced
+            | FsType.Variable _ -> true
+            | _ -> false
+        else
+            false
+
+    let f =
+        f |> fixFile (fun _ tp -> 
+            match tp with
+            | FsType.Interface i ->
+                let ms =
+                    i.Members
+                    |> List.filter (not << shouldBeRemoved)
+                { i with
+                    Members = ms
+                }
+                |> FsType.Interface
+            | FsType.Module m ->
+                let ts =
+                    m.Types
+                    |> List.filter (not << shouldBeRemoved)
+                { m with
+                    Types = ts
+                }
+                |> FsType.Module
+            | _ -> tp
+        )
+    f

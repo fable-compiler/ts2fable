@@ -139,6 +139,10 @@ module internal Bridge =
         // |> log "start"
         // |> wrapperModuleForExtralFile
         |> removeInternalModules
+           // should be early:
+           // * prevent creation of helper interfaces that might remain
+           // * throw away stuff that doesn't need handling -> faster
+        |> if Config.RemoveObsolete then removeObsolete else id
         |> mergeModulesInFile
         |> aliasToInterfacePartly
         |> removeKeyOfConstraint
