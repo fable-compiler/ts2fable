@@ -2182,22 +2182,61 @@ let extractGenericParameterDefaults (f: FsFile): FsFile =
                                     tps.[0..(i-1)]
                                     @
                                     (
-                                        tps.[i..]
-                                        |> List.choose FsType.asGenericTypeParameter
-                                        |> List.map (fun p ->
-                                            match p.Default with
-                                            | Some d ->
-                                                match d with
-                                                  // `A & B` gets compiled as tuple `A * B` -> prevent
-                                                | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
-                                                    None
-                                                  // `{}`
-                                                | FsType.TypeLiteral _ ->
-                                                    None
-                                                | t -> Some t
-                                            | _ -> None
-                                            |> Option.defaultWith (fun _ -> simpleType "obj")
-                                        )
+                                        /// Gen Type Parameters to be replaced by their default
+                                        let dtps = 
+                                            tps.[i..]
+                                            |> List.choose FsType.asGenericTypeParameter
+                                        /// Gen Type Parameters replaced by their default
+                                        let defaulted =
+                                            dtps
+                                            |> List.map (fun p ->
+                                                match p.Default with
+                                                | Some d ->
+                                                    match d with
+                                                    // `A & B` gets compiled as tuple `A * B` -> prevent
+                                                    | FsType.Tuple tp when tp.Kind = FsTupleKind.Intersection ->
+                                                        None
+                                                    // `{}`
+                                                    | FsType.TypeLiteral _ ->
+                                                        None
+                                                    | t -> Some t
+                                                | _ -> None
+                                                |> Option.defaultWith (fun _ -> simpleType "obj")
+                                            )
+
+                                        // we additional must replace nested generic type params
+                                        // otherwise: printed as name!
+                                        // `interface C<TA extends Node = Node, TB extends TA = TA> {}`
+                                        // without replacement: `type C = C<Node, TA>`
+                                        let rec replaceDefaultedTypeParams defaulted (fixedDefaulted: FsType list) =
+                                            match defaulted with
+                                            | [] -> fixedDefaulted
+                                            | d::rest ->
+                                                let fixedD = 
+                                                    d
+                                                    |> fixType "" (fun _ t ->
+                                                        match t with
+                                                        | FsType.Mapped mp ->
+                                                            let tp =
+                                                                // dtps: only generic type params that get defaulted
+                                                                //       not type params that remain!
+                                                                dtps
+                                                                |> List.indexed
+                                                                |> List.tryFind (fun (_, tp) -> tp.Name = mp.Name)
+                                                            match tp with
+                                                            | None -> t
+                                                            | Some (i, _) ->
+                                                                // replace with default of `tp`
+                                                                // default can only reference gen type param before
+                                                                // but for extra safety: check index
+                                                                // fixedDefaulted[i]
+                                                                fixedDefaulted 
+                                                                |> List.tryItem i
+                                                                |> Option.defaultValue t
+                                                        | _ -> t
+                                                    )
+                                                replaceDefaultedTypeParams rest (fixedDefaulted @ [fixedD])
+                                        replaceDefaultedTypeParams defaulted []
                                     )
                             }
                             |> FsType.Generic
