@@ -2514,6 +2514,23 @@ let mergeReadAndWriteProperties (f: FsFile): FsFile =
 
     f |> fixFile fix
 
+/// https://www.typescriptlang.org/docs/handbook/utility-types.html
+let fixNonNullableType (f: FsFile): FsFile =
+    f |> fixFile (fun _ tp ->
+        match tp with
+        | FsType.Generic ({ Type = FsType.Mapped { Name = "NonNullable" }; TypeParameters = [tp] } as g) -> 
+            // remove NonNullable -> just TypeParameter
+            // remove null | undefined (-> Option) from TypeParameters->Union
+            let tp =
+                match tp with
+                | FsType.Union ({ Option = true } as u) ->
+                    {u with Option = false}
+                    |> FsType.Union 
+                | _ -> tp
+            tp
+        | _ -> tp
+    )
+
 /// Note: Doesn't check `Config.RemoveObsolete`!
 ///       -> if you want to guard this function by `Config.RemoveObsolete`: check before!
 let removeObsolete (f: FsFile): FsFile =

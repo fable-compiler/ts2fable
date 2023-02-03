@@ -808,7 +808,11 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #464 duplicated method in generated interface" <| fun _ ->
         runRegressionTest "#464-duplicated-method-in-generated-interface"
 
-    // https://github.com/fable-compiler/ts4fable/pull/464
+    // https://github.com/fable-compiler/ts4fable/pull/466
     it "regression #466 default of generic type param references other type param" <| fun _ ->
         runRegressionTest "#466-generic-type-param-default-refs-other-type-param"
+
+    // https://github.com/fable-compiler/ts4fable/pull/467
+    it "regression #467 NonNullable" <| fun _ ->
+        runRegressionTest "#467-NonNullable"
 )
