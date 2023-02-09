@@ -815,4 +815,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts4fable/pull/467
     it "regression #467 NonNullable" <| fun _ ->
         runRegressionTest "#467-NonNullable"
+
+    // https://github.com/fable-compiler/ts5fable/pull/468
+    it "regression #468 String Enum with duplicate name in F#" <| fun _ ->
+        runRegressionTest "#468-string-enum-duplicate-fsharp-name"
 )
