@@ -144,6 +144,7 @@ module internal Bridge =
            // * throw away stuff that doesn't need handling -> faster
         |> if Config.RemoveObsolete then removeObsolete else id
         |> mergeModulesInFile
+        |> fixNonNullableType
         |> aliasToInterfacePartly
         |> removeKeyOfConstraint
         |> extractGenericParameterDefaults
