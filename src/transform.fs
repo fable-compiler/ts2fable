@@ -2587,6 +2587,7 @@ let removeObsolete (f: FsFile): FsFile =
         )
     f
 
+#if TYPESCRIPT
 /// Some special rules for typescript compiler (`typescript.d.ts`)
 /// 
 /// Fixes some cases that aren't/cannot handled by ts2fable in general rules
@@ -2864,3 +2865,4 @@ let specialTscRules (f: FsFile) : FsFile =
         printfn "* %02i times: '%s'" count name
 
     f
+#endif

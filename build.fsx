@@ -18,6 +18,30 @@ open Fake.Windows
 let versionFromGlobalJson (o: DotNet.CliInstallOptions): DotNet.CliInstallOptions =
     { o with Version = DotNet.Version (DotNet.getSDKVersionFromGlobalJson()) }
 
+/// To handle compilation with special rules for typescript (`typescript.d.ts`)
+module TypeScriptSpecialRules =
+    /// If `true`: special rules for typescript
+    let enabled = 
+        Target.getArguments () 
+        |> Option.defaultValue [||]
+        |> Array.contains "--typescript-special-rules"
+
+    let warnIfEnabled () =
+        if enabled then
+            Trace.traceImportant "!!! Using TypeScript Special Rules !!!"
+
+    [<Literal>]
+    let private constant = "TYPESCRIPT"
+
+    /// Empty if not `enabled`
+    ///
+    /// For fable, NOT msbuild
+    let define =
+        if enabled then
+            $"--define {constant}"
+        else
+            ""
+
 let run cmd dir args =
     CreateProcess.fromRawCommandLine cmd args
     |> CreateProcess.withWorkingDirectory dir
@@ -85,18 +109,18 @@ module Scripts =
     /// 
     /// Start with `node ./build/cli/ts2fable.js`
     let buildCli () =
-        fable $"{cliDir} --outDir {cliBuildDir} --configuration Release --define {CLI_BUILD_SYMBOL} --sourceMaps"
+        fable $"{cliDir} --outDir {cliBuildDir} --configuration Release --define {CLI_BUILD_SYMBOL} --sourceMaps {TypeScriptSpecialRules.define}"
     /// Watch `./src` in debug mode, no bundle, with sourcemaps, into `./build/cli`, with entry `ts2fable.js`
     /// 
     /// Start with `node ./build/cli/ts2fable.js`
     let watchCli () =
-        fable $"watch {cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --configuration Debug --sourceMaps"
+        fable $"watch {cliDir} --outDir {cliBuildDir} --define {CLI_BUILD_SYMBOL} --configuration Debug --sourceMaps {TypeScriptSpecialRules.define}"
 
     /// Build `./test` in release mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`
     /// 
     /// Start with `npx mocha ./build/test/test.js`
     let buildTest () =
-        fable $"{testDir} --outDir {testBuildDir} --sourceMaps"
+        fable $"{testDir} --outDir {testBuildDir} --sourceMaps {TypeScriptSpecialRules.define}"
 
     /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js`.
     /// 
@@ -104,7 +128,7 @@ module Scripts =
     /// 
     /// Unlike `watchAndRunTest` this doesn't run tests after compilation.
     let watchTest () =
-        fable $" watch {testDir} --outDir {testBuildDir} --configuration Debug --sourceMaps"
+        fable $" watch {testDir} --outDir {testBuildDir} --configuration Debug --sourceMaps {TypeScriptSpecialRules.define}"
 
     /// Run mocha tests with entry `./build/test/test.js`.
     /// 
@@ -116,21 +140,21 @@ module Scripts =
 
     /// Watch `./test` in debug mode, no bundle, with sourcemaps, into `./build/test`, with entry `test.js` and run tests with mocha after each change
     let watchAndRunTest () =
-        fable $"watch {testDir} --outDir {testBuildDir} --sourceMaps --configuration Debug --runWatch mocha --colors {testBuildDir}/test.js"
+        fable $"watch {testDir} --outDir {testBuildDir} --configuration Debug --sourceMaps {TypeScriptSpecialRules.define} --runWatch mocha --colors {testBuildDir}/test.js"
 
     /// Build `web-app` in release mode, bundled, with sourcemap into `./web-app/output/` dir.
     /// 
     /// First: Fable in release mode, with sourcemaps into `./web-app/temp` with entry `App.js`.
     /// Then: Bundling with webpack into `./web-app/output/` with `./web-app/webpack.config.js`.
     let buildWebapp () =
-        fable $"{appDir} --outDir {appTempOutDir} --configuration Release --sourceMaps --run webpack --mode production --config {appDir}/webpack.config.js"
+        fable $"{appDir} --outDir {appTempOutDir} --configuration Release --sourceMaps {TypeScriptSpecialRules.define} --run webpack --mode production --config {appDir}/webpack.config.js"
     
     /// Watch `web-app` in debug mode, with sourcemaps, served via `localhost:8080`.
     /// 
     /// First: Fable in debug mode, with sourcemaps into `./web-app/temp` with entry `App.js`.
     /// Then: Serving via `localhost:8080` with `webpack serve` (-> webpack-dev-server) and `./web-app/webpack.config.js`
     let watchWebapp () =
-        fable $"watch {appDir} --outDir {appTempOutDir} --configuration Debug --sourceMaps --run webpack serve --mode development --config {appDir}/webpack.config.js"
+        fable $"watch {appDir} --outDir {appTempOutDir} --configuration Debug --sourceMaps {TypeScriptSpecialRules.define} --run webpack serve --mode development --config {appDir}/webpack.config.js"
 
     /// Bundle existing CLI (output of `buildCli`, in `./build/cli` with entry `ts2fable.js`) into `./dist/ts2fable.js` with rollup
     let bundleCli () =
@@ -512,4 +536,10 @@ Target.create "WebApp.Setup" ignore
           "RunTest" ]
 
 
-Target.runOrDefault "BuildCli"
+// Warn before targets
+TypeScriptSpecialRules.warnIfEnabled ()
+
+Target.runOrDefaultWithArguments "BuildCli"
+
+// Warn again after all targets
+TypeScriptSpecialRules.warnIfEnabled ()

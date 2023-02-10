@@ -178,7 +178,9 @@ module internal Bridge =
         |> removeDuplicateFunctions
         |> removeDuplicateOptionsFromParameters
         |> fixFloatAlias
+#if TYPESCRIPT
         |> specialTscRules
+#endif
         |> TransformComments.transform
         //todo: enhancement: extract Namespaces from Attributes and open
         // |> log "done"

@@ -820,6 +820,8 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     it "regression #468 String Enum with duplicate name in F#" <| fun _ ->
         runRegressionTest "#468-string-enum-duplicate-fsharp-name"
 
+#if TYPESCRIPT
     itOnly "tsc" <| fun _ ->
         runRegressionTest "tsc"
+#endif
 )
