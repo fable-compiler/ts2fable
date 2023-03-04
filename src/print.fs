@@ -497,18 +497,83 @@ let printEnum (lines: ResizeArray<string>) (indent: string) (en: FsEnum) =
             sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
     | FsEnumCaseType.String ->
         sprintf "%stype [<StringEnum>] [<RequireQualifiedAccess>] %s =" indent en.Name |> lines.Add
+
+        let cases = ResizeArray()
         for cs in en.Cases do
+            let name = cs.Name
+            let value = (cs.Value |> Option.map (fun v -> v.Value) |> Option.defaultValue name) |> escapeCompiledName
+            let unionCaseName = createUnionCaseName name
+            
+            // fix duplicate name
+            let unionCaseName =
+                let dupl =
+                    cases.FindIndex (fun (_,_,ucn) -> unionCaseName = ucn)
+                match dupl with
+                | -1 -> unionCaseName
+                | iOther ->
+                    // current case has same F# name as `cases[iOther]`
+                    // keep name that's closer to TS name
+
+                    // Levenshtein with slight adjustment to prefer lower/upper case over removed/added letters:
+                    // F#: `Utf8` -> prefer `utf8` over `Utf-8`
+                    // -> `utf8` stays `Utf8` in F#, while `Utf-8` gets backticks
+                    let levDistance (s1: string) (s2: string) =
+                        let l1, l2 = s1.Length, s2.Length
+                        let d = Array.init (l1+1) (fun i ->
+                            Array.init (l2+1) (fun j ->
+                                if i = 0 then
+                                    float j
+                                elif j = 0 then
+                                    float i
+                                else
+                                    System.Double.MaxValue
+                            )
+                        )
+
+                        for i in 1..l1 do
+                            for j in 1..l2 do
+                                let c1, c2 = s1[i-1], s2[j-1]
+                                
+                                let delCost = d[i-1][j] + 1.0
+                                let insCost = d[i][j-1] + 1.0
+                                let substCost = 
+                                    let cost =
+                                        if c1 = c2 then
+                                            0.0
+                                        elif System.Char.ToLowerInvariant c1 = System.Char.ToLowerInvariant c2 then
+                                            0.0001
+                                        else
+                                            1.0
+                                    d[i-1][j-1] + cost
+
+                                d[i][j] <- min (min delCost insCost) substCost
+
+                        d[l1-1][l2-1]
+
+                    let dCurrent = levDistance value unionCaseName
+                    let (csOther, valueOther, _) = cases[iOther]
+                    let dOther = levDistance valueOther unionCaseName
+
+                    if dOther <= dCurrent then
+                        // keep other, change current
+                        $"``{value}``"
+                    else
+                        // keep current, change other
+                        cases[iOther] <- (csOther, valueOther, $"``{valueOther}``")
+                        unionCaseName
+
+            cases.Add (cs, value, unionCaseName)
+
+        for (cs, value, unionCaseName) in cases do
             printComments lines (indent + "    ") cs.Comments
             printAttributes lines (indent + "    ") cs.Attributes
-            let nm = cs.Name
-            let v = (cs.Value |> Option.map (fun v -> v.Value) |> Option.defaultValue nm) |> escapeCompiledName
-            let unm = createUnionCaseName nm
-            let line = ResizeArray()
-            if nameEqualsDefaultFableValue unm v then
-                sprintf "    | %s" unm |> line.Add
-            else
-                sprintf "    | [<CompiledName(\"%s\")>] %s" v unm |> line.Add
-            sprintf "%s%s" indent (line |> String.concat "") |> lines.Add
+            let line =
+                if nameEqualsDefaultFableValue unionCaseName value then
+                    sprintf "    | %s" unionCaseName
+                else
+                    sprintf "    | [<CompiledName(\"%s\")>] %s" value unionCaseName
+            sprintf "%s%s" indent line |> lines.Add
+        
     | FsEnumCaseType.Unknown ->
         sprintf "%stype %s =" indent en.Name |> lines.Add
         sprintf "%s    obj" indent |> lines.Add
