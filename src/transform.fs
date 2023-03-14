@@ -2833,12 +2833,28 @@ let specialTscRules (f: FsFile) : FsFile =
             "JsxAttributeLike" "ObjectLiteralElement"
             ty
 
+    /// `ImportAll`/`import * as typescript from "typescript"` doesn't work,
+    /// but instead must be `ImportDefault`/`import typescript from "typescript"`
+    /// 
+    /// TS uses `export = ts` -- which [kind-of-but-also-kind-of-not resemble default exports](https://www.typescriptlang.org/docs/handbook/modules.html#export--and-import--require)  
+    /// (vs. normal TS default exports: `export default ts`)
+    let ``use `ImportDefault("typescript")` instead of `ImportAll("typescript")` `` (ty: FsType) : FsType option =
+        match ty with
+        | FsType.Variable ({ Export = Some ({ Path = "typescript"; Selector = "*" } as export)} as v) ->
+            { v with
+                Export = Some { export with Selector = "default"}
+            }
+            |> FsType.Variable
+            |> Some
+        | _ -> None
+
     printfn "!!! Applying custom TSC (`typescript.d.ts`) rules !!!"
     let rules = [|
         let t (s: string) =  s.Trim '`'
         nameof(``fix ts.CustomTransformers.afterDeclarations``) |> t, ``fix ts.CustomTransformers.afterDeclarations`` 
         nameof(``fix ns.ObjectLiteralExpression``) |> t, ``fix ns.ObjectLiteralExpression``
         nameof(``fix ns.JsxAttributes``) |> t, ``fix ns.JsxAttributes``
+        nameof(``use `ImportDefault("typescript")` instead of `ImportAll("typescript")` ``) |> t, ``use `ImportDefault("typescript")` instead of `ImportAll("typescript")` ``
     |]
     let applied: int[] = Array.zeroCreate rules.Length
 
