@@ -564,13 +564,13 @@ let init args =
 let main args =
   init (List.ofArray args)
   try
-    // // Warn before targets
-    // TypeScriptSpecialRules.warnIfEnabled ()
+    // Warn before targets
+    TypeScriptSpecialRules.warnIfEnabled ()
 
     Target.runOrDefaultWithArguments "BuildCli"
 
-    // // Warn again after all targets
-    // TypeScriptSpecialRules.warnIfEnabled ()
+    // Warn again after all targets
+    TypeScriptSpecialRules.warnIfEnabled ()
     0
   with e ->
     eprintfn "%A" e
