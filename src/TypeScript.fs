@@ -23,7 +23,6 @@ module Ts =
         /// The version of the TypeScript compiler release
         abstract version: string
         abstract OperationCanceledException: OperationCanceledExceptionStatic
-        abstract getNodeMajorVersion: unit -> float option
         abstract sys: System with get, set
         abstract tokenToString: t: SyntaxKind -> string option
         abstract getPositionOfLineAndCharacter: sourceFile: SourceFileLike * line: float * character: float -> float
@@ -298,7 +297,6 @@ module Ts =
         abstract hasRestParameter: s: U2<SignatureDeclaration, JSDocSignature> -> bool
         abstract isRestParameter: node: U2<ParameterDeclaration, JSDocParameterTag> -> bool
         abstract unchangedTextChangeRange: TextChangeRange with get, set
-        abstract emitModuleKindIsNonNodeESM: moduleKind: ModuleKind -> bool
         /// Create an external source map source file reference
         abstract createSourceMapSource: fileName: string * text: string * ?skipTrivia: (float -> float) -> SourceMapSource
         abstract setOriginalNode: node: 'T * original: Node option -> 'T when 'T :> Node
@@ -634,7 +632,6 @@ module Ts =
         abstract bundlerModuleNameResolver: moduleName: string * containingFile: string * compilerOptions: CompilerOptions * host: ModuleResolutionHost * ?cache: ModuleResolutionCache * ?redirectedReference: ResolvedProjectReference -> ResolvedModuleWithFailedLookupLocations
         abstract nodeModuleNameResolver: moduleName: string * containingFile: string * compilerOptions: CompilerOptions * host: ModuleResolutionHost * ?cache: ModuleResolutionCache * ?redirectedReference: ResolvedProjectReference -> ResolvedModuleWithFailedLookupLocations
         abstract classicNameResolver: moduleName: string * containingFile: string * compilerOptions: CompilerOptions * host: ModuleResolutionHost * ?cache: NonRelativeModuleNameResolutionCache * ?redirectedReference: ResolvedProjectReference -> ResolvedModuleWithFailedLookupLocations
-        abstract shouldAllowImportingTsExtension: compilerOptions: CompilerOptions * ?fromFileName: string -> U2<bool, string> option
         /// <summary>
         /// Visits a Node using the supplied visitor, possibly returning a new Node in its place.
         /// 
@@ -4304,6 +4301,7 @@ module Ts =
 
     type [<AllowNullLiteral>] TypeChecker =
         abstract getTypeOfSymbolAtLocation: symbol: Symbol * node: Node -> Type
+        abstract getTypeOfSymbol: symbol: Symbol -> Type
         abstract getDeclaredTypeOfSymbol: symbol: Symbol -> Type
         abstract getPropertiesOfType: ``type``: Type -> Symbol[]
         abstract getPropertyOfType: ``type``: Type * propertyName: string -> Symbol option
@@ -4390,6 +4388,17 @@ module Ts =
         abstract getApparentType: ``type``: Type -> Type
         abstract getBaseConstraintOfType: ``type``: Type -> Type option
         abstract getDefaultFromTypeParameter: ``type``: Type -> Type option
+        /// <summary>
+        /// True if this type is the <c>Array</c> or <c>ReadonlyArray</c> type from lib.d.ts.
+        /// This function will _not_ return true if passed a type which
+        /// extends <c>Array</c> (for example, the TypeScript AST's <c>NodeArray</c> type).
+        /// </summary>
+        abstract isArrayType: ``type``: Type -> bool
+        /// True if this type is a tuple type. This function will _not_ return true if
+        /// passed a type which extends from a tuple.
+        abstract isTupleType: ``type``: Type -> bool
+        /// <summary>True if this type is assignable to <c>ReadonlyArray&lt;any&gt;</c>.</summary>
+        abstract isArrayLikeType: ``type``: Type -> bool
         abstract getTypePredicateOfSignature: signature: Signature -> TypePredicate option
         /// Depending on the operation performed, it may be appropriate to throw away the checker
         /// if the cancellation token is triggered. Typically, if it is used for error checking
@@ -4651,7 +4660,8 @@ module Ts =
         | TemplateLiteral = 134217728
         | StringMapping = 268435456
         | Literal = 2944
-        | Unit = 109440
+        | Unit = 109472
+        | Freshable = 2976
         | StringOrNumberLiteral = 384
         | PossiblyFalsy = 117724
         | StringLike = 402653316
@@ -4703,11 +4713,14 @@ module Ts =
         abstract isClass: unit -> bool
         abstract isIndexType: unit -> bool
 
-    type [<AllowNullLiteral>] LiteralType =
+    type [<AllowNullLiteral>] FreshableType =
         inherit Type
+        abstract freshType: FreshableType with get, set
+        abstract regularType: FreshableType with get, set
+
+    type [<AllowNullLiteral>] LiteralType =
+        inherit FreshableType
         abstract value: U3<string, float, PseudoBigInt> with get, set
-        abstract freshType: LiteralType with get, set
-        abstract regularType: LiteralType with get, set
 
     type [<AllowNullLiteral>] UniqueESSymbolType =
         inherit Type
@@ -4727,7 +4740,7 @@ module Ts =
         abstract value: PseudoBigInt with get, set
 
     type [<AllowNullLiteral>] EnumType =
-        inherit Type
+        inherit FreshableType
 
     type [<RequireQualifiedAccess>] ObjectFlags =
         | None = 0
@@ -4991,6 +5004,11 @@ module Ts =
 
     type [<RequireQualifiedAccess>] ModuleResolutionKind =
         | Classic = 1
+        /// <deprecated>
+        /// <c>NodeJs</c> was renamed to <c>Node10</c> to better reflect the version of Node that it targets.
+        /// Use the new name or consider switching to a modern module resolution target.
+        /// </deprecated>
+        | NodeJs = 2
         | Node10 = 2
         | Node16 = 3
         | NodeNext = 99
@@ -7134,6 +7152,13 @@ module Ts =
         /// (as opposed to when the user explicitly requested them) this should be set.
         abstract triggerCharacter: CompletionsTriggerCharacter option with get, set
         abstract triggerKind: CompletionTriggerKind option with get, set
+        /// <summary>
+        /// Include a <c>symbol</c> property on each completion entry object.
+        /// Symbols reference cyclic data structures and sometimes an entire TypeChecker instance,
+        /// so use caution when serializing or retaining completion entries retrieved with this option.
+        /// </summary>
+        /// <default>false</default>
+        abstract includeSymbol: bool option with get, set
 
     type [<StringEnum>] [<RequireQualifiedAccess>] SignatureHelpTriggerCharacter =
         | [<CompiledName(",")>] ``,``
@@ -7626,6 +7651,7 @@ module Ts =
         /// The name of the property or export in the module's symbol table. Differs from the completion name
         /// in the case of InternalSymbolName.ExportEquals and InternalSymbolName.Default.
         abstract exportName: string with get, set
+        abstract exportMapKey: string option with get, set
         abstract moduleSpecifier: string option with get, set
         /// The file name declaring the export's module symbol, if it was an external module
         abstract fileName: string option with get, set
@@ -7636,7 +7662,6 @@ module Ts =
 
     type [<AllowNullLiteral>] CompletionEntryDataUnresolved =
         inherit CompletionEntryDataAutoImport
-        /// <summary>The key in the <c>ExportMapCache</c> where the completion entry's <c>SymbolExportInfo[]</c> is found</summary>
         abstract exportMapKey: string with get, set
 
     type [<AllowNullLiteral>] CompletionEntryDataResolved =
@@ -7665,6 +7690,12 @@ module Ts =
         abstract isFromUncheckedFile: bool option with get, set
         abstract isPackageJsonImport: bool option with get, set
         abstract isImportStatementCompletion: bool option with get, set
+        /// <summary>
+        /// For API purposes.
+        /// Included for non-string completions only when <c>includeSymbol: true</c> option is passed to <c>getCompletionsAtPosition</c>.
+        /// </summary>
+        /// <example>Get declaration of completion: <c>symbol.valueDeclaration</c></example>
+        abstract symbol: Symbol option with get, set
         /// <summary>
         /// A property to be sent back to TS Server in the CompletionDetailsRequest, along with <c>name</c>,
         /// that allows TS Server to look up the symbol represented by the completion item, disambiguating
