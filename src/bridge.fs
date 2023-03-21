@@ -82,19 +82,20 @@ module internal Bridge =
                 o.noEmit <- Some true
                 o.``module`` <- Some ModuleKind.CommonJS
             )
-            let host = ts.createCompilerHost(options)
-            host?getSourceFile <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
-            host?getSourceFileByPath <- fun (fileName,_,_) -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
-            host.writeFile <- !!(fun (_,_) -> ())
-            host?getDefaultLibFileName <- fun _ -> "lib.d.ts"
-            host?useCaseSensitiveFileNames <- fun () -> false
-            host?getCanonicalFileName <- id
-            host?getCurrentDirectory <- fun _ -> ""
-            host?getNewLine <- fun _ -> "\r\n"  //TODO: change?
-            host?fileExists <- fun fileName -> List.contains fileName tsPaths
-            host?readFile <- fun fileName -> sourceFiles |> List.tryPick (fun sf -> if sf.fileName = fileName then Some (sf.getFullText()) else None)
-            host?directoryExists <- fun _ -> true
-            host?getDirectories <- fun _ -> [||]
+            let host: CompilerHost = !!{|
+                getSourceFile = fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
+                getSourceFileByPath = fun (fileName,_,_) -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
+                writeFile = (!!(fun (_,_) -> ()) : WriteFileCallback)
+                getDefaultLibFileName = fun _ -> "lib.d.ts"
+                useCaseSensitiveFileNames = fun () -> false
+                getCanonicalFileName = id
+                getCurrentDirectory = fun _ -> ""
+                getNewLine = fun _ -> "\r\n"  //TODO: change?
+                fileExists = fun fileName -> List.contains fileName tsPaths
+                readFile = fun fileName -> sourceFiles |> List.tryPick (fun sf -> if sf.fileName = fileName then Some (sf.getFullText()) else None)
+                directoryExists = fun _ -> true
+                getDirectories = fun _ -> [||]
+            |}
 
             ts.createProgram(Array.ofList tsPaths, options, host)
 
