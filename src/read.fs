@@ -120,19 +120,22 @@ let readInherits (checker: TypeChecker) (hcs: HeritageClause[] option): FsType l
             )
         )
 
-let readCommentLines (text: string): FsCommentContent =
+let private readCommentLines (text: string): FsCommentContent =
     text.Replace("\r\n","\n").Replace("\r","\n").Split [|'\n'|] |> List.ofArray
-let readJsDocCommentLines (comments: JSDocComment[]): FsCommentContent =
-    //TODO: concat with space correct? or new line? or empty?
-    comments |> Seq.map (fun c -> c?text) |> String.concat " " |> readCommentLines
+
+let private readCommentSymbolDisplayParts (text: SymbolDisplayPart[]): FsCommentContent option =
+    if text.Length = 0 then None
+    else
+        ts.displayPartsToString(Some text)
+        |> readCommentLines
+        |> Some
 
 let private readCommentSummary (documentationComment: SymbolDisplayPart[]): FsComment option =
     if documentationComment.Length = 0 then None
     else
         documentationComment
-        |> List.ofSeq
-        |> List.filter (fun dp -> dp.kind = "text")  // | SymbolDisplayPartKind.Text -> // TODO how to use the enum
-        |> List.collect (fun dp -> dp.text |> readCommentLines)
+        |> readCommentSymbolDisplayParts
+        |> Option.defaultValue []
         |> function | [] -> None | lines -> Some (FsComment.Summary lines)
 
 let private readCommentTag (jsDocTag: JSDocTag): FsComment =
@@ -149,7 +152,7 @@ let private readCommentTag (jsDocTag: JSDocTag): FsComment =
             identifier.text
         | SyntaxKind.QualifiedName ->
             getQualifiedName (unbox name)
-        | kind -> failwithf "Invalid Syntaxkind: %A" kind
+        | kind -> failwithf "Invalid SyntaxKind: %A" kind
 
     let tag (jsDocTag: JSDocTag) = jsDocTag.tagName.text.ToLower()
 
@@ -164,14 +167,31 @@ let private readCommentTag (jsDocTag: JSDocTag): FsComment =
             Some (jsDocTag |> tag)
         | _ -> None
 
+    let readComment comment =
+        match comment with
+        | Some comment ->
+            ts.getTextOfJSDocComment comment
+            |> Option.map readCommentLines
+            |> Option.map (fun comments ->
+                // Special case: Multiline, but first text on line after tag
+                // ```typescript
+                // /**
+                //   * @see SomeType
+                //   *      some text
+                //   */
+                // ```
+                // -> text is `*      some text`
+                // -> remove leading * and whitespace
+                match comments with
+                | first::rest when first.StartsWith("*") ->
+                    let first = first.Substring(1).TrimStart()
+                    first::rest
+                | comment -> comment
+            )
+            |> Option.defaultValue []
+        | None -> []
     let comment =
-        jsDocTag.comment
-        |> Option.map (
-            function
-            | U2.Case1 text -> readCommentLines text
-            | U2.Case2 comments -> readJsDocCommentLines comments
-        )
-        |> Option.defaultValue []
+        readComment jsDocTag.comment
 
     let mkTag name =
         { Name = name; Content = comment }
@@ -198,18 +218,61 @@ let private readCommentTag (jsDocTag: JSDocTag): FsComment =
     // -> handled in transform
     | TagNodeOf ["typeparam"; "tparam"] _ ->
         mkTag "typeparam"
+    | Tag SyntaxKind.JSDocSeeTag ->
+        let p: JSDocSeeTag = downcast jsDocTag
+        // There's an issue with TSC and URL:
+        // `@see https://github.com ...`
+        // -> name: `https`; comment: `://github.com ...`
+        // -> in that case: put url together again and extract target in `transformComments`
+        let target = 
+            p.name 
+            |> Option.map (fun n -> 
+                let n: Node = !!n.name
+                n.getText ()
+            )
+            |> Option.defaultValue ""
+        match comment with
+        | _ when String.IsNullOrWhiteSpace target ->
+            // happens when `{@link ...}` in first place
+            { Name = "see"; Content = comment }
+            |> FsComment.Tag
+        | head::rest when head.StartsWith "://" ->
+            // link is extracted later in `transformComments`
+            let comment = (target + head)::rest
+            { Name = "see"; Content = comment }
+            |> FsComment.Tag
+        | _ ->
+            // Actual LinkType is  determined later in `transformComments`
+            { Type = Unknown; Target = target; Content = readComment p.comment }
+            |> FsComment.SeeAlso
     | TagNodeOf ["see"] _ ->
         mkTag "see"
+    | Tag SyntaxKind.JSDocThrowsTag ->
+        let p: JSDocThrowsTag = downcast jsDocTag
+        let t = 
+            p.typeExpression
+            |> Option.map (fun e -> e.``type``.getText())
+        { Type = t; Content = comment}
+        |> FsComment.Exception
     | TagNodeOf ["throws"; "throw"; "exception"] _ ->
         mkTag "throws"
+    | Tag SyntaxKind.JSDocDeprecatedTag ->
+        let p: JSDocDeprecatedTag = downcast jsDocTag
+        { Name = "deprecated"; Content = readComment p.comment }
+        |> FsComment.Tag
     | TagNodeOf ["deprecated"] _ ->
         mkTag "deprecated"
-
-    | Tag SyntaxKind.FirstJSDocTagNode ->
-        { Name = jsDocTag |> tag; Content = comment }
-        |> FsComment.UnknownTag
     | _ ->
-        comment |> FsComment.Unknown
+        // `jsDocTag.comment` might cover just part of actual tag content
+        // (might be case when: special handled by TSC (-> more fields than just `comment`), but not yet handled by ts2fable)
+        // -> use full text and remove leading tag
+        let text =
+            let text = jsDocTag.getText()
+            match text.IndexOf(jsDocTag.tagName.text) with
+            | -1 -> text
+            | i -> text.Substring(i + jsDocTag.tagName.text.Length).TrimStart([|' '; '\t'|])
+        { Name = jsDocTag |> tag; Content = readCommentLines text }
+        |> FsComment.UnknownTag
 
 let private readCommentTags (jsDocTags: JSDocTag[]): FsComment list =
     if jsDocTags.Length = 0 then []
@@ -218,7 +281,7 @@ let private readCommentTags (jsDocTags: JSDocTag[]): FsComment list =
         |> List.ofSeq
         |> List.map readCommentTag
 
-let readComments (documentationComment: SymbolDisplayPart[]) (jsDocTags: JSDocTag[]): FsComment list =
+let private readComments (documentationComment: SymbolDisplayPart[]) (jsDocTags: JSDocTag[]): FsComment list =
     // documentationComment contains root comment
     // jsDocTags all other tags
     [
@@ -228,7 +291,6 @@ let readComments (documentationComment: SymbolDisplayPart[]) (jsDocTags: JSDocTa
 
         yield! readCommentTags jsDocTags
     ]
-
 
 let readCommentsForSignatureDeclaration (checker: TypeChecker) (declaration: SignatureDeclaration): FsComment list =
     try
@@ -244,7 +306,7 @@ let readCommentsAtLocation (checker: TypeChecker) (nd: Node): FsComment list =
     | None -> []
     | Some symbol ->
         // difference between `symbol.getJsDocTags()` && `ts.getJSDocTags id.parent`
-        // * on symbol: gets unparsed tags
+        // * on symbol: gets unparsed_ish tags
         // * on ts: gets parsed tags
         readComments (symbol.getDocumentationComment (Some checker)) (ts.getJSDocTags nd.parent)
 

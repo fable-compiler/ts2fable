@@ -15,7 +15,10 @@ open Fable.Core.JS
 /// 
 /// Markdown link: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see>
 /// 
-/// JsDoc Link: <see href="https://github.com" /> and <see href="https://github.com">GitHub</see> and <see href="https://github.com">GitHub</see>
+/// JsDoc Link: <see href="https://github.com" /> and <see href="https://github.com">GitHub (previously separated by BAR)</see> and <see href="https://github.com">GitHub</see>
+/// Note: TS parser currently doesn't support <c>@link</c> with <c>|</c> separator: <c>@{link target|description}</c> 
+///       -&gt; Bar gets removed, link target becomes <c>targetdescription</c> and no description
+///       -&gt; use space as separator again
 /// 
 /// Markdown inline code: <c>console.log("hello World")</c>
 /// 
@@ -41,7 +44,7 @@ open Fable.Core.JS
 /// CRef with <c>#</c> (instance member) and <c>~</c> (inner member) -&gt; convert all into <c>.</c>:
 /// <c>Namespace.Class.method</c> = <see cref="Namespace.Class.method" />
 /// <c>Namespace.Class#method</c> = <see cref="Namespace.Class.method" />
-/// <c>Namespace.Class~method</c> = <see cref="Namespace.Class.method" />
+/// <c>Namespace.Class~method</c> = <see cref="Namespace.Class">~method</see> (Note: currently not supported by TS -&gt; not handled by ts2fable)
 /// remove leading:
 /// <c>#method</c> = <see cref="method" />
 /// <c>~method</c> = <see cref="method" />
@@ -50,11 +53,11 @@ open Fable.Core.JS
 /// <see href="https://fsharp.org">code <c>1+1</c> fsharp</see>
 /// 
 /// Link in code aren't transformed:
-/// <c>[ts2fable](https://github.com/fable-compiler/ts2fable)</c> and <c>{@link https://github.com|GitHub}</c>
+/// <c>[ts2fable](https://github.com/fable-compiler/ts2fable)</c> and <c>{@link https://github.com GitHub}</c>
 /// and multiline:
 /// <code>
 /// [ts2fable](https://github.com/fable-compiler/ts2fable)`
-/// `{@link https://github.com|GitHub}` 
+/// `{@link https://github.com GitHub}` 
 /// </code>
 /// </summary>
 type [<AllowNullLiteral>] AllTextTransformations =
@@ -77,7 +80,7 @@ type [<AllowNullLiteral>] AllTextTransformations =
 /// <returns>Returns: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see></returns>
 /// <seealso cref="SomeType">See: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see></seealso>
 /// <typeparam name="T">TypeParam: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see></typeparam>
-/// <exception cref="Exception"> Throws: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see></exception>
+/// <exception cref="Exception">Throws: <see href="https://github.com/fable-compiler/ts2fable">ts2fable</see></exception>
 type [<AllowNullLiteral>] AllTags =
     interface end
 
@@ -100,6 +103,12 @@ type [<AllowNullLiteral>] AllTags =
 /// should be cref
 /// on multiple lines
 /// </seealso>
+/// <seealso cref="SomeType11">
+/// 
+/// should be cref
+/// on multiple lines
+/// with leading empty line
+/// </seealso>
 type [<AllowNullLiteral>] SeeTag =
     interface end
 
@@ -117,8 +126,15 @@ type [<AllowNullLiteral>] Separator =
     interface end
 
 /// <summary>Exception Type in <c>@throws</c> is optional, but required in <c>&lt;exception&gt;</c></summary>
-/// <exception cref="SomeException"> exception with type</exception>
-/// <exception cref="Module.SomeException"> exception with type in module</exception>
+/// <exception cref="SomeException">exception with type</exception>
+/// <exception cref="Module.SomeException">exception with type in module</exception>
 /// <exception cref="">exception without type</exception>
 type [<AllowNullLiteral>] Throws =
+    interface end
+
+/// <summary>
+/// Tags not handled by ts2fable
+/// -&gt; No tags in F#, and no exceptions in ts2fable
+/// </summary>
+type [<AllowNullLiteral>] Unknown =
     interface end

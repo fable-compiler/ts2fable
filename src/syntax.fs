@@ -105,6 +105,7 @@ type FsCommentTag =
 type FsCommentLinkType =
     | HRef
     | CRef
+    | Unknown
 type FsCommentLink =
     {
         Type: FsCommentLinkType
@@ -134,7 +135,6 @@ type FsComment =
       /// Used for non-standard tags
     | Tag of FsCommentTag
     | UnknownTag of FsCommentTag
-    | Unknown of FsCommentContent
 
 [<RequireQualifiedAccess>]
 module FsComment =
