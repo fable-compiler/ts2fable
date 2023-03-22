@@ -158,7 +158,12 @@ module.exports = (env, argv) => {
                     test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)(\?.*$|$)/,
                     type: "asset/resource"
                 },
-            ]
+            ],
+            // without: Warning:
+            // > WARNING in ./node_modules/typescript/lib/typescript.js 3064:94-115
+            // > Module not found: Error: Can't resolve 'perf_hooks' in '[...]\ts2fable\node_modules\typescript\lib'
+            // see https://github.com/microsoft/TypeScript/issues/39436#issuecomment-817029140
+            noParse: [require.resolve('typescript/lib/typescript.js')],
         }
     }
 };
