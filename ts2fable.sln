@@ -7,6 +7,10 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ts2fable", "src\ts2fable.fs
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "test", "test\test.fsproj", "{D4946D9C-5FDC-404C-ADA7-77C18B46B828}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{E2484325-8175-49A7-8998-ACDFD97D278E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "build", "build\fake\build.fsproj", "{EA9D8A6E-DEC0-45B8-8F8A-C74313A997B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,11 +25,18 @@ Global
 		{D4946D9C-5FDC-404C-ADA7-77C18B46B828}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4946D9C-5FDC-404C-ADA7-77C18B46B828}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4946D9C-5FDC-404C-ADA7-77C18B46B828}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA9D8A6E-DEC0-45B8-8F8A-C74313A997B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA9D8A6E-DEC0-45B8-8F8A-C74313A997B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA9D8A6E-DEC0-45B8-8F8A-C74313A997B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA9D8A6E-DEC0-45B8-8F8A-C74313A997B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A3C2B92D-9AAF-4632-B169-72EAB6E4856D}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EA9D8A6E-DEC0-45B8-8F8A-C74313A997B2} = {E2484325-8175-49A7-8998-ACDFD97D278E}
 	EndGlobalSection
 EndGlobal

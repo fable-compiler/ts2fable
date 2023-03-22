@@ -1,0 +1,16 @@
+group Build
+  FSharp.Core
+  Fake.DotNet.Cli
+  Fake.IO.FileSystem
+  Fake.Core.Environment
+  Fake.Core.BuildServer
+  Fake.Api.GitHub
+  Fake.Tools.Git
+  Fake.Windows.Chocolatey
+  Fake.Core.Target
+  Fake.DotNet.MsBuild
+
+  Microsoft.Build
+  Microsoft.Build.Framework
+  Microsoft.Build.Tasks.Core
+  Microsoft.Build.Utilities.Core
