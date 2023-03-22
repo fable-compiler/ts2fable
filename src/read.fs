@@ -12,18 +12,19 @@ type Node with
     member x.ForEachChild (cbNode: Node -> unit) =
         x.forEachChild<unit> (fun nd -> cbNode nd; None) |> ignore
 
-let getAccessibility (modifiersOpt: ModifiersArray option) : FsAccessibility option =
+let getAccessibility (modifiersOpt: ModifierLike[] option) : FsAccessibility option =
     match modifiersOpt with
     | Some modifiers ->
-        if modifiers |> Seq.exists (fun m -> m.kind = SyntaxKind.PublicKeyword) then
+        if modifiers |> Seq.exists (fun m -> m?kind = SyntaxKind.PublicKeyword) then
             Some FsAccessibility.Public
-        else if modifiers |> Seq.exists (fun m -> m.kind = SyntaxKind.ProtectedKeyword) then
+        else if modifiers |> Seq.exists (fun m -> m?kind = SyntaxKind.ProtectedKeyword) then
             Some FsAccessibility.Protected
-        else if modifiers |> Seq.exists (fun m -> m.kind = SyntaxKind.PrivateKeyword) then
+        else if modifiers |> Seq.exists (fun m -> m?kind = SyntaxKind.PrivateKeyword) then
             Some FsAccessibility.Private
         else
             None
     | None -> None
+let getAccessibility' (modifiersOpt: Modifier[] option) = getAccessibility (!!modifiersOpt)
 
 let getPropertyName(pn: PropertyName): string =
     !!pn?getText() |> removeQuotes
@@ -87,7 +88,7 @@ let readEnumCase (checker: TypeChecker) (em: EnumMember): FsEnumCase =
         Value = value
     }
 
-let readTypeParameters (checker: TypeChecker) (tps: List<TypeParameterDeclaration> option): FsType list =
+let readTypeParameters (checker: TypeChecker) (tps: TypeParameterDeclaration[] option): FsType list =
     match tps with
     | None -> []
     | Some tps ->
@@ -100,7 +101,7 @@ let readTypeParameters (checker: TypeChecker) (tps: List<TypeParameterDeclaratio
             |> FsType.GenericTypeParameter
         )
 
-let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsType list =
+let readInherits (checker: TypeChecker) (hcs: HeritageClause[] option): FsType list =
     match hcs with
     | None -> []
     | Some hcs ->
@@ -121,9 +122,12 @@ let readInherits (checker: TypeChecker) (hcs: List<HeritageClause> option): FsTy
 
 let readCommentLines (text: string): FsCommentContent =
     text.Replace("\r\n","\n").Replace("\r","\n").Split [|'\n'|] |> List.ofArray
+let readJsDocCommentLines (comments: JSDocComment[]): FsCommentContent =
+    //TODO: concat with space correct? or new line? or empty?
+    comments |> Seq.map (fun c -> c?text) |> String.concat " " |> readCommentLines
 
-let private readCommentSummary (documentationComment: ResizeArray<SymbolDisplayPart>): FsComment option =
-    if documentationComment.Count = 0 then None
+let private readCommentSummary (documentationComment: SymbolDisplayPart[]): FsComment option =
+    if documentationComment.Length = 0 then None
     else
         documentationComment
         |> List.ofSeq
@@ -162,7 +166,11 @@ let private readCommentTag (jsDocTag: JSDocTag): FsComment =
 
     let comment =
         jsDocTag.comment
-        |> Option.map readCommentLines
+        |> Option.map (
+            function
+            | U2.Case1 text -> readCommentLines text
+            | U2.Case2 comments -> readJsDocCommentLines comments
+        )
         |> Option.defaultValue []
 
     let mkTag name =
@@ -203,14 +211,14 @@ let private readCommentTag (jsDocTag: JSDocTag): FsComment =
     | _ ->
         comment |> FsComment.Unknown
 
-let private readCommentTags (jsDocTags: ResizeArray<JSDocTag>): FsComment list =
-    if jsDocTags.Count = 0 then []
+let private readCommentTags (jsDocTags: JSDocTag[]): FsComment list =
+    if jsDocTags.Length = 0 then []
     else
         jsDocTags
         |> List.ofSeq
         |> List.map readCommentTag
 
-let readComments (documentationComment: ResizeArray<SymbolDisplayPart>) (jsDocTags: ResizeArray<JSDocTag>): FsComment list =
+let readComments (documentationComment: SymbolDisplayPart[]) (jsDocTags: JSDocTag[]): FsComment list =
     // documentationComment contains root comment
     // jsDocTags all other tags
     [
@@ -311,10 +319,11 @@ let readClass (checker: TypeChecker) (cd: ClassDeclaration): FsInterface =
         Accessibility = getAccessibility cd.modifiers
     }
 
-let hasModifier (kind: SyntaxKind) (modifiers: ModifiersArray option) =
+let hasModifier (kind: SyntaxKind) (modifiers: ModifierLike[] option) =
     match modifiers with
     | None -> false
-    | Some mds -> mds |> Seq.exists (fun md -> md.kind = kind)
+    | Some mds -> mds |> Seq.exists (fun md -> md?kind = kind)
+let hasModifier' (kind: SyntaxKind) (modifiers: Modifier[] option) = hasModifier kind (!!modifiers)
 
 let isConst (nd: Node): bool =
     nd.flags.HasFlag NodeFlags.Const
@@ -332,7 +341,7 @@ let readVariable (checker: TypeChecker) (vb: VariableStatement) =
             Name = vd.name |> getBindingName |> Option.defaultValue "unsupported_pattern"
             Type = vd.``type`` |> Option.map (readTypeNode checker) |> Option.defaultValue (simpleType "obj")
             IsConst = isConst (vb.declarationList)  // const is specified before all declarations -> part of list
-            IsStatic = hasModifier SyntaxKind.StaticKeyword vd.modifiers
+            IsStatic = hasModifier SyntaxKind.StaticKeyword vb.modifiers
             Accessibility = getAccessibility vb.modifiers
         }
         |> FsType.Variable
@@ -382,7 +391,7 @@ let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
         Attributes = []
         Comments = []//ft.name |> Option.map (readPropertyNameComments checker) |> Option.defaultValue []
         Kind = FsFunctionKind.Regular
-        IsStatic = hasModifier SyntaxKind.StaticKeyword ft.modifiers
+        IsStatic = false
         Name = ft.name |> Option.map getPropertyName
         TypeParameters = readTypeParameters checker ft.typeParameters
         Params =  ft.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
@@ -390,7 +399,7 @@ let readFunctionType (checker: TypeChecker) (ft: FunctionTypeNode): FsFunction =
             // match ft.``type`` with
             // | Some t -> readTypeNode checker t
             // | None -> simpleType "unit"
-        Accessibility = getAccessibility ft.modifiers
+        Accessibility = None
     }
 
 let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
@@ -417,7 +426,9 @@ let rec readTypeNode (checker: TypeChecker) (t: TypeNode): FsType =
     | SyntaxKind.TupleType ->
         let tp = t :?> TupleTypeNode
         {
-            Types = tp.elementTypes |> List.ofSeq |> List.map (readTypeNode checker)
+            Types =
+                // `NamedTupleMember` is `inherit TypeNode`
+                tp.elements |> Seq.map (fun e -> readTypeNode checker (!!e)) |> Seq.toList
             Kind = FsTupleKind.Tuple
         }
         |> FsType.Tuple
@@ -517,7 +528,18 @@ and readUnionType (checker: TypeChecker) (un: UnionTypeNode): FsType =
         un.types
         |> Seq.map removeParens
         |> List.ofSeq
-    let isOptionType (t: TypeNode) = t.kind = SyntaxKind.UndefinedKeyword || t.kind = SyntaxKind.NullKeyword
+    let isOptionType (t: TypeNode) = 
+        t.kind = SyntaxKind.UndefinedKeyword 
+        || t.kind = SyntaxKind.NullKeyword
+        || (
+            t.kind = SyntaxKind.LiteralType
+            &&
+            (
+                let lt = t :?> LiteralTypeNode
+                lt.literal?kind = SyntaxKind.NullKeyword
+            )
+        )
+
     let isLiteralType (t: TypeNode) = t.kind = SyntaxKind.LiteralType
     let isOptional = unTypes |> List.exists isOptionType
     let makeEnumCase (t: LiteralTypeNode) =
@@ -587,7 +609,7 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
         Attributes = []
         Comments = readCommentsForSignatureDeclaration checker ms
         Kind = FsFunctionKind.Regular
-        IsStatic = hasModifier SyntaxKind.StaticKeyword ms.modifiers
+        IsStatic = hasModifier' SyntaxKind.StaticKeyword ms.modifiers
         Name = ms.name |> getPropertyName |> Some
         TypeParameters = readTypeParameters checker ms.typeParameters
         Params = ms.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
@@ -595,7 +617,7 @@ let readMethodSignature (checker: TypeChecker) (ms: MethodSignature): FsFunction
             match ms.``type`` with
             | Some t -> readTypeNode checker t
             | None -> simpleType "unit"
-        Accessibility = getAccessibility ms.modifiers
+        Accessibility = getAccessibility' ms.modifiers
     }
 
 let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
@@ -614,8 +636,10 @@ let readMethodDeclaration checker (md: MethodDeclaration): FsFunction =
         Accessibility = getAccessibility md.modifiers
     }
 
-let isReadOnly (modifiers: ModifiersArray option) =
+let isReadOnly (modifiers: ModifierLike[] option) =
     hasModifier SyntaxKind.ReadonlyKeyword modifiers
+let isReadOnly' (modifiers: ModifiersArray option) =
+    hasModifier' SyntaxKind.ReadonlyKeyword modifiers
 
 let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProperty =
     {
@@ -629,9 +653,9 @@ let readPropertySignature (checker: TypeChecker) (ps: PropertySignature): FsProp
             match ps.``type`` with
             | None -> FsType.None
             | Some tp -> readTypeNode checker tp
-        Accessor = FsAccessor.fromReadonly <| isReadOnly ps.modifiers
-        IsStatic = hasModifier SyntaxKind.StaticKeyword ps.modifiers
-        Accessibility = getAccessibility ps.modifiers
+        Accessor = FsAccessor.fromReadonly <| isReadOnly' ps.modifiers
+        IsStatic = hasModifier' SyntaxKind.StaticKeyword ps.modifiers
+        Accessibility = getAccessibility' ps.modifiers
     }
 
 let readPropertyDeclaration (checker: TypeChecker) (pd: PropertyDeclaration): FsProperty =
@@ -678,7 +702,7 @@ let readSetAccessorDeclaration (checker: TypeChecker) (sad: SetAccessorDeclarati
         Type =
             // parameter, not return type
             //      in valid TS: EXACTLY one parameter
-            if sad.parameters.Count <> 1 then
+            if sad.parameters.Length <> 1 then
                 FsType.None
             else
                 let p = sad.parameters.[0]
@@ -714,10 +738,7 @@ let readIndexSignature (checker: TypeChecker) (ps: IndexSignatureDeclaration): F
         Index = Some pm
         Name = "Item"
         Option = ps.questionToken.IsSome
-        Type =
-            match ps.``type`` with
-            | None -> FsType.None
-            | Some tp -> readTypeNode checker tp
+        Type = readTypeNode checker ps.``type``
         Accessor = FsAccessor.fromReadonly <| isReadOnly ps.modifiers
         IsStatic = hasModifier SyntaxKind.StaticKeyword ps.modifiers
         Accessibility = getAccessibility ps.modifiers
@@ -728,7 +749,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
         Attributes = []
         Comments = readCommentsForSignatureDeclaration checker cs
         Kind = FsFunctionKind.Call
-        IsStatic = false // TODO ?
+        IsStatic = false
         Name = Some "Invoke"
         TypeParameters = cs.typeParameters |> readTypeParameters checker
         Params = cs.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
@@ -736,7 +757,7 @@ let readCallSignature (checker: TypeChecker) (cs: CallSignatureDeclaration): FsF
             match cs.``type`` with
             | Some t -> readTypeNode checker t
             | None -> simpleType "unit"
-        Accessibility = getAccessibility cs.modifiers
+        Accessibility = None
     }
 
 let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSignatureDeclaration): FsFunction =
@@ -749,7 +770,7 @@ let readConstructSignatureDeclaration (checker: TypeChecker) (cs: ConstructSigna
         TypeParameters = cs.typeParameters |> (readTypeParameters checker)
         Params = cs.parameters |> List.ofSeq |> List.mapi (readParameterDeclaration checker)
         ReturnType = FsType.This
-        Accessibility = getAccessibility cs.modifiers
+        Accessibility = None
     }
 
 let readConstructorDeclaration (checker: TypeChecker) (cs: ConstructorDeclaration): FsFunction =
@@ -868,7 +889,7 @@ let readImportDeclaration(im: ImportDeclaration): FsType list =
                         |> FsImport.Module |> FsType.Import
                     ]
                 else
-                    let children: ResizeArray<Node> = !!namedBindings?getChildren()
+                    let children: Node[] = !!namedBindings?getChildren()
                     children |> List.ofSeq |> List.collect (fun ch ->
                         match ch.kind with
                         | SyntaxKind.SyntaxList  ->

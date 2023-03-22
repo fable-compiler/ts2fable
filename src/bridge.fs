@@ -82,28 +82,29 @@ module internal Bridge =
                 o.noEmit <- Some true
                 o.``module`` <- Some ModuleKind.CommonJS
             )
-            let host = jsOptions<CompilerHost>(fun o ->
-                o.getSourceFile <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
-                o.getSourceFileByPath <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
-                o.writeFile <- fun (_,_) -> ()
-                o.getDefaultLibFileName <- fun _ -> "lib.d.ts"
-                o.useCaseSensitiveFileNames <- fun _ -> false
-                o.getCanonicalFileName <- id
-                o.getCurrentDirectory <- fun _ -> ""
-                o.getNewLine <- fun _ -> "\r\n"
-                o.fileExists <- fun fileName -> List.contains fileName tsPaths
-                o.readFile <- fun fileName -> sourceFiles |> List.tryPick (fun sf -> if sf.fileName = fileName then Some (sf.getFullText()) else None)
-                o.directoryExists <- fun _ -> true
-                o.getDirectories <- fun _ -> ResizeArray []
-            )
-            ts.createProgram(ResizeArray tsPaths, options, host)
+            let host = ts.createCompilerHost(options)
+            host?getSourceFile <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
+            host?getSourceFileByPath <- fun (fileName,_,_) -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
+            host.writeFile <- !!(fun (_,_) -> ())
+            host?getDefaultLibFileName <- fun _ -> "lib.d.ts"
+            host?useCaseSensitiveFileNames <- fun () -> false
+            host?getCanonicalFileName <- id
+            host?getCurrentDirectory <- fun _ -> ""
+            host?getNewLine <- fun _ -> "\r\n"  //TODO: change?
+            host?fileExists <- fun fileName -> List.contains fileName tsPaths
+            host?readFile <- fun fileName -> sourceFiles |> List.tryPick (fun sf -> if sf.fileName = fileName then Some (sf.getFullText()) else None)
+            host?directoryExists <- fun _ -> true
+            host?getDirectories <- fun _ -> [||]
+
+            ts.createProgram(Array.ofList tsPaths, options, host)
+
         match bridge with
         | Bridge.Node nb ->
             let exports,readText = getExportFiles bridge,nb.ReadText
             let sourceFiles =
                 exports |> List.map (fun tsPath ->
                     let text = tsPath |> readText
-                    ts.createSourceFile (tsPath,text, scriptTarget, true)
+                    ts.createSourceFile (tsPath,text, U2.Case1 scriptTarget, true)
                 )
             createDummy exports sourceFiles
         | Bridge.Web w ->
