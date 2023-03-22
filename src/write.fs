@@ -17,6 +17,6 @@ let getFsFileOutWithText (text: string) =
 
 let emitFsFileOutAsText (fsFileOut: FsFileOut) =
     let lines = List []
-    for line in printFsFile "0.8.0" fsFileOut do
+    for line in printFsFile "0.9.0" fsFileOut do
         lines.Add(line)
     lines |> String.concat "\n"
