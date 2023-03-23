@@ -1,3 +1,3 @@
 #!/bin/bash
 dotnet tool restore
-dotnet run --project .\build\fake\ -- -t $@
+dotnet run --project ./build/fake/ -- -t $@
