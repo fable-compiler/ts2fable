@@ -82,28 +82,30 @@ module internal Bridge =
                 o.noEmit <- Some true
                 o.``module`` <- Some ModuleKind.CommonJS
             )
-            let host = jsOptions<CompilerHost>(fun o ->
-                o.getSourceFile <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
-                o.getSourceFileByPath <- fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
-                o.writeFile <- fun (_,_) -> ()
-                o.getDefaultLibFileName <- fun _ -> "lib.d.ts"
-                o.useCaseSensitiveFileNames <- fun _ -> false
-                o.getCanonicalFileName <- id
-                o.getCurrentDirectory <- fun _ -> ""
-                o.getNewLine <- fun _ -> "\r\n"
-                o.fileExists <- fun fileName -> List.contains fileName tsPaths
-                o.readFile <- fun fileName -> sourceFiles |> List.tryPick (fun sf -> if sf.fileName = fileName then Some (sf.getFullText()) else None)
-                o.directoryExists <- fun _ -> true
-                o.getDirectories <- fun _ -> ResizeArray []
-            )
-            ts.createProgram(ResizeArray tsPaths, options, host)
+            let host: CompilerHost = !!{|
+                getSourceFile = fun fileName -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
+                getSourceFileByPath = fun (fileName,_,_) -> sourceFiles |> List.tryFind (fun sf -> sf.fileName = fileName)
+                writeFile = (!!(fun (_,_) -> ()) : WriteFileCallback)
+                getDefaultLibFileName = fun _ -> "lib.d.ts"
+                useCaseSensitiveFileNames = fun () -> false
+                getCanonicalFileName = id
+                getCurrentDirectory = fun _ -> ""
+                getNewLine = fun _ -> "\r\n"  //TODO: change?
+                fileExists = fun fileName -> List.contains fileName tsPaths
+                readFile = fun fileName -> sourceFiles |> List.tryPick (fun sf -> if sf.fileName = fileName then Some (sf.getFullText()) else None)
+                directoryExists = fun _ -> true
+                getDirectories = fun _ -> [||]
+            |}
+
+            ts.createProgram(Array.ofList tsPaths, options, host)
+
         match bridge with
         | Bridge.Node nb ->
             let exports,readText = getExportFiles bridge,nb.ReadText
             let sourceFiles =
                 exports |> List.map (fun tsPath ->
                     let text = tsPath |> readText
-                    ts.createSourceFile (tsPath,text, scriptTarget, true)
+                    ts.createSourceFile (tsPath,text, U2.Case1 scriptTarget, true)
                 )
             createDummy exports sourceFiles
         | Bridge.Web w ->
@@ -178,6 +180,9 @@ module internal Bridge =
         |> removeDuplicateFunctions
         |> removeDuplicateOptionsFromParameters
         |> fixFloatAlias
+#if TYPESCRIPT
+        |> specialTscRules
+#endif
         |> TransformComments.transform
         //todo: enhancement: extract Namespaces from Attributes and open
         // |> log "done"

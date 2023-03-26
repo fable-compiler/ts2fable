@@ -377,7 +377,7 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
             | FsComment.Param p -> printTag "param" [("name", p.Name)] p.Content
             | FsComment.Returns r -> printTag "returns" [] r
             | FsComment.Remarks r -> printTag "remarks" [] r
-            | FsComment.SeeAlso link -> printTag "seealso" [((match link.Type with | HRef -> "href" | CRef -> "cref"), link.Target)] link.Content
+            | FsComment.SeeAlso link -> printTag "seealso" [((match link.Type with | HRef -> "href" | CRef -> "cref" | Unknown -> "cref"), link.Target)] link.Content
             | FsComment.TypeParam tp -> printTag "typeparam" [("name", tp.Name)] tp.Content
             | FsComment.Example e -> printTag "example" [] e
             | FsComment.Exception e ->
@@ -391,7 +391,6 @@ let printComments (lines: ResizeArray<string>) (indent: string) (comments: FsCom
               // Unknown tag, but was explicitly kept (vs. `UnknownTag`) -> print too
             | FsComment.Tag t -> printTag t.Name [] t.Content
             | FsComment.UnknownTag _ -> ()
-            | FsComment.Unknown _ -> ()
 
 let printAttributes (lines: ResizeArray<string>) (indent: string) (attrs: FsAttributeSet list) =
     match attrs with

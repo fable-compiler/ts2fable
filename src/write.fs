@@ -4,10 +4,11 @@ open TypeScript
 open ts2fable.Print
 open System.Collections.Generic
 open ts2fable.Bridges
+open Fable.Core
 
 let getFsFileOutWithText (text: string) =
     let inputFileName = "module.d.ts"
-    let sourceFile = ts.createSourceFile (inputFileName, text, scriptTarget, true)
+    let sourceFile = ts.createSourceFile (inputFileName, text, U2.Case1 scriptTarget, true)
     {
         FileName = inputFileName
         SourceFile = sourceFile
@@ -16,6 +17,6 @@ let getFsFileOutWithText (text: string) =
 
 let emitFsFileOutAsText (fsFileOut: FsFileOut) =
     let lines = List []
-    for line in printFsFile "0.8.0" fsFileOut do
+    for line in printFsFile "0.9.0" fsFileOut do
         lines.Add(line)
     lines |> String.concat "\n"

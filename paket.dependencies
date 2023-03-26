@@ -1,6 +1,6 @@
 source https://api.nuget.org/v3/index.json
 storage:none
-framework: net6.0
+framework: net7.0
 
 nuget Fable.Core
 nuget Fable.Node
@@ -8,12 +8,12 @@ nuget Fable.Browser.Css
 nuget Fable.Browser.Dom
 nuget Fable.Browser.Svg
 
-group netcorebuild
+group Build
     source https://api.nuget.org/v3/index.json
     storage:none
-    framework: net6.0
+    framework: net7.0
 
-    nuget FSharp.Core 6
+    nuget FSharp.Core
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem
     nuget Fake.Core.Environment
@@ -22,6 +22,7 @@ group netcorebuild
     nuget Fake.Tools.Git
     nuget Fake.Windows.Chocolatey
     nuget Fake.Core.Target
+    nuget Fake.DotNet.MsBuild
 
     # https://github.com/fsprojects/FAKE/issues/2722#issuecomment-1319077969
     # otherwise for multiple `Fake.DotNet` commands (like restore):
@@ -34,7 +35,7 @@ group netcorebuild
 group WebApp
     source https://api.nuget.org/v3/index.json
     storage:none
-    framework: net6.0
+    framework: net7.0
 
     nuget FSharp.Core redirects:force
     nuget Fable.Core

@@ -99,7 +99,7 @@ module Monaco =
         abstract wrapError: error: Error -> Promise<'ValueType>
 
     type [<AllowNullLiteral>] PromiseStaticJoinPromises =
-        [<Emit "$0[$1]{{=$2}}">] abstract Item: n: string -> Promise<'ValueType> with get, set
+        [<Emit "$0[$1]{{=$2}}">] abstract Item: n: string -> Promise<'ValueType> // with get, set
 
     type [<AllowNullLiteral>] CancellationTokenSource =
         abstract token: CancellationToken

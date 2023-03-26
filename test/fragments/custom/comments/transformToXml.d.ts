@@ -5,7 +5,10 @@
  * 
  * Markdown link: [ts2fable](https://github.com/fable-compiler/ts2fable)
  * 
- * JsDoc Link: {@link https://github.com} and {@link https://github.com|GitHub} and {@link https://github.com GitHub}
+ * JsDoc Link: {@link https://github.com} and {@link https://github.com GitHub (previously separated by BAR)} and {@link https://github.com GitHub}
+ * Note: TS parser currently doesn't support `@link` with `|` separator: `@{link target|description}` 
+ *       -> Bar gets removed, link target becomes `targetdescription` and no description
+ *       -> use space as separator again
  * 
  * Markdown inline code: `console.log("hello World")`
  * 
@@ -22,16 +25,16 @@
  * ```
  * 
  * Multiple things in one line: 
- * [ts2fable](https://github.com/fable-compiler/ts2fable) and `code` and {@link https://github.com|GitHub} ....
+ * [ts2fable](https://github.com/fable-compiler/ts2fable) and `code` and {@link https://github.com GitHub} ....
  * 
  * Href and Cref:
- * * href: [ts2fable](https://github.com/fable-compiler/ts2fable) and {@link https://github.com|GitHub} 
- * * cref: [Thingy B](B) and {@link B|Thingy B}
+ * * href: [ts2fable](https://github.com/fable-compiler/ts2fable) and {@link https://github.com GitHub} 
+ * * cref: [Thingy B](B) and {@link B Thingy B}
  * 
  * CRef with `#` (instance member) and `~` (inner member) -> convert all into `.`:
  * `Namespace.Class.method` = {@link Namespace.Class.method}
  * `Namespace.Class#method` = {@link Namespace.Class#method}
- * `Namespace.Class~method` = {@link Namespace.Class~method}
+ * `Namespace.Class~method` = {@link Namespace.Class~method} (Note: currently not supported by TS -> not handled by ts2fable)
  * remove leading:
  * `#method` = {@link method}
  * `~method` = {@link method}
@@ -40,11 +43,11 @@
  * [code `1+1` fsharp](https://fsharp.org)
  * 
  * Link in code aren't transformed:
- * `[ts2fable](https://github.com/fable-compiler/ts2fable)` and `{@link https://github.com|GitHub}`
+ * `[ts2fable](https://github.com/fable-compiler/ts2fable)` and `{@link https://github.com GitHub}`
  * and multiline:
  * ```
  * [ts2fable](https://github.com/fable-compiler/ts2fable)`
- * `{@link https://github.com|GitHub}` 
+ * `{@link https://github.com GitHub}` 
  * ```
  */
 export interface AllTextTransformations {}
@@ -75,8 +78,8 @@ export interface AllTags {}
  * @see Module.SomeType2 should be cref
  * @see https://github.com/fable-compiler/ts2fable should be href
  * @see {@link SomeType3} should be cref
- * @see {@link SomeType4|should be cref}
- * @see {@link SomeType5|should be} cref
+ * @see {@link SomeType4 should be cref}
+ * @see {@link SomeType5 should be} cref
  * @see {@link SomeType6 should be} cref
  * @see [should be cref](SomeType7)
  * @see [should be](SomeType8) cref
@@ -86,6 +89,11 @@ export interface AllTags {}
  * @see SomeType10
  *      should be cref
  *      on multiple lines
+ * @see SomeType11
+ *
+ *      should be cref
+ *      on multiple lines
+ *      with leading empty line
  */
 export interface SeeTag {}
 
@@ -111,3 +119,13 @@ export interface Separator {}
  * @throws exception without type
  */
 export interface Throws {}
+
+/**
+ * Tags not handled by ts2fable
+ * -> No tags in F#, and no exceptions in ts2fable
+ * 
+ * @author Ian Awesome <i.am.awesome@example.com>
+ * @extends {Set<T>}
+ * @something foo bar baz
+ */
+export interface Unknown {}

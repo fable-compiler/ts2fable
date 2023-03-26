@@ -5,14 +5,14 @@
     "tasks": [
         {
             "command": "dotnet",
-            "args": [ "fake", "build", "-t", "BuildCli" ],
+            "args": [ "run", "--project", "./build/fake", "--", "-t", "BuildCli" ],
             "type": "shell",
             "label": "Build CLI",
             "group": "build",
         },
         {
             "command": "dotnet",
-            "args": [ "fake", "build", "-t", "CLI.BuildRelease" ],
+            "args": [ "run", "--project", "./build/fake", "--", "-t", "CLI.BuildRelease" ],
             "type": "shell",
             "label": "Build Release CLI",
             "group": "build",
@@ -20,7 +20,7 @@
 
         {
             "command": "dotnet",
-            "args": [ "fake", "build", "-t", "BuildAll" ],
+            "args": [ "run", "--project", "./build/fake", "--", "-t", "BuildAll" ],
             "type": "shell",
             "label": "BuildAll (CLI & Tests)",
             "group": "build"
@@ -28,28 +28,28 @@
 
         {
             "command": "dotnet",
-            "args": ["fake","build","-t","BuildTest"],
+            "args": ["run", "--project", "./build/fake","-t","BuildTest"],
             "type": "shell",
             "label": "BuildTest",
             "group": "build"
         },
         {
             "command": "dotnet",
-            "args": ["fake","build","-t","WatchTest"],
+            "args": ["run", "--project", "./build/fake","-t","WatchTest"],
             "type": "shell",
             "label": "WatchTest",
             "group": "build"
         },
         {
             "command": "dotnet",
-            "args": ["fake","build","-t","RunTest"],
+            "args": ["run", "--project", "./build/fake","-t","RunTest"],
             "type": "shell",
             "label": "RunTest",
             "group": "build"
         },
         {
             "command": "dotnet",
-            "args": ["fake","build","-t","WatchAndRun"],
+            "args": ["run", "--project", "./build/fake","-t","WatchAndRun"],
             "type": "shell",
             "label": "WatchAndRunTest",
             "group": "build"
@@ -57,7 +57,7 @@
 
         {
             "command": "dotnet",
-            "args": ["fake","build","-t","CliTest"],
+            "args": ["run", "--project", "./build/fake","-t","CliTest"],
             "type": "shell",
             "label": "CliTest (test & test compile)",
             "group": "build"
@@ -65,21 +65,21 @@
 
         {
             "command": "dotnet",
-            "args": ["fake","build","-t","WebApp.Watch"],
+            "args": ["run", "--project", "./build/fake","-t","WebApp.Watch"],
             "type": "shell",
             "label": "WebApp.Watch",
             "group": "build",
         },
         {
             "command": "dotnet",
-            "args": ["fake","build","-t","WebApp.Build"],
+            "args": ["run", "--project", "./build/fake","-t","WebApp.Build"],
             "type": "shell",
             "label": "WebApp.Build",
             "group": "build"
         },
         {
             "command": "dotnet",
-            "args": ["fake","build","-t","PushForComparision"],
+            "args": ["run", "--project", "./build/fake","-t","PushForComparision"],
             "type": "shell",
             "label": "PushForComparision",
             "group": "build"

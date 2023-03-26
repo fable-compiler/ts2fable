@@ -2586,3 +2586,299 @@ let removeObsolete (f: FsFile): FsFile =
             | _ -> tp
         )
     f
+
+#if TYPESCRIPT
+/// Some special rules for typescript compiler (`typescript.d.ts`)
+/// 
+/// Fixes some cases that aren't/cannot handled by ts2fable in general rules
+let specialTscRules (f: FsFile) : FsFile =
+    /// ```typescript
+    /// namespace ts {
+    ///     interface CustomTransformers {
+    ///         // ...
+    ///         afterDeclarations?: (TransformerFactory<Bundle | SourceFile> | CustomTransformerFactory)[];
+    ///     }
+    /// }
+    /// ```
+    /// Without special rule:
+    /// ```fsharp
+    /// module Ts =
+    ///     type [<AllowNullLiteral>] CustomTransformers =
+    ///         // ...
+    ///         abstract afterDeclarations: U2<TransformerFactory<U2<Bundle, SourceFile>>, CustomTransformerFactory>[] option with get, set
+    /// //                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    /// //                                     The type 'U2<Bundle,SourceFile>' is not compatible with the type 'Node'
+    /// ```
+    /// (`type TransformerFactory<T extends Node>`, `type TransformerFactory<'T when 'T :> Node>`)
+    ///
+    /// Fix:
+    /// ```fsharp
+    /// module Ts =
+    ///     type [<AllowNullLiteral>] CustomTransformers =
+    ///         // ...
+    ///         abstract afterDeclarations: U3<TransformerFactory<Bundle>, TransformerFactory<SourceFile>, CustomTransformerFactory>[] option with get, set
+    /// ```
+    let ``fix ts.CustomTransformers.afterDeclarations`` (ty: FsType) : FsType option =
+        match ty with
+        | FsType.Interface ({ FullName = "ts.CustomTransformers" } as i) ->
+            let ms =
+                i.Members
+                |> List.map (fun m ->
+                    match m with
+                    | FsType.Property p when p.Name = "afterDeclarations" ->
+                        let adjusted =
+                            match p.Type with
+                            | FsType.Array (
+                                FsType.Union { 
+                                    Option = false
+                                    Types = [
+                                        FsType.Generic {
+                                            Type = FsType.Mapped {
+                                                Name = "TransformerFactory"
+                                            } as transformerFactory
+                                            TypeParameters = [ 
+                                                FsType.Union {
+                                                    Option = false
+                                                    Types = [
+                                                        FsType.Mapped {
+                                                            Name = "Bundle"
+                                                        } as bundle
+                                                        FsType.Mapped {
+                                                            Name = "SourceFile"
+                                                        } as sourceFile
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                        FsType.Mapped {
+                                            Name = "CustomTransformerFactory"
+                                        } as customTransformerFactory
+                                    ]
+                                }
+                              ) ->
+                                FsType.Array (
+                                    FsType.Union { 
+                                        Option = false
+                                        Types = [
+                                            FsType.Generic {
+                                                Type = transformerFactory
+                                                TypeParameters = [ 
+                                                    bundle
+                                                ]
+                                            }
+                                            FsType.Generic {
+                                                Type = transformerFactory
+                                                TypeParameters = [ 
+                                                    sourceFile
+                                                ]
+                                            }
+                                            customTransformerFactory
+                                        ]
+                                    }
+                                )
+                                |> Some
+                            | _ -> None
+                        match adjusted with
+                        | Some ty ->
+                            { p with Type = ty }
+                            |> FsType.Property
+                        | None ->
+                            printfn "Source=%A" p
+                            failwithf "Signature of `ts.CustomTransformers.afterDeclarations` has changed"
+                    | _ -> m
+                )
+            { i with Members = ms }
+            |> FsType.Interface
+            |> Some
+        | _ -> None
+
+    /// ```typescript
+    /// namespace ts {
+    ///     interface ObjectLiteralExpression extends ObjectLiteralExpressionBase<CURRENT> {
+    ///         // ...
+    ///     }
+    /// }
+    /// ```
+    /// ```fsharp
+    /// type ObjectLiteralExpression =
+    ///     inherit ObjectLiteralExpressionBase<CURRENT>
+    ///     // ...
+    /// ```
+    /// Replaces `CURRENT` with `REPLACEMENT`
+    /// 
+    /// Additional: Adds XML doc remarks with change
+    let changeInheritObjectLiteralExpressionBaseType (current: string) (replacement: string) (i: FsInterface) =
+        let mutable adjusted = false
+        let inherits =
+            i.Inherits
+            |> List.map (
+                function
+                | FsType.Generic {
+                    Type = FsType.Mapped {
+                        Name = "ObjectLiteralExpressionBase"
+                    } as objectLiteralExpressionBase
+                    TypeParameters = [
+                        FsType.Mapped {
+                            Name = tpName
+                        }
+                    ]
+                  }
+                  when tpName = current ->
+                    adjusted <- true
+                    FsType.Generic {
+                        Type = objectLiteralExpressionBase
+                        TypeParameters = [
+                            simpleType replacement
+                        ]
+                    }
+                | ext -> ext
+            )
+
+        if adjusted then
+            { i with
+                Inherits = inherits
+                Comments = i.Comments @ [FsComment.Remarks [
+                    "Changed inherit!"
+                    ""
+                    "Original:"
+                    "```fsharp"
+                    $"inherit ObjectLiteralExpression<{current}>"
+                    "```"
+                    $"Changed `{current}` to common base type `{replacement}`:"
+                    "```fsharp"
+                    $"inherit ObjectLiteralExpression<{replacement}>`"
+                    "```"
+                ]]
+            }
+            |> FsType.Interface
+            |> Some
+        else
+            None
+    /// Note: `interfaceName` must include Namespace/Module! (most likely `ts.XXX`)
+    let changeInheritObjectLiteralExpressionBaseTypeInInterface (interfaceName: string) (current: string) (replacement: string) (ty: FsType) =
+        match ty with
+        | FsType.Interface ({ FullName = interfaceName } as i) ->
+            changeInheritObjectLiteralExpressionBaseType current replacement i
+        | _ -> None
+
+
+    /// ```typescript
+    /// namespace ts {
+    ///     interface ObjectLiteralExpression extends ObjectLiteralExpressionBase<ObjectLiteralElementLike>, JSDocContainer {
+    ///         readonly kind: SyntaxKind.ObjectLiteralExpression;
+    ///     }
+    /// }
+    /// ```
+    /// Without special rule:
+    /// ```fsharp
+    /// module Ts =
+    ///     type [<AllowNullLiteral>] ObjectLiteralExpression =
+    ///         inherit ObjectLiteralExpressionBase<ObjectLiteralElementLike>
+    /// //              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    /// //              The type 'ObjectLiteralElementLike' is not compatible with the type 'ObjectLiteralElement'
+    ///         inherit JSDocContainer
+    ///         abstract kind: SyntaxKind
+    /// ```
+    /// (`ObjectLiteralElementLike` is `U5<PropertyAssignment, ShorthandPropertyAssignment, SpreadAssignment, MethodDeclaration, AccessorDeclaration>`)  
+    /// 
+    /// Fix:
+    /// Common type for U5<...> elements: `ObjectLiteralElement`
+    /// -> inherit from `ObjectLiteralElement` instead
+    /// ```fsharp
+    /// module Ts =
+    ///     type [<AllowNullLiteral>] ObjectLiteralExpression =
+    ///         inherit ObjectLiteralExpressionBase<ObjectLiteralElement>
+    ///         inherit JSDocContainer
+    ///         abstract kind: SyntaxKind
+    /// ```
+    let ``fix ns.ObjectLiteralExpression`` (ty: FsType) : FsType option =
+        changeInheritObjectLiteralExpressionBaseTypeInInterface
+            "ts.ObjectLiteralExpression"
+            "ObjectLiteralElementLike" "ObjectLiteralElement"
+            ty
+
+    /// ```typescript
+    /// namespace ts {
+    ///     interface JsxAttributes extends ObjectLiteralExpressionBase<JsxAttributeLike> {
+    ///         readonly kind: SyntaxKind.JsxAttributes;
+    ///         readonly parent: JsxOpeningLikeElement;
+    ///     }
+    /// }
+    /// ```
+    /// Without special rule:
+    /// ```fsharp
+    /// module Ts =
+    ///     type [<AllowNullLiteral>] JsxAttributes =
+    ///         inherit ObjectLiteralExpressionBase<JsxAttributeLike>
+    /// //              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    /// //              The type 'JsxAttributeLike' is not compatible with the type 'ObjectLiteralElement'
+    ///         abstract kind: SyntaxKind
+    ///         abstract parent: JsxOpeningLikeElement
+    /// ```
+    /// (`JsxAttributeLike` is `U2<JsxAttribute, JsxSpreadAttribute>`)  
+    /// 
+    /// Fix:
+    /// Common type for U2<...> elements: `ObjectLiteralElement`
+    /// -> inherit from `ObjectLiteralElement` instead
+    /// ```fsharp
+    /// module Ts =
+    ///     type [<AllowNullLiteral>] JsxAttributes =
+    ///         inherit ObjectLiteralExpressionBase<ObjectLiteralElement>
+    ///         abstract kind: SyntaxKind
+    ///         abstract parent: JsxOpeningLikeElement
+    /// ```
+    let ``fix ns.JsxAttributes`` (ty: FsType) : FsType option =
+        changeInheritObjectLiteralExpressionBaseTypeInInterface
+            "ts.JsxAttributes"
+            "JsxAttributeLike" "ObjectLiteralElement"
+            ty
+
+    /// `ImportAll`/`import * as typescript from "typescript"` doesn't work,
+    /// but instead must be `ImportDefault`/`import typescript from "typescript"`
+    /// 
+    /// TS uses `export = ts` -- which [kind-of-but-also-kind-of-not resemble default exports](https://www.typescriptlang.org/docs/handbook/modules.html#export--and-import--require)  
+    /// (vs. normal TS default exports: `export default ts`)
+    let ``use `ImportDefault("typescript")` instead of `ImportAll("typescript")` `` (ty: FsType) : FsType option =
+        match ty with
+        | FsType.Variable ({ Export = Some ({ Path = "typescript"; Selector = "*" } as export)} as v) ->
+            { v with
+                Export = Some { export with Selector = "default"}
+            }
+            |> FsType.Variable
+            |> Some
+        | _ -> None
+
+    printfn "!!! Applying custom TSC (`typescript.d.ts`) rules !!!"
+    let rules = [|
+        let t (s: string) =  s.Trim '`'
+        nameof(``fix ts.CustomTransformers.afterDeclarations``) |> t, ``fix ts.CustomTransformers.afterDeclarations`` 
+        nameof(``fix ns.ObjectLiteralExpression``) |> t, ``fix ns.ObjectLiteralExpression``
+        nameof(``fix ns.JsxAttributes``) |> t, ``fix ns.JsxAttributes``
+        nameof(``use `ImportDefault("typescript")` instead of `ImportAll("typescript")` ``) |> t, ``use `ImportDefault("typescript")` instead of `ImportAll("typescript")` ``
+    |]
+    let applied: int[] = Array.zeroCreate rules.Length
+
+    let applyRules tp =
+        let mutable tp = tp
+        for i in 0..rules.Length-1 do
+            let (name, rule) = rules[i]
+            match rule tp with
+            | None -> ()
+            | Some res ->
+                printfn "> Applied rule '%s'" name
+                applied[i] <- applied[i]+1
+                tp <- res
+        tp
+
+    let f =
+        f |> fixFile (fun _ tp ->
+            applyRules tp
+        )
+
+    printfn ":: TSC special rules stats:"
+    for i in 0..(rules.Length-1) do
+        let (name, _), count = rules[i], applied[i]
+        printfn "* %02i times: '%s'" count name
+
+    f
+#endif

@@ -95,7 +95,6 @@ module private Text =
                 sprintf "[%s](%s)" title link
             | None -> link
         
-        printfn "Transforming line %s" line
         line |> Regex.replaceAll jsDocLinkRegex replace
 
     let private mdInlineCodeRegex =
@@ -338,7 +337,6 @@ let private transformContent (comments: FsComment list) =
             { t with Content = transform c }
             |> FsComment.Tag
         | FsComment.UnknownTag _ as u -> u
-        | FsComment.Unknown _ as u -> u
     )
 
 let private mergeSummaries (comments: FsComment list) =
@@ -476,7 +474,6 @@ let private transformTags (comments: FsComment list): FsComment list =
 
             match c with
             | AtLeastOneLine (l, ls) ->
-                Fable.Core.JS.console.log (Text.parseLeadingLink l)
                 match Text.parseLeadingLink l with
                 | None -> None
                 | Some (target, title, rest) ->
@@ -497,7 +494,10 @@ let private transformTags (comments: FsComment list): FsComment list =
                     |> FsComment.SeeAlso
                     |> Some
             | _ -> None
-
+        | FsComment.SeeAlso ({ Type = FsCommentLinkType.Unknown } as see) ->
+            { see with Type = Text.linkType see.Target }
+            |> FsComment.SeeAlso
+            |> Some
         | FsComment.Param p ->
             match removeLeadingClutter p.Content with
             | Some content ->
@@ -580,7 +580,6 @@ let private escapeXmlChars (comments: FsComment list): FsComment list =
                 }
                 |> FsComment.Tag
             | FsComment.UnknownTag _ as u -> u
-            | FsComment.Unknown _ as u -> u
         )
 
 /// Extract `@deprecated` JSDoc tag from comments and convert into `Obsolete` Attribute

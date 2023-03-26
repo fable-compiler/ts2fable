@@ -28,6 +28,8 @@ let private inNodeModules path = sprintf "%s/%s" nodeModulesPath path
 // -> timeout suffix method call works only for each individual test (`it`), but not on test suite (`describe`)
 /// captures `this` of `describe`
 let [<Emit("describe($0, function () { $1() })")>] describe (msg: string) (f: unit->unit): unit = jsNative
+let [<Emit("describe.only($0, function () { $1() })")>] describeOnly (msg: string) (f: unit -> unit): unit = jsNative
+/// Focus on this test suite.
 let [<Global>] it (msg: string) (f: unit->unit): unit = jsNative
 /// Focus on this test. Other tests aren't executed, just `itOnly` tests.
 let [<Global("it.only")>] itOnly (msg: string) (f: unit->unit): unit = jsNative
@@ -413,51 +415,52 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let expected = "test/fragments/babylonjs/Stage.PrivateCtor.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
 
-    it "generic-type-constraints/simple" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/simple.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/simple.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/simple.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "generic-type-constraints/and" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/and.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/and.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/and.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "generic-type-constraints/or" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/or.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/or.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/or.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "generic-type-constraints/combination" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/combination.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/combination.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/combination.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "generic-type-constraints/sealed" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/sealed.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/sealed.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/sealed.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "generic-type-constraints/types" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/types.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/types.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/types.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "generic-type-constraints/function" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/function.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/function.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/function.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "generic-type-constraints/etc" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/etc.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/etc.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/etc.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "generic-type-constraints/default" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/generic-type-constraints/default.d.ts"]
-        let fsPath = "test/fragments/custom/generic-type-constraints/default.fs"
-        let expected = "test/fragments/custom/generic-type-constraints/default.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
+    do describe "generic-type-constraints" <| fun _ ->
+        it "simple" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/simple.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/simple.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/simple.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "and" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/and.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/and.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/and.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "or" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/or.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/or.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/or.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "combination" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/combination.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/combination.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/combination.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "sealed" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/sealed.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/sealed.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/sealed.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "types" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/types.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/types.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/types.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "function" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/function.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/function.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/function.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "etc" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/etc.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/etc.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/etc.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "default" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/generic-type-constraints/default.d.ts"]
+            let fsPath = "test/fragments/custom/generic-type-constraints/default.fs"
+            let expected = "test/fragments/custom/generic-type-constraints/default.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
 
     // https://github.com/fable-compiler/ts2fable/issues/361
     it "keyof" <| fun _ ->
@@ -466,29 +469,30 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
         let expected = "test/fragments/custom/keyof.expected.fs"
         convertAndCompareAgainstExpected tsPaths fsPath expected
 
-    it "comments/summary" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/comments/summary.d.ts"]
-        let fsPath = "test/fragments/custom/comments/summary.fs"
-        let expected = "test/fragments/custom/comments/summary.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "comments/transformToXml" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/comments/transformToXml.d.ts"]
-        let fsPath = "test/fragments/custom/comments/transformToXml.fs"
-        let expected = "test/fragments/custom/comments/transformToXml.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "comments/types" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/comments/types.d.ts"]
-        let fsPath = "test/fragments/custom/comments/types.fs"
-        let expected = "test/fragments/custom/comments/types.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
-    it "comments/obsolete" <| fun _ ->
-        let tsPaths = ["test/fragments/custom/comments/obsolete.d.ts"]
-        let fsPath = "test/fragments/custom/comments/obsolete.fs"
-        let expected = "test/fragments/custom/comments/obsolete.expected.fs"
-        convertAndCompareAgainstExpected tsPaths fsPath expected
+    do describe "comments" <| fun _ ->
+        it "summary" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/comments/summary.d.ts"]
+            let fsPath = "test/fragments/custom/comments/summary.fs"
+            let expected = "test/fragments/custom/comments/summary.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "transformToXml" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/comments/transformToXml.d.ts"]
+            let fsPath = "test/fragments/custom/comments/transformToXml.fs"
+            let expected = "test/fragments/custom/comments/transformToXml.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "types" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/comments/types.d.ts"]
+            let fsPath = "test/fragments/custom/comments/types.fs"
+            let expected = "test/fragments/custom/comments/types.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
+        it "obsolete" <| fun _ ->
+            let tsPaths = ["test/fragments/custom/comments/obsolete.d.ts"]
+            let fsPath = "test/fragments/custom/comments/obsolete.fs"
+            let expected = "test/fragments/custom/comments/obsolete.expected.fs"
+            convertAndCompareAgainstExpected tsPaths fsPath expected
 
     // https://github.com/fable-compiler/ts2fable/pull/409
-    let _ =
+    do describe "nowarn/xml-comments" <| fun _ ->
         let nowarnXmlComments = "#nowarn \"3390\""
         let dataContains (text: string) (data: AdditionalData list) =
             data
@@ -506,34 +510,34 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             |> dataContains nowarnXmlComments
             |> equal nowarnExcpected
 
-        it "nowarn/xml-comments/no xml comments" <| fun _ ->
+        it "no xml comments" <| fun _ ->
             testNowarn "no-xml-comments" false
 
-        it "nowarn/xml-comments/XML comments but without XML tags" <| fun _ ->
+        it "XML comments but without XML tags" <| fun _ ->
             testNowarn "xml-comments-but-no-xml-tags" false
 
-        it "nowarn/xml-comments/XML comments with summary tag" <| fun _ ->
+        it "XML comments with summary tag" <| fun _ ->
             testNowarn "xml-comments-with-summary-tag" true
 
-        it "nowarn/xml-comments/XML comments with param tag" <| fun _ ->
+        it "XML comments with param tag" <| fun _ ->
             testNowarn "xml-comments-with-param-tag" true
 
-        it "nowarn/xml-comments/complex without XML comments" <| fun _ ->
+        it "complex without XML comments" <| fun _ ->
             testNowarn "complex-without-xml-comments" false
 
-        it "nowarn/xml-comments/complex with XML comments but no xml tags" <| fun _ ->
+        it "complex with XML comments but no xml tags" <| fun _ ->
             testNowarn "complex-with-xml-comments-but-no-xml-tags" false
 
-        it "nowarn/xml-comments/complex with XML comments and a single tag" <| fun _ ->
+        it "complex with XML comments and a single tag" <| fun _ ->
             testNowarn "complex-with-xml-comments-with-single-tag" true
 
-        it "nowarn/xml-comments/complex with XML comments and multiple tags" <| fun _ ->
+        it "complex with XML comments and multiple tags" <| fun _ ->
             testNowarn "complex-with-xml-comments-with-multiple-tags" true
 
-        it "nowarn/xml-comments/ignored XML tag" <| fun _ ->
+        it "ignored XML tag" <| fun _ ->
             testNowarn "ignored-xml-tag" false
 
-        it "nowarn/xml-comments/correct tags" <| fun _ ->
+        it "correct tags" <| fun _ ->
             // This test doesn't need `#nowarn xml comments`:
             // it contains XML comments, but these are all valid:
             // * `<summary>` doesn't contain invalid xml
@@ -546,7 +550,7 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             testNowarn "xml-comments-correct-tags" true
 
     // https://github.com/fable-compiler/ts2fable/pull/405
-    let _ =
+    do describe "nowarn/obsolete" <| fun _ ->
         let nowarnXmlComments = "#nowarn \"0044\""
         let dataContains (text: string) (data: AdditionalData list) =
             data
@@ -564,25 +568,25 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
             |> dataContains nowarnXmlComments
             |> equal nowarnExcpected
 
-        it "nowarn/obsolete/no deprecated" <| fun _ ->
+        it "no deprecated" <| fun _ ->
             testNowarn "no-deprecated" false
 
-        it "nowarn/obsolete/deprecated" <| fun _ ->
+        it "deprecated" <| fun _ ->
             testNowarn "deprecated" true
 
-        it "nowarn/obsolete/complex-no-deprecated" <| fun _ ->
+        it "complex-no-deprecated" <| fun _ ->
             testNowarn "complex-no-deprecated" false
 
-        it "nowarn/obsolete/complex-single-deprecated" <| fun _ ->
+        it "complex-single-deprecated" <| fun _ ->
             testNowarn "complex-single-deprecated" true
 
-        it "nowarn/obsolete/complex-multiple-deprecated" <| fun _ ->
+        it "complex-multiple-deprecated" <| fun _ ->
             testNowarn "complex-multiple-deprecated" true
 
-        it "nowarn/obsolete/complex-deprecated-width-xml-comments" <| fun _ ->
+        it "complex-deprecated-width-xml-comments" <| fun _ ->
             testNowarn "complex-deprecated-with-xml-comments" true
 
-        it "nowarn/obsolete/deprecated usage" <| fun _ ->
+        it "deprecated usage" <| fun _ ->
             // in ideal case:
             // `#nowarn obsolete` is only emitted when an obsolete type/function/whatever is used
             // -> only this unit test should contain `#nowarn obsolete`
@@ -819,4 +823,9 @@ let testFsFileLines tsPaths fsPath (f: string list -> unit) =
     // https://github.com/fable-compiler/ts5fable/pull/468
     it "regression #468 String Enum with duplicate name in F#" <| fun _ ->
         runRegressionTest "#468-string-enum-duplicate-fsharp-name"
+
+#if TYPESCRIPT
+    itOnly "tsc" <| fun _ ->
+        runRegressionTest "tsc"
+#endif
 )
