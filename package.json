@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/fable-compiler/ts2fable#readme",
   "dependencies": {
-    "typescript": "^5.0.2"
+    "typescript": "5.0.x"
   },
   "devDependencies": {
     "@babel/core": "^7.21.3",
